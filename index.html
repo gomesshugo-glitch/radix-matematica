@@ -3919,6 +3919,7 @@ function renderListaAlunos(perfis, statusAtual) {
                   ` : `
                     <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Reativar</button>
                   `}
+                  <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;background:#7F1D1D;" onclick="excluirAluno('${p.id}','${p.nome.replace(/'/g, '\\\'')}')">🗑️ Excluir</button>
                 `}
               </td>
             </tr>
@@ -3938,6 +3939,29 @@ async function mudarStatusAluno(alunoId, novoStatus) {
     .eq('id', alunoId);
 
   if (error) { alert('Erro: ' + error.message); return; }
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
+}
+
+
+async function excluirAluno(alunoId, alunoNome) {
+  // Confirmação dupla — exclusão é destrutiva
+  const c1 = confirm(`⚠️ EXCLUSÃO PERMANENTE\n\nVocê está prestes a EXCLUIR o aluno "${alunoNome}".\n\nIsso vai APAGAR:\n• A conta dele (não poderá mais logar)\n• Todas as respostas dele\n• Todos os simulados realizados\n• Todo o progresso no cronograma\n• Todos os downloads registrados\n\nEsta ação NÃO pode ser desfeita. Tem certeza?`);
+  if (!c1) return;
+
+  const c2 = prompt(`Para confirmar, digite EXCLUIR (em maiúsculas):`);
+  if (c2 !== 'EXCLUIR') {
+    alert('Exclusão cancelada.');
+    return;
+  }
+
+  // Chamar a função RPC do Supabase
+  const { data, error } = await sb.rpc('excluir_aluno', { aluno_id: alunoId });
+  if (error) {
+    alert('Erro ao excluir: ' + error.message);
+    return;
+  }
+  alert(`Aluno "${alunoNome}" excluído com sucesso.`);
   renderGerenciarAlunos();
   atualizarBadgePendentes();
 }
