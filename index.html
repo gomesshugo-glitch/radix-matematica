@@ -354,28 +354,29 @@
     color: var(--radix-gray);
   }
   .alternativas { display: flex; flex-direction: column; gap: 8px; }
+  /* ====== ALTERNATIVA — base ====== */
   .alternativa {
-    padding: 14px 48px 14px 16px;
-    border: 2px solid var(--radix-border);
+    padding: 14px 16px;
+    border: 2px solid #E0E7EE;
     border-radius: 10px;
     cursor: pointer;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 14px;
-    transition: all 0.2s ease;
     background: white;
     position: relative;
+    transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
   }
-  .alternativa:hover {
+  .alternativa > div:last-child { flex: 1; line-height: 1.5; }
+  .alternativa:hover:not(.correta):not(.errada):not(.selecionada) {
     border-color: var(--radix-cyan);
-    background: var(--radix-bg-soft);
-    transform: translateX(2px);
+    background: #F4FAFE;
   }
   .alternativa-letra {
     background: white;
     border: 2px solid #B0BEC5;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -384,46 +385,32 @@
     font-size: 14px;
     flex-shrink: 0;
     color: var(--radix-gray);
-    transition: all 0.2s ease;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
   }
 
-  /* ===== SELECIONADA (durante simulado) ===== */
+  /* ====== SELECIONADA (no simulado, sem feedback ainda) ====== */
   .alternativa.selecionada {
     border-color: var(--radix-blue);
-    background: linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%);
-    box-shadow: 0 3px 12px rgba(30,136,229,0.25);
-    transform: translateX(2px);
+    background: #EFF6FF;
+    box-shadow: 0 0 0 3px rgba(30,136,229,0.12);
   }
   .alternativa.selecionada .alternativa-letra {
     background: var(--radix-blue);
     border-color: var(--radix-blue);
     color: white;
-    box-shadow: 0 2px 6px rgba(30,136,229,0.35);
-  }
-  .alternativa.selecionada::after {
-    content: "●";
-    position: absolute;
-    right: 18px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--radix-blue);
-    font-size: 22px;
-    font-weight: 900;
   }
 
-  /* ===== CORRETA (gabarito após resposta) ===== */
+  /* ====== CORRETA (resposta certa do gabarito) ====== */
   .alternativa.correta {
     border-color: #16A34A;
-    background: linear-gradient(135deg, #DCFCE7 0%, #F0FDF4 100%);
-    box-shadow: 0 3px 12px rgba(22,163,74,0.25);
-    transform: translateX(2px);
+    background: #F0FDF4;
     cursor: default;
+    padding-right: 48px;
   }
   .alternativa.correta .alternativa-letra {
     background: #16A34A;
     border-color: #16A34A;
     color: white;
-    box-shadow: 0 2px 6px rgba(22,163,74,0.4);
   }
   .alternativa.correta::after {
     content: "✓";
@@ -432,36 +419,68 @@
     top: 50%;
     transform: translateY(-50%);
     color: #16A34A;
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 900;
     line-height: 1;
   }
 
-  /* ===== ERRADA (resposta marcada estava errada) ===== */
+  /* ====== ERRADA (marcou errado) ====== */
   .alternativa.errada {
     border-color: #DC2626;
-    background: linear-gradient(135deg, #FEE2E2 0%, #FEF2F2 100%);
-    box-shadow: 0 3px 12px rgba(220,38,38,0.25);
+    background: #FEF2F2;
     cursor: default;
-    opacity: 0.92;
+    padding-right: 48px;
   }
   .alternativa.errada .alternativa-letra {
     background: #DC2626;
     border-color: #DC2626;
     color: white;
-    box-shadow: 0 2px 6px rgba(220,38,38,0.4);
   }
   .alternativa.errada::after {
     content: "✗";
     position: absolute;
-    right: 18px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
     color: #DC2626;
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 900;
     line-height: 1;
   }
+
+  /* ====== Alternativas em IMAGEM (Q19 cubo, Q43 soja) ====== */
+  .alternativa.alt-img {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+  .alternativa.alt-img > * { flex: initial; }
+  .alternativa.alt-img .alternativa-letra { align-self: flex-start; }
+  /* Para imagens, ícone no canto superior direito em "badge" branco */
+  .alternativa.alt-img.correta,
+  .alternativa.alt-img.errada,
+  .alternativa.alt-img.selecionada {
+    padding-right: 12px;
+  }
+  .alternativa.alt-img.correta::after,
+  .alternativa.alt-img.errada::after,
+  .alternativa.alt-img.selecionada::after {
+    top: 8px;
+    right: 8px;
+    transform: none;
+    width: 28px;
+    height: 28px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: 2px solid currentColor;
+  }
+  .alternativa.alt-img.correta::after { color: #16A34A; }
+  .alternativa.alt-img.errada::after  { color: #DC2626; }
+  .alternativa.alt-img.selecionada::after { color: var(--radix-blue); content: "●"; }
 
   .explicacao {
     margin-top: 16px;
@@ -819,6 +838,178 @@
   }
   #form-signin button, #form-signup button { margin-top: 8px; }
 
+
+  /* ========= CRONOGRAMA 2026 ========= */
+  .cronograma-resumo {
+    background: linear-gradient(135deg, var(--radix-cyan) 0%, var(--radix-blue) 100%);
+    color: white;
+    padding: 22px 24px;
+    border-radius: 14px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  .cron-resumo-numero { font-size: 36px; font-weight: 800; line-height: 1; }
+  .cron-resumo-label { font-size: 14px; opacity: 0.95; margin-top: 6px; }
+  .cron-resumo-sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+  .cron-progress-bar {
+    height: 14px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .cron-progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+
+  .cron-modulo-bloco {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.06);
+    border: 1px solid var(--radix-border);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .cron-modulo-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 22px;
+    background: var(--mod-cor, var(--radix-blue-dark));
+    color: white;
+  }
+  .cron-modulo-numero {
+    font-size: 36px;
+    font-weight: 800;
+    font-family: 'Times New Roman', Georgia, serif;
+    line-height: 1;
+    opacity: 0.95;
+  }
+  .cron-modulo-info { flex: 1; }
+  .cron-modulo-info h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Times New Roman', Georgia, serif;
+  }
+  .cron-modulo-info p { font-size: 12px; margin: 3px 0 0 0; opacity: 0.9; }
+  .cron-modulo-stats {
+    background: rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .cron-semanas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    padding: 14px;
+  }
+  .cron-semana {
+    border: 1.5px solid var(--radix-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: white;
+    transition: all 0.15s;
+  }
+  .cron-semana:hover:not([onclick=""]) {
+    border-color: var(--radix-blue);
+    background: var(--radix-bg-soft);
+    transform: translateY(-1px);
+  }
+  .cron-semana.em_estudo { border-color: #F59E0B; background: #FFFBEB; }
+  .cron-semana.concluido { border-color: #16A34A; background: #F0FDF4; }
+  .cron-semana-topo { display: flex; gap: 10px; align-items: center; }
+  .cron-semana-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--radix-blue-dark);
+    text-align: center;
+    line-height: 1.1;
+    background: var(--radix-bg-soft);
+    padding: 6px 8px;
+    border-radius: 8px;
+    min-width: 38px;
+  }
+  .cron-semana-num b { font-size: 16px; display: block; }
+  .cron-semana-meta { flex: 1; min-width: 0; }
+  .cron-semana-data {
+    font-size: 11px;
+    color: var(--radix-gray-light);
+    font-weight: 600;
+  }
+  .cron-semana-titulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--radix-gray);
+    line-height: 1.3;
+    margin-top: 2px;
+  }
+  .cron-semana-status { font-size: 22px; }
+  .cron-semana-stats {
+    font-size: 11px;
+    color: var(--radix-gray-light);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--radix-border);
+  }
+  .cron-tipo {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-left: 4px;
+  }
+  .simulado-tipo { background: #FFEBEE; color: #C62828; }
+  .recesso-tipo  { background: #F3F4F6; color: #6B7280; }
+  .revisao-tipo  { background: #E3F2FD; color: #1565C0; }
+  .evento-tipo   { background: #FFF3E0; color: #E65100; }
+
+  /* Modal do editor de semana */
+  .status-opcoes { display: flex; flex-direction: column; gap: 8px; }
+  .status-opc {
+    padding: 10px 12px;
+    background: var(--radix-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status-opc input { margin: 0; }
+  .tecnicas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px;
+  }
+  .tecnica-item {
+    padding: 8px 12px;
+    background: var(--radix-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid transparent;
+  }
+  .tecnica-item.sel,
+  .tecnica-item:has(input:checked) {
+    background: var(--radix-bg-soft);
+    border-color: var(--radix-blue);
+  }
+  .tecnica-item input { margin: 0; }
+
 </style>
 </head>
 <body>
@@ -899,6 +1090,66 @@ const MODULOS = [
     subtitulo: 'Combinatória · Probabilidade · Estatística · Matrizes',
     cor: '#0277BD',
     temas: ['combinatoria','probabilidade','estatistica','matrizes','sistemas-lineares'] },
+  { id: 'm5', numero: '05', nome: 'Revisão Geral',
+    subtitulo: 'Revisão completa para a reta final',
+    cor: '#1565C0',
+    temas: [] },
+];
+
+// ====== CRONOGRAMA ANUAL 2026 ======
+const CRONOGRAMA_2026 = [
+  { n: 0,  data: '26/01', titulo: 'Aula de abertura',                       moduloId: 'm1', temaId: null, tipo: 'evento' },
+  { n: 1,  data: '02/02', titulo: 'Sistema de Numeração e Métrico Decimal', moduloId: 'm1', temaId: 'sist-numeracao' },
+  { n: 2,  data: '09/02', titulo: 'Problemas sobre as 4 operações',         moduloId: 'm1', temaId: 'operacoes' },
+  { n: 3,  data: '23/02', titulo: 'Lógica Matemática',                       moduloId: 'm1', temaId: 'logica' },
+  { n: 4,  data: '02/03', titulo: 'Múltiplos e Divisores',                   moduloId: 'm1', temaId: 'multiplos' },
+  { n: 5,  data: '09/03', titulo: 'Razão e Proporção',                       moduloId: 'm1', temaId: 'razao-proporcao' },
+  { n: 6,  data: '16/03', titulo: 'Porcentagem',                             moduloId: 'm1', temaId: 'porcentagem' },
+  { n: 7,  data: '23/03', titulo: 'Interpretação de gráficos e tabelas',     moduloId: 'm1', temaId: 'interp-graficos' },
+  { n: 8,  data: '30/03', titulo: 'Geometria Plana I',                       moduloId: 'm2', temaId: 'geo-plana' },
+  { n: 9,  data: '06/04', titulo: 'Geometria Plana II',                      moduloId: 'm2', temaId: 'geo-plana' },
+  { n: 10, data: '13/04', titulo: 'Trigonometria no Triângulo',              moduloId: 'm2', temaId: 'trigonometria' },
+  { n: 11, data: '20/04', titulo: 'Geometria Espacial I',                    moduloId: 'm2', temaId: 'geo-espacial' },
+  { n: 12, data: '27/04', titulo: 'Geometria Espacial II',                   moduloId: 'm2', temaId: 'geo-espacial' },
+  { n: 13, data: '04/05', titulo: 'Geometria Analítica',                     moduloId: 'm2', temaId: 'geo-analitica' },
+  { n: 14, data: '11/05', titulo: 'Conjuntos e Conjuntos Numéricos',         moduloId: 'm3', temaId: 'conjuntos' },
+  { n: 15, data: '18/05', titulo: 'Função do 1º grau',                       moduloId: 'm3', temaId: 'fun-1grau' },
+  { n: 16, data: '25/05', titulo: 'Função do 2º grau',                       moduloId: 'm3', temaId: 'fun-2grau' },
+  { n: 17, data: '01/06', titulo: 'Potências e Raízes',                      moduloId: 'm3', temaId: 'potencias' },
+  { n: 18, data: '08/06', titulo: 'Função Exponencial',                      moduloId: 'm3', temaId: 'exponencial' },
+  { n: 19, data: '15/06', titulo: 'Função Logarítmica',                      moduloId: 'm3', temaId: 'logaritmica' },
+  { n: 20, data: '22/06', titulo: 'Funções Trigonométricas',                 moduloId: 'm3', temaId: 'fun-trig' },
+  { n: 21, data: '29/06', titulo: 'SIMULADO',                                moduloId: 'm3', temaId: null, tipo: 'simulado' },
+  { n: 22, data: '06/07', titulo: 'RECESSO',                                 moduloId: 'm3', temaId: null, tipo: 'recesso' },
+  { n: 23, data: '13/07', titulo: 'Progressão Aritmética',                   moduloId: 'm3', temaId: 'pa' },
+  { n: 24, data: '20/07', titulo: 'Progressão Geométrica',                   moduloId: 'm3', temaId: 'pg' },
+  { n: 25, data: '27/07', titulo: 'Matemática Financeira',                   moduloId: 'm3', temaId: 'financeira' },
+  { n: 26, data: '03/08', titulo: 'Análise Combinatória I',                  moduloId: 'm4', temaId: 'combinatoria' },
+  { n: 27, data: '10/08', titulo: 'Análise Combinatória II',                 moduloId: 'm4', temaId: 'combinatoria' },
+  { n: 28, data: '17/08', titulo: 'Probabilidade I',                         moduloId: 'm4', temaId: 'probabilidade' },
+  { n: 29, data: '24/08', titulo: 'Probabilidade II',                        moduloId: 'm4', temaId: 'probabilidade' },
+  { n: 30, data: '31/08', titulo: 'Estatística',                             moduloId: 'm4', temaId: 'estatistica' },
+  { n: 31, data: '07/09', titulo: 'Matrizes',                                moduloId: 'm4', temaId: 'matrizes' },
+  { n: 32, data: '14/09', titulo: 'Sistemas Lineares',                       moduloId: 'm4', temaId: 'sistemas-lineares' },
+  { n: 33, data: '21/09', titulo: 'Revisão I',                               moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 34, data: '28/09', titulo: 'Revisão II',                              moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 35, data: '05/10', titulo: 'Revisão III',                             moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 36, data: '12/10', titulo: 'Revisão IV',                              moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 37, data: '19/10', titulo: 'Revisão V',                               moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 38, data: '26/10', titulo: 'Revisão VI',                              moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 39, data: '02/11', titulo: 'Revisão VII',                             moduloId: 'm5', temaId: null, tipo: 'revisao' },
+];
+
+// Técnicas de estudo que o aluno pode marcar
+const TECNICAS_ESTUDO = [
+  { id: 'aula',       nome: 'Assistiu aula',          emoji: '👨‍🏫' },
+  { id: 'videoaula',  nome: 'Videoaula',              emoji: '🎬' },
+  { id: 'teoria',     nome: 'Estudou teoria/livro',   emoji: '📖' },
+  { id: 'resumo',     nome: 'Fez resumo',             emoji: '📝' },
+  { id: 'mapa',       nome: 'Mapa mental',            emoji: '🧠' },
+  { id: 'flashcards', nome: 'Flashcards',             emoji: '🃏' },
+  { id: 'lista',      nome: 'Lista de exercícios',    emoji: '✏️' },
+  { id: 'questoes',   nome: 'Banco de questões',      emoji: '🎯' },
 ];
 
 const TEMAS = [
@@ -1320,6 +1571,8 @@ let state = {
   simuladoAtual: null,
   historicoSimulados: [],
   temaAtual: null,
+  progressoCronograma: {}, // { semanaNumero: {status, tecnicas, nota_pessoal} }
+  semanaEditando: null,
 };
 
 // ========== PERSISTÊNCIA (Supabase) ==========
@@ -1351,6 +1604,9 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
+  // Carrega progresso do cronograma em paralelo
+  await carregarProgressoCronograma();
+
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
   const { data: resp } = await sb.from('respostas')
     .select('*')
@@ -1522,6 +1778,10 @@ function renderHome() {
       <h2 class="section-title"><span class="section-title-accent"></span>Olá, ${state.usuario.nome}!</h2>
       <div class="tagline-bar">√ "Raiz que vira resultado" — vamos praticar matemática hoje?</div>
       <div class="quick-actions">
+        <div class="quick-card" onclick="renderCronograma()">
+          <div class="icon" style="background:#FFF3E0;color:#E65100;">📅</div>
+          <div><h3>Cronograma 2026</h3><p>Plano anual e meu progresso</p></div>
+        </div>
         <div class="quick-card" onclick="abrirSimuladoConfig()">
           <div class="icon red">⏱</div>
           <div><h3>Fazer Simulado</h3><p>Prova cronometrada</p></div>
@@ -2412,6 +2672,233 @@ function renderRelatorioProfessor() {
     data: { labels, datasets: [{ label: '% acerto', data: taxas, backgroundColor: '#1E88E5', borderRadius: 6 }] },
     options: { scales: { y: { beginAtZero: true, max: 100 } } }
   });
+}
+
+
+// ========== CRONOGRAMA 2026 ==========
+
+async function carregarProgressoCronograma() {
+  state.progressoCronograma = {};
+  if (!state.usuario?.id) return;
+  const { data } = await sb.from('progresso_semanas')
+    .select('*')
+    .eq('aluno_id', state.usuario.id);
+  (data || []).forEach(p => {
+    state.progressoCronograma[p.semana_numero] = {
+      status: p.status,
+      tecnicas: p.tecnicas || [],
+      nota_pessoal: p.nota_pessoal || ''
+    };
+  });
+}
+
+function statsDaSemana(semana) {
+  // Conta respostas do aluno em questões do tema dessa semana
+  if (!semana.temaId) return { total: 0, acertos: 0, taxa: 0 };
+  const resp = state.respostasAluno.filter(r => r.tema === semana.temaId);
+  const total = resp.length;
+  const acertos = resp.filter(r => r.correto).length;
+  const taxa = total ? Math.round((acertos / total) * 100) : 0;
+  return { total, acertos, taxa };
+}
+
+function statusDaSemana(numero) {
+  return state.progressoCronograma[numero]?.status || 'nao_iniciado';
+}
+
+function renderCronograma() {
+  state.view = 'cronograma';
+  const main = document.getElementById('main-content');
+
+  // Calcula progresso geral
+  let totalSemanas = 0, concluidas = 0, emEstudo = 0;
+  CRONOGRAMA_2026.forEach(s => {
+    if (s.tipo === 'recesso') return;
+    totalSemanas++;
+    const st = statusDaSemana(s.n);
+    if (st === 'concluido') concluidas++;
+    else if (st === 'em_estudo') emEstudo++;
+  });
+  const pctConcluido = Math.round((concluidas / totalSemanas) * 100);
+
+  // Agrupa semanas por modulo
+  const semanasPorMod = {};
+  MODULOS.forEach(m => semanasPorMod[m.id] = []);
+  CRONOGRAMA_2026.forEach(s => semanasPorMod[s.moduloId].push(s));
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Cronograma 2026</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>📅 Cronograma 2026 — Matemática</h2>
+
+    <div class="cronograma-resumo">
+      <div class="cron-resumo-info">
+        <div class="cron-resumo-numero">${concluidas} / ${totalSemanas}</div>
+        <div class="cron-resumo-label">semanas concluídas (${pctConcluido}%)</div>
+        <div class="cron-resumo-sub">${emEstudo} em estudo · ${totalSemanas - concluidas - emEstudo} a fazer</div>
+      </div>
+      <div class="cron-progress-bar">
+        <div class="cron-progress-fill" style="width: ${pctConcluido}%;"></div>
+      </div>
+    </div>
+
+    ${MODULOS.map(mod => {
+      const semanas = semanasPorMod[mod.id];
+      const semOk = semanas.filter(s => s.tipo !== 'recesso' && statusDaSemana(s.n) === 'concluido').length;
+      const semTotal = semanas.filter(s => s.tipo !== 'recesso').length;
+      return `
+        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
+          <div class="cron-modulo-header">
+            <div class="cron-modulo-numero">${mod.numero}</div>
+            <div class="cron-modulo-info">
+              <h3>${mod.nome}</h3>
+              <p>${mod.subtitulo}</p>
+            </div>
+            <div class="cron-modulo-stats">${semOk}/${semTotal}</div>
+          </div>
+          <div class="cron-semanas-grid">
+            ${semanas.map(s => renderSemanaCard(s)).join('')}
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function renderSemanaCard(s) {
+  const st = statusDaSemana(s.n);
+  const stats = statsDaSemana(s);
+  const stIcon = { 'nao_iniciado': '⚪', 'em_estudo': '🟡', 'concluido': '✅' }[st];
+  const stLabel = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' }[st];
+  const tipoBadge = s.tipo === 'simulado' ? '<span class="cron-tipo simulado-tipo">SIMULADO</span>' :
+                    s.tipo === 'recesso'  ? '<span class="cron-tipo recesso-tipo">RECESSO</span>' :
+                    s.tipo === 'revisao'  ? '<span class="cron-tipo revisao-tipo">REVISÃO</span>' :
+                    s.tipo === 'evento'   ? '<span class="cron-tipo evento-tipo">EVENTO</span>' : '';
+  const podeMarcar = s.tipo !== 'recesso';
+  return `
+    <div class="cron-semana ${st}" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
+      <div class="cron-semana-topo">
+        <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
+        <div class="cron-semana-meta">
+          <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
+          <div class="cron-semana-titulo">${s.titulo}</div>
+        </div>
+        <div class="cron-semana-status" title="${stLabel}">${stIcon}</div>
+      </div>
+      ${s.temaId ? `
+        <div class="cron-semana-stats">
+          <span>📝 ${stats.total} ${stats.total === 1 ? 'questão' : 'questões'}</span>
+          ${stats.total > 0 ? `<span>· 🎯 ${stats.taxa}% acerto</span>` : ''}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function abrirEditorSemana(n) {
+  const s = CRONOGRAMA_2026.find(x => x.n === n);
+  if (!s || s.tipo === 'recesso') return;
+  state.semanaEditando = n;
+  const prog = state.progressoCronograma[n] || { status: 'nao_iniciado', tecnicas: [], nota_pessoal: '' };
+  const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
+
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalSemana()">
+      <div class="modal" style="max-width:560px;">
+        <h2>Semana ${String(s.n).padStart(2,'0')} — ${s.titulo}</h2>
+        <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:18px;">
+          Início: ${s.data}/2026 ${tema ? '· Tema: '+tema.nome : ''}
+        </p>
+
+        <div class="form-group">
+          <label>Status</label>
+          <div class="status-opcoes">
+            <label class="status-opc"><input type="radio" name="status-radio" value="nao_iniciado" ${prog.status==='nao_iniciado'?'checked':''}> <span>⚪ Não iniciado</span></label>
+            <label class="status-opc"><input type="radio" name="status-radio" value="em_estudo" ${prog.status==='em_estudo'?'checked':''}> <span>🟡 Em estudo</span></label>
+            <label class="status-opc"><input type="radio" name="status-radio" value="concluido" ${prog.status==='concluido'?'checked':''}> <span>✅ Concluído</span></label>
+          </div>
+        </div>
+
+        <div class="form-group" id="grupo-tecnicas" style="${prog.status==='nao_iniciado'?'display:none;':''}">
+          <label>Como você está estudando esta semana? (pode marcar várias)</label>
+          <div class="tecnicas-grid">
+            ${TECNICAS_ESTUDO.map(t => `
+              <label class="tecnica-item ${prog.tecnicas.includes(t.id)?'sel':''}">
+                <input type="checkbox" value="${t.id}" ${prog.tecnicas.includes(t.id)?'checked':''}>
+                <span>${t.emoji} ${t.nome}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notas pessoais (opcional)</label>
+          <textarea id="semana-nota" rows="3" placeholder="Dúvidas, observações, o que revisar...">${prog.nota_pessoal || ''}</textarea>
+        </div>
+
+        ${tema ? `
+          <div class="form-group" style="display:flex;gap:8px;flex-wrap:wrap;background:var(--radix-bg);padding:12px;border-radius:8px;">
+            <button class="btn btn-secondary" onclick="fecharModalSemana();abrirTema('${tema.id}')">🎯 Praticar questões</button>
+            <button class="btn btn-secondary" onclick="fecharModalSemana();fazerMiniSimulado('${tema.id}')">⏱ Mini-simulado (10 questões)</button>
+          </div>
+        ` : ''}
+
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalSemana()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarSemana()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-semana">${html}</div>`);
+  // Mostra/esconde tecnicas conforme muda status
+  document.querySelectorAll('[name="status-radio"]').forEach(r => {
+    r.addEventListener('change', () => {
+      document.getElementById('grupo-tecnicas').style.display = r.value === 'nao_iniciado' ? 'none' : 'block';
+    });
+  });
+}
+
+function fecharModalSemana() {
+  const m = document.getElementById('modal-semana');
+  if (m) m.remove();
+  state.semanaEditando = null;
+}
+
+async function salvarSemana() {
+  const n = state.semanaEditando;
+  if (n === null) return;
+  const statusEl = document.querySelector('[name="status-radio"]:checked');
+  const status = statusEl ? statusEl.value : 'nao_iniciado';
+  const tecnicas = [...document.querySelectorAll('#grupo-tecnicas input[type=checkbox]:checked')].map(c => c.value);
+  const nota = document.getElementById('semana-nota').value.trim();
+
+  state.progressoCronograma[n] = { status, tecnicas, nota_pessoal: nota };
+
+  const { error } = await sb.from('progresso_semanas').upsert({
+    aluno_id: state.usuario.id,
+    semana_numero: n,
+    status, tecnicas, nota_pessoal: nota,
+    atualizado_em: new Date().toISOString()
+  }, { onConflict: 'aluno_id,semana_numero' });
+
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+  fecharModalSemana();
+  renderCronograma();
+}
+
+function fazerMiniSimulado(temaId) {
+  // Sorteia até 10 questões do tema e inicia simulado de 10 min
+  let pool = state.questoes.filter(q => q.tema === temaId);
+  if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
+  const num = Math.min(10, pool.length);
+  pool = pool.sort(() => Math.random() - 0.5).slice(0, num);
+  state.simuladoAtual = {
+    questoes: pool, respostas: {}, indiceAtual: 0,
+    tempoTotal: 10 * 60, tempoRestante: 10 * 60,
+    iniciadoEm: Date.now(), finalizado: false,
+  };
+  renderSimulado();
+  iniciarCronometro();
 }
 
 // ========== INIT ==========
