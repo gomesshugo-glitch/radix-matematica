@@ -1249,26 +1249,92 @@ let state = {
   temaAtual: null,
 };
 
-// ========== PERSISTÊNCIA ==========
+// ========== PERSISTÊNCIA (Supabase) ==========
+// Funções legadas mantidas para compatibilidade — agora salvam no banco
 function salvarDados() {
-  // Não salva o array completo (muito grande com imagens) — recarrega do código
-  localStorage.setItem('radix_respostas', JSON.stringify(state.respostasAluno));
-  localStorage.setItem('radix_simulados', JSON.stringify(state.historicoSimulados));
+  // Nada a fazer aqui — cada resposta/simulado é salvo direto no Supabase
 }
 
-function carregarDados() {
-  // Limpa caches antigos (versões com array de questões salvo)
+async function carregarDados() {
+  // Limpar caches antigos do localStorage (versões anteriores)
   localStorage.removeItem('radix_questoes');
   localStorage.removeItem('radix_questoes_enem25');
   localStorage.removeItem('radix_questoes_radix26');
-  // Questões sempre vêm direto do código (já que têm imagens grandes embutidas)
+  localStorage.removeItem('radix_respostas');
+  localStorage.removeItem('radix_simulados');
+
+  // Questões: sempre vêm do código (imagens grandes)
   state.questoes = QUESTOES_INICIAIS.slice();
-  // Variável "q" mantida para compatibilidade com código abaixo
-  const q = null;
-  const r = localStorage.getItem('radix_respostas');
-  state.respostasAluno = r ? JSON.parse(r) : [];
-  const s = localStorage.getItem('radix_simulados');
-  state.historicoSimulados = s ? JSON.parse(s) : [];
+  state.respostasAluno = [];
+  state.historicoSimulados = [];
+
+  if (!state.usuario?.id) return;
+
+  if (state.usuario.perfil === 'professor') {
+    await carregarDadosProfessor();
+  } else {
+    await carregarDadosAluno();
+  }
+}
+
+async function carregarDadosAluno() {
+  // Carrega só as respostas e simulados deste aluno (RLS já filtra)
+  const { data: resp } = await sb.from('respostas')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .order('respondido_em', { ascending: false })
+    .limit(2000);
+  state.respostasAluno = (resp || []).map(r => ({
+    questaoId: r.questao_id, tema: r.tema,
+    resposta: r.resposta_marcada, correto: r.correto,
+    data: r.respondido_em, aluno: state.usuario.nome,
+    fonte: r.fonte
+  }));
+  const { data: sim } = await sb.from('simulados_realizados')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .order('realizado_em', { ascending: false })
+    .limit(500);
+  state.historicoSimulados = (sim || []).map(s => ({
+    id: s.id, aluno: state.usuario.nome,
+    data: s.realizado_em, acertos: s.acertos,
+    total: s.total_questoes, percentual: s.percentual,
+    tempoUsado: s.tempo_usado_seg
+  }));
+}
+
+async function carregarDadosProfessor() {
+  // Professor vê tudo (RLS permite via is_professor())
+  const { data: perfis } = await sb.from('perfis').select('id, nome, email');
+  const perfilMap = {};
+  (perfis || []).forEach(p => perfilMap[p.id] = p);
+
+  const { data: resp } = await sb.from('respostas')
+    .select('*')
+    .order('respondido_em', { ascending: false })
+    .limit(5000);
+  state.respostasAluno = (resp || []).map(r => ({
+    questaoId: r.questao_id, tema: r.tema,
+    resposta: r.resposta_marcada, correto: r.correto,
+    data: r.respondido_em,
+    aluno: perfilMap[r.aluno_id]?.nome || 'Aluno',
+    aluno_email: perfilMap[r.aluno_id]?.email,
+    aluno_id: r.aluno_id,
+    fonte: r.fonte
+  }));
+
+  const { data: sim } = await sb.from('simulados_realizados')
+    .select('*')
+    .order('realizado_em', { ascending: false })
+    .limit(1000);
+  state.historicoSimulados = (sim || []).map(s => ({
+    id: s.id,
+    aluno: perfilMap[s.aluno_id]?.nome || 'Aluno',
+    aluno_id: s.aluno_id,
+    data: s.realizado_em, acertos: s.acertos,
+    total: s.total_questoes, percentual: s.percentual,
+    tempoUsado: s.tempo_usado_seg
+  }));
 }
 
 // ========== AUTENTICAÇÃO SUPABASE ==========
@@ -1354,7 +1420,7 @@ async function iniciarSessao() {
   const perfil = ADMIN_EMAILS.includes(user.email) ? 'professor' : 'aluno';
   const nome = user.user_metadata?.nome || user.email.split('@')[0];
   state.usuario = { nome, perfil, email: user.email, id: user.id };
-  carregarDados();
+  await carregarDados();
   mostrarApp();
 }
 
@@ -1600,15 +1666,19 @@ function responderQuestao(qid, idx) {
       ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
     </div>
   `;
-  state.respostasAluno.push({
-    questaoId: qid,
-    tema: q.tema,
-    resposta: idx,
-    correto: idx === q.correta,
+  const correto = idx === q.correta;
+  const nova = {
+    questaoId: qid, tema: q.tema,
+    resposta: idx, correto: correto,
     data: new Date().toISOString(),
-    aluno: state.usuario.nome,
-  });
-  salvarDados();
+    aluno: state.usuario.nome, fonte: 'estudo'
+  };
+  state.respostasAluno.push(nova);
+  // Salva no Supabase de forma assíncrona (não bloqueia UI)
+  sb.from('respostas').insert({
+    aluno_id: state.usuario.id, questao_id: qid, tema: q.tema,
+    resposta_marcada: idx, correto: correto, fonte: 'estudo'
+  }).then(({ error }) => { if (error) console.warn('Erro salvar resposta:', error); });
 }
 
 // ========== SIMULADO ==========
@@ -1833,19 +1903,22 @@ function finalizarSimulado(porTempo) {
   sim.finalizado = true;
 
   let acertos = 0;
+  const respostasParaSalvar = [];
   const detalhes = sim.questoes.map(q => {
     const resposta = sim.respostas[q.id];
     const correto = resposta === q.correta;
     if (correto) acertos++;
     if (resposta !== undefined) {
-      state.respostasAluno.push({
-        questaoId: q.id,
-        tema: q.tema,
-        resposta,
-        correto,
+      const nova = {
+        questaoId: q.id, tema: q.tema,
+        resposta, correto,
         data: new Date().toISOString(),
-        aluno: state.usuario.nome,
-        fonte: 'simulado',
+        aluno: state.usuario.nome, fonte: 'simulado'
+      };
+      state.respostasAluno.push(nova);
+      respostasParaSalvar.push({
+        aluno_id: state.usuario.id, questao_id: q.id, tema: q.tema,
+        resposta_marcada: resposta, correto: correto, fonte: 'simulado'
       });
     }
     return { questao: q, resposta, correto };
@@ -1857,14 +1930,25 @@ function finalizarSimulado(porTempo) {
     id: Date.now(),
     aluno: state.usuario.nome,
     data: new Date().toISOString(),
-    acertos,
-    total,
+    acertos, total,
     percentual: Math.round((acertos / total) * 100),
-    tempoUsado,
-    detalhes,
+    tempoUsado, detalhes,
   };
   state.historicoSimulados.push(registro);
-  salvarDados();
+
+  // Salva o simulado e as respostas no Supabase em paralelo
+  Promise.all([
+    sb.from('simulados_realizados').insert({
+      aluno_id: state.usuario.id,
+      total_questoes: total, acertos: acertos,
+      percentual: registro.percentual,
+      tempo_usado_seg: tempoUsado,
+      questoes_ids: sim.questoes.map(q => q.id)
+    }),
+    respostasParaSalvar.length ? sb.from('respostas').insert(respostasParaSalvar) : Promise.resolve()
+  ]).then(results => {
+    results.forEach(r => { if (r?.error) console.warn('Erro salvar simulado:', r.error); });
+  });
 
   renderResultadoSimulado(registro, porTempo);
 }
