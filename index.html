@@ -355,36 +355,113 @@
   }
   .alternativas { display: flex; flex-direction: column; gap: 8px; }
   .alternativa {
-    padding: 12px 16px;
+    padding: 14px 48px 14px 16px;
     border: 2px solid var(--radix-border);
     border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    transition: all 0.15s;
+    gap: 14px;
+    transition: all 0.2s ease;
     background: white;
+    position: relative;
   }
-  .alternativa:hover { border-color: var(--radix-cyan); background: var(--radix-bg-soft); }
-  .alternativa.selecionada { border-color: var(--radix-blue); background: var(--radix-bg-soft); }
-  .alternativa.correta { border-color: #16a34a; background: #F1F8E9; }
-  .alternativa.errada { border-color: var(--radix-red); background: #FFEBEE; }
+  .alternativa:hover {
+    border-color: var(--radix-cyan);
+    background: var(--radix-bg-soft);
+    transform: translateX(2px);
+  }
   .alternativa-letra {
-    background: #F3F4F6;
-    width: 28px;
-    height: 28px;
+    background: white;
+    border: 2px solid #B0BEC5;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 13px;
+    font-weight: 800;
+    font-size: 14px;
     flex-shrink: 0;
     color: var(--radix-gray);
+    transition: all 0.2s ease;
   }
-  .alternativa.selecionada .alternativa-letra { background: var(--radix-blue); color: white; }
-  .alternativa.correta .alternativa-letra { background: #16a34a; color: white; }
-  .alternativa.errada .alternativa-letra { background: var(--radix-red); color: white; }
+
+  /* ===== SELECIONADA (durante simulado) ===== */
+  .alternativa.selecionada {
+    border-color: var(--radix-blue);
+    background: linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%);
+    box-shadow: 0 3px 12px rgba(30,136,229,0.25);
+    transform: translateX(2px);
+  }
+  .alternativa.selecionada .alternativa-letra {
+    background: var(--radix-blue);
+    border-color: var(--radix-blue);
+    color: white;
+    box-shadow: 0 2px 6px rgba(30,136,229,0.35);
+  }
+  .alternativa.selecionada::after {
+    content: "●";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--radix-blue);
+    font-size: 22px;
+    font-weight: 900;
+  }
+
+  /* ===== CORRETA (gabarito após resposta) ===== */
+  .alternativa.correta {
+    border-color: #16A34A;
+    background: linear-gradient(135deg, #DCFCE7 0%, #F0FDF4 100%);
+    box-shadow: 0 3px 12px rgba(22,163,74,0.25);
+    transform: translateX(2px);
+    cursor: default;
+  }
+  .alternativa.correta .alternativa-letra {
+    background: #16A34A;
+    border-color: #16A34A;
+    color: white;
+    box-shadow: 0 2px 6px rgba(22,163,74,0.4);
+  }
+  .alternativa.correta::after {
+    content: "✓";
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #16A34A;
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  /* ===== ERRADA (resposta marcada estava errada) ===== */
+  .alternativa.errada {
+    border-color: #DC2626;
+    background: linear-gradient(135deg, #FEE2E2 0%, #FEF2F2 100%);
+    box-shadow: 0 3px 12px rgba(220,38,38,0.25);
+    cursor: default;
+    opacity: 0.92;
+  }
+  .alternativa.errada .alternativa-letra {
+    background: #DC2626;
+    border-color: #DC2626;
+    color: white;
+    box-shadow: 0 2px 6px rgba(220,38,38,0.4);
+  }
+  .alternativa.errada::after {
+    content: "✗";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #DC2626;
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+  }
 
   .explicacao {
     margin-top: 16px;
@@ -481,11 +558,7 @@
     color: #1A1A1A;
     font-weight: 700;
   }
-  .questao-card.enem-style .alternativa.selecionada .alternativa-letra,
-  .questao-card.enem-style .alternativa.correta .alternativa-letra,
-  .questao-card.enem-style .alternativa.errada .alternativa-letra {
-    border-color: transparent;
-  }
+  /* Estados das letras já tratados nos seletores principais — sem override no estilo ENEM */
 
   .acoes-questao {
     display: flex;
