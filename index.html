@@ -4320,10 +4320,10 @@ async function salvarMaterial(matId, tipo) {
       const oldT = btn.textContent;
       btn.textContent = 'Enviando arquivo...';
       btn.disabled = true;
-      const { error: upErr } = await sb.storage.from('materiais').upload(storage_path, file, { contentType: 'application/pdf' });
+      const { error: upErr } = await sb.storage.from('Materiais').upload(storage_path, file, { contentType: 'application/pdf' });
       btn.disabled = false; btn.textContent = oldT;
       if (upErr) { alert('Erro no upload: ' + upErr.message); return; }
-      url = sb.storage.from('materiais').getPublicUrl(storage_path).data.publicUrl;
+      url = sb.storage.from('Materiais').getPublicUrl(storage_path).data.publicUrl;
     }
   } else {
     url = document.getElementById('mat-url').value.trim();
@@ -4365,7 +4365,7 @@ async function excluirMaterial(matId) {
   const m = materiaisCache.find(x => x.id === matId);
   // Se for PDF, apaga do Storage também
   if (m && m.storage_path) {
-    await sb.storage.from('materiais').remove([m.storage_path]);
+    await sb.storage.from('Materiais').remove([m.storage_path]);
   }
   await sb.from('materiais').delete().eq('id', matId);
   renderGerenciarMateriais();
