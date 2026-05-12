@@ -1207,6 +1207,39 @@
     text-transform: uppercase;
   }
 
+
+  /* Resumo de materiais (header da página) */
+  .materiais-resumo {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .mat-resumo-item {
+    background: white;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--radix-border);
+    font-size: 13px;
+    color: var(--radix-gray);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mat-resumo-icon { font-size: 16px; }
+  /* Seção de tema dentro do módulo */
+  .mat-tema-secao { margin-bottom: 22px; }
+  .mat-tema-secao:last-child { margin-bottom: 0; }
+  .mat-tema-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--radix-blue-dark);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--radix-bg-soft);
+  }
+
 </style>
 </head>
 <body>
@@ -3947,66 +3980,120 @@ async function renderVideoAulas() {
   await carregarMateriais();
   const main = document.getElementById('main-content');
 
-  const aulas = materiaisCache.filter(m => m.tipo === 'aula_youtube' && m.visivel);
-  const pdfs = materiaisCache.filter(m => m.tipo === 'pdf' && m.visivel);
-  const links = materiaisCache.filter(m => m.tipo === 'link_externo' && m.visivel);
+  const visiveis = materiaisCache.filter(m => m.visivel);
+
+  // Agrupar por módulo (e dentro do módulo, por tema)
+  const porModulo = {};
+  MODULOS.forEach(mod => porModulo[mod.id] = []);
+  const semModulo = [];
+  visiveis.forEach(mat => {
+    if (mat.modulo_id && porModulo[mat.modulo_id]) porModulo[mat.modulo_id].push(mat);
+    else semModulo.push(mat);
+  });
+
+  // Contadores totais
+  const totAulas = visiveis.filter(m => m.tipo === 'aula_youtube').length;
+  const totPDFs  = visiveis.filter(m => m.tipo === 'pdf').length;
+  const totLinks = visiveis.filter(m => m.tipo === 'link_externo').length;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Vídeo-aulas</div>
     <h2 class="section-title"><span class="section-title-accent"></span>🎬 Vídeo-aulas e Materiais</h2>
 
+    <div class="materiais-resumo">
+      <div class="mat-resumo-item"><span class="mat-resumo-icon">🎬</span> ${totAulas} vídeo-aula${totAulas!==1?'s':''}</div>
+      <div class="mat-resumo-item"><span class="mat-resumo-icon">📄</span> ${totPDFs} PDF${totPDFs!==1?'s':''}</div>
+      <div class="mat-resumo-item"><span class="mat-resumo-icon">🔗</span> ${totLinks} link${totLinks!==1?'s':''}</div>
+    </div>
+
     <div class="filtros">
-      <select id="filtro-modulo" onchange="renderVideoAulas()">
-        <option value="">Todos os módulos</option>
-        ${MODULOS.map(m => `<option value="${m.id}">Módulo ${m.numero} — ${m.nome}</option>`).join('')}
-      </select>
-      <select id="filtro-tipo" onchange="renderVideoAulas()">
+      <select id="filtro-tipo" onchange="filtrarMateriais()">
         <option value="">Todos os tipos</option>
         <option value="aula_youtube">🎬 Apenas vídeo-aulas</option>
         <option value="pdf">📄 Apenas PDFs</option>
         <option value="link_externo">🔗 Apenas links</option>
       </select>
+      <input type="text" id="filtro-busca" placeholder="🔍 Buscar por título..." oninput="filtrarMateriais()" style="flex:1;min-width:180px;">
     </div>
 
-    ${aulas.length > 0 ? `
-      <h3 class="section-title"><span class="section-title-accent"></span>🎬 Vídeo-aulas (${aulas.length})</h3>
-      <div class="materiais-grid">
-        ${aulas.map(m => cardMaterial(m)).join('')}
-      </div>
-    ` : ''}
-
-    ${pdfs.length > 0 ? `
-      <h3 class="section-title"><span class="section-title-accent"></span>📄 PDFs e Apostilas (${pdfs.length})</h3>
-      <div class="materiais-grid">
-        ${pdfs.map(m => cardMaterial(m)).join('')}
-      </div>
-    ` : ''}
-
-    ${links.length > 0 ? `
-      <h3 class="section-title"><span class="section-title-accent"></span>🔗 Links extras (${links.length})</h3>
-      <div class="materiais-grid">
-        ${links.map(m => cardMaterial(m)).join('')}
-      </div>
-    ` : ''}
-
-    ${(aulas.length + pdfs.length + links.length) === 0 ? `
-      <div style="text-align:center;padding:40px;color:var(--radix-gray-light);">
+    ${visiveis.length === 0 ? `
+      <div style="text-align:center;padding:48px;color:var(--radix-gray-light);background:white;border-radius:12px;">
         <div style="font-size:48px;margin-bottom:8px;">📭</div>
         Nenhum material publicado ainda.
       </div>
+    ` : MODULOS.map(mod => {
+      const mats = porModulo[mod.id];
+      if (mats.length === 0) return '';
+      // Agrupar por tema dentro do módulo
+      const porTema = {};
+      mats.forEach(m => {
+        const tk = m.tema_id || '__sem_tema__';
+        if (!porTema[tk]) porTema[tk] = [];
+        porTema[tk].push(m);
+      });
+      // Ordenar temas pela ordem definida no módulo
+      const temasOrdenados = [...mod.temas, '__sem_tema__'].filter(t => porTema[t]);
+      return `
+        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
+          <div class="cron-modulo-header">
+            <div class="cron-modulo-numero">${mod.numero}</div>
+            <div class="cron-modulo-info">
+              <h3>${mod.nome}</h3>
+              <p>${mod.subtitulo}</p>
+            </div>
+            <div class="cron-modulo-stats">${mats.length}</div>
+          </div>
+          <div style="padding:14px;">
+            ${temasOrdenados.map(tid => {
+              const tema = tid === '__sem_tema__' ? null : TEMAS.find(t => t.id === tid);
+              return `
+                <div class="mat-tema-secao">
+                  <h4 class="mat-tema-titulo">${tema ? '√ ' + tema.nome : 'Sem tema específico'}</h4>
+                  <div class="materiais-grid">
+                    ${porTema[tid].map(m => cardMaterial(m)).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('')}
+
+    ${semModulo.length > 0 ? `
+      <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;">
+        <div class="cron-modulo-header">
+          <div class="cron-modulo-numero">+</div>
+          <div class="cron-modulo-info">
+            <h3>Materiais Gerais</h3>
+            <p>Sem vínculo com módulo específico</p>
+          </div>
+          <div class="cron-modulo-stats">${semModulo.length}</div>
+        </div>
+        <div style="padding:14px;">
+          <div class="materiais-grid">
+            ${semModulo.map(m => cardMaterial(m)).join('')}
+          </div>
+        </div>
+      </div>
     ` : ''}
   `;
+}
 
-  // Aplicar filtros
-  const fm = document.getElementById('filtro-modulo').value;
+function filtrarMateriais() {
   const ft = document.getElementById('filtro-tipo').value;
-  if (fm || ft) {
-    document.querySelectorAll('.card-material').forEach(c => {
-      const okM = !fm || c.dataset.modulo === fm;
-      const okT = !ft || c.dataset.tipo === ft;
-      c.style.display = (okM && okT) ? '' : 'none';
-    });
-  }
+  const fb = document.getElementById('filtro-busca').value.toLowerCase();
+  document.querySelectorAll('.card-material').forEach(c => {
+    const okT = !ft || c.dataset.tipo === ft;
+    const titulo = c.querySelector('.mat-titulo')?.textContent.toLowerCase() || '';
+    const okB = !fb || titulo.includes(fb);
+    c.style.display = (okT && okB) ? '' : 'none';
+  });
+  // Esconder seções vazias
+  document.querySelectorAll('.mat-tema-secao').forEach(s => {
+    const visiveis = [...s.querySelectorAll('.card-material')].filter(c => c.style.display !== 'none');
+    s.style.display = visiveis.length === 0 ? 'none' : '';
+  });
 }
 
 function cardMaterial(m) {
@@ -4088,35 +4175,52 @@ function fecharPlayer() {
 
 // ===== Baixar PDF com marca d'água do aluno =====
 async function baixarPDFComMarcaDagua(matId) {
-  const mat = materiaisCache.find(m => m.id === matId);
-  if (!mat) return;
-
-  // Buscar CPF do aluno; se nao tiver, pede
-  const { data: perfil } = await sb.from('perfis').select('cpf,nome').eq('id', state.usuario.id).single();
-  let cpf = perfil?.cpf;
-  if (!cpf) {
-    const cpfInput = prompt('Para baixar materiais, informe seu CPF (só números). Ele será incluído na marca d\'água do PDF.');
-    if (!cpfInput) return;
-    cpf = cpfInput.replace(/\D/g,'');
-    if (cpf.length !== 11) { alert('CPF inválido. Use 11 dígitos.'); return; }
-    await sb.from('perfis').update({ cpf }).eq('id', state.usuario.id);
-  }
-  const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
-  const nomeAluno = (perfil?.nome || state.usuario.nome).toUpperCase();
-
-  // Mostrar indicador
-  const btn = event.target;
-  const oldText = btn.textContent;
-  btn.textContent = 'Preparando PDF...';
-  btn.disabled = true;
+  // Capturar botão ANTES de qualquer await (evita perder o event.target)
+  const btn = event && event.target ? event.target : null;
+  const oldText = btn ? btn.textContent : '';
 
   try {
-    // Carregar PDF original
-    const resp = await fetch(mat.url);
-    if (!resp.ok) throw new Error('Não foi possível carregar o PDF');
-    const pdfBytes = await resp.arrayBuffer();
+    if (!window.PDFLib) {
+      alert('Biblioteca pdf-lib não carregou. Recarregue a página (Ctrl+F5) e tente de novo.');
+      return;
+    }
 
-    // Usar pdf-lib pra escrever marca
+    const mat = materiaisCache.find(m => m.id === matId);
+    if (!mat) { alert('Material não encontrado'); return; }
+
+    // Buscar perfil pra ter CPF + nome atualizado
+    const { data: perfil, error: errP } = await sb.from('perfis').select('cpf,nome').eq('id', state.usuario.id).single();
+    if (errP) { alert('Erro ao buscar perfil: ' + errP.message); return; }
+
+    let cpf = perfil?.cpf;
+    if (!cpf) {
+      const cpfInput = prompt('Para baixar materiais, informe seu CPF (só números, 11 dígitos). Ele será incluído na marca d\'água do PDF.');
+      if (!cpfInput) return;
+      cpf = cpfInput.replace(/\D/g,'');
+      if (cpf.length !== 11) { alert('CPF inválido. Use 11 dígitos.'); return; }
+      const { error: errUp } = await sb.from('perfis').update({ cpf }).eq('id', state.usuario.id);
+      if (errUp) { alert('Erro salvando CPF: ' + errUp.message); return; }
+    }
+
+    const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+    const nomeAluno = (perfil?.nome || state.usuario.nome || 'Aluno').toUpperCase();
+
+    if (btn) { btn.textContent = 'Carregando PDF...'; btn.disabled = true; }
+
+    // Tentar via fetch padrão
+    let pdfBytes;
+    try {
+      const resp = await fetch(mat.url, { mode: 'cors' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      pdfBytes = await resp.arrayBuffer();
+    } catch (fetchErr) {
+      console.error('Erro ao fetch PDF:', fetchErr);
+      alert('Erro ao baixar PDF do servidor: ' + fetchErr.message + '\n\nVerifique se o bucket "Materiais" está como Public no Supabase.');
+      return;
+    }
+
+    if (btn) btn.textContent = 'Adicionando marca d\'água...';
+
     const { PDFDocument, StandardFonts, rgb, degrees } = window.PDFLib;
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -4124,14 +4228,12 @@ async function baixarPDFComMarcaDagua(matId) {
 
     pdfDoc.getPages().forEach(page => {
       const { width, height } = page.getSize();
-      // Rodapé com nome + CPF
-      const txtRodape = `${nomeAluno}  •  CPF ${cpfFmt}  •  app.radixmatematica.com.br`;
+      const txtRodape = nomeAluno + '  -  CPF ' + cpfFmt + '  -  app.radixmatematica.com.br';
       page.drawText(txtRodape, {
         x: 20, y: 12, size: 7, font: fontReg,
         color: rgb(0.4, 0.4, 0.4),
       });
-      // Marca d'água diagonal (forte) ao centro
-      const wmText = `${nomeAluno} - ${cpfFmt}`;
+      const wmText = nomeAluno + ' - ' + cpfFmt;
       page.drawText(wmText, {
         x: width * 0.12, y: height * 0.45,
         size: Math.min(width, height) * 0.04, font,
@@ -4140,27 +4242,31 @@ async function baixarPDFComMarcaDagua(matId) {
       });
     });
 
+    if (btn) btn.textContent = 'Gerando download...';
+
     const newBytes = await pdfDoc.save();
     const blob = new Blob([newBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     const safeName = mat.titulo.replace(/[^a-zA-Z0-9_-]+/g,'_').substring(0, 50);
-    a.download = `${safeName}_${nomeAluno.replace(/\s+/g,'_')}.pdf`;
+    a.download = safeName + '_' + nomeAluno.replace(/\s+/g,'_') + '.pdf';
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
 
-    // Registrar download
-    await sb.from('downloads_pdf').insert({ aluno_id: state.usuario.id, material_id: matId });
+    // Registrar download (não bloqueia)
+    sb.from('downloads_pdf').insert({ aluno_id: state.usuario.id, material_id: matId })
+      .then(({error}) => { if (error) console.warn('Falha registrar download:', error); });
+
   } catch (e) {
-    alert('Erro ao baixar: ' + e.message);
+    console.error('Erro completo:', e);
+    alert('Erro ao baixar: ' + (e.message || e));
   } finally {
-    btn.textContent = oldText;
-    btn.disabled = false;
+    if (btn) { btn.textContent = oldText; btn.disabled = false; }
   }
 }
+
 
 // ========== GERENCIAR MATERIAIS (Professor) ==========
 
