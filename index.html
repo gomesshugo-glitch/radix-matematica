@@ -1010,6 +1010,26 @@
   }
   .tecnica-item input { margin: 0; }
 
+
+  /* Badge de pendentes no card "Gerenciar Alunos" */
+  .badge-pendentes {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #E65100;
+    color: white;
+    border-radius: 999px;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 0 8px;
+    box-shadow: 0 2px 6px rgba(230,81,0,0.4);
+  }
+
 </style>
 </head>
 <body>
@@ -1058,6 +1078,9 @@
     <p id="auth-msg" style="font-size:13px;text-align:center;margin-top:14px;min-height:18px;"></p>
   </div>
 </div>
+
+<!-- TELA DE STATUS (aguardando aprovacao / bloqueado) -->
+<div id="view-status" class="hidden"></div>
 
 <!-- APP -->
 <div id="view-app" class="hidden">
@@ -1746,11 +1769,71 @@ async function esqueciSenha() {
 async function iniciarSessao() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
-  const perfil = ADMIN_EMAILS.includes(user.email) ? 'professor' : 'aluno';
-  const nome = user.user_metadata?.nome || user.email.split('@')[0];
-  state.usuario = { nome, perfil, email: user.email, id: user.id };
+
+  // Buscar o perfil dele para checar status de aprovação
+  const { data: meuPerfil } = await sb.from('perfis').select('*').eq('id', user.id).single();
+  if (!meuPerfil) {
+    setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
+    return;
+  }
+  if (meuPerfil.status === 'pendente') {
+    mostrarTelaAguardandoAprovacao(meuPerfil);
+    return;
+  }
+  if (meuPerfil.status === 'bloqueado') {
+    mostrarTelaBloqueado(meuPerfil);
+    return;
+  }
+  // Status = aprovado: entra normalmente
+  state.usuario = {
+    nome: meuPerfil.nome, perfil: meuPerfil.perfil,
+    email: meuPerfil.email, id: user.id
+  };
   await carregarDados();
   mostrarApp();
+}
+
+function mostrarTelaAguardandoAprovacao(perfil) {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.add('hidden');
+  const v = document.getElementById('view-status');
+  v.classList.remove('hidden');
+  v.innerHTML = `
+    <div class="login-wrap">
+      <div class="login-box" style="text-align:center;">
+        <div style="font-size:64px;margin-bottom:12px;">⏳</div>
+        <h2 style="color:var(--radix-blue-dark);margin-bottom:8px;">Aguardando aprovação</h2>
+        <p style="color:var(--radix-gray-light);font-size:14px;line-height:1.6;margin-bottom:20px;">
+          Olá, <strong>${perfil.nome}</strong>! Seu cadastro foi recebido e está aguardando aprovação do professor.
+          Você receberá um e-mail assim que for liberado.
+        </p>
+        <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:24px;">
+          E-mail cadastrado: ${perfil.email}
+        </p>
+        <button class="btn btn-secondary" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
+      </div>
+    </div>
+  `;
+}
+
+function mostrarTelaBloqueado(perfil) {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.add('hidden');
+  const v = document.getElementById('view-status');
+  v.classList.remove('hidden');
+  v.innerHTML = `
+    <div class="login-wrap">
+      <div class="login-box" style="text-align:center;">
+        <div style="font-size:64px;margin-bottom:12px;">🚫</div>
+        <h2 style="color:var(--radix-red);margin-bottom:8px;">Acesso bloqueado</h2>
+        <p style="color:var(--radix-gray-light);font-size:14px;line-height:1.6;margin-bottom:20px;">
+          ${perfil.nome}, seu acesso à plataforma Radix está bloqueado.
+          Entre em contato com o professor Hugo Gomes para regularizar sua situação.
+        </p>
+        <button class="btn btn-secondary" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
+      </div>
+    </div>
+  `;
 }
 
 async function logout() {
@@ -1764,9 +1847,13 @@ async function logout() {
 function mostrarApp() {
   document.getElementById('view-login').classList.add('hidden');
   document.getElementById('view-app').classList.remove('hidden');
+  const vs = document.getElementById('view-status');
+  if (vs) vs.classList.add('hidden');
   document.getElementById('user-display').textContent =
     `${state.usuario.nome} (${state.usuario.perfil === 'aluno' ? 'Aluno' : 'Professor'})`;
   renderHome();
+  // Para professor, mostrar badge de pendentes
+  setTimeout(atualizarBadgePendentes, 200);
 }
 
 // ========== RENDER HOME ==========
@@ -1829,6 +1916,14 @@ function renderHome() {
         </div>
       </div>
       <div class="quick-actions">
+        <div class="quick-card" onclick="renderGerenciarAlunos()" style="position:relative;">
+          <div class="icon" style="background:#FFF3E0;color:#E65100;">👥</div>
+          <div>
+            <h3>Gerenciar Alunos</h3>
+            <p>Aprovar cadastros novos</p>
+          </div>
+          <span id="badge-pendentes" class="badge-pendentes hidden"></span>
+        </div>
         <div class="quick-card" onclick="abrirCadastroQuestao()">
           <div class="icon">➕</div>
           <div><h3>Cadastrar Questão</h3><p>Adicionar ao banco</p></div>
@@ -2674,6 +2769,116 @@ function renderRelatorioProfessor() {
   });
 }
 
+
+
+// ========== GERENCIAR ALUNOS (Moderação) ==========
+
+async function renderGerenciarAlunos() {
+  state.view = 'gerenciar-alunos';
+  const main = document.getElementById('main-content');
+
+  // Buscar todos os perfis (alunos + professores)
+  const { data: perfis, error } = await sb.from('perfis')
+    .select('*')
+    .order('criado_em', { ascending: false });
+
+  if (error) {
+    main.innerHTML = `<div class="breadcrumb"><a onclick="renderHome()">← Início</a></div><p>Erro ao carregar: ${error.message}</p>`;
+    return;
+  }
+
+  const pendentes = perfis.filter(p => p.status === 'pendente');
+  const aprovados = perfis.filter(p => p.status === 'aprovado');
+  const bloqueados = perfis.filter(p => p.status === 'bloqueado');
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Alunos</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>👥 Gerenciar Alunos</h2>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Pendentes</div><div class="value" style="color:#E65100;">${pendentes.length}</div></div>
+      <div class="stat-card"><div class="label">Aprovados</div><div class="value" style="color:#16A34A;">${aprovados.length}</div></div>
+      <div class="stat-card"><div class="label">Bloqueados</div><div class="value" style="color:var(--radix-red);">${bloqueados.length}</div></div>
+      <div class="stat-card"><div class="label">Total</div><div class="value">${perfis.length}</div></div>
+    </div>
+
+    ${pendentes.length > 0 ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>⏳ Pendentes de aprovação (${pendentes.length})</h3>
+      ${renderListaAlunos(pendentes, 'pendente')}
+    ` : ''}
+
+    <h3 class="section-title"><span class="section-title-accent"></span>✅ Aprovados (${aprovados.length})</h3>
+    ${aprovados.length === 0 ? '<p style="color:var(--radix-gray-light);">Nenhum aluno aprovado ainda.</p>' : renderListaAlunos(aprovados, 'aprovado')}
+
+    ${bloqueados.length > 0 ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>🚫 Bloqueados (${bloqueados.length})</h3>
+      ${renderListaAlunos(bloqueados, 'bloqueado')}
+    ` : ''}
+  `;
+}
+
+function renderListaAlunos(perfis, statusAtual) {
+  return `
+    <table>
+      <thead>
+        <tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Cadastro</th><th style="text-align:right;">Ações</th></tr>
+      </thead>
+      <tbody>
+        ${perfis.map(p => {
+          const d = new Date(p.criado_em);
+          const dataFmt = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const isProf = p.perfil === 'professor';
+          return `
+            <tr>
+              <td><strong>${p.nome}</strong></td>
+              <td style="font-size:12px;color:var(--radix-gray-light);">${p.email}</td>
+              <td>${isProf ? '👨‍🏫 Professor' : '🎓 Aluno'}</td>
+              <td style="font-size:12px;color:var(--radix-gray-light);">${dataFmt}</td>
+              <td style="text-align:right;">
+                ${isProf ? '<span style="color:var(--radix-gray-light);font-size:12px;">—</span>' : `
+                  ${statusAtual === 'pendente' ? `
+                    <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Aprovar</button>
+                    <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','bloqueado')">🚫 Bloquear</button>
+                  ` : statusAtual === 'aprovado' ? `
+                    <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','bloqueado')">🚫 Bloquear</button>
+                  ` : `
+                    <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Reativar</button>
+                  `}
+                `}
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function mudarStatusAluno(alunoId, novoStatus) {
+  const acaoLabel = { 'aprovado': 'aprovar', 'bloqueado': 'bloquear' }[novoStatus];
+  if (!confirm(`Confirma ${acaoLabel} este aluno?`)) return;
+
+  const { error } = await sb.from('perfis')
+    .update({ status: novoStatus })
+    .eq('id', alunoId);
+
+  if (error) { alert('Erro: ' + error.message); return; }
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
+}
+
+async function atualizarBadgePendentes() {
+  if (state.usuario?.perfil !== 'professor') return;
+  const { data } = await sb.from('perfis').select('id').eq('status', 'pendente');
+  const badge = document.getElementById('badge-pendentes');
+  if (!badge) return;
+  if (data && data.length > 0) {
+    badge.textContent = data.length;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
 
 // ========== CRONOGRAMA 2026 ==========
 
