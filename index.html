@@ -6,6 +6,7 @@
 <title>Radix — Banco de Questões de Matemática</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
   :root {
     --radix-blue: #1E88E5;
@@ -1086,6 +1087,126 @@
   .modal::-webkit-scrollbar-thumb { background: #CFD8DC; border-radius: 4px; }
   .modal::-webkit-scrollbar-thumb:hover { background: #B0BEC5; }
 
+
+  /* ========= MATERIAIS (Vídeo-aulas, PDFs, Links) ========= */
+  .materiais-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .card-material {
+    background: white;
+    border: 1px solid var(--radix-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-material:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    border-color: var(--radix-blue);
+  }
+  .mat-thumb {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: #F4F6FA;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    overflow: hidden;
+  }
+  .mat-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .mat-thumb-pdf { background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%); color: #C62828; }
+  .mat-thumb-link { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); color: #1565C0; }
+  .mat-thumb-yt { background: #000; }
+  .mat-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 56px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.18);
+    transition: background 0.15s;
+  }
+  .card-material:hover .mat-play { background: rgba(0,0,0,0.4); }
+  .mat-info { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .mat-titulo { font-weight: 600; font-size: 15px; color: var(--radix-gray); line-height: 1.3; }
+  .mat-desc { font-size: 12px; color: var(--radix-gray-light); line-height: 1.4; }
+  .mat-meta { display: flex; gap: 4px; flex-wrap: wrap; }
+  .mat-acoes { margin-top: auto; padding-top: 6px; }
+  .mat-acoes .btn { width: 100%; }
+
+  /* ========= Player YouTube protegido ========= */
+  .player-modal {
+    max-width: 920px !important;
+    width: 100%;
+    padding: 20px !important;
+  }
+  .player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .video-wrapper {
+    position: relative;
+    aspect-ratio: 16/9;
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .video-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  /* Marca d'agua canto inferior direito */
+  .video-watermark-corner {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.55);
+    color: rgba(255,255,255,0.85);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    pointer-events: none;
+    z-index: 5;
+    letter-spacing: 0.5px;
+  }
+  /* Marca d'agua centro (mais leve, atravessa o vídeo) */
+  .video-watermark-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(20px, 4vw, 42px);
+    font-weight: 800;
+    color: rgba(255,255,255,0.10);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    transform: rotate(-22deg);
+    pointer-events: none;
+    z-index: 4;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
 </style>
 </head>
 <body>
@@ -1125,6 +1246,8 @@
       <input type="email" id="signup-email" placeholder="seu@email.com" autocomplete="email">
       <label>WhatsApp (com DDD)</label>
       <input type="tel" id="signup-whats" placeholder="(11) 98765-4321" autocomplete="tel" maxlength="16" oninput="mascararTelefone(this)">
+      <label>CPF (usado para identificar materiais baixados)</label>
+      <input type="text" id="signup-cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascararCPF(this)">
       <label>Senha (mínimo 6 caracteres)</label>
       <input type="password" id="signup-senha" placeholder="Crie uma senha" autocomplete="new-password">
       <button onclick="fazerCadastro()">Criar conta</button>
@@ -2479,6 +2602,15 @@ function setMsg(texto, cor) {
   el.style.color = cor || 'var(--radix-gray-light)';
 }
 
+
+function mascararCPF(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 11);
+  v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, '$1.$2.$3-$4');
+  v = v.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, '$1.$2.$3');
+  v = v.replace(/^(\d{3})(\d{0,3}).*/, '$1.$2');
+  input.value = v;
+}
+
 function mascararTelefone(input) {
   let v = input.value.replace(/\D/g, '').slice(0, 11);
   if (v.length >= 11) v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
@@ -2495,6 +2627,7 @@ async function fazerCadastro() {
   const nome = document.getElementById('signup-nome').value.trim();
   const email = document.getElementById('signup-email').value.trim().toLowerCase();
   const whats = telefoneLimpo(document.getElementById('signup-whats').value);
+  const cpf = (document.getElementById('signup-cpf').value || '').replace(/\D/g, '');
   const senha = document.getElementById('signup-senha').value;
 
   if (!nome || !email || senha.length < 6) {
@@ -2508,7 +2641,7 @@ async function fazerCadastro() {
   setMsg('Criando sua conta...');
   const { data, error } = await sb.auth.signUp({
     email, password: senha,
-    options: { data: { nome, telefone: whats } }
+    options: { data: { nome, telefone: whats, cpf } }
   });
   if (error) {
     setMsg('Erro: ' + error.message, 'var(--radix-red)');
@@ -2517,7 +2650,7 @@ async function fazerCadastro() {
   // Salvar telefone na perfis (caso o trigger não capture)
   if (data.user) {
     setTimeout(async () => {
-      await sb.from('perfis').update({ telefone: whats }).eq('id', data.user.id);
+      await sb.from('perfis').update({ telefone: whats, cpf: cpf || null }).eq('id', data.user.id);
     }, 800);
   }
   if (data.user && !data.session) {
@@ -2656,6 +2789,10 @@ function renderHome() {
       <h2 class="section-title"><span class="section-title-accent"></span>Olá, ${state.usuario.nome}!</h2>
       <div class="tagline-bar">√ "Raiz que vira resultado" — vamos praticar matemática hoje?</div>
       <div class="quick-actions">
+        <div class="quick-card" onclick="renderVideoAulas()">
+          <div class="icon" style="background:#FFEBEE;color:#C62828;">🎬</div>
+          <div><h3>Vídeo-aulas</h3><p>Aulas e materiais</p></div>
+        </div>
         <div class="quick-card" onclick="renderCronograma()">
           <div class="icon" style="background:#FFF3E0;color:#E65100;">📅</div>
           <div><h3>Cronograma 2026</h3><p>Plano anual e meu progresso</p></div>
@@ -2722,6 +2859,10 @@ function renderHome() {
         <div class="quick-card" onclick="renderEditarCronograma()">
           <div class="icon" style="background:#E1F5FE;color:#01579B;">📅</div>
           <div><h3>Editar Cronograma</h3><p>Aulas extras, ajustes</p></div>
+        </div>
+        <div class="quick-card" onclick="renderGerenciarMateriais()">
+          <div class="icon" style="background:#FFEBEE;color:#C62828;">🎬</div>
+          <div><h3>Vídeo-aulas e PDFs</h3><p>Gerenciar materiais</p></div>
         </div>
         <div class="quick-card" onclick="abrirNotificarWhatsApp()">
           <div class="icon" style="background:#E8F5E9;color:#1B5E20;">💬</div>
@@ -3781,6 +3922,454 @@ async function atualizarBadgePendentes() {
   }
 }
 
+
+
+// ========== VÍDEO-AULAS E MATERIAIS ==========
+
+let materiaisCache = [];
+
+async function carregarMateriais() {
+  const { data } = await sb.from('materiais')
+    .select('*')
+    .order('ordem', { ascending: true })
+    .order('criado_em', { ascending: false });
+  materiaisCache = data || [];
+}
+
+function extrairYouTubeId(url) {
+  // Aceita formatos: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/live/ID, youtube.com/embed/ID
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function renderVideoAulas() {
+  state.view = 'videoaulas';
+  await carregarMateriais();
+  const main = document.getElementById('main-content');
+
+  const aulas = materiaisCache.filter(m => m.tipo === 'aula_youtube' && m.visivel);
+  const pdfs = materiaisCache.filter(m => m.tipo === 'pdf' && m.visivel);
+  const links = materiaisCache.filter(m => m.tipo === 'link_externo' && m.visivel);
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Vídeo-aulas</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>🎬 Vídeo-aulas e Materiais</h2>
+
+    <div class="filtros">
+      <select id="filtro-modulo" onchange="renderVideoAulas()">
+        <option value="">Todos os módulos</option>
+        ${MODULOS.map(m => `<option value="${m.id}">Módulo ${m.numero} — ${m.nome}</option>`).join('')}
+      </select>
+      <select id="filtro-tipo" onchange="renderVideoAulas()">
+        <option value="">Todos os tipos</option>
+        <option value="aula_youtube">🎬 Apenas vídeo-aulas</option>
+        <option value="pdf">📄 Apenas PDFs</option>
+        <option value="link_externo">🔗 Apenas links</option>
+      </select>
+    </div>
+
+    ${aulas.length > 0 ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>🎬 Vídeo-aulas (${aulas.length})</h3>
+      <div class="materiais-grid">
+        ${aulas.map(m => cardMaterial(m)).join('')}
+      </div>
+    ` : ''}
+
+    ${pdfs.length > 0 ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>📄 PDFs e Apostilas (${pdfs.length})</h3>
+      <div class="materiais-grid">
+        ${pdfs.map(m => cardMaterial(m)).join('')}
+      </div>
+    ` : ''}
+
+    ${links.length > 0 ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>🔗 Links extras (${links.length})</h3>
+      <div class="materiais-grid">
+        ${links.map(m => cardMaterial(m)).join('')}
+      </div>
+    ` : ''}
+
+    ${(aulas.length + pdfs.length + links.length) === 0 ? `
+      <div style="text-align:center;padding:40px;color:var(--radix-gray-light);">
+        <div style="font-size:48px;margin-bottom:8px;">📭</div>
+        Nenhum material publicado ainda.
+      </div>
+    ` : ''}
+  `;
+
+  // Aplicar filtros
+  const fm = document.getElementById('filtro-modulo').value;
+  const ft = document.getElementById('filtro-tipo').value;
+  if (fm || ft) {
+    document.querySelectorAll('.card-material').forEach(c => {
+      const okM = !fm || c.dataset.modulo === fm;
+      const okT = !ft || c.dataset.tipo === ft;
+      c.style.display = (okM && okT) ? '' : 'none';
+    });
+  }
+}
+
+function cardMaterial(m) {
+  const mod = MODULOS.find(x => x.id === m.modulo_id);
+  const tema = TEMAS.find(t => t.id === m.tema_id);
+  let icon = '🔗', tag = 'link';
+  let thumbHtml = `<div class="mat-thumb mat-thumb-link">🔗</div>`;
+  let actionHtml = `<button class="btn btn-secondary" onclick="window.open('${m.url}','_blank')">Abrir link</button>`;
+  
+  if (m.tipo === 'aula_youtube') {
+    icon = '🎬'; tag = 'aula';
+    const ytId = extrairYouTubeId(m.url);
+    thumbHtml = ytId ? `<div class="mat-thumb mat-thumb-yt"><img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg" alt=""><div class="mat-play">▶</div></div>` : `<div class="mat-thumb mat-thumb-yt">🎬</div>`;
+    actionHtml = `<button class="btn" onclick="abrirPlayerYouTube(${m.id})">▶ Assistir</button>`;
+  } else if (m.tipo === 'pdf') {
+    icon = '📄'; tag = 'pdf';
+    thumbHtml = `<div class="mat-thumb mat-thumb-pdf">📄</div>`;
+    actionHtml = `<button class="btn" onclick="baixarPDFComMarcaDagua(${m.id})">⬇ Baixar com sua identificação</button>`;
+  }
+
+  return `
+    <div class="card-material" data-modulo="${m.modulo_id || ''}" data-tipo="${m.tipo}">
+      ${thumbHtml}
+      <div class="mat-info">
+        <div class="mat-titulo">${m.titulo}</div>
+        ${m.descricao ? `<div class="mat-desc">${m.descricao}</div>` : ''}
+        <div class="mat-meta">
+          ${mod ? `<span class="tag tag-tema">Módulo ${mod.numero}</span>` : ''}
+          ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
+          ${m.duracao_min ? `<span class="tag" style="background:#FFEBEE;color:#C62828;">${m.duracao_min} min</span>` : ''}
+        </div>
+        <div class="mat-acoes">${actionHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== Player de vídeo protegido (sem link clicável para o YouTube) =====
+function abrirPlayerYouTube(matId) {
+  const mat = materiaisCache.find(m => m.id === matId);
+  if (!mat) return;
+  const ytId = extrairYouTubeId(mat.url);
+  if (!ytId) { alert('URL do YouTube inválida'); return; }
+  // Marca d'água: nome do aluno + identificação
+  const aluno = state.usuario?.nome || 'Aluno Radix';
+  const id_alt = state.usuario?.id?.substring(0,8) || '';
+  const params = 'modestbranding=1&rel=0&controls=1&disablekb=1&iv_load_policy=3&fs=1&playsinline=1&showinfo=0&origin=' + encodeURIComponent(location.origin);
+  // youtube-nocookie é versão mais privada
+  const src = `https://www.youtube-nocookie.com/embed/${ytId}?${params}`;
+
+  const modalHtml = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharPlayer()">
+      <div class="modal player-modal" oncontextmenu="event.preventDefault();return false;">
+        <div class="player-header">
+          <h2 style="margin:0;">${mat.titulo}</h2>
+          <button class="btn btn-secondary" onclick="fecharPlayer()" style="padding:5px 10px;">Fechar ✕</button>
+        </div>
+        <div class="video-wrapper" oncontextmenu="event.preventDefault();return false;">
+          <iframe src="${src}" allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
+          <div class="video-watermark-corner">${aluno} • ${id_alt}</div>
+          <div class="video-watermark-center">${aluno}</div>
+        </div>
+        ${mat.descricao ? `<p style="margin-top:14px;color:var(--radix-gray-light);font-size:14px;">${mat.descricao}</p>` : ''}
+        <p style="font-size:11px;color:var(--radix-gray-light);margin-top:10px;text-align:center;">
+          🔒 Este vídeo é para uso exclusivo dos alunos da Radix. Sua identificação está marcada na tela.
+        </p>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-player">${modalHtml}</div>`);
+  document.body.classList.add('modal-open');
+}
+
+function fecharPlayer() {
+  const m = document.getElementById('modal-player');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+// ===== Baixar PDF com marca d'água do aluno =====
+async function baixarPDFComMarcaDagua(matId) {
+  const mat = materiaisCache.find(m => m.id === matId);
+  if (!mat) return;
+
+  // Buscar CPF do aluno; se nao tiver, pede
+  const { data: perfil } = await sb.from('perfis').select('cpf,nome').eq('id', state.usuario.id).single();
+  let cpf = perfil?.cpf;
+  if (!cpf) {
+    const cpfInput = prompt('Para baixar materiais, informe seu CPF (só números). Ele será incluído na marca d\'água do PDF.');
+    if (!cpfInput) return;
+    cpf = cpfInput.replace(/\D/g,'');
+    if (cpf.length !== 11) { alert('CPF inválido. Use 11 dígitos.'); return; }
+    await sb.from('perfis').update({ cpf }).eq('id', state.usuario.id);
+  }
+  const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+  const nomeAluno = (perfil?.nome || state.usuario.nome).toUpperCase();
+
+  // Mostrar indicador
+  const btn = event.target;
+  const oldText = btn.textContent;
+  btn.textContent = 'Preparando PDF...';
+  btn.disabled = true;
+
+  try {
+    // Carregar PDF original
+    const resp = await fetch(mat.url);
+    if (!resp.ok) throw new Error('Não foi possível carregar o PDF');
+    const pdfBytes = await resp.arrayBuffer();
+
+    // Usar pdf-lib pra escrever marca
+    const { PDFDocument, StandardFonts, rgb, degrees } = window.PDFLib;
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontReg = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    pdfDoc.getPages().forEach(page => {
+      const { width, height } = page.getSize();
+      // Rodapé com nome + CPF
+      const txtRodape = `${nomeAluno}  •  CPF ${cpfFmt}  •  app.radixmatematica.com.br`;
+      page.drawText(txtRodape, {
+        x: 20, y: 12, size: 7, font: fontReg,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+      // Marca d'água diagonal (forte) ao centro
+      const wmText = `${nomeAluno} - ${cpfFmt}`;
+      page.drawText(wmText, {
+        x: width * 0.12, y: height * 0.45,
+        size: Math.min(width, height) * 0.04, font,
+        color: rgb(0.85, 0.85, 0.85), opacity: 0.45,
+        rotate: degrees(35),
+      });
+    });
+
+    const newBytes = await pdfDoc.save();
+    const blob = new Blob([newBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = mat.titulo.replace(/[^a-zA-Z0-9_-]+/g,'_').substring(0, 50);
+    a.download = `${safeName}_${nomeAluno.replace(/\s+/g,'_')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    // Registrar download
+    await sb.from('downloads_pdf').insert({ aluno_id: state.usuario.id, material_id: matId });
+  } catch (e) {
+    alert('Erro ao baixar: ' + e.message);
+  } finally {
+    btn.textContent = oldText;
+    btn.disabled = false;
+  }
+}
+
+// ========== GERENCIAR MATERIAIS (Professor) ==========
+
+async function renderGerenciarMateriais() {
+  state.view = 'gerenciar-materiais';
+  await carregarMateriais();
+  const main = document.getElementById('main-content');
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Materiais</div>
+    <h2 class="section-title">
+      <span><span class="section-title-accent"></span>🎬 Vídeo-aulas e PDFs</span>
+      <span>
+        <button class="btn btn-success" onclick="abrirNovoMaterial('aula_youtube')">+ Vídeo-aula</button>
+        <button class="btn btn-success" onclick="abrirNovoMaterial('pdf')">+ PDF</button>
+        <button class="btn btn-success" onclick="abrirNovoMaterial('link_externo')">+ Link externo</button>
+      </span>
+    </h2>
+
+    <table>
+      <thead>
+        <tr><th>Tipo</th><th>Título</th><th>Módulo</th><th>Status</th><th style="text-align:right;">Ações</th></tr>
+      </thead>
+      <tbody>
+        ${materiaisCache.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--radix-gray-light);padding:32px;">Nenhum material cadastrado.</td></tr>' : materiaisCache.map(m => {
+          const mod = MODULOS.find(x => x.id === m.modulo_id);
+          const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[m.tipo];
+          return `
+            <tr ${!m.visivel ? 'style="opacity:0.5;"' : ''}>
+              <td>${ico}</td>
+              <td><strong>${m.titulo}</strong>${m.descricao ? `<br><span style="font-size:11px;color:var(--radix-gray-light);">${m.descricao.substring(0,80)}</span>` : ''}</td>
+              <td>${mod ? `Mód. ${mod.numero}` : '—'}</td>
+              <td>${m.visivel ? '✅ Visível' : '🚫 Oculto'}</td>
+              <td style="text-align:right;">
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="abrirEdicaoMaterial(${m.id})">Editar</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="toggleVisivelMaterial(${m.id})">${m.visivel ? 'Ocultar' : 'Mostrar'}</button>
+                <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="excluirMaterial(${m.id})">Excluir</button>
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function abrirNovoMaterial(tipo) {
+  abrirModalMaterial(null, tipo);
+}
+
+function abrirEdicaoMaterial(matId) {
+  const m = materiaisCache.find(x => x.id === matId);
+  abrirModalMaterial(m, m.tipo);
+}
+
+function abrirModalMaterial(material, tipo) {
+  const isNovo = !material;
+  const tipoLabel = { 'aula_youtube': '🎬 Vídeo-aula (YouTube)', 'pdf': '📄 PDF / Apostila', 'link_externo': '🔗 Link externo' }[tipo];
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalMaterial()">
+      <div class="modal" style="max-width:600px;">
+        <h2>${isNovo ? 'Adicionar' : 'Editar'} ${tipoLabel}</h2>
+
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="mat-titulo" value="${material?.titulo || ''}" placeholder="Ex: Aula 1 - Função do 1º grau">
+        </div>
+
+        <div class="form-group">
+          <label>Descrição (opcional)</label>
+          <textarea id="mat-desc" rows="2">${material?.descricao || ''}</textarea>
+        </div>
+
+        ${tipo === 'aula_youtube' ? `
+          <div class="form-group">
+            <label>URL do YouTube</label>
+            <input type="text" id="mat-url" value="${material?.url || ''}" placeholder="https://www.youtube.com/watch?v=... ou youtu.be/...">
+            <small style="color:var(--radix-gray-light);font-size:12px;">Dica: use vídeos "não listados" no YouTube + restrinja embed ao domínio app.radixmatematica.com.br para maior proteção.</small>
+          </div>
+          <div class="form-group">
+            <label>Duração (em minutos, opcional)</label>
+            <input type="number" id="mat-dur" value="${material?.duracao_min || ''}">
+          </div>
+        ` : tipo === 'pdf' ? `
+          <div class="form-group">
+            <label>Arquivo PDF</label>
+            ${material ? `<p style="font-size:13px;">Atual: <a href="${material.url}" target="_blank">${material.storage_path || material.url}</a></p>` : ''}
+            <input type="file" id="mat-arquivo" accept="application/pdf">
+            <small style="color:var(--radix-gray-light);font-size:12px;">Max 50 MB. Será disponibilizado com marca d'água do aluno no download.</small>
+          </div>
+        ` : `
+          <div class="form-group">
+            <label>URL do link</label>
+            <input type="text" id="mat-url" value="${material?.url || ''}" placeholder="https://...">
+          </div>
+        `}
+
+        <div class="form-group">
+          <label>Vincular ao módulo (opcional)</label>
+          <select id="mat-mod">
+            <option value="">— sem vínculo —</option>
+            ${MODULOS.map(mod => `<option value="${mod.id}" ${material?.modulo_id === mod.id ? 'selected' : ''}>Módulo ${mod.numero} - ${mod.nome}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Vincular ao tema (opcional)</label>
+          <select id="mat-tema">
+            <option value="">— sem tema —</option>
+            ${TEMAS.map(t => `<option value="${t.id}" ${material?.tema_id === t.id ? 'selected' : ''}>${t.nome}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Vincular à semana (0-39, opcional)</label>
+          <input type="number" id="mat-sem" min="0" max="39" value="${material?.semana_numero ?? ''}">
+        </div>
+
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalMaterial()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarMaterial(${material?.id || 'null'},'${tipo}')">Salvar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-material">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+
+function fecharModalMaterial() {
+  const m = document.getElementById('modal-material');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+async function salvarMaterial(matId, tipo) {
+  const titulo = document.getElementById('mat-titulo').value.trim();
+  const descricao = document.getElementById('mat-desc').value.trim();
+  const modulo_id = document.getElementById('mat-mod').value || null;
+  const tema_id = document.getElementById('mat-tema').value || null;
+  const semana = document.getElementById('mat-sem').value;
+  const semana_numero = semana === '' ? null : parseInt(semana);
+
+  if (!titulo) { alert('Título obrigatório'); return; }
+
+  let url = '', storage_path = null, duracao_min = null;
+
+  if (tipo === 'pdf') {
+    const fileInput = document.getElementById('mat-arquivo');
+    if (fileInput.files.length === 0 && !matId) { alert('Selecione um arquivo PDF'); return; }
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      if (file.size > 50 * 1024 * 1024) { alert('PDF muito grande (max 50 MB)'); return; }
+      const safe = titulo.replace(/[^a-zA-Z0-9_-]+/g,'_').toLowerCase();
+      storage_path = `pdfs/${Date.now()}_${safe}.pdf`;
+      const btn = event.target;
+      const oldT = btn.textContent;
+      btn.textContent = 'Enviando arquivo...';
+      btn.disabled = true;
+      const { error: upErr } = await sb.storage.from('materiais').upload(storage_path, file, { contentType: 'application/pdf' });
+      btn.disabled = false; btn.textContent = oldT;
+      if (upErr) { alert('Erro no upload: ' + upErr.message); return; }
+      url = sb.storage.from('materiais').getPublicUrl(storage_path).data.publicUrl;
+    }
+  } else {
+    url = document.getElementById('mat-url').value.trim();
+    if (!url) { alert('URL obrigatória'); return; }
+    if (tipo === 'aula_youtube') {
+      const dur = document.getElementById('mat-dur').value;
+      duracao_min = dur ? parseInt(dur) : null;
+      if (!extrairYouTubeId(url)) { alert('URL do YouTube inválida'); return; }
+    }
+  }
+
+  const payload = { tipo, titulo, descricao, url, modulo_id, tema_id, semana_numero, duracao_min, visivel: true };
+  if (storage_path) payload.storage_path = storage_path;
+
+  let res;
+  if (matId) {
+    // No update, se nao tiver url nova (pdf sem upload), nao sobrescrever
+    if (!url) {
+      delete payload.url;
+      delete payload.storage_path;
+    }
+    res = await sb.from('materiais').update(payload).eq('id', matId);
+  } else {
+    res = await sb.from('materiais').insert(payload);
+  }
+  if (res.error) { alert('Erro: ' + res.error.message); return; }
+  fecharModalMaterial();
+  renderGerenciarMateriais();
+}
+
+async function toggleVisivelMaterial(matId) {
+  const m = materiaisCache.find(x => x.id === matId);
+  await sb.from('materiais').update({ visivel: !m.visivel }).eq('id', matId);
+  renderGerenciarMateriais();
+}
+
+async function excluirMaterial(matId) {
+  if (!confirm('Excluir esse material? Essa ação não pode ser desfeita.')) return;
+  const m = materiaisCache.find(x => x.id === matId);
+  // Se for PDF, apaga do Storage também
+  if (m && m.storage_path) {
+    await sb.storage.from('materiais').remove([m.storage_path]);
+  }
+  await sb.from('materiais').delete().eq('id', matId);
+  renderGerenciarMateriais();
+}
 
 // ========== EDITAR CRONOGRAMA (Professor) ==========
 
