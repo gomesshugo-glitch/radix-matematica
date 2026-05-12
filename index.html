@@ -1067,6 +1067,8 @@
       <input type="text" id="signup-nome" placeholder="Seu nome">
       <label>E-mail</label>
       <input type="email" id="signup-email" placeholder="seu@email.com" autocomplete="email">
+      <label>WhatsApp (com DDD)</label>
+      <input type="tel" id="signup-whats" placeholder="(11) 98765-4321" autocomplete="tel" maxlength="16" oninput="mascararTelefone(this)">
       <label>Senha (mínimo 6 caracteres)</label>
       <input type="password" id="signup-senha" placeholder="Crie uma senha" autocomplete="new-password">
       <button onclick="fazerCadastro()">Criar conta</button>
@@ -2335,8 +2337,8 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  // Carrega progresso do cronograma em paralelo
-  await carregarProgressoCronograma();
+  // Carrega progresso do cronograma e customizacoes em paralelo
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom()]);
 
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
   const { data: resp } = await sb.from('respostas')
@@ -2364,6 +2366,7 @@ async function carregarDadosAluno() {
 }
 
 async function carregarDadosProfessor() {
+  await carregarCronogramaCustom();
   // Professor vê tudo (RLS permite via is_professor())
   const { data: perfis } = await sb.from('perfis').select('id, nome, email');
   const perfilMap = {};
@@ -2420,22 +2423,46 @@ function setMsg(texto, cor) {
   el.style.color = cor || 'var(--radix-gray-light)';
 }
 
+function mascararTelefone(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length >= 11) v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+  else if (v.length >= 7) v = v.replace(/^(\d{2})(\d{4,5})(\d{0,4}).*/, '($1) $2-$3');
+  else if (v.length >= 3) v = v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+  input.value = v;
+}
+
+function telefoneLimpo(s) {
+  return (s || '').replace(/\D/g, '');
+}
+
 async function fazerCadastro() {
   const nome = document.getElementById('signup-nome').value.trim();
   const email = document.getElementById('signup-email').value.trim().toLowerCase();
+  const whats = telefoneLimpo(document.getElementById('signup-whats').value);
   const senha = document.getElementById('signup-senha').value;
+
   if (!nome || !email || senha.length < 6) {
     setMsg('Preencha nome, e-mail e senha (mínimo 6 caracteres).', 'var(--radix-red)');
+    return;
+  }
+  if (whats.length < 10 || whats.length > 11) {
+    setMsg('Informe um WhatsApp válido com DDD (10 ou 11 dígitos).', 'var(--radix-red)');
     return;
   }
   setMsg('Criando sua conta...');
   const { data, error } = await sb.auth.signUp({
     email, password: senha,
-    options: { data: { nome } }
+    options: { data: { nome, telefone: whats } }
   });
   if (error) {
     setMsg('Erro: ' + error.message, 'var(--radix-red)');
     return;
+  }
+  // Salvar telefone na perfis (caso o trigger não capture)
+  if (data.user) {
+    setTimeout(async () => {
+      await sb.from('perfis').update({ telefone: whats }).eq('id', data.user.id);
+    }, 800);
   }
   if (data.user && !data.session) {
     setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
@@ -2632,6 +2659,18 @@ function renderHome() {
           </div>
           <span id="badge-pendentes" class="badge-pendentes hidden"></span>
         </div>
+        <div class="quick-card" onclick="renderRelatorioProfessor()">
+          <div class="icon">📈</div>
+          <div><h3>Relatórios</h3><p>Ranking, evolução, top erradas</p></div>
+        </div>
+        <div class="quick-card" onclick="renderEditarCronograma()">
+          <div class="icon" style="background:#E1F5FE;color:#01579B;">📅</div>
+          <div><h3>Editar Cronograma</h3><p>Aulas extras, ajustes</p></div>
+        </div>
+        <div class="quick-card" onclick="abrirNotificarWhatsApp()">
+          <div class="icon" style="background:#E8F5E9;color:#1B5E20;">💬</div>
+          <div><h3>Notificar Alunos</h3><p>Mensagem via WhatsApp</p></div>
+        </div>
         <div class="quick-card" onclick="abrirCadastroQuestao()">
           <div class="icon">➕</div>
           <div><h3>Cadastrar Questão</h3><p>Adicionar ao banco</p></div>
@@ -2639,10 +2678,6 @@ function renderHome() {
         <div class="quick-card" onclick="renderGerenciarQuestoes()">
           <div class="icon">📚</div>
           <div><h3>Gerenciar Banco</h3><p>Editar / excluir questões</p></div>
-        </div>
-        <div class="quick-card" onclick="renderRelatorioProfessor()">
-          <div class="icon">📈</div>
-          <div><h3>Relatórios</h3><p>Desempenho por tema</p></div>
         </div>
       </div>
       <div id="modulos-container"></div>
@@ -3415,6 +3450,7 @@ function renderRelatorioProfessor() {
   state.view = 'relatorio';
   const main = document.getElementById('main-content');
 
+  // === Calcular stats por tema ===
   const porTema = {};
   TEMAS.forEach(t => porTema[t.id] = { total: 0, acertos: 0 });
   state.respostasAluno.forEach(r => {
@@ -3424,42 +3460,133 @@ function renderRelatorioProfessor() {
     }
   });
 
+  // === Stats por aluno ===
   const porAluno = {};
   state.respostasAluno.forEach(r => {
-    if (!porAluno[r.aluno]) porAluno[r.aluno] = { total: 0, acertos: 0 };
-    porAluno[r.aluno].total++;
-    if (r.correto) porAluno[r.aluno].acertos++;
+    if (!porAluno[r.aluno_id]) porAluno[r.aluno_id] = { nome: r.aluno, total: 0, acertos: 0 };
+    porAluno[r.aluno_id].total++;
+    if (r.correto) porAluno[r.aluno_id].acertos++;
   });
+
+  // === Ranking: alunos com mais de 10 respostas, ordenados por % acerto ===
+  const ranking = Object.entries(porAluno)
+    .map(([id, d]) => ({ id, nome: d.nome, total: d.total, acertos: d.acertos, taxa: d.total ? Math.round(d.acertos/d.total*100) : 0 }))
+    .filter(a => a.total >= 5)
+    .sort((a,b) => b.taxa - a.taxa || b.total - a.total)
+    .slice(0, 10);
+
+  // === Top 10 questões com pior taxa de acerto (com >= 3 respostas) ===
+  const porQuestao = {};
+  state.respostasAluno.forEach(r => {
+    if (!porQuestao[r.questaoId]) porQuestao[r.questaoId] = { total: 0, acertos: 0 };
+    porQuestao[r.questaoId].total++;
+    if (r.correto) porQuestao[r.questaoId].acertos++;
+  });
+  const piores = Object.entries(porQuestao)
+    .map(([qid, d]) => {
+      const q = state.questoes.find(x => x.id === parseInt(qid));
+      const tema = q ? TEMAS.find(t => t.id === q.tema) : null;
+      return { qid: parseInt(qid), enun: q ? q.enunciado.substring(0, 90) + '...' : `Questão ${qid}`,
+               tema: tema?.nome || '—', total: d.total, acertos: d.acertos,
+               taxa: Math.round(d.acertos/d.total*100) };
+    })
+    .filter(q => q.total >= 3)
+    .sort((a,b) => a.taxa - b.taxa)
+    .slice(0, 10);
+
+  // === Atividade dos últimos 30 dias ===
+  const hoje = new Date();
+  const linha30 = {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(hoje); d.setDate(d.getDate() - i);
+    const key = d.toISOString().substring(0,10);
+    linha30[key] = 0;
+  }
+  state.respostasAluno.forEach(r => {
+    const k = r.data.substring(0,10);
+    if (linha30[k] !== undefined) linha30[k]++;
+  });
+
+  // === Engajamento por semana do cronograma ===
+  // Quantos % dos alunos aprovados marcaram cada semana como 'concluido'
+  // (precisaria carregar progresso de todos os alunos — vou aproximar com respostas por tema)
+  const totalAlunosAprovados = Object.keys(porAluno).length;
+
+  // === Estatísticas básicas ===
+  const totalQ = state.questoes.length;
+  const totalR = state.respostasAluno.length;
+  const totalAlunos = Object.keys(porAluno).length;
+  const taxaGeral = totalR ? Math.round(state.respostasAluno.filter(r=>r.correto).length / totalR * 100) : 0;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Relatórios</div>
     <h2 class="section-title"><span class="section-title-accent"></span>📈 Relatório Geral</h2>
-    <div class="chart-container">
-      <h3>Taxa de Acerto por Tema (todos os alunos)</h3>
-      <canvas id="chart-rel" height="100"></canvas>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Questões no banco</div><div class="value">${totalQ}</div></div>
+      <div class="stat-card"><div class="label">Alunos ativos</div><div class="value">${totalAlunos}</div></div>
+      <div class="stat-card"><div class="label">Respostas registradas</div><div class="value">${totalR}</div></div>
+      <div class="stat-card"><div class="label">Taxa de acerto geral</div><div class="value" style="color:var(--radix-blue);">${taxaGeral}%</div></div>
     </div>
+
     <div class="chart-container">
-      <h3>Desempenho por Aluno</h3>
-      ${Object.keys(porAluno).length === 0 ? '<p style="color:var(--radix-gray-light);">Ainda não há dados de alunos.</p>' : `
+      <h3>🏆 Top 10 Alunos (mínimo 5 respostas)</h3>
+      ${ranking.length === 0 ? '<p style="color:var(--radix-gray-light);">Ainda não há dados suficientes.</p>' : `
         <table>
-          <thead><tr><th>Aluno</th><th>Total</th><th>Acertos</th><th>% Acerto</th></tr></thead>
+          <thead><tr><th style="width:50px;">Pos.</th><th>Aluno</th><th>Respondidas</th><th>Acertos</th><th>% Acerto</th></tr></thead>
           <tbody>
-            ${Object.entries(porAluno).map(([nome, d]) => `
-              <tr><td>${nome}</td><td>${d.total}</td><td>${d.acertos}</td><td><strong>${Math.round(d.acertos/d.total*100)}%</strong></td></tr>
+            ${ranking.map((a, i) => `
+              <tr>
+                <td><strong>${['🥇','🥈','🥉'][i] || (i+1)+'º'}</strong></td>
+                <td><strong>${a.nome}</strong></td>
+                <td>${a.total}</td>
+                <td>${a.acertos}</td>
+                <td><strong style="color:${a.taxa>=70?'#16A34A':a.taxa>=50?'#EA580C':'#DC2626'};">${a.taxa}%</strong></td>
+              </tr>
             `).join('')}
           </tbody>
         </table>
       `}
     </div>
+
     <div class="chart-container">
-      <h3>Últimos Simulados</h3>
+      <h3>📉 Top 10 Questões mais erradas (mínimo 3 respostas)</h3>
+      ${piores.length === 0 ? '<p style="color:var(--radix-gray-light);">Ainda não há dados suficientes.</p>' : `
+        <table>
+          <thead><tr><th>Tema</th><th>Questão (preview)</th><th>Respostas</th><th>% Acerto</th></tr></thead>
+          <tbody>
+            ${piores.map(q => `
+              <tr>
+                <td><span class="tag tag-tema">${q.tema}</span></td>
+                <td style="font-size:13px;">${q.enun}</td>
+                <td>${q.total}</td>
+                <td><strong style="color:${q.taxa<30?'#DC2626':q.taxa<50?'#EA580C':'#16A34A'};">${q.taxa}%</strong></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+
+    <div class="chart-container">
+      <h3>📅 Atividade nos últimos 30 dias</h3>
+      <canvas id="chart-linha" height="80"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <h3>🎯 Taxa de Acerto por Tema</h3>
+      <canvas id="chart-rel" height="100"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <h3>📋 Últimos Simulados Realizados</h3>
       ${state.historicoSimulados.length === 0 ? '<p style="color:var(--radix-gray-light);">Nenhum simulado realizado ainda.</p>' : `
         <table>
           <thead><tr><th>Aluno</th><th>Data</th><th>Questões</th><th>Acertos</th><th>%</th></tr></thead>
           <tbody>
-            ${state.historicoSimulados.slice().reverse().slice(0, 20).map(h => {
+            ${state.historicoSimulados.slice().reverse().slice(0, 15).map(h => {
               const d = new Date(h.data);
-              return `<tr><td>${h.aluno}</td><td>${d.toLocaleDateString('pt-BR')}</td><td>${h.total}</td><td>${h.acertos}</td><td><strong>${h.percentual}%</strong></td></tr>`;
+              return `<tr><td>${h.aluno}</td><td>${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td><td>${h.total}</td><td>${h.acertos}</td><td><strong style="color:${h.percentual>=70?'#16A34A':h.percentual>=50?'#EA580C':'#DC2626'};">${h.percentual}%</strong></td></tr>`;
             }).join('')}
           </tbody>
         </table>
@@ -3467,6 +3594,16 @@ function renderRelatorioProfessor() {
     </div>
   `;
 
+  // Gráfico de linha (últimos 30 dias)
+  const labelsLinha = Object.keys(linha30).map(d => d.substring(5).split('-').reverse().join('/'));
+  const dadosLinha = Object.values(linha30);
+  new Chart(document.getElementById('chart-linha'), {
+    type: 'line',
+    data: { labels: labelsLinha, datasets: [{ label: 'Respostas/dia', data: dadosLinha, borderColor: '#1E88E5', backgroundColor: 'rgba(30,136,229,0.15)', fill: true, tension: 0.3 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Gráfico de tema
   const temasComDados = TEMAS.filter(t => porTema[t.id].total > 0);
   const labels = temasComDados.map(t => t.nome);
   const taxas = temasComDados.map(t => Math.round(porTema[t.id].acertos / porTema[t.id].total * 100));
@@ -3588,6 +3725,309 @@ async function atualizarBadgePendentes() {
   }
 }
 
+
+// ========== EDITAR CRONOGRAMA (Professor) ==========
+
+let cronogramaCustom = [];
+
+async function carregarCronogramaCustom() {
+  const { data } = await sb.from('cronograma_custom').select('*').order('semana_numero');
+  cronogramaCustom = data || [];
+}
+
+function getCronogramaMerged() {
+  // Mescla CRONOGRAMA_2026 base com customizações
+  const base = CRONOGRAMA_2026.map(s => ({ ...s }));
+  cronogramaCustom.forEach(c => {
+    if (c.removida) {
+      // Semana original marcada como cancelada → marca um flag
+      const sem = base.find(x => x.n === c.semana_numero);
+      if (sem) sem.cancelada = true;
+    } else {
+      // Edição ou novo
+      const exist = base.find(x => x.n === c.semana_numero);
+      if (exist) {
+        // Override campos editados
+        if (c.titulo) exist.titulo = c.titulo;
+        if (c.data_inicio) exist.data = c.data_inicio;
+        if (c.tema_id !== null && c.tema_id !== undefined) exist.temaId = c.tema_id || null;
+        if (c.tipo) exist.tipo = c.tipo;
+        if (c.observacao) exist.observacao = c.observacao;
+        exist._customId = c.id;
+      } else {
+        // Aula extra completamente nova
+        base.push({
+          n: c.semana_numero, data: c.data_inicio || '', titulo: c.titulo,
+          moduloId: c.modulo_id, temaId: c.tema_id || null,
+          tipo: c.tipo || 'extra', observacao: c.observacao || '',
+          _customId: c.id, _extra: true
+        });
+      }
+    }
+  });
+  return base.sort((a,b) => a.n - b.n);
+}
+
+async function renderEditarCronograma() {
+  state.view = 'editar-cronograma';
+  await carregarCronogramaCustom();
+  const main = document.getElementById('main-content');
+  const merged = getCronogramaMerged();
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Editar Cronograma</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>📅 Editar Cronograma 2026</h2>
+    <p style="color:var(--radix-gray-light);margin-bottom:16px;font-size:14px;">
+      Você pode editar título, data, tema ou cancelar qualquer semana. Aulas extras adicionadas aqui aparecem no cronograma dos alunos.
+    </p>
+    <div style="margin-bottom:16px;">
+      <button class="btn btn-success" onclick="abrirNovaAulaExtra()">+ Nova aula extra</button>
+    </div>
+
+    ${MODULOS.map(mod => {
+      const semanas = merged.filter(s => s.moduloId === mod.id);
+      return `
+        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
+          <div class="cron-modulo-header">
+            <div class="cron-modulo-numero">${mod.numero}</div>
+            <div class="cron-modulo-info">
+              <h3>${mod.nome}</h3>
+              <p>${mod.subtitulo}</p>
+            </div>
+          </div>
+          <table style="margin:0;">
+            <thead>
+              <tr><th>SEM</th><th>Data</th><th>Título</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr>
+            </thead>
+            <tbody>
+              ${semanas.map(s => `
+                <tr ${s.cancelada ? 'style="opacity:0.5;text-decoration:line-through;"' : ''}>
+                  <td><strong>${String(s.n).padStart(2,'0')}</strong></td>
+                  <td>${s.data || '—'}</td>
+                  <td>${s.titulo} ${s._extra ? '<span class="cron-tipo evento-tipo">EXTRA</span>' : ''}</td>
+                  <td>${s.tipo || 'normal'}</td>
+                  <td style="text-align:right;">
+                    <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="editarSemanaCrono(${s.n}, ${s._customId || 'null'})">Editar</button>
+                    ${s._extra ? `<button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="excluirAulaExtra(${s._customId})">Excluir</button>` : ''}
+                    ${!s._extra ? (s.cancelada ? `<button class="btn btn-success" style="padding:5px 10px;font-size:12px;" onclick="reativarSemana(${s.n})">Reativar</button>` : `<button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="cancelarSemana(${s.n})">Cancelar</button>`) : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function abrirNovaAulaExtra() {
+  abrirEditorCrono(null, null);
+}
+
+function editarSemanaCrono(n, customId) {
+  const s = getCronogramaMerged().find(x => x.n === n);
+  abrirEditorCrono(s, customId);
+}
+
+function abrirEditorCrono(semana, customId) {
+  const isNova = !semana;
+  const nextN = Math.max(...getCronogramaMerged().map(x=>x.n)) + 1;
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalCrono()">
+      <div class="modal" style="max-width:560px;">
+        <h2>${isNova ? '➕ Nova aula extra' : `Editar semana ${String(semana.n).padStart(2,'0')}`}</h2>
+        <div class="form-group">
+          <label>Nº da semana</label>
+          <input type="number" id="crono-n" value="${isNova ? nextN : semana.n}" ${isNova ? '' : 'readonly'}>
+        </div>
+        <div class="form-group">
+          <label>Módulo</label>
+          <select id="crono-mod">
+            ${MODULOS.map(m => `<option value="${m.id}" ${(!isNova && semana.moduloId===m.id) ? 'selected' : ''}>Módulo ${m.numero} - ${m.nome}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data (DD/MM)</label>
+          <input type="text" id="crono-data" placeholder="15/04" value="${isNova ? '' : (semana.data || '')}">
+        </div>
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="crono-titulo" placeholder="Aula sobre..." value="${isNova ? '' : (semana.titulo || '')}">
+        </div>
+        <div class="form-group">
+          <label>Tema vinculado (opcional)</label>
+          <select id="crono-tema">
+            <option value="">— sem tema —</option>
+            ${MODULOS.map(mod => `
+              <optgroup label="Módulo ${mod.numero}">
+                ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}" ${(!isNova && semana.temaId===tid)?'selected':''}>${t.nome}</option>`; }).join('')}
+              </optgroup>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="crono-tipo">
+            <option value="normal" ${(!isNova && semana.tipo==='normal')?'selected':''}>Normal</option>
+            <option value="extra" ${(!isNova && (semana.tipo==='extra'||isNova))?'selected':''}>Extra</option>
+            <option value="simulado" ${(!isNova && semana.tipo==='simulado')?'selected':''}>Simulado</option>
+            <option value="recesso" ${(!isNova && semana.tipo==='recesso')?'selected':''}>Recesso</option>
+            <option value="revisao" ${(!isNova && semana.tipo==='revisao')?'selected':''}>Revisão</option>
+            <option value="evento" ${(!isNova && semana.tipo==='evento')?'selected':''}>Evento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Observação (opcional)</label>
+          <textarea id="crono-obs" rows="2">${isNova ? '' : (semana.observacao || '')}</textarea>
+        </div>
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalCrono()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarCronoSemana(${customId || 'null'}, ${isNova ? 'true' : 'false'})">Salvar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-crono">${html}</div>`);
+}
+
+function fecharModalCrono() {
+  const m = document.getElementById('modal-crono');
+  if (m) m.remove();
+}
+
+async function salvarCronoSemana(customId, isNova) {
+  const n = parseInt(document.getElementById('crono-n').value);
+  const moduloId = document.getElementById('crono-mod').value;
+  const data_inicio = document.getElementById('crono-data').value.trim();
+  const titulo = document.getElementById('crono-titulo').value.trim();
+  const tema_id = document.getElementById('crono-tema').value || null;
+  const tipo = document.getElementById('crono-tipo').value;
+  const observacao = document.getElementById('crono-obs').value.trim();
+
+  if (!titulo) { alert('Título é obrigatório'); return; }
+
+  const payload = { semana_numero: n, modulo_id: moduloId, titulo, data_inicio, tema_id, tipo, observacao, removida: false };
+
+  let res;
+  if (customId) {
+    res = await sb.from('cronograma_custom').update(payload).eq('id', customId);
+  } else {
+    res = await sb.from('cronograma_custom').insert(payload);
+  }
+  if (res.error) { alert('Erro: ' + res.error.message); return; }
+  fecharModalCrono();
+  renderEditarCronograma();
+}
+
+async function excluirAulaExtra(customId) {
+  if (!confirm('Excluir essa aula extra?')) return;
+  await sb.from('cronograma_custom').delete().eq('id', customId);
+  renderEditarCronograma();
+}
+
+async function cancelarSemana(n) {
+  if (!confirm('Cancelar essa semana? Ela aparecerá riscada no cronograma dos alunos.')) return;
+  const mod = CRONOGRAMA_2026.find(s => s.n === n)?.moduloId || 'm1';
+  const titulo = CRONOGRAMA_2026.find(s => s.n === n)?.titulo || '';
+  await sb.from('cronograma_custom').upsert({
+    semana_numero: n, modulo_id: mod, titulo, removida: true
+  }, { onConflict: 'id' });
+  renderEditarCronograma();
+}
+
+async function reativarSemana(n) {
+  await sb.from('cronograma_custom').delete().eq('semana_numero', n).eq('removida', true);
+  renderEditarCronograma();
+}
+
+// ========== NOTIFICAR ALUNOS VIA WHATSAPP ==========
+
+async function abrirNotificarWhatsApp() {
+  const { data: alunos } = await sb.from('perfis').select('*').eq('perfil','aluno').eq('status','aprovado');
+  const comTel = (alunos || []).filter(a => a.telefone);
+  const semTel = (alunos || []).filter(a => !a.telefone);
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalWhats()">
+      <div class="modal" style="max-width:560px;">
+        <h2>💬 Notificar alunos via WhatsApp</h2>
+        <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
+          ${comTel.length} alunos aprovados com WhatsApp cadastrado.
+          ${semTel.length > 0 ? `<br>⚠️ ${semTel.length} sem WhatsApp (não receberão).` : ''}
+        </p>
+
+        <div class="form-group">
+          <label>Modelo de mensagem</label>
+          <select id="whats-modelo" onchange="aplicarModeloWhats()">
+            <option value="">— escolha ou digite a sua —</option>
+            <option value="novo_material">📚 Novo material disponível</option>
+            <option value="nova_prova">📝 Nova prova adicionada ao banco</option>
+            <option value="lembrete_simulado">⏱ Lembrete de simulado</option>
+            <option value="aula_extra">📅 Aula extra agendada</option>
+            <option value="aviso_geral">📢 Aviso geral</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Mensagem</label>
+          <textarea id="whats-msg" rows="5" placeholder="Olá! ..."></textarea>
+        </div>
+
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalWhats()">Cancelar</button>
+          <button class="btn btn-success" onclick="enviarWhatsLinks(${JSON.stringify(comTel.map(a=>({nome:a.nome,tel:a.telefone}))).replace(/"/g,'&quot;')})">Gerar links wa.me</button>
+        </div>
+        <p style="font-size:11px;color:var(--radix-gray-light);margin-top:10px;">
+          Os links abrem o WhatsApp Web com a mensagem pronta. Você clica em "Enviar" em cada janela.
+          (Em breve: envio automático via Z-API.)
+        </p>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-whats">${html}</div>`);
+}
+
+function fecharModalWhats() {
+  const m = document.getElementById('modal-whats');
+  if (m) m.remove();
+}
+
+function aplicarModeloWhats() {
+  const tipo = document.getElementById('whats-modelo').value;
+  const templates = {
+    'novo_material': 'Olá! 📚 Acabei de disponibilizar um novo material na plataforma Radix. Acesse app.radixmatematica.com.br para conferir. Bons estudos! — Prof. Hugo',
+    'nova_prova': 'Olá! 📝 Adicionei uma nova prova ao banco de questões da Radix. Já pode praticar em app.radixmatematica.com.br. Bons estudos! — Prof. Hugo',
+    'lembrete_simulado': 'Olá! ⏱ Lembrete: temos simulado essa semana. Aproveite pra revisar em app.radixmatematica.com.br. — Prof. Hugo',
+    'aula_extra': 'Olá! 📅 Aula extra agendada — confira o cronograma atualizado em app.radixmatematica.com.br. — Prof. Hugo',
+    'aviso_geral': 'Olá! 📢 ',
+  };
+  if (templates[tipo]) document.getElementById('whats-msg').value = templates[tipo];
+}
+
+async function enviarWhatsLinks(alunos) {
+  const msg = document.getElementById('whats-msg').value.trim();
+  if (!msg) { alert('Digite a mensagem'); return; }
+  if (alunos.length === 0) { alert('Nenhum aluno com WhatsApp'); return; }
+  if (!confirm(`Abrir ${alunos.length} janelas do WhatsApp Web?`)) return;
+
+  // Salvar histórico
+  await sb.from('notificacoes_whatsapp').insert({
+    enviada_por: state.usuario.id,
+    destinatarios_total: alunos.length,
+    mensagem: msg,
+    tipo: 'manual'
+  });
+
+  // Abrir cada link em nova aba
+  alunos.forEach((a, i) => {
+    const tel = '55' + a.tel.replace(/\D/g,'');
+    const url = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    setTimeout(() => window.open(url, '_blank'), i * 250);
+  });
+  alert(`Abertas ${alunos.length} janelas. Em cada uma, clique em "Enviar".`);
+  fecharModalWhats();
+}
+
 // ========== CRONOGRAMA 2026 ==========
 
 async function carregarProgressoCronograma() {
@@ -3623,10 +4063,11 @@ function renderCronograma() {
   state.view = 'cronograma';
   const main = document.getElementById('main-content');
 
+  const merged = getCronogramaMerged();
   // Calcula progresso geral
   let totalSemanas = 0, concluidas = 0, emEstudo = 0;
-  CRONOGRAMA_2026.forEach(s => {
-    if (s.tipo === 'recesso') return;
+  merged.forEach(s => {
+    if (s.tipo === 'recesso' || s.cancelada) return;
     totalSemanas++;
     const st = statusDaSemana(s.n);
     if (st === 'concluido') concluidas++;
@@ -3637,7 +4078,7 @@ function renderCronograma() {
   // Agrupa semanas por modulo
   const semanasPorMod = {};
   MODULOS.forEach(m => semanasPorMod[m.id] = []);
-  CRONOGRAMA_2026.forEach(s => semanasPorMod[s.moduloId].push(s));
+  merged.forEach(s => semanasPorMod[s.moduloId].push(s));
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Cronograma 2026</div>
