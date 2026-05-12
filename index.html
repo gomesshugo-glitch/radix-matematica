@@ -1030,6 +1030,62 @@
     box-shadow: 0 2px 6px rgba(230,81,0,0.4);
   }
 
+
+  /* ===== Modal — overlay fixo no viewport + animação ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 24px;
+    animation: modalFadeIn 0.2s ease-out;
+  }
+  .modal {
+    background: white;
+    padding: 28px 32px;
+    border-radius: 14px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    animation: modalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal h2 {
+    margin: 0 0 14px 0;
+    font-size: 20px;
+    color: var(--radix-gray);
+    font-weight: 700;
+  }
+  .modal-acoes {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--radix-border);
+  }
+  @keyframes modalFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes modalSlideUp {
+    from { transform: translateY(24px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0)    scale(1);    opacity: 1; }
+  }
+  body.modal-open { overflow: hidden; }
+  .modal::-webkit-scrollbar { width: 8px; }
+  .modal::-webkit-scrollbar-track { background: transparent; }
+  .modal::-webkit-scrollbar-thumb { background: #CFD8DC; border-radius: 4px; }
+  .modal::-webkit-scrollbar-thumb:hover { background: #B0BEC5; }
+
 </style>
 </head>
 <body>
@@ -3889,11 +3945,13 @@ function abrirEditorCrono(semana, customId) {
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', `<div id="modal-crono">${html}</div>`);
+  document.body.classList.add('modal-open');
 }
 
 function fecharModalCrono() {
   const m = document.getElementById('modal-crono');
   if (m) m.remove();
+  document.body.classList.remove('modal-open');
 }
 
 async function salvarCronoSemana(customId, isNova) {
@@ -3985,11 +4043,13 @@ async function abrirNotificarWhatsApp() {
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', `<div id="modal-whats">${html}</div>`);
+  document.body.classList.add('modal-open');
 }
 
 function fecharModalWhats() {
   const m = document.getElementById('modal-whats');
   if (m) m.remove();
+  document.body.classList.remove('modal-open');
 }
 
 function aplicarModeloWhats() {
@@ -4204,6 +4264,7 @@ function abrirEditorSemana(n) {
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', `<div id="modal-semana">${html}</div>`);
+  document.body.classList.add('modal-open');
   // Mostra/esconde tecnicas conforme muda status
   document.querySelectorAll('[name="status-radio"]').forEach(r => {
     r.addEventListener('change', () => {
@@ -4215,6 +4276,7 @@ function abrirEditorSemana(n) {
 function fecharModalSemana() {
   const m = document.getElementById('modal-semana');
   if (m) m.remove();
+  document.body.classList.remove('modal-open');
   state.semanaEditando = null;
 }
 
