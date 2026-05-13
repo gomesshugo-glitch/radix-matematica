@@ -1296,6 +1296,138 @@
     flex-wrap: wrap;
   }
 
+
+  /* ===== DASHBOARD DO ALUNO ===== */
+  .dash-hero {
+    background: linear-gradient(135deg, #4FC3F7 0%, #1E88E5 50%, #1565C0 100%);
+    color: white;
+    padding: 28px 32px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .dash-saudacao { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .dash-tagline { font-size: 14px; opacity: 0.9; font-style: italic; margin-top: 4px; }
+  .dash-data { font-size: 13px; opacity: 0.9; font-weight: 600; text-transform: capitalize; }
+
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .dash-stat {
+    border-radius: 14px;
+    padding: 18px 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-stat-1 { background: linear-gradient(135deg, #1565C0 0%, #1E88E5 100%); }
+  .dash-stat-2 { background: linear-gradient(135deg, #16A34A 0%, #22C55E 100%); }
+  .dash-stat-3 { background: linear-gradient(135deg, #E65100 0%, #FB923C 100%); }
+  .dash-stat-4 { background: linear-gradient(135deg, #7B1FA2 0%, #AB47BC 100%); }
+  .dash-stat-label { font-size: 12px; opacity: 0.85; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dash-stat-value { font-size: 36px; font-weight: 800; line-height: 1; margin: 8px 0 6px; }
+  .dash-stat-sub { font-size: 12px; opacity: 0.9; }
+  .dash-mini-bar { background: rgba(255,255,255,0.25); height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+  .dash-mini-fill { height: 100%; transition: width 0.5s ease; }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 720px) { .dash-grid { grid-template-columns: 1fr; } }
+
+  .dash-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px 22px;
+    border: 1px solid var(--radix-border);
+    box-shadow: 0 2px 8px rgba(30,136,229,0.06);
+    margin-bottom: 14px;
+  }
+  .dash-card h3 { margin: 0 0 12px 0; font-size: 16px; color: var(--radix-gray); }
+
+  .dash-proxima-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .dash-pill {
+    background: var(--radix-bg-soft);
+    color: var(--radix-blue-dark);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .dash-pill-sm { font-size: 9px; padding: 2px 8px; background: #FFEBEE; color: #C62828; }
+  .dash-data-sem { font-size: 12px; color: var(--radix-gray-light); font-weight: 600; }
+  .dash-proxima-titulo { font-size: 22px; font-weight: 700; color: var(--radix-gray); margin: 6px 0; line-height: 1.25; }
+  .dash-proxima-sub { font-size: 13px; color: var(--radix-gray-light); margin-bottom: 14px; }
+  .dash-proxima-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .dash-empty { text-align: center; padding: 18px; color: var(--radix-gray-light); }
+  .dash-empty p { margin: 12px 0 14px; }
+
+  .dash-atalhos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .dash-atalho {
+    background: var(--radix-bg);
+    padding: 14px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .dash-atalho:hover {
+    background: var(--radix-bg-soft);
+    border-color: var(--radix-blue);
+    transform: translateY(-2px);
+  }
+  .dash-atalho-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin: 0 auto 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .dash-atalho span { font-size: 12px; font-weight: 600; color: var(--radix-gray); }
+
+  .dash-atividades { display: flex; flex-direction: column; gap: 6px; }
+  .dash-atividade {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--radix-bg);
+    border-radius: 8px;
+    border-left: 3px solid;
+  }
+  .dash-atividade.correta { border-left-color: #16A34A; }
+  .dash-atividade.errada { border-left-color: #DC2626; }
+  .dash-ativ-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .dash-atividade.correta .dash-ativ-icon { background: #DCFCE7; color: #16A34A; }
+  .dash-atividade.errada .dash-ativ-icon { background: #FEE2E2; color: #DC2626; }
+  .dash-ativ-info { flex: 1; }
+  .dash-ativ-tema { font-size: 13px; font-weight: 600; color: var(--radix-gray); }
+  .dash-ativ-tempo { font-size: 11px; color: var(--radix-gray-light); }
+
 </style>
 </head>
 <body>
@@ -2874,38 +3006,7 @@ function renderHome() {
   state.view = 'home';
   const main = document.getElementById('main-content');
   if (state.usuario.perfil === 'aluno') {
-    main.innerHTML = `
-      <h2 class="section-title"><span class="section-title-accent"></span>Olá, ${state.usuario.nome}!</h2>
-      <div class="tagline-bar">√ "Raiz que vira resultado" — vamos praticar matemática hoje?</div>
-      <div class="quick-actions">
-        <div class="quick-card" onclick="renderVideoAulas()">
-          <div class="icon" style="background:#FFEBEE;color:#C62828;">🎬</div>
-          <div><h3>Vídeo-aulas</h3><p>Aulas e materiais</p></div>
-        </div>
-        <div class="quick-card" onclick="renderCronograma()">
-          <div class="icon" style="background:#FFF3E0;color:#E65100;">📅</div>
-          <div><h3>Cronograma 2026</h3><p>Plano anual e meu progresso</p></div>
-        </div>
-        <div class="quick-card" onclick="abrirSimuladoConfig()">
-          <div class="icon red">⏱</div>
-          <div><h3>Fazer Simulado</h3><p>Prova cronometrada</p></div>
-        </div>
-        <div class="quick-card" onclick="renderDesempenho()">
-          <div class="icon">📊</div>
-          <div><h3>Meu Desempenho</h3><p>Veja sua evolução</p></div>
-        </div>
-        <div class="quick-card" onclick="renderHistoricoSimulados()">
-          <div class="icon">📋</div>
-          <div><h3>Histórico</h3><p>Simulados realizados</p></div>
-        </div>
-        <div class="quick-card" onclick="abrirTema('')">
-          <div class="icon">📚</div>
-          <div><h3>Todas as Questões</h3><p>Banco completo</p></div>
-        </div>
-      </div>
-      <div id="modulos-container"></div>
-    `;
-    renderModulos();
+    renderDashboardAluno();
   } else {
     const totalQ = state.questoes.length;
     const totalA = state.respostasAluno.length;
@@ -3003,6 +3104,378 @@ function renderModulos() {
       </div>
     `;
   }).join('');
+}
+
+
+// ========== DASHBOARD ALUNO ==========
+
+function renderDashboardAluno() {
+  state.view = 'home';
+  const main = document.getElementById('main-content');
+
+  // Calcular stats
+  const respostas = state.respostasAluno || [];
+  const totalRespostas = respostas.length;
+  const acertos = respostas.filter(r => r.correto).length;
+  const taxaAcerto = totalRespostas ? Math.round((acertos / totalRespostas) * 100) : 0;
+
+  // Progresso no cronograma
+  const merged = getCronogramaMerged();
+  const semanasValidas = merged.filter(s => s.tipo !== 'recesso' && !s.cancelada);
+  const concluidas = semanasValidas.filter(s => statusDaSemana(s.n) === 'concluido').length;
+  const emEstudo = semanasValidas.filter(s => statusDaSemana(s.n) === 'em_estudo').length;
+  const pctCronograma = semanasValidas.length ? Math.round((concluidas / semanasValidas.length) * 100) : 0;
+
+  // Última atividade
+  const ultimoSim = state.historicoSimulados[0];
+
+  // Próxima semana a estudar (primeira não concluída)
+  const hoje = new Date();
+  const proximaSem = semanasValidas.find(s => statusDaSemana(s.n) !== 'concluido');
+  const proxTema = proximaSem?.temaId ? TEMAS.find(t => t.id === proximaSem.temaId) : null;
+  const proxMod = proximaSem ? MODULOS.find(m => m.id === proximaSem.moduloId) : null;
+
+  // Atividade dos últimos 7 dias
+  const respostasRecentes = respostas.filter(r => {
+    const d = new Date(r.data);
+    return (Date.now() - d.getTime()) < 7 * 24 * 60 * 60 * 1000;
+  });
+
+  // Saudação dinâmica
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  const nomeCurto = state.usuario.nome.split(' ')[0];
+
+  main.innerHTML = `
+    <!-- Cabeçalho de boas-vindas -->
+    <div class="dash-hero">
+      <div>
+        <div class="dash-saudacao">${saudacao}, ${nomeCurto}! 👋</div>
+        <div class="dash-tagline">"Raiz que vira resultado"</div>
+      </div>
+      <div class="dash-data">
+        ${hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+      </div>
+    </div>
+
+    <!-- Stats principais -->
+    <div class="dash-stats-grid">
+      <div class="dash-stat dash-stat-1">
+        <div class="dash-stat-label">Cronograma</div>
+        <div class="dash-stat-value">${pctCronograma}%</div>
+        <div class="dash-stat-sub">${concluidas} / ${semanasValidas.length} semanas concluídas</div>
+        <div class="dash-mini-bar"><div class="dash-mini-fill" style="width:${pctCronograma}%;background:#fff;"></div></div>
+      </div>
+      <div class="dash-stat dash-stat-2">
+        <div class="dash-stat-label">Taxa de acerto</div>
+        <div class="dash-stat-value">${taxaAcerto}%</div>
+        <div class="dash-stat-sub">${acertos} acertos em ${totalRespostas} respostas</div>
+      </div>
+      <div class="dash-stat dash-stat-3">
+        <div class="dash-stat-label">Esta semana</div>
+        <div class="dash-stat-value">${respostasRecentes.length}</div>
+        <div class="dash-stat-sub">questões respondidas (7 dias)</div>
+      </div>
+      <div class="dash-stat dash-stat-4">
+        <div class="dash-stat-label">Último simulado</div>
+        <div class="dash-stat-value">${ultimoSim ? ultimoSim.percentual + '%' : '—'}</div>
+        <div class="dash-stat-sub">${ultimoSim ? ultimoSim.acertos + '/' + ultimoSim.total + ' acertos' : 'Nenhum ainda'}</div>
+      </div>
+    </div>
+
+    <!-- 2 colunas: próxima ação + atalhos -->
+    <div class="dash-grid">
+      <!-- Próxima ação -->
+      <div class="dash-card dash-proxima">
+        <h3>🎯 Sua próxima missão</h3>
+        ${proximaSem ? `
+          <div class="dash-proxima-meta">
+            <span class="dash-pill" style="background:${proxMod?.cor || 'var(--radix-blue)'}40;color:${proxMod?.cor || 'var(--radix-blue-dark)'};">
+              Módulo ${proxMod?.numero || ''} · Semana ${String(proximaSem.n).padStart(2,'0')}
+            </span>
+            <span class="dash-data-sem">📅 ${proximaSem.data || ''}</span>
+          </div>
+          <h2 class="dash-proxima-titulo">${proximaSem.titulo}</h2>
+          ${proxTema ? `<p class="dash-proxima-sub">Tema: ${proxTema.nome}</p>` : ''}
+          <div class="dash-proxima-acoes">
+            ${proxTema ? `
+              <button class="btn" onclick="abrirTema('${proxTema.id}')">🎯 Praticar agora</button>
+              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${proxTema.id}')">⏱ Mini-simulado</button>
+            ` : ''}
+            <button class="btn btn-secondary" onclick="renderCronograma()">📅 Ver cronograma</button>
+          </div>
+        ` : `
+          <div class="dash-empty">
+            <div style="font-size:48px;">🎉</div>
+            <p>Você concluiu todas as semanas do cronograma! Hora de revisar com simulados.</p>
+            <button class="btn" onclick="abrirSimuladoConfig()">Fazer simulado</button>
+          </div>
+        `}
+      </div>
+
+      <!-- Atalhos rápidos -->
+      <div class="dash-card">
+        <h3>🚀 Acesso rápido</h3>
+        <div class="dash-atalhos">
+          <div class="dash-atalho" onclick="renderVideoAulas()">
+            <div class="dash-atalho-icon" style="background:#FFEBEE;color:#C62828;">🎬</div>
+            <span>Vídeo-aulas</span>
+          </div>
+          <div class="dash-atalho" onclick="renderCronograma()">
+            <div class="dash-atalho-icon" style="background:#FFF3E0;color:#E65100;">📅</div>
+            <span>Cronograma</span>
+          </div>
+          <div class="dash-atalho" onclick="abrirSimuladoConfig()">
+            <div class="dash-atalho-icon" style="background:#FFEBEE;color:#C62828;">⏱</div>
+            <span>Simulado</span>
+          </div>
+          <div class="dash-atalho" onclick="abrirTema('')">
+            <div class="dash-atalho-icon" style="background:#E3F2FD;color:#1565C0;">📚</div>
+            <span>Questões</span>
+          </div>
+          <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
+            <div class="dash-atalho-icon" style="background:#E0F7FA;color:#006064;">📈</div>
+            <span>Estatísticas</span>
+          </div>
+          <div class="dash-atalho" onclick="renderHistoricoSimulados()">
+            <div class="dash-atalho-icon" style="background:#F3E5F5;color:#6A1B9A;">📋</div>
+            <span>Histórico</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Últimas atividades -->
+    <div class="dash-card">
+      <h3>🕒 Suas últimas atividades</h3>
+      ${respostas.length === 0 ? `
+        <p style="color:var(--radix-gray-light);text-align:center;padding:24px;">Você ainda não respondeu nenhuma questão. <a onclick="abrirTema('')" style="color:var(--radix-blue);cursor:pointer;">Começar agora →</a></p>
+      ` : `
+        <div class="dash-atividades">
+          ${respostas.slice(0, 8).map(r => {
+            const tema = TEMAS.find(t => t.id === r.tema);
+            const d = new Date(r.data);
+            const tempoAtras = relativeTime(d);
+            return `
+              <div class="dash-atividade ${r.correto ? 'correta' : 'errada'}">
+                <span class="dash-ativ-icon">${r.correto ? '✓' : '✗'}</span>
+                <div class="dash-ativ-info">
+                  <div class="dash-ativ-tema">${tema ? tema.nome : 'Questão'}</div>
+                  <div class="dash-ativ-tempo">${tempoAtras}</div>
+                </div>
+                ${r.fonte === 'simulado' ? '<span class="dash-pill dash-pill-sm">SIMULADO</span>' : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function relativeTime(date) {
+  const diff = Date.now() - date.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `há ${d}d`;
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+// ========== ESTATÍSTICAS AVANÇADAS DO ALUNO ==========
+
+async function renderEstatisticasAvancadas() {
+  state.view = 'estatisticas-avancadas';
+  const main = document.getElementById('main-content');
+
+  // Indicador de loading enquanto busca dados da turma
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Estatísticas avançadas</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>📈 Estatísticas avançadas</h2>
+    <p style="color:var(--radix-gray-light);">Carregando dados da turma...</p>
+  `;
+
+  // Buscar média da turma (todas as respostas, agrupadas por tema)
+  const { data: todasResp } = await sb.from('respostas').select('tema, correto').limit(50000);
+
+  // Stats por tema do aluno
+  const meusPorTema = {};
+  state.respostasAluno.forEach(r => {
+    if (!meusPorTema[r.tema]) meusPorTema[r.tema] = { total: 0, acertos: 0 };
+    meusPorTema[r.tema].total++;
+    if (r.correto) meusPorTema[r.tema].acertos++;
+  });
+
+  // Stats por tema da turma
+  const turmaPorTema = {};
+  (todasResp || []).forEach(r => {
+    if (!turmaPorTema[r.tema]) turmaPorTema[r.tema] = { total: 0, acertos: 0 };
+    turmaPorTema[r.tema].total++;
+    if (r.correto) turmaPorTema[r.tema].acertos++;
+  });
+
+  // Evolução semanal (últimas 12 semanas)
+  const hoje = new Date();
+  const semanas = {};
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(hoje);
+    d.setDate(d.getDate() - i * 7);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    semanas[key] = { label, total: 0, acertos: 0 };
+  }
+  const keys = Object.keys(semanas);
+  state.respostasAluno.forEach(r => {
+    const d = new Date(r.data);
+    // Achar a semana correta (primeira chave cujo "fim" inclui essa data)
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const inicio = new Date(keys[i]);
+      const fim = new Date(inicio); fim.setDate(fim.getDate() + 7);
+      if (d >= inicio && d < fim) {
+        semanas[keys[i]].total++;
+        if (r.correto) semanas[keys[i]].acertos++;
+        break;
+      }
+    }
+  });
+
+  // Stats simulados
+  const sims = state.historicoSimulados;
+  const totalSims = sims.length;
+  const tempoMedio = sims.length ? Math.round(sims.reduce((s, x) => s + x.tempoUsado, 0) / sims.length / 60) : 0;
+  const melhorSim = sims.length ? Math.max(...sims.map(s => s.percentual)) : 0;
+  const piorSim = sims.length ? Math.min(...sims.map(s => s.percentual)) : 0;
+  const mediaSim = sims.length ? Math.round(sims.reduce((s, x) => s + x.percentual, 0) / sims.length) : 0;
+
+  // Por dificuldade
+  const porDif = { facil: { t: 0, a: 0 }, media: { t: 0, a: 0 }, dificil: { t: 0, a: 0 } };
+  state.respostasAluno.forEach(r => {
+    const q = state.questoes.find(x => x.id === r.questaoId);
+    if (q && porDif[q.dificuldade]) {
+      porDif[q.dificuldade].t++;
+      if (r.correto) porDif[q.dificuldade].a++;
+    }
+  });
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Estatísticas avançadas</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>📈 Estatísticas avançadas</h2>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Simulados feitos</div><div class="value">${totalSims}</div></div>
+      <div class="stat-card"><div class="label">Tempo médio (min)</div><div class="value">${tempoMedio}</div></div>
+      <div class="stat-card"><div class="label">Melhor simulado</div><div class="value" style="color:#16A34A;">${melhorSim}%</div></div>
+      <div class="stat-card"><div class="label">Média dos simulados</div><div class="value" style="color:var(--radix-blue);">${mediaSim}%</div></div>
+    </div>
+
+    <div class="chart-container">
+      <h3>📊 Evolução nas últimas 12 semanas</h3>
+      <p style="font-size:12px;color:var(--radix-gray-light);margin-bottom:14px;">% de acerto por semana (pontos vazios = sem atividade naquela semana)</p>
+      <canvas id="chart-evolucao" height="100"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <h3>🆚 Você vs Turma — por tema</h3>
+      <p style="font-size:12px;color:var(--radix-gray-light);margin-bottom:14px;">Sua taxa de acerto em cada tema comparada à média de todos os alunos</p>
+      <canvas id="chart-vs-turma" height="120"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <h3>🎯 Desempenho por dificuldade</h3>
+      <canvas id="chart-dif" height="80"></canvas>
+    </div>
+
+    ${sims.length >= 3 ? `
+      <div class="chart-container">
+        <h3>📅 Linha do tempo dos simulados</h3>
+        <canvas id="chart-sim-linha" height="80"></canvas>
+      </div>
+    ` : ''}
+  `;
+
+  // Gráfico evolução semanal
+  new Chart(document.getElementById('chart-evolucao'), {
+    type: 'line',
+    data: {
+      labels: Object.values(semanas).map(s => s.label),
+      datasets: [{
+        label: '% acerto',
+        data: Object.values(semanas).map(s => s.total ? Math.round((s.acertos / s.total) * 100) : null),
+        borderColor: '#1E88E5',
+        backgroundColor: 'rgba(30,136,229,0.15)',
+        fill: true,
+        tension: 0.3,
+        spanGaps: false,
+        pointRadius: 4,
+        pointBackgroundColor: '#1E88E5'
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+  });
+
+  // Comparação com turma por tema
+  const temasComDados = TEMAS.filter(t => meusPorTema[t.id] && meusPorTema[t.id].total > 0);
+  const labelsT = temasComDados.map(t => t.nome);
+  const minhaTaxa = temasComDados.map(t => Math.round((meusPorTema[t.id].acertos / meusPorTema[t.id].total) * 100));
+  const turmaTaxa = temasComDados.map(t => {
+    const tt = turmaPorTema[t.id];
+    return tt && tt.total ? Math.round((tt.acertos / tt.total) * 100) : 0;
+  });
+  new Chart(document.getElementById('chart-vs-turma'), {
+    type: 'bar',
+    data: {
+      labels: labelsT,
+      datasets: [
+        { label: 'Você', data: minhaTaxa, backgroundColor: '#1E88E5', borderRadius: 4 },
+        { label: 'Média da turma', data: turmaTaxa, backgroundColor: '#B0BEC5', borderRadius: 4 }
+      ]
+    },
+    options: { scales: { y: { beginAtZero: true, max: 100 } } }
+  });
+
+  // Por dificuldade
+  new Chart(document.getElementById('chart-dif'), {
+    type: 'bar',
+    data: {
+      labels: ['Fácil', 'Média', 'Difícil'],
+      datasets: [{
+        label: '% acerto',
+        data: [
+          porDif.facil.t ? Math.round((porDif.facil.a / porDif.facil.t) * 100) : 0,
+          porDif.media.t ? Math.round((porDif.media.a / porDif.media.t) * 100) : 0,
+          porDif.dificil.t ? Math.round((porDif.dificil.a / porDif.dificil.t) * 100) : 0
+        ],
+        backgroundColor: ['#16A34A', '#EA580C', '#DC2626'],
+        borderRadius: 6
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+  });
+
+  // Linha do tempo dos simulados (se >= 3)
+  if (sims.length >= 3) {
+    const simsOrdenados = sims.slice().reverse();
+    new Chart(document.getElementById('chart-sim-linha'), {
+      type: 'line',
+      data: {
+        labels: simsOrdenados.map((s, i) => `Sim. ${i+1}`),
+        datasets: [{
+          label: '% acerto',
+          data: simsOrdenados.map(s => s.percentual),
+          borderColor: '#16A34A',
+          backgroundColor: 'rgba(22,163,74,0.15)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 5,
+          pointBackgroundColor: '#16A34A'
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+  }
 }
 
 // ========== BANCO POR TEMA ==========
