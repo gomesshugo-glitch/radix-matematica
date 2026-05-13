@@ -1532,6 +1532,34 @@
     flex-shrink: 0;
   }
 
+
+  /* Montar Lista */
+  .lista-mod-bloco { background:white; border-radius:12px; border:1px solid var(--radix-border); margin-bottom:16px; overflow:hidden; }
+  .lista-mod-header { background:var(--mod-cor); color:white; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; font-size:14px; }
+  .lista-mod-header .dash-pill { background:rgba(255,255,255,0.25); color:white; }
+  .lista-questoes { padding:8px; }
+  .lista-item { display:flex; gap:14px; padding:12px; border-radius:8px; background:var(--radix-bg); margin-bottom:6px; align-items:center; }
+  .lista-num { background:var(--radix-blue); color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; }
+  .lista-conteudo { flex:1; min-width:0; }
+  .lista-tema { font-size:11px; color:var(--radix-blue-dark); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+  .lista-enun { font-size:13px; color:var(--radix-gray); margin-top:2px; line-height:1.4; }
+  .lista-acoes { display:flex; gap:4px; flex-shrink:0; }
+  .btn-mini-icon { background:white; border:1px solid var(--radix-border); width:30px; height:30px; border-radius:8px; cursor:pointer; font-weight:700; }
+  .btn-mini-icon:hover { background:var(--radix-bg-soft); border-color:var(--radix-blue); }
+
+  /* Conferir gabarito */
+  .confer-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:10px; }
+  .confer-card { background:white; border:2px solid var(--radix-border); border-radius:10px; padding:12px; display:flex; gap:10px; align-items:center; transition:all 0.15s; }
+  .confer-card.marcada { border-color:#16A34A; background:#F0FDF4; }
+  .confer-num { background:var(--radix-blue); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; }
+  .confer-info { flex:1; min-width:0; }
+  .confer-tema { font-size:10px; color:var(--radix-blue-dark); font-weight:700; text-transform:uppercase; }
+  .confer-preview { font-size:11px; color:var(--radix-gray-light); }
+  .confer-alts { display:flex; gap:3px; flex-shrink:0; }
+  .confer-alt { width:30px; height:30px; border-radius:50%; border:1.5px solid var(--radix-border); background:white; font-weight:700; cursor:pointer; transition:all 0.1s; }
+  .confer-alt:hover { border-color:var(--radix-blue); }
+  .confer-alt.sel { background:var(--radix-blue); border-color:var(--radix-blue); color:white; transform:scale(1.1); }
+
 </style>
 </head>
 <body>
@@ -2808,8 +2836,9 @@ let state = {
   simuladoAtual: null,
   historicoSimulados: [],
   temaAtual: null,
-  progressoCronograma: {}, // { semanaNumero: {status, tecnicas, nota_pessoal} }
+  progressoCronograma: {},
   semanaEditando: null,
+  questoesSelecionadas: [], // IDs de questoes selecionadas para a lista
 };
 
 // ========== PERSISTÊNCIA (Supabase) ==========
@@ -2841,8 +2870,8 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  // Carrega progresso do cronograma e customizacoes em paralelo
   await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom()]);
+  carregarListaLocal();
 
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
   const { data: resp } = await sb.from('respostas')
@@ -3383,7 +3412,7 @@ function mostrarApp() {
   if (vs) vs.classList.add('hidden');
   atualizarHeaderAvatar();
   renderHome();
-  setTimeout(atualizarBadgePendentes, 200);
+  setTimeout(() => { atualizarBadgePendentes(); atualizarBadgeLista(); }, 200);
 }
 
 // ========== RENDER HOME ==========
@@ -3684,6 +3713,11 @@ function renderDashboardAluno() {
             <div class="dash-atalho-icon" style="background:#F3E5F5;color:#6A1B9A;">📋</div>
             <span>Histórico</span>
           </div>
+          <div class="dash-atalho" onclick="renderMontarLista()" style="position:relative;">
+            <div class="dash-atalho-icon" style="background:#FCE4EC;color:#AD1457;">📋</div>
+            <span>Minha Lista</span>
+            <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:#AD1457;"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -3921,6 +3955,700 @@ async function renderEstatisticasAvancadas() {
   }
 }
 
+
+
+// ========== MONTAR LISTA DE QUESTÕES ==========
+
+function carregarListaLocal() {
+  try {
+    const ids = JSON.parse(localStorage.getItem('radix_lista_' + state.usuario.id) || '[]');
+    state.questoesSelecionadas = Array.isArray(ids) ? ids : [];
+  } catch (e) { state.questoesSelecionadas = []; }
+}
+
+function salvarListaLocal() {
+  localStorage.setItem('radix_lista_' + state.usuario.id, JSON.stringify(state.questoesSelecionadas));
+}
+
+function toggleQuestaoLista(qid) {
+  const idx = state.questoesSelecionadas.indexOf(qid);
+  if (idx >= 0) state.questoesSelecionadas.splice(idx, 1);
+  else state.questoesSelecionadas.push(qid);
+  salvarListaLocal();
+  // Atualizar visual do botão
+  const btn = document.querySelector(`[data-lista-btn="${qid}"]`);
+  if (btn) {
+    const sel = state.questoesSelecionadas.includes(qid);
+    btn.innerHTML = sel ? '✓ Na lista' : '+ Adicionar à lista';
+    btn.classList.toggle('btn-success', sel);
+    btn.classList.toggle('btn-secondary', !sel);
+  }
+  // Atualizar badge no menu
+  atualizarBadgeLista();
+}
+
+function atualizarBadgeLista() {
+  const el = document.getElementById('badge-lista');
+  if (!el) return;
+  const n = state.questoesSelecionadas.length;
+  if (n > 0) { el.textContent = n; el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+}
+
+function renderMontarLista() {
+  state.view = 'montar-lista';
+  const main = document.getElementById('main-content');
+
+  // Filtrar questoes existentes
+  const minhasQ = state.questoesSelecionadas
+    .map(id => state.questoes.find(q => q.id === id))
+    .filter(Boolean);
+
+  // Agrupar por modulo
+  const porMod = {};
+  MODULOS.forEach(m => porMod[m.id] = []);
+  minhasQ.forEach(q => {
+    const tema = TEMAS.find(t => t.id === q.tema);
+    const modId = MODULOS.find(m => m.temas.includes(q.tema))?.id;
+    if (modId && porMod[modId]) porMod[modId].push(q);
+  });
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minha Lista</div>
+    <h2 class="section-title">
+      <span><span class="section-title-accent"></span>📋 Minha Lista de Questões</span>
+      ${minhasQ.length > 0 ? `<span style="display:flex;gap:8px;">
+        <button class="btn" style="background:#DC2626;" onclick="baixarMinhaListaPDF()">📥 Baixar PDF para impressão</button>
+        <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito()">✏️ Conferir gabarito</button>
+        <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:#DC2626;border-color:#DC2626;">🗑️ Limpar lista</button>
+      </span>` : ''}
+    </h2>
+
+    ${minhasQ.length === 0 ? `
+      <div style="text-align:center;padding:48px;background:white;border-radius:14px;border:1px solid var(--radix-border);">
+        <div style="font-size:56px;margin-bottom:10px;">📋</div>
+        <h3 style="color:var(--radix-gray);margin:0 0 8px;">Sua lista está vazia</h3>
+        <p style="color:var(--radix-gray-light);max-width:480px;margin:0 auto 16px;">Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar. Depois você pode gerar um PDF para imprimir e estudar offline.</p>
+        <button class="btn" onclick="abrirTema('')">🎯 Navegar pelo banco de questões</button>
+      </div>
+    ` : `
+      <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
+        ${minhasQ.length} ${minhasQ.length === 1 ? 'questão selecionada' : 'questões selecionadas'} · Você pode reordenar, remover ou gerar o PDF para impressão
+      </p>
+      ${MODULOS.map(mod => {
+        const qs = porMod[mod.id];
+        if (!qs || qs.length === 0) return '';
+        return `
+          <div class="lista-mod-bloco">
+            <div class="lista-mod-header" style="--mod-cor:${mod.cor};">
+              <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
+              <span class="dash-pill">${qs.length} questão${qs.length !== 1 ? 'ões' : ''}</span>
+            </div>
+            <div class="lista-questoes">
+              ${qs.map((q, i) => {
+                const tema = TEMAS.find(t => t.id === q.tema);
+                const idxGlobal = state.questoesSelecionadas.indexOf(q.id);
+                return `
+                  <div class="lista-item">
+                    <div class="lista-num">${state.questoesSelecionadas.indexOf(q.id) + 1}</div>
+                    <div class="lista-conteudo">
+                      <div class="lista-tema">${tema ? tema.nome : '—'}</div>
+                      <div class="lista-enun">${q.enunciado.substring(0, 200).replace(/<[^>]+>/g,'')}${q.enunciado.length > 200 ? '...' : ''}</div>
+                    </div>
+                    <div class="lista-acoes">
+                      <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, -1)" title="Subir">↑</button>
+                      <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, 1)" title="Descer">↓</button>
+                      <button class="btn-mini-icon" style="color:#DC2626;" onclick="toggleQuestaoLista(${q.id});renderMontarLista();" title="Remover">✕</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `}
+  `;
+}
+
+function moverQuestaoLista(qid, delta) {
+  const idx = state.questoesSelecionadas.indexOf(qid);
+  if (idx < 0) return;
+  const novoIdx = idx + delta;
+  if (novoIdx < 0 || novoIdx >= state.questoesSelecionadas.length) return;
+  const arr = state.questoesSelecionadas;
+  [arr[idx], arr[novoIdx]] = [arr[novoIdx], arr[idx]];
+  salvarListaLocal();
+  renderMontarLista();
+}
+
+function limparMinhaLista() {
+  if (!confirm('Limpar todas as questões da lista? Você não vai perder as respostas, só remover da lista.')) return;
+  state.questoesSelecionadas = [];
+  salvarListaLocal();
+  atualizarBadgeLista();
+  renderMontarLista();
+}
+
+function baixarMinhaListaPDF() {
+  const qs = state.questoesSelecionadas.map(id => state.questoes.find(q => q.id === id)).filter(Boolean);
+  if (qs.length === 0) { alert('Sua lista está vazia.'); return; }
+  gerarPDFQuestoes(qs, 'Minha Lista de Estudos', true /* includeGabaritoEmpty */);
+}
+
+// ========== CONFERIR GABARITO ==========
+let _confAtual = {};
+
+function iniciarConferenciaGabarito() {
+  const qs = state.questoesSelecionadas.map(id => state.questoes.find(q => q.id === id)).filter(Boolean);
+  if (qs.length === 0) { alert('Lista vazia.'); return; }
+  _confAtual = { qs, respostas: {}, idx: 0 };
+  renderConferirGabarito();
+}
+
+function renderConferirGabarito() {
+  state.view = 'conferir-gabarito';
+  const main = document.getElementById('main-content');
+  const { qs, respostas } = _confAtual;
+  const allRespondidas = qs.every(q => respostas[q.id] !== undefined);
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderMontarLista()">← Minha Lista</a> / Conferir Gabarito</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>✏️ Marque suas respostas</h2>
+    <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:16px;">
+      Marque abaixo a letra que você escolheu em cada questão (a mesma que você marcou no PDF impresso). Ao final, clique em <strong>Conferir resultado</strong> para ver acertos, erros e resolução de cada uma.
+    </p>
+
+    <div class="confer-grid">
+      ${qs.map((q, i) => {
+        const tema = TEMAS.find(t => t.id === q.tema);
+        const minhaResp = respostas[q.id];
+        return `
+          <div class="confer-card ${minhaResp !== undefined ? 'marcada' : ''}">
+            <div class="confer-num">${String(i + 1).padStart(2, '0')}</div>
+            <div class="confer-info">
+              <div class="confer-tema">${tema ? tema.nome : '—'}</div>
+              <div class="confer-preview">${q.enunciado.substring(0, 80).replace(/<[^>]+>/g,'')}...</div>
+            </div>
+            <div class="confer-alts">
+              ${['A','B','C','D','E'].map((letra, k) => `
+                <button class="confer-alt ${minhaResp === k ? 'sel' : ''}" onclick="marcarConfRespost(${q.id}, ${k})">${letra}</button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div style="margin-top:24px;text-align:center;">
+      <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:10px;">
+        ${Object.keys(respostas).length} de ${qs.length} respostas marcadas
+      </p>
+      <button class="btn ${allRespondidas ? 'btn-success' : ''}" onclick="${allRespondidas ? 'finalizarConferenciaGabarito()' : `alert('Marque todas as respostas antes de conferir.')`}" ${allRespondidas ? '' : 'style="opacity:0.5;"'}>🎯 Conferir resultado</button>
+    </div>
+  `;
+}
+
+function marcarConfRespost(qid, alt) {
+  _confAtual.respostas[qid] = alt;
+  renderConferirGabarito();
+}
+
+async function finalizarConferenciaGabarito() {
+  const { qs, respostas } = _confAtual;
+  let acertos = 0;
+  const detalhes = qs.map(q => {
+    const minhaResp = respostas[q.id];
+    const correto = minhaResp === q.correta;
+    if (correto) acertos++;
+    return { q, minhaResp, correto };
+  });
+  const total = qs.length;
+  const pct = Math.round(acertos / total * 100);
+
+  // Salvar respostas no banco (como se fosse simulado offline)
+  const respostasParaSalvar = detalhes.map(d => ({
+    aluno_id: state.usuario.id,
+    questao_id: d.q.id,
+    tema: d.q.tema,
+    resposta_marcada: d.minhaResp,
+    correto: d.correto,
+    fonte: 'simulado'
+  }));
+  await sb.from('respostas').insert(respostasParaSalvar);
+  // Atualizar cache local
+  detalhes.forEach(d => {
+    state.respostasAluno.push({
+      questaoId: d.q.id, tema: d.q.tema,
+      resposta: d.minhaResp, correto: d.correto,
+      data: new Date().toISOString(),
+      aluno: state.usuario.nome, fonte: 'simulado'
+    });
+  });
+
+  // Tela de resultado
+  state.view = 'resultado-conferencia';
+  const main = document.getElementById('main-content');
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderMontarLista()">← Minha Lista</a> / Resultado</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>🎯 Resultado da Lista</h2>
+
+    <div class="resultado-box">
+      <div style="color:var(--radix-gray-light);">Você acertou</div>
+      <div class="nota">${acertos}/${total}</div>
+      <div class="nota-detalhe">${pct}% de aproveitamento</div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;">
+      <button class="btn" onclick="renderHome()">Voltar ao Início</button>
+      <button class="btn btn-secondary" onclick="renderMontarLista()">Voltar à Lista</button>
+    </div>
+
+    <h3 class="section-title"><span class="section-title-accent"></span>Revisão das questões</h3>
+    ${detalhes.map((d, i) => {
+      const q = d.q;
+      const tema = TEMAS.find(t => t.id === q.tema);
+      const imgsHtml = (q.imagens || []).map(src =>
+        `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
+      ).join('');
+      let altsHtml;
+      if (q.alternativasImg && q.alternativasImg.length) {
+        altsHtml = q.alternativasImg.map((src, j) => {
+          let cls = '';
+          if (j === q.correta) cls = 'correta';
+          else if (j === d.minhaResp) cls = 'errada';
+          return `
+            <div class="alternativa alt-img ${cls}">
+              <div class="alternativa-letra">${String.fromCharCode(65 + j)}</div>
+              <img class="alt-img-content" src="${src}">
+            </div>`;
+        }).join('');
+      } else {
+        altsHtml = q.alternativas.map((alt, j) => {
+          let cls = '';
+          if (j === q.correta) cls = 'correta';
+          else if (j === d.minhaResp) cls = 'errada';
+          return `
+            <div class="alternativa ${cls}">
+              <div class="alternativa-letra">${String.fromCharCode(65 + j)}</div>
+              <div>${alt.replace(/^[A-E]\)\s*/, '')}</div>
+            </div>`;
+        }).join('');
+      }
+      return `
+        <div class="questao-card enem-style">
+          <div class="questao-header">
+            <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
+            ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
+          </div>
+          <div class="questao-enunciado">${q.enunciado}</div>
+          ${imgsHtml}
+          <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
+          <div class="explicacao">
+            <strong>Sua resposta:</strong> ${String.fromCharCode(65 + d.minhaResp)}) ${d.correto ? '✅ Correto!' : '❌ Incorreto'}<br>
+            <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
+            <strong>Explicação:</strong> ${q.explicacao}
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+// ========== GERAR PDF DAS QUESTÕES (Estilo ENEM) ==========
+
+function baixarQuestoesFiltradasPDF() {
+  // Pega o que está visível no filtro atual
+  const filtroEl = document.getElementById('filtro-tema');
+  const tema = filtroEl ? filtroEl.value : state.temaAtual;
+  const dif = document.getElementById('filtro-dif').value;
+  let questoes = state.questoes.slice();
+  if (tema) questoes = questoes.filter(q => q.tema === tema);
+  if (dif) questoes = questoes.filter(q => q.dificuldade === dif);
+
+  if (questoes.length === 0) {
+    alert('Não há questões com esse filtro.');
+    return;
+  }
+
+  const t = tema ? TEMAS.find(x => x.id === tema)?.nome : 'Todos os temas';
+  const titulo = `${t}${dif ? ' · ' + dif.charAt(0).toUpperCase()+dif.slice(1) : ''}`;
+  gerarPDFQuestoes(questoes, titulo);
+}
+
+async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
+  if (!window.PDFLib) { alert('pdf-lib nao carregou. Recarregue (Ctrl+F5).'); return; }
+  if (questoes.length === 0) { alert('Nada para gerar.'); return; }
+
+  const { data: perfil } = await sb.from('perfis').select('nome,cpf,foto_base64').eq('id', state.usuario.id).single();
+  let cpf = perfil?.cpf;
+  if (!cpf) {
+    const cpfInput = prompt('Para baixar o PDF, informe seu CPF (so numeros).');
+    if (!cpfInput) return;
+    cpf = cpfInput.replace(/\D/g, '');
+    if (cpf.length !== 11) { alert('CPF invalido.'); return; }
+    await sb.from('perfis').update({ cpf }).eq('id', state.usuario.id);
+  }
+  const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+  const nomeAluno = (perfil?.nome || state.usuario.nome).toUpperCase();
+
+  const FRASES_MOTIVACIONAIS = [
+    'O sucesso é a soma de pequenos esforços repetidos dia após dia.',
+    'Acredite em você. Sua dedicação hoje constrói o seu futuro.',
+    'Cada questão respondida é um passo a mais rumo à aprovação.',
+    'Persistência transforma esforço em conquista.',
+    'Confie no processo. Você está mais perto do que imagina.',
+    'Disciplina é a ponte entre seus sonhos e suas realizações.',
+    'Não pare quando estiver cansado, pare quando tiver terminado.',
+    'Cada erro é uma aula. Cada acerto é uma vitória.',
+    'A matemática não é difícil. Difícil é desistir antes de tentar.',
+    'Quem estuda raiz, colhe resultado.',
+  ];
+  const fraseMot = FRASES_MOTIVACIONAIS[Math.floor(Math.random() * FRASES_MOTIVACIONAIS.length)];
+
+  // Encontrar botão de progresso
+  let btnEl = null;
+  document.querySelectorAll('button').forEach(b => { if (b.textContent.includes('Baixar em PDF')) btnEl = b; });
+  const oldT = btnEl ? btnEl.textContent : '';
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Gerando PDF...'; }
+
+  try {
+    const { PDFDocument, StandardFonts, rgb, degrees } = window.PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+
+    const W = 595, H = 842;
+    const ML = 50, MR = 50, MT = 95, MB = 60;
+    const CW = W - ML - MR;
+
+    // === COR ===
+    const corAzulRadix = rgb(0.118, 0.392, 0.753);
+    const corAzulEscuro = rgb(0.05, 0.28, 0.55);
+    const corVermelho = rgb(0.9, 0.22, 0.22);
+    const corTextoEscuro = rgb(0.12, 0.12, 0.12);
+    const corTextoMedio = rgb(0.40, 0.40, 0.40);
+    const corCinzaClaro = rgb(0.85, 0.85, 0.85);
+
+    function quebrarTexto(texto, fonte, tam, larg) {
+      const palavras = String(texto || '').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').split(/(\s+)/);
+      const linhas = [];
+      let linha = '';
+      for (const p of palavras) {
+        if (p === '\n') { if (linha) { linhas.push(linha); linha = ''; } continue; }
+        const teste = linha + p;
+        const wid = fonte.widthOfTextAtSize(teste, tam);
+        if (wid > larg && linha) {
+          linhas.push(linha.trimEnd());
+          linha = p.trimStart();
+        } else { linha = teste; }
+      }
+      if (linha) linhas.push(linha);
+      return linhas;
+    }
+
+    async function embedImg(dataUrl) {
+      try {
+        if (dataUrl.startsWith('data:image/png')) {
+          const bin = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
+          return await pdfDoc.embedPng(bin);
+        } else if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
+          const bin = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
+          return await pdfDoc.embedJpg(bin);
+        }
+      } catch (e) { console.warn('Img:', e); return null; }
+      return null;
+    }
+
+    let currentPage = null;
+    let y = 0;
+    const pages = [];
+
+    // ============ PÁGINA DE CAPA ============
+    const capa = pdfDoc.addPage([W, H]);
+    pages.push(capa);
+
+    // Faixa azul superior grande
+    capa.drawRectangle({ x: 0, y: H - 220, width: W, height: 220, color: corAzulRadix });
+    // Gradiente simulado com retângulos sobrepostos
+    capa.drawRectangle({ x: 0, y: H - 220, width: W, height: 80, color: rgb(0.31, 0.76, 0.97), opacity: 0.35 });
+
+    // Logo Radix grande
+    capa.drawText('√', { x: W/2 - 95, y: H - 110, size: 64, font: fontBold, color: rgb(1,1,1) });
+    capa.drawText('RADIX', { x: W/2 - 50, y: H - 100, size: 48, font: fontBold, color: rgb(1,1,1) });
+    // Ponto vermelho sobre o "i"
+    capa.drawRectangle({ x: W/2 + 71, y: H - 70, width: 9, height: 9, color: corVermelho });
+
+    capa.drawText('2026', { x: W/2 - 30, y: H - 155, size: 28, font: fontBold, color: rgb(1,1,1), opacity: 0.85 });
+    capa.drawText('"Raiz que vira resultado"', { x: W/2 - 75, y: H - 185, size: 11, font: fontItalic, color: rgb(1,1,1), opacity: 0.92 });
+
+    // Caderno de questões — bloco central
+    let yC = H - 280;
+    capa.drawText('LISTA DE EXERCÍCIOS', { x: W/2 - 95, y: yC, size: 16, font: fontBold, color: corAzulEscuro });
+    yC -= 28;
+    const tlW = fontBold.widthOfTextAtSize(tituloLista, 22);
+    capa.drawText(tituloLista, { x: (W - tlW) / 2, y: yC, size: 22, font: fontBold, color: corTextoEscuro });
+    yC -= 18;
+    capa.drawLine({ start: { x: ML + 100, y: yC }, end: { x: W - MR - 100, y: yC }, thickness: 1, color: corAzulRadix });
+    yC -= 24;
+    capa.drawText('MATEMÁTICA E SUAS TECNOLOGIAS', { x: W/2 - 130, y: yC, size: 12, font: fontBold, color: corAzulRadix });
+    yC -= 20;
+    capa.drawText(questoes.length + ' QUESTÕES', { x: W/2 - 35, y: yC, size: 11, font: font, color: corTextoMedio });
+
+    // Box de identificação do aluno
+    yC -= 50;
+    capa.drawRectangle({ x: ML + 40, y: yC - 90, width: CW - 80, height: 90, borderColor: corAzulRadix, borderWidth: 1.5, color: rgb(0.96, 0.98, 1) });
+    capa.drawText('IDENTIFICAÇÃO DO ALUNO', { x: ML + 56, y: yC - 14, size: 9, font: fontBold, color: corAzulRadix });
+    capa.drawText('Nome:', { x: ML + 56, y: yC - 36, size: 9, font: fontBold, color: corTextoMedio });
+    capa.drawText(nomeAluno, { x: ML + 95, y: yC - 36, size: 11, font: fontBold, color: corTextoEscuro });
+    capa.drawText('CPF:', { x: ML + 56, y: yC - 56, size: 9, font: fontBold, color: corTextoMedio });
+    capa.drawText(cpfFmt, { x: ML + 95, y: yC - 56, size: 11, font: font, color: corTextoEscuro });
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    capa.drawText('Data:', { x: ML + 56, y: yC - 76, size: 9, font: fontBold, color: corTextoMedio });
+    capa.drawText(hoje, { x: ML + 95, y: yC - 76, size: 11, font: font, color: corTextoEscuro });
+    // Foto do aluno (se houver)
+    if (perfil?.foto_base64) {
+      const fotoImg = await embedImg(perfil.foto_base64);
+      if (fotoImg) {
+        capa.drawImage(fotoImg, { x: W - MR - 110, y: yC - 80, width: 60, height: 60 });
+      }
+    }
+
+    // Frase motivacional
+    yC -= 130;
+    capa.drawText('Mensagem do Professor Hugo Gomes', { x: W/2 - 90, y: yC, size: 10, font: fontBold, color: corAzulEscuro });
+    yC -= 18;
+    const fraseLinhas = quebrarTexto('"' + fraseMot + '"', fontItalic, 13, CW - 100);
+    fraseLinhas.forEach((l, i) => {
+      const w = fontItalic.widthOfTextAtSize(l, 13);
+      capa.drawText(l, { x: (W - w) / 2, y: yC - i * 18, size: 13, font: fontItalic, color: corTextoMedio });
+    });
+
+    // Rodapé da capa
+    capa.drawLine({ start: { x: ML, y: 70 }, end: { x: W - MR, y: 70 }, thickness: 0.5, color: corCinzaClaro });
+    capa.drawText('app.radixmatematica.com.br', { x: W/2 - 70, y: 55, size: 9, font: fontBold, color: corAzulRadix });
+    capa.drawText('Boa prova! Confie no processo.', { x: W/2 - 75, y: 40, size: 9, font: fontItalic, color: corTextoMedio });
+
+    // ============ PÁGINAS DAS QUESTÕES ============
+    function novaPagina() {
+      currentPage = pdfDoc.addPage([W, H]);
+      pages.push(currentPage);
+      y = H - MT;
+      // Cabeçalho compacto
+      currentPage.drawRectangle({ x: 0, y: H - 55, width: W, height: 55, color: corAzulRadix });
+      currentPage.drawText('√ RADIX', { x: ML, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
+      currentPage.drawRectangle({ x: ML + 64, y: H - 28, width: 4, height: 4, color: corVermelho });
+      currentPage.drawText('2026', { x: ML + 82, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
+      currentPage.drawText('MATEMÁTICA E SUAS TECNOLOGIAS', { x: W - MR - 195, y: H - 38, size: 9, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
+      // Linha de identificação
+      currentPage.drawText(nomeAluno, { x: ML, y: H - 70, size: 7, font: fontBold, color: corTextoMedio });
+      currentPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 7, font: font, color: corTextoMedio });
+      currentPage.drawLine({ start: { x: ML, y: H - 76 }, end: { x: W - MR, y: H - 76 }, thickness: 0.3, color: corCinzaClaro });
+      y = H - 100;
+    }
+
+    function drawWrapped(text, x, y, fonte, tam, larg, color, lineHeight) {
+      const linhas = quebrarTexto(text, fonte, tam, larg);
+      const lh = lineHeight || tam * 1.5;
+      linhas.forEach((l, i) => {
+        currentPage.drawText(l, { x, y: y - i * lh, size: tam, font: fonte, color: color || corTextoEscuro });
+      });
+      return linhas.length * lh;
+    }
+
+    function estimarAltura(q) {
+      const enun = String(q.enunciado || '').replace(/<[^>]+>/g, '');
+      const linhasTexto = Math.ceil(enun.length / 85);
+      const numAlts = (q.alternativas || q.alternativasImg || []).length || 5;
+      let altura = 22 + linhasTexto * 15 + numAlts * 24 + 30;
+      if (q.imagens && q.imagens.length) altura += 220;
+      if (q.alternativasImg && q.alternativasImg.length) altura += 100;
+      return altura;
+    }
+
+    novaPagina();
+
+    for (let i = 0; i < questoes.length; i++) {
+      const q = questoes[i];
+      const alturaEst = estimarAltura(q);
+      if (y - alturaEst < MB && y < H - 250) { novaPagina(); }
+
+      // Cabeçalho da questão (estilo ENEM oficial)
+      currentPage.drawText('QUESTÃO ' + String(i + 1).padStart(2, '0'), {
+        x: ML, y, size: 11, font: fontBold, color: corAzulRadix
+      });
+      currentPage.drawLine({ start: { x: ML + 78, y: y + 4 }, end: { x: W - MR, y: y + 4 }, thickness: 0.8, color: corAzulRadix });
+      const tema = TEMAS.find(t => t.id === q.tema);
+      if (tema) {
+        currentPage.drawText(tema.nome, { x: ML + 85, y: y, size: 8, font: fontItalic, color: corTextoMedio });
+      }
+      y -= 20;
+
+      // Enunciado (justificado)
+      const consumiu = drawWrapped(q.enunciado, ML, y, font, 10, CW, corTextoEscuro, 15);
+      y -= consumiu + 8;
+
+      // Imagens
+      if (q.imagens && q.imagens.length) {
+        for (const imgData of q.imagens) {
+          const img = await embedImg(imgData);
+          if (img) {
+            const dim = img.scale(1);
+            let imgW = Math.min(dim.width * 0.55, CW * 0.8);
+            let imgH = (dim.height / dim.width) * imgW;
+            if (imgH > 260) { imgH = 260; imgW = (dim.width / dim.height) * imgH; }
+            if (y - imgH < MB + 20) { novaPagina(); }
+            const cx = (W - imgW) / 2;
+            currentPage.drawImage(img, { x: cx, y: y - imgH, width: imgW, height: imgH });
+            y -= imgH + 10;
+          }
+        }
+      }
+
+      // Alternativas
+      if (q.alternativasImg && q.alternativasImg.length) {
+        // Grade 5 imagens
+        const cols = 5, gap = 4;
+        const altW = (CW - gap * (cols - 1)) / cols;
+        let altH = 80;
+        const primeira = await embedImg(q.alternativasImg[0]);
+        if (primeira) {
+          const dim = primeira.scale(1);
+          altH = (dim.height / dim.width) * altW;
+          if (altH > 100) altH = 100;
+        }
+        if (y - altH - 25 < MB) novaPagina();
+        for (let k = 0; k < q.alternativasImg.length; k++) {
+          const letra = String.fromCharCode(65 + k);
+          const xCol = ML + k * (altW + gap);
+          // Círculo com letra
+          currentPage.drawCircle({ x: xCol + 8, y: y - 6, size: 7, borderColor: corAzulEscuro, borderWidth: 1.2, color: rgb(1, 1, 1) });
+          const lw = fontBold.widthOfTextAtSize(letra, 9);
+          currentPage.drawText(letra, { x: xCol + 8 - lw/2, y: y - 9, size: 9, font: fontBold, color: corTextoEscuro });
+          const img = await embedImg(q.alternativasImg[k]);
+          if (img) {
+            currentPage.drawImage(img, { x: xCol, y: y - 20 - altH, width: altW, height: altH });
+          }
+        }
+        y -= altH + 28;
+      } else if (q.alternativas) {
+        for (let k = 0; k < q.alternativas.length; k++) {
+          const alt = q.alternativas[k];
+          const letra = String.fromCharCode(65 + k);
+          const textoLimpo = alt.replace(/^[A-E]\)\s*/, '');
+          // Calcular altura do texto
+          const linhasAlt = quebrarTexto(textoLimpo, font, 10, CW - 30);
+          const altH = linhasAlt.length * 14 + 4;
+          if (y - altH < MB + 10) novaPagina();
+          // Círculo grande com letra ao centro (estilo ENEM)
+          currentPage.drawCircle({ x: ML + 10, y: y - 3, size: 8, borderColor: corAzulEscuro, borderWidth: 1.2, color: rgb(1, 1, 1) });
+          const lw2 = fontBold.widthOfTextAtSize(letra, 10);
+          currentPage.drawText(letra, { x: ML + 10 - lw2/2, y: y - 6.5, size: 10, font: fontBold, color: corTextoEscuro });
+          // Texto da alternativa
+          drawWrapped(textoLimpo, ML + 26, y, font, 10, CW - 26, corTextoEscuro, 14);
+          y -= altH + 4;
+        }
+      }
+      y -= 16;
+      // Separador sutil entre questões
+      if (y > MB + 20) {
+        currentPage.drawLine({ start: { x: ML + 80, y: y + 6 }, end: { x: W - MR - 80, y: y + 6 }, thickness: 0.4, color: corCinzaClaro });
+        y -= 14;
+      }
+    }
+
+    // Página de GABARITO em branco (se solicitado)
+    if (includeGabaritoEmpty) {
+      const gabPage = pdfDoc.addPage([W, H]);
+      pages.push(gabPage);
+      // Cabeçalho compacto
+      gabPage.drawRectangle({ x: 0, y: H - 55, width: W, height: 55, color: corAzulRadix });
+      gabPage.drawText('√ RADIX', { x: ML, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
+      gabPage.drawRectangle({ x: ML + 64, y: H - 28, width: 4, height: 4, color: corVermelho });
+      gabPage.drawText('2026', { x: ML + 82, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
+      gabPage.drawText('FOLHA DE RESPOSTAS', { x: W - MR - 130, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
+      gabPage.drawText(nomeAluno, { x: ML, y: H - 70, size: 8, font: fontBold, color: corTextoMedio });
+      gabPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 8, font: font, color: corTextoMedio });
+
+      let yG = H - 110;
+      gabPage.drawText('FOLHA DE RESPOSTAS', { x: W/2 - 90, y: yG, size: 18, font: fontBold, color: corAzulRadix });
+      yG -= 22;
+      gabPage.drawText('Marque a letra de cada resposta no círculo correspondente.', { x: W/2 - 170, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
+      yG -= 16;
+      gabPage.drawText('Depois, volte à plataforma em "Minha Lista" → "Conferir gabarito" para ver acertos e resoluções.', { x: W/2 - 240, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
+      yG -= 30;
+
+      // Grade de respostas (4 colunas)
+      const cols = 4;
+      const colW = CW / cols;
+      const linhaH = 26;
+      for (let i = 0; i < questoes.length; i++) {
+        const colIdx = i % cols;
+        const linhaIdx = Math.floor(i / cols);
+        const xC = ML + colIdx * colW;
+        const yC = yG - linhaIdx * linhaH;
+        if (yC < MB + 30) { /* deveria criar nova pagina mas vamos simplificar */ break; }
+        // Numero da questao
+        gabPage.drawText(String(i + 1).padStart(2, '0'), { x: xC, y: yC, size: 9, font: fontBold, color: corAzulEscuro });
+        // 5 círculos vazios A-E
+        ['A', 'B', 'C', 'D', 'E'].forEach((letra, k) => {
+          const cx = xC + 22 + k * 18;
+          const cy = yC + 3;
+          gabPage.drawCircle({ x: cx, y: cy, size: 7, borderColor: corAzulEscuro, borderWidth: 1, color: rgb(1, 1, 1) });
+          const lw = font.widthOfTextAtSize(letra, 7);
+          gabPage.drawText(letra, { x: cx - lw/2, y: cy - 2.5, size: 7, font: fontBold, color: corTextoMedio });
+        });
+      }
+
+      // Box de notas embaixo
+      const boxY = 130;
+      gabPage.drawRectangle({ x: ML, y: boxY - 60, width: CW, height: 80, borderColor: corCinzaClaro, borderWidth: 0.5, color: rgb(0.99, 0.99, 0.99) });
+      gabPage.drawText('Observações pessoais:', { x: ML + 10, y: boxY + 5, size: 9, font: fontBold, color: corTextoMedio });
+    }
+
+    // ============ RODAPÉ + MARCA D\'ÁGUA EM TODAS AS PÁGINAS ============
+    pages.forEach((p, idx) => {
+      // Marca d'água diagonal (só nas páginas de questão, não na capa)
+      if (idx > 0) {
+        const wm = nomeAluno + '  ·  ' + cpfFmt;
+        const wmSize = 42;
+        const wmWidth = fontBold.widthOfTextAtSize(wm, wmSize);
+        p.drawText(wm, {
+          x: W/2 - wmWidth/2.3, y: H * 0.48, size: wmSize, font: fontBold,
+          color: rgb(0.93, 0.93, 0.93), opacity: 0.5, rotate: degrees(30)
+        });
+      }
+      // Rodapé
+      p.drawLine({ start: { x: ML, y: 38 }, end: { x: W - MR, y: 38 }, thickness: 0.3, color: corCinzaClaro });
+      if (idx === 0) {
+        // Capa: rodapé já desenhado acima
+      } else {
+        p.drawText(nomeAluno + '  ·  CPF ' + cpfFmt, { x: ML, y: 25, size: 7, font: font, color: corTextoMedio });
+        p.drawText('app.radixmatematica.com.br', { x: W/2 - 60, y: 25, size: 7, font: font, color: corTextoMedio });
+        p.drawText('Página ' + (idx + 1) + '/' + pages.length, { x: W - MR - 55, y: 25, size: 7, font: fontBold, color: corTextoMedio });
+      }
+    });
+
+    const newBytes = await pdfDoc.save();
+    const blob = new Blob([newBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = tituloLista.replace(/[^a-zA-Z0-9_-]+/g, '_').substring(0, 40);
+    a.download = 'Radix_' + safeName + '_' + nomeAluno.replace(/\s+/g, '_') + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+
+  } catch (e) {
+    console.error('Erro PDF:', e);
+    alert('Erro: ' + (e.message || e));
+  } finally {
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = oldT; }
+  }
+}
+
 // ========== BANCO POR TEMA ==========
 function abrirTema(temaId) {
   state.view = 'tema';
@@ -3948,6 +4676,7 @@ function abrirTema(temaId) {
         <option value="media">Média</option>
         <option value="dificil">Difícil</option>
       </select>
+      <button class="btn" onclick="baixarQuestoesFiltradasPDF()" style="margin-left:auto;background:#DC2626;">📥 Baixar em PDF</button>
     </div>
     <div id="lista-questoes"></div>
   `;
@@ -4022,6 +4751,14 @@ function renderQuestao(q, numero, modoSimulado) {
           <button class="btn btn-danger" onclick="excluirQuestao(${q.id})">Excluir</button>
         </div>
       ` : ''}
+      ${!ehAdmin && !modoSimulado ? (() => {
+        const sel = state.questoesSelecionadas?.includes(q.id);
+        return `<div class="acoes-questao">
+          <button class="btn ${sel ? 'btn-success' : 'btn-secondary'}" data-lista-btn="${q.id}" onclick="toggleQuestaoLista(${q.id})">
+            ${sel ? '✓ Na lista' : '+ Adicionar à lista'}
+          </button>
+        </div>`;
+      })() : ''}
     </div>
   `;
 }
