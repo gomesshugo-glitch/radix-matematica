@@ -4307,7 +4307,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
   if (!window.PDFLib) { alert('pdf-lib nao carregou. Recarregue (Ctrl+F5).'); return; }
   if (questoes.length === 0) { alert('Nada para gerar.'); return; }
 
-  const { data: perfil } = await sb.from('perfis').select('nome,cpf,foto_base64').eq('id', state.usuario.id).single();
+  const { data: perfil } = await sb.from('perfis').select('nome,cpf').eq('id', state.usuario.id).single();
   let cpf = perfil?.cpf;
   if (!cpf) {
     const cpfInput = prompt('Para baixar o PDF, informe seu CPF (so numeros).');
@@ -4319,23 +4319,20 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
   const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
   const nomeAluno = (perfil?.nome || state.usuario.nome).toUpperCase();
 
-  const FRASES_MOTIVACIONAIS = [
-    'O sucesso é a soma de pequenos esforços repetidos dia após dia.',
-    'Acredite em você. Sua dedicação hoje constrói o seu futuro.',
-    'Cada questão respondida é um passo a mais rumo à aprovação.',
-    'Persistência transforma esforço em conquista.',
-    'Confie no processo. Você está mais perto do que imagina.',
-    'Disciplina é a ponte entre seus sonhos e suas realizações.',
-    'Não pare quando estiver cansado, pare quando tiver terminado.',
-    'Cada erro é uma aula. Cada acerto é uma vitória.',
-    'A matemática não é difícil. Difícil é desistir antes de tentar.',
+  const FRASES = [
+    'O sucesso e a soma de pequenos esforcos repetidos dia apos dia.',
+    'Acredite em voce. Sua dedicacao hoje constroi o seu futuro.',
+    'Cada questao respondida e um passo a mais rumo a aprovacao.',
+    'Persistencia transforma esforco em conquista.',
+    'Confie no processo. Voce esta mais perto do que imagina.',
+    'Disciplina e a ponte entre seus sonhos e suas realizacoes.',
+    'Cada erro e uma aula. Cada acerto e uma vitoria.',
     'Quem estuda raiz, colhe resultado.',
   ];
-  const fraseMot = FRASES_MOTIVACIONAIS[Math.floor(Math.random() * FRASES_MOTIVACIONAIS.length)];
+  const fraseMot = FRASES[Math.floor(Math.random() * FRASES.length)];
 
-  // Encontrar botão de progresso
   let btnEl = null;
-  document.querySelectorAll('button').forEach(b => { if (b.textContent.includes('Baixar em PDF')) btnEl = b; });
+  document.querySelectorAll('button').forEach(b => { if (b.textContent.includes('Baixar em PDF') || b.textContent.includes('Baixar PDF')) btnEl = b; });
   const oldT = btnEl ? btnEl.textContent : '';
   if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Gerando PDF...'; }
 
@@ -4347,35 +4344,30 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
     const W = 595, H = 842;
-    const ML = 50, MR = 50, MT = 95, MB = 60;
-    const CW = W - ML - MR;
+    const ML = 60, MR = 60, MT = 60, MB = 55;
+    const CW = W - ML - MR; // 475
 
-    // === COR ===
-    const corAzulRadix = rgb(0.118, 0.392, 0.753);
-    const corAzulEscuro = rgb(0.05, 0.28, 0.55);
-    const corVermelho = rgb(0.9, 0.22, 0.22);
-    const corTextoEscuro = rgb(0.12, 0.12, 0.12);
-    const corTextoMedio = rgb(0.40, 0.40, 0.40);
-    const corCinzaClaro = rgb(0.85, 0.85, 0.85);
+    const preto = rgb(0, 0, 0);
+    const cinzaEscuro = rgb(0.25, 0.25, 0.25);
+    const cinzaMedio = rgb(0.5, 0.5, 0.5);
+    const cinzaClaro = rgb(0.8, 0.8, 0.8);
+    const cinzaMuitoClaro = rgb(0.93, 0.93, 0.93);
 
     function sanit(s) {
       if (!s) return '';
-      // Substitui caracteres unicode nao suportados pelo WinAnsi
       const map = {
         '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
         '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
-        '√':'raiz','π':'pi','∞':'inf','≤':'<=','≥':'>=','≠':'!=','≈':'~','÷':'/','×':'x',
-        '°':'°','·':'.','—':'-','–':'-','…':'...','‒':'-','„':'"','«':'"','»':'"',
+        '√':'raiz','π':'pi','∞':'inf','≤':'<=','≥':'>=','≠':'!=','≈':'~','÷':'/','×':'x','−':'-',
+        '·':'.','—':'-','–':'-','…':'...','‒':'-','„':'"','«':'"','»':'"',
         '“':'"','”':'"','‘':"'","’":"'",
         'α':'alfa','β':'beta','γ':'gama','δ':'delta','ε':'eps','θ':'teta','λ':'lambda','μ':'mu','σ':'sigma','τ':'tau','ϕ':'phi','φ':'phi','ω':'omega',
         'Δ':'Delta','Σ':'Sigma','Π':'Pi','Ω':'Omega','Θ':'Teta','Λ':'Lambda','Φ':'Phi',
-        'ℓ':'l','∑':'soma','∫':'int','∂':'d','∇':'nabla','∈':'pertence','∉':'naopertence','⊂':'subset','⊃':'supset','∪':'uniao','∩':'intersec','∀':'paratodo','∃':'existe','∅':'vazio','→':'->','←':'<-','↔':'<->','⇒':'=>','⇐':'<=','⇔':'<=>','∴':'logo','∵':'pois','∝':'prop','⋅':'.'
+        'ℓ':'l','∑':'soma','∫':'int','∂':'d','∇':'nabla','∈':'pertence','∉':'naopertence','⊂':'subset','⊃':'supset','∪':'uniao','∩':'intersec','∀':'paratodo','∃':'existe','∅':'vazio',
+        '→':'->','←':'<-','↔':'<->','⇒':'=>','⇐':'<=','⇔':'<=>','∴':'logo','∵':'pois','∝':'prop','⋅':'.'
       };
       let out = String(s);
-      for (const [k, v] of Object.entries(map)) {
-        out = out.split(k).join(v);
-      }
-      // Remover qualquer outro caractere fora do ASCII estendido (WinAnsi) que sobrou
+      for (const [k, v] of Object.entries(map)) out = out.split(k).join(v);
       out = out.replace(/[^\x00-\xFF]/g, '?');
       return out;
     }
@@ -4391,7 +4383,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
         if (wid > larg && linha) {
           linhas.push(linha.trimEnd());
           linha = p.trimStart();
-        } else { linha = teste; }
+        } else linha = teste;
       }
       if (linha) linhas.push(linha);
       return linhas;
@@ -4406,120 +4398,98 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
           const bin = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
           return await pdfDoc.embedJpg(bin);
         }
-      } catch (e) { console.warn('Img:', e); return null; }
+      } catch (e) { return null; }
       return null;
+    }
+
+    function drawRadical(page, x, y, size, color, thickness) {
+      const t = thickness || size * 0.07;
+      page.drawLine({ start: { x: x, y: y + size*0.3 }, end: { x: x + size*0.12, y: y }, thickness: t, color });
+      page.drawLine({ start: { x: x + size*0.12, y: y }, end: { x: x + size*0.28, y: y + size*0.9 }, thickness: t, color });
+      page.drawLine({ start: { x: x + size*0.28, y: y + size*0.9 }, end: { x: x + size, y: y + size*0.9 }, thickness: t, color });
     }
 
     let currentPage = null;
     let y = 0;
     const pages = [];
 
-    // ============ PÁGINA DE CAPA ============
+    // ============ CAPA MINIMALISTA ============
     const capa = pdfDoc.addPage([W, H]);
     pages.push(capa);
 
-    // Faixa azul superior grande
-    capa.drawRectangle({ x: 0, y: H - 220, width: W, height: 220, color: corAzulRadix });
-    // Gradiente simulado com retângulos sobrepostos
-    capa.drawRectangle({ x: 0, y: H - 220, width: W, height: 80, color: rgb(0.31, 0.76, 0.97), opacity: 0.35 });
+    // Logo no topo central
+    drawRadical(capa, W/2 - 70, H - 130, 28, preto, 2.2);
+    capa.drawText('RADIX', { x: W/2 - 38, y: H - 122, size: 28, font: fontBold, color: preto });
+    capa.drawText('2026', { x: W/2 + 42, y: H - 122, size: 28, font: fontBold, color: cinzaMedio });
 
-    // Logo Radix grande - desenha radical como linhas
-    function drawRadical(page, x, y, size, color, thickness) {
-      const t = thickness || size * 0.07;
-      // Pequeno gancho descendente
-      page.drawLine({ start: { x: x, y: y + size*0.3 }, end: { x: x + size*0.12, y: y }, thickness: t, color: color });
-      page.drawLine({ start: { x: x + size*0.12, y: y }, end: { x: x + size*0.28, y: y + size*0.9 }, thickness: t, color: color });
-      // Linha horizontal superior
-      page.drawLine({ start: { x: x + size*0.28, y: y + size*0.9 }, end: { x: x + size, y: y + size*0.9 }, thickness: t, color: color });
-    }
-    drawRadical(capa, W/2 - 105, H - 145, 50, rgb(1,1,1), 4);
-    capa.drawText('RADIX', { x: W/2 - 50, y: H - 100, size: 48, font: fontBold, color: rgb(1,1,1) });
-    // Ponto vermelho sobre o "i"
-    capa.drawRectangle({ x: W/2 + 71, y: H - 70, width: 9, height: 9, color: corVermelho });
+    // Tagline pequena
+    capa.drawText('"Raiz que vira resultado"', { x: W/2 - 65, y: H - 150, size: 9, font: fontItalic, color: cinzaMedio });
 
-    capa.drawText('2026', { x: W/2 - 30, y: H - 155, size: 28, font: fontBold, color: rgb(1,1,1), opacity: 0.85 });
-    capa.drawText('"Raiz que vira resultado"', { x: W/2 - 75, y: H - 185, size: 11, font: fontItalic, color: rgb(1,1,1), opacity: 0.92 });
+    // Linha divisória
+    capa.drawLine({ start: { x: ML + 80, y: H - 175 }, end: { x: W - MR - 80, y: H - 175 }, thickness: 0.5, color: cinzaClaro });
 
-    // Caderno de questões — bloco central
-    let yC = H - 280;
-    capa.drawText('LISTA DE EXERCÍCIOS', { x: W/2 - 95, y: yC, size: 16, font: fontBold, color: corAzulEscuro });
-    yC -= 28;
-    const tlW = fontBold.widthOfTextAtSize(sanit(tituloLista), 22);
-    capa.drawText(sanit(tituloLista), { x: (W - tlW) / 2, y: yC, size: 22, font: fontBold, color: corTextoEscuro });
-    yC -= 18;
-    capa.drawLine({ start: { x: ML + 100, y: yC }, end: { x: W - MR - 100, y: yC }, thickness: 1, color: corAzulRadix });
-    yC -= 24;
-    capa.drawText('MATEMÁTICA E SUAS TECNOLOGIAS', { x: W/2 - 130, y: yC, size: 12, font: fontBold, color: corAzulRadix });
-    yC -= 20;
-    capa.drawText(questoes.length + ' QUESTÕES', { x: W/2 - 35, y: yC, size: 11, font: font, color: corTextoMedio });
+    // Título centralizado
+    let yC = H - 230;
+    capa.drawText('MATEMATICA E SUAS TECNOLOGIAS', { x: W/2 - 130, y: yC, size: 10, font: font, color: cinzaMedio });
+    yC -= 30;
+    const tituloSan = sanit(tituloLista);
+    const tlW = fontBold.widthOfTextAtSize(tituloSan, 26);
+    capa.drawText(tituloSan, { x: (W - tlW) / 2, y: yC, size: 26, font: fontBold, color: preto });
+    yC -= 22;
+    capa.drawText(questoes.length + ' questoes', { x: W/2 - 30, y: yC, size: 11, font: fontItalic, color: cinzaMedio });
 
-    // Box de identificação do aluno
-    yC -= 50;
-    capa.drawRectangle({ x: ML + 40, y: yC - 90, width: CW - 80, height: 90, borderColor: corAzulRadix, borderWidth: 1.5, color: rgb(0.96, 0.98, 1) });
-    capa.drawText('IDENTIFICAÇÃO DO ALUNO', { x: ML + 56, y: yC - 14, size: 9, font: fontBold, color: corAzulRadix });
-    capa.drawText('Nome:', { x: ML + 56, y: yC - 36, size: 9, font: fontBold, color: corTextoMedio });
-    capa.drawText(sanit(nomeAluno), { x: ML + 95, y: yC - 36, size: 11, font: fontBold, color: corTextoEscuro });
-    capa.drawText('CPF:', { x: ML + 56, y: yC - 56, size: 9, font: fontBold, color: corTextoMedio });
-    capa.drawText(cpfFmt, { x: ML + 95, y: yC - 56, size: 11, font: font, color: corTextoEscuro });
+    // Box de identificação simples
+    yC -= 70;
+    capa.drawLine({ start: { x: ML, y: yC + 8 }, end: { x: ML + 80, y: yC + 8 }, thickness: 0.8, color: preto });
+    capa.drawText('IDENTIFICACAO', { x: ML, y: yC + 14, size: 8, font: fontBold, color: preto });
+    yC -= 14;
+    capa.drawText('Nome:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
+    capa.drawText(sanit(nomeAluno), { x: ML + 40, y: yC, size: 10, font: fontBold, color: preto });
+    yC -= 16;
+    capa.drawText('CPF:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
+    capa.drawText(cpfFmt, { x: ML + 40, y: yC, size: 10, font: font, color: preto });
+    yC -= 16;
+    capa.drawText('Data:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
     const hoje = new Date().toLocaleDateString('pt-BR');
-    capa.drawText('Data:', { x: ML + 56, y: yC - 76, size: 9, font: fontBold, color: corTextoMedio });
-    capa.drawText(hoje, { x: ML + 95, y: yC - 76, size: 11, font: font, color: corTextoEscuro });
-    // Foto do aluno (se houver)
-    if (perfil?.foto_base64) {
-      const fotoImg = await embedImg(perfil.foto_base64);
-      if (fotoImg) {
-        capa.drawImage(fotoImg, { x: W - MR - 110, y: yC - 80, width: 60, height: 60 });
-      }
-    }
+    capa.drawText(hoje, { x: ML + 40, y: yC, size: 10, font: font, color: preto });
 
-    // Frase motivacional
-    yC -= 130;
-    capa.drawText('Mensagem do Professor Hugo Gomes', { x: W/2 - 90, y: yC, size: 10, font: fontBold, color: corAzulEscuro });
-    yC -= 18;
-    const fraseLinhas = quebrarTexto('"' + fraseMot + '"', fontItalic, 13, CW - 100);
+    // Frase motivacional bem discreta no meio-baixo
+    yC = 220;
+    capa.drawLine({ start: { x: W/2 - 30, y: yC + 30 }, end: { x: W/2 + 30, y: yC + 30 }, thickness: 0.3, color: cinzaClaro });
+    const fraseLinhas = quebrarTexto('"' + fraseMot + '"', fontItalic, 11, CW - 80);
     fraseLinhas.forEach((l, i) => {
-      const w = fontItalic.widthOfTextAtSize(l, 13);
-      capa.drawText(l, { x: (W - w) / 2, y: yC - i * 18, size: 13, font: fontItalic, color: corTextoMedio });
+      const w = fontItalic.widthOfTextAtSize(l, 11);
+      capa.drawText(l, { x: (W - w) / 2, y: yC - i * 16, size: 11, font: fontItalic, color: cinzaMedio });
     });
 
-    // Rodapé da capa
-    capa.drawLine({ start: { x: ML, y: 70 }, end: { x: W - MR, y: 70 }, thickness: 0.5, color: corCinzaClaro });
-    capa.drawText('app.radixmatematica.com.br', { x: W/2 - 70, y: 55, size: 9, font: fontBold, color: corAzulRadix });
-    capa.drawText('Boa prova! Confie no processo.', { x: W/2 - 75, y: 40, size: 9, font: fontItalic, color: corTextoMedio });
+    // Rodapé minimalista
+    capa.drawText('app.radixmatematica.com.br', { x: W/2 - 60, y: 50, size: 8, font: font, color: cinzaMedio });
 
     // ============ PÁGINAS DAS QUESTÕES ============
     function novaPagina() {
       currentPage = pdfDoc.addPage([W, H]);
       pages.push(currentPage);
-      y = H - MT;
-      // Cabeçalho compacto
-      currentPage.drawRectangle({ x: 0, y: H - 55, width: W, height: 55, color: corAzulRadix });
-      drawRadical(currentPage, ML, H - 45, 18, rgb(1, 1, 1), 1.8);
-      currentPage.drawText('RADIX', { x: ML + 22, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
-      currentPage.drawRectangle({ x: ML + 66, y: H - 28, width: 4, height: 4, color: corVermelho });
-      currentPage.drawText('2026', { x: ML + 84, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
-      currentPage.drawText('MATEMÁTICA E SUAS TECNOLOGIAS', { x: W - MR - 195, y: H - 38, size: 9, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
-      // Linha de identificação
-      currentPage.drawText(sanit(nomeAluno), { x: ML, y: H - 70, size: 7, font: fontBold, color: corTextoMedio });
-      currentPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 7, font: font, color: corTextoMedio });
-      currentPage.drawLine({ start: { x: ML, y: H - 76 }, end: { x: W - MR, y: H - 76 }, thickness: 0.3, color: corCinzaClaro });
-      y = H - 100;
+      // Cabeçalho minimalista: linha + texto pequeno
+      currentPage.drawText('RADIX 2026  ·  MATEMATICA E SUAS TECNOLOGIAS', { x: ML, y: H - 35, size: 7, font: font, color: cinzaMedio });
+      currentPage.drawText(sanit(nomeAluno), { x: W - MR - fontBold.widthOfTextAtSize(sanit(nomeAluno), 7), y: H - 35, size: 7, font: fontBold, color: cinzaMedio });
+      currentPage.drawLine({ start: { x: ML, y: H - 45 }, end: { x: W - MR, y: H - 45 }, thickness: 0.5, color: preto });
+      y = H - 70;
     }
 
     function drawWrapped(text, x, y, fonte, tam, larg, color, lineHeight) {
       const linhas = quebrarTexto(text, fonte, tam, larg);
       const lh = lineHeight || tam * 1.5;
       linhas.forEach((l, i) => {
-        currentPage.drawText(l, { x, y: y - i * lh, size: tam, font: fonte, color: color || corTextoEscuro });
+        currentPage.drawText(l, { x, y: y - i * lh, size: tam, font: fonte, color: color || preto });
       });
       return linhas.length * lh;
     }
 
     function estimarAltura(q) {
       const enun = String(q.enunciado || '').replace(/<[^>]+>/g, '');
-      const linhasTexto = Math.ceil(enun.length / 85);
+      const linhasTexto = Math.ceil(enun.length / 78);
       const numAlts = (q.alternativas || q.alternativasImg || []).length || 5;
-      let altura = 22 + linhasTexto * 15 + numAlts * 24 + 30;
+      let altura = 30 + linhasTexto * 14 + numAlts * 22 + 30;
       if (q.imagens && q.imagens.length) altura += 220;
       if (q.alternativasImg && q.alternativasImg.length) altura += 100;
       return altura;
@@ -4530,33 +4500,28 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     for (let i = 0; i < questoes.length; i++) {
       const q = questoes[i];
       const alturaEst = estimarAltura(q);
-      if (y - alturaEst < MB && y < H - 250) { novaPagina(); }
+      if (y - alturaEst < MB && y < H - 200) novaPagina();
 
-      // Cabeçalho da questão (estilo ENEM oficial)
-      currentPage.drawText('QUESTÃO ' + String(i + 1).padStart(2, '0'), {
-        x: ML, y, size: 11, font: fontBold, color: corAzulRadix
+      // Header da questão estilo ENEM oficial — simples e direto
+      currentPage.drawText('QUESTAO ' + String(i + 1).padStart(2, '0'), {
+        x: ML, y, size: 11, font: fontBold, color: preto
       });
-      currentPage.drawLine({ start: { x: ML + 78, y: y + 4 }, end: { x: W - MR, y: y + 4 }, thickness: 0.8, color: corAzulRadix });
-      const tema = TEMAS.find(t => t.id === q.tema);
-      if (tema) {
-        currentPage.drawText(sanit(tema.nome), { x: ML + 85, y: y, size: 8, font: fontItalic, color: corTextoMedio });
-      }
-      y -= 20;
+      y -= 18;
 
-      // Enunciado (justificado)
-      const consumiu = drawWrapped(q.enunciado, ML, y, font, 10, CW, corTextoEscuro, 15);
+      // Enunciado — texto justificado em preto, line-height generoso
+      const consumiu = drawWrapped(q.enunciado, ML, y, font, 10, CW, preto, 14);
       y -= consumiu + 8;
 
-      // Imagens
+      // Imagens (centralizadas, sem borda)
       if (q.imagens && q.imagens.length) {
         for (const imgData of q.imagens) {
           const img = await embedImg(imgData);
           if (img) {
             const dim = img.scale(1);
-            let imgW = Math.min(dim.width * 0.55, CW * 0.8);
+            let imgW = Math.min(dim.width * 0.5, CW * 0.75);
             let imgH = (dim.height / dim.width) * imgW;
-            if (imgH > 260) { imgH = 260; imgW = (dim.width / dim.height) * imgH; }
-            if (y - imgH < MB + 20) { novaPagina(); }
+            if (imgH > 240) { imgH = 240; imgW = (dim.width / dim.height) * imgH; }
+            if (y - imgH < MB + 20) novaPagina();
             const cx = (W - imgW) / 2;
             currentPage.drawImage(img, { x: cx, y: y - imgH, width: imgW, height: imgH });
             y -= imgH + 10;
@@ -4566,8 +4531,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
 
       // Alternativas
       if (q.alternativasImg && q.alternativasImg.length) {
-        // Grade 5 imagens
-        const cols = 5, gap = 4;
+        const cols = 5, gap = 6;
         const altW = (CW - gap * (cols - 1)) / cols;
         let altH = 80;
         const primeira = await embedImg(q.alternativasImg[0]);
@@ -4580,112 +4544,76 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
         for (let k = 0; k < q.alternativasImg.length; k++) {
           const letra = String.fromCharCode(65 + k);
           const xCol = ML + k * (altW + gap);
-          // Círculo com letra
-          currentPage.drawCircle({ x: xCol + 8, y: y - 6, size: 7, borderColor: corAzulEscuro, borderWidth: 1.2, color: rgb(1, 1, 1) });
-          const lw = fontBold.widthOfTextAtSize(letra, 9);
-          currentPage.drawText(letra, { x: xCol + 8 - lw/2, y: y - 9, size: 9, font: fontBold, color: corTextoEscuro });
+          currentPage.drawText(letra, { x: xCol, y, size: 10, font: fontBold, color: preto });
           const img = await embedImg(q.alternativasImg[k]);
           if (img) {
-            currentPage.drawImage(img, { x: xCol, y: y - 20 - altH, width: altW, height: altH });
+            currentPage.drawImage(img, { x: xCol, y: y - 14 - altH, width: altW, height: altH });
           }
         }
-        y -= altH + 28;
+        y -= altH + 22;
       } else if (q.alternativas) {
         for (let k = 0; k < q.alternativas.length; k++) {
           const alt = q.alternativas[k];
           const letra = String.fromCharCode(65 + k);
           const textoLimpo = alt.replace(/^[A-E]\)\s*/, '');
-          // Calcular altura do texto
-          const linhasAlt = quebrarTexto(textoLimpo, font, 10, CW - 30);
+          const linhasAlt = quebrarTexto(textoLimpo, font, 10, CW - 22);
           const altH = linhasAlt.length * 14 + 4;
           if (y - altH < MB + 10) novaPagina();
-          // Círculo grande com letra ao centro (estilo ENEM)
-          currentPage.drawCircle({ x: ML + 10, y: y - 3, size: 8, borderColor: corAzulEscuro, borderWidth: 1.2, color: rgb(1, 1, 1) });
-          const lw2 = fontBold.widthOfTextAtSize(letra, 10);
-          currentPage.drawText(letra, { x: ML + 10 - lw2/2, y: y - 6.5, size: 10, font: fontBold, color: corTextoEscuro });
-          // Texto da alternativa
-          drawWrapped(textoLimpo, ML + 26, y, font, 10, CW - 26, corTextoEscuro, 14);
+          // Letra simples seguida de ) — estilo ENEM clean
+          currentPage.drawText(letra, { x: ML, y, size: 10, font: fontBold, color: preto });
+          currentPage.drawText(')', { x: ML + 8, y, size: 10, font: font, color: preto });
+          drawWrapped(textoLimpo, ML + 18, y, font, 10, CW - 18, preto, 14);
           y -= altH + 4;
         }
       }
-      y -= 16;
-      // Separador sutil entre questões
-      if (y > MB + 20) {
-        currentPage.drawLine({ start: { x: ML + 80, y: y + 6 }, end: { x: W - MR - 80, y: y + 6 }, thickness: 0.4, color: corCinzaClaro });
-        y -= 14;
-      }
+      y -= 18;
     }
 
-    // Página de GABARITO em branco (se solicitado)
+    // ============ FOLHA DE RESPOSTAS (se solicitado) ============
     if (includeGabaritoEmpty) {
       const gabPage = pdfDoc.addPage([W, H]);
       pages.push(gabPage);
-      // Cabeçalho compacto
-      gabPage.drawRectangle({ x: 0, y: H - 55, width: W, height: 55, color: corAzulRadix });
-      drawRadical(gabPage, ML, H - 45, 18, rgb(1, 1, 1), 1.8);
-      gabPage.drawText('RADIX', { x: ML + 22, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
-      gabPage.drawRectangle({ x: ML + 66, y: H - 28, width: 4, height: 4, color: corVermelho });
-      gabPage.drawText('2026', { x: ML + 84, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
-      gabPage.drawText('FOLHA DE RESPOSTAS', { x: W - MR - 130, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
-      gabPage.drawText(sanit(nomeAluno), { x: ML, y: H - 70, size: 8, font: fontBold, color: corTextoMedio });
-      gabPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 8, font: font, color: corTextoMedio });
+      gabPage.drawText('RADIX 2026  ·  MATEMATICA E SUAS TECNOLOGIAS', { x: ML, y: H - 35, size: 7, font: font, color: cinzaMedio });
+      gabPage.drawText(sanit(nomeAluno), { x: W - MR - fontBold.widthOfTextAtSize(sanit(nomeAluno), 7), y: H - 35, size: 7, font: fontBold, color: cinzaMedio });
+      gabPage.drawLine({ start: { x: ML, y: H - 45 }, end: { x: W - MR, y: H - 45 }, thickness: 0.5, color: preto });
 
-      let yG = H - 110;
-      gabPage.drawText('FOLHA DE RESPOSTAS', { x: W/2 - 90, y: yG, size: 18, font: fontBold, color: corAzulRadix });
-      yG -= 22;
-      gabPage.drawText('Marque a letra de cada resposta no círculo correspondente.', { x: W/2 - 170, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
-      yG -= 16;
-      gabPage.drawText(sanit('Depois, volte à plataforma em "Minha Lista" e clique em "Conferir gabarito" para ver acertos e resoluções.'), { x: W/2 - 240, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
+      let yG = H - 90;
+      gabPage.drawText('FOLHA DE RESPOSTAS', { x: ML, y: yG, size: 14, font: fontBold, color: preto });
+      yG -= 18;
+      gabPage.drawText('Marque a letra de cada resposta no circulo correspondente.', { x: ML, y: yG, size: 9, font: fontItalic, color: cinzaMedio });
       yG -= 30;
 
-      // Grade de respostas (4 colunas)
       const cols = 4;
       const colW = CW / cols;
-      const linhaH = 26;
+      const linhaH = 24;
       for (let i = 0; i < questoes.length; i++) {
         const colIdx = i % cols;
         const linhaIdx = Math.floor(i / cols);
         const xC = ML + colIdx * colW;
-        const yC = yG - linhaIdx * linhaH;
-        if (yC < MB + 30) { /* deveria criar nova pagina mas vamos simplificar */ break; }
-        // Numero da questao
-        gabPage.drawText(String(i + 1).padStart(2, '0'), { x: xC, y: yC, size: 9, font: fontBold, color: corAzulEscuro });
-        // 5 círculos vazios A-E
-        ['A', 'B', 'C', 'D', 'E'].forEach((letra, k) => {
-          const cx = xC + 22 + k * 18;
-          const cy = yC + 3;
-          gabPage.drawCircle({ x: cx, y: cy, size: 7, borderColor: corAzulEscuro, borderWidth: 1, color: rgb(1, 1, 1) });
-          const lw = font.widthOfTextAtSize(letra, 7);
-          gabPage.drawText(letra, { x: cx - lw/2, y: cy - 2.5, size: 7, font: fontBold, color: corTextoMedio });
+        const yCur = yG - linhaIdx * linhaH;
+        if (yCur < MB + 30) break;
+        gabPage.drawText(String(i + 1).padStart(2, '0'), { x: xC, y: yCur, size: 9, font: fontBold, color: preto });
+        ['A','B','C','D','E'].forEach((letra, k) => {
+          const cx = xC + 22 + k * 16;
+          const cy = yCur + 3;
+          gabPage.drawCircle({ x: cx, y: cy, size: 6, borderColor: preto, borderWidth: 0.8, color: rgb(1,1,1) });
+          const lw = font.widthOfTextAtSize(letra, 6);
+          gabPage.drawText(letra, { x: cx - lw/2, y: cy - 2, size: 6, font: font, color: cinzaMedio });
         });
       }
-
-      // Box de notas embaixo
-      const boxY = 130;
-      gabPage.drawRectangle({ x: ML, y: boxY - 60, width: CW, height: 80, borderColor: corCinzaClaro, borderWidth: 0.5, color: rgb(0.99, 0.99, 0.99) });
-      gabPage.drawText('Observações pessoais:', { x: ML + 10, y: boxY + 5, size: 9, font: fontBold, color: corTextoMedio });
     }
 
-    // ============ RODAPÉ + MARCA D\'ÁGUA EM TODAS AS PÁGINAS ============
+    // ============ RODAPÉ + MARCA D'ÁGUA SUTIL ============
     pages.forEach((p, idx) => {
-      // Marca d'água diagonal (só nas páginas de questão, não na capa)
+      // Marca d'agua bem sutil só no rodapé (não no meio da página)
+      p.drawLine({ start: { x: ML, y: 38 }, end: { x: W - MR, y: 38 }, thickness: 0.3, color: cinzaClaro });
       if (idx > 0) {
-        const wm = sanit(nomeAluno + '  ·  ' + cpfFmt);
-        const wmSize = 42;
-        const wmWidth = fontBold.widthOfTextAtSize(wm, wmSize);
-        p.drawText(wm, {
-          x: W/2 - wmWidth/2.3, y: H * 0.48, size: wmSize, font: fontBold,
-          color: rgb(0.93, 0.93, 0.93), opacity: 0.5, rotate: degrees(30)
-        });
-      }
-      // Rodapé
-      p.drawLine({ start: { x: ML, y: 38 }, end: { x: W - MR, y: 38 }, thickness: 0.3, color: corCinzaClaro });
-      if (idx === 0) {
-        // Capa: rodapé já desenhado acima
+        p.drawText(sanit(nomeAluno + ' · CPF ' + cpfFmt), { x: ML, y: 25, size: 7, font: font, color: cinzaMedio });
+        p.drawText(idx + ' / ' + pages.length, { x: W - MR - 24, y: 25, size: 7, font: fontBold, color: cinzaMedio });
+        // Marca d'agua bem leve no canto inferior direito
+        p.drawText(sanit(nomeAluno), { x: W - MR - fontItalic.widthOfTextAtSize(sanit(nomeAluno), 30), y: H/2, size: 30, font: fontItalic, color: rgb(0.97,0.97,0.97), opacity: 0.6, rotate: degrees(35) });
       } else {
-        p.drawText(sanit(nomeAluno + '  ·  CPF ' + cpfFmt), { x: ML, y: 25, size: 7, font: font, color: corTextoMedio });
-        p.drawText('app.radixmatematica.com.br', { x: W/2 - 60, y: 25, size: 7, font: font, color: corTextoMedio });
-        p.drawText('Página ' + (idx + 1) + '/' + pages.length, { x: W - MR - 55, y: 25, size: 7, font: fontBold, color: corTextoMedio });
+        p.drawText(sanit('Boa prova! ' + nomeAluno), { x: ML, y: 25, size: 7, font: fontItalic, color: cinzaMedio });
       }
     });
 
