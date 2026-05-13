@@ -4419,35 +4419,60 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     const capa = pdfDoc.addPage([W, H]);
     pages.push(capa);
 
-    // Banner 2026 (imagem fornecida pelo professor) — centralizado no topo
-    try {
-      const bannerImg = await embedImg(BANNER_RADIX_2026);
-      if (bannerImg) {
-        const bDim = bannerImg.scale(1);
-        const bW = Math.min(380, CW * 0.88);
-        const bH = (bDim.height / bDim.width) * bW;
-        const bx = (W - bW) / 2;
-        capa.drawImage(bannerImg, { x: bx, y: H - 150, width: bW, height: bH });
-      }
-    } catch (e) { console.warn('Banner falhou', e); }
+    // Logo composta: √ RADIX (esquerda, em preto) + tarja preta com "2026" (direita, em cinza)
+    // Tudo centralizado horizontalmente
+    const lblRadix = 'RADIX';
+    const wRadix = fontBold.widthOfTextAtSize(lblRadix, 36);
+    const lbl2026 = '2026';
+    const w2026 = fontBold.widthOfTextAtSize(lbl2026, 36);
+    const radSize = 36;
+    const radWidth = radSize * 0.95;
+    const gap = 12;
+    const tarjaPad = 14;
+    const tarjaW = w2026 + tarjaPad * 2;
+    const tarjaH = 50;
+    const totalLogoW = radWidth + 8 + wRadix + gap + tarjaW;
+    const startX = (W - totalLogoW) / 2;
+    const logoY = H - 130;
+    // Radical
+    drawRadical(capa, startX, logoY - 5, radSize, preto, 3);
+    // RADIX
+    capa.drawText(lblRadix, { x: startX + radWidth + 8, y: logoY, size: 36, font: fontBold, color: preto });
+    // Tarja preta com 2026
+    capa.drawRectangle({
+      x: startX + radWidth + 8 + wRadix + gap,
+      y: logoY - 6, width: tarjaW, height: tarjaH, color: preto
+    });
+    capa.drawText(lbl2026, {
+      x: startX + radWidth + 8 + wRadix + gap + tarjaPad,
+      y: logoY, size: 36, font: fontBold, color: rgb(0.6, 0.6, 0.6)
+    });
+    // Tagline centralizada
+    const tagline = '"Raiz que vira resultado"';
+    const wTagline = fontItalic.widthOfTextAtSize(tagline, 11);
+    capa.drawText(tagline, { x: (W - wTagline) / 2, y: H - 175, size: 11, font: fontItalic, color: cinzaMedio });
 
     // Linha divisória sutil
     capa.drawLine({ start: { x: ML + 80, y: H - 200 }, end: { x: W - MR - 80, y: H - 200 }, thickness: 0.5, color: cinzaClaro });
 
-    // Título centralizado
+    // Subtítulo centralizado
     let yC = H - 250;
-    capa.drawText('MATEMATICA E SUAS TECNOLOGIAS', { x: W/2 - 130, y: yC, size: 10, font: font, color: cinzaMedio });
+    const subT = 'MATEMÁTICA E SUAS TECNOLOGIAS';
+    const wSubT = font.widthOfTextAtSize(subT, 10);
+    capa.drawText(subT, { x: (W - wSubT) / 2, y: yC, size: 10, font: font, color: cinzaMedio });
     yC -= 32;
     const tituloSan = sanit(tituloLista);
     const tlW = fontBold.widthOfTextAtSize(tituloSan, 26);
     capa.drawText(tituloSan, { x: (W - tlW) / 2, y: yC, size: 26, font: fontBold, color: preto });
     yC -= 22;
-    capa.drawText(questoes.length + ' questoes', { x: W/2 - 30, y: yC, size: 11, font: fontItalic, color: cinzaMedio });
+    const qLabel = questoes.length + ' questões';
+    const wQLabel = fontItalic.widthOfTextAtSize(qLabel, 11);
+    capa.drawText(qLabel, { x: (W - wQLabel) / 2, y: yC, size: 11, font: fontItalic, color: cinzaMedio });
 
-    // Box de identificacao simples
+    // Box de identificação simples
     yC -= 70;
     capa.drawLine({ start: { x: ML, y: yC + 8 }, end: { x: ML + 80, y: yC + 8 }, thickness: 0.8, color: preto });
-    capa.drawText('IDENTIFICACAO', { x: ML, y: yC + 14, size: 8, font: fontBold, color: preto });
+    capa.drawText('IDENTIFICAÇÃO', { x: ML, y: yC + 14, size: 8, font: fontBold, color: preto });
     yC -= 14;
     capa.drawText('Nome:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
     capa.drawText(sanit(nomeAluno), { x: ML + 40, y: yC, size: 10, font: fontBold, color: preto });
@@ -4476,7 +4501,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       currentPage = pdfDoc.addPage([W, H]);
       pages.push(currentPage);
       // Cabeçalho minimalista: linha + texto pequeno
-      currentPage.drawText('RADIX 2026  ·  MATEMATICA E SUAS TECNOLOGIAS', { x: ML, y: H - 35, size: 7, font: font, color: cinzaMedio });
+      currentPage.drawText('RADIX 2026  ·  MATEMÁTICA E SUAS TECNOLOGIAS', { x: ML, y: H - 35, size: 7, font: font, color: cinzaMedio });
       currentPage.drawText(sanit(nomeAluno), { x: W - MR - fontBold.widthOfTextAtSize(sanit(nomeAluno), 7), y: H - 35, size: 7, font: fontBold, color: cinzaMedio });
       currentPage.drawLine({ start: { x: ML, y: H - 45 }, end: { x: W - MR, y: H - 45 }, thickness: 0.5, color: preto });
       y = H - 70;
@@ -4487,6 +4512,34 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       const lh = lineHeight || tam * 1.5;
       linhas.forEach((l, i) => {
         currentPage.drawText(l, { x, y: y - i * lh, size: tam, font: fonte, color: color || preto });
+      });
+      return linhas.length * lh;
+    }
+
+    function drawWrappedJustified(text, x, y, fonte, tam, larg, color, lineHeight) {
+      // Texto justificado: distribui espaços entre palavras pra preencher largura completa
+      const linhas = quebrarTexto(text, fonte, tam, larg);
+      const lh = lineHeight || tam * 1.5;
+      const espaco = fonte.widthOfTextAtSize(' ', tam);
+      linhas.forEach((l, i) => {
+        const isUltima = (i === linhas.length - 1);
+        const palavras = l.split(' ').filter(p => p);
+        if (palavras.length <= 1 || isUltima) {
+          // Não justifica a última linha (estilo livro)
+          currentPage.drawText(l, { x, y: y - i * lh, size: tam, font: fonte, color: color || preto });
+          return;
+        }
+        // Calcular largura do texto sem espaços
+        const wPalavras = palavras.reduce((s, p) => s + fonte.widthOfTextAtSize(p, tam), 0);
+        const espacosNecessarios = palavras.length - 1;
+        const espacoCalc = (larg - wPalavras) / espacosNecessarios;
+        // Limite máximo de stretch (não mais que 3x o espaço normal pra evitar gaps feios)
+        const espacoFinal = Math.min(espacoCalc, espaco * 3);
+        let xCur = x;
+        palavras.forEach((p, j) => {
+          currentPage.drawText(p, { x: xCur, y: y - i * lh, size: tam, font: fonte, color: color || preto });
+          xCur += fonte.widthOfTextAtSize(p, tam) + (j < palavras.length - 1 ? espacoFinal : 0);
+        });
       });
       return linhas.length * lh;
     }
@@ -4514,8 +4567,8 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       });
       y -= 18;
 
-      // Enunciado — texto justificado em preto, line-height generoso
-      const consumiu = drawWrapped(q.enunciado, ML, y, font, 10, CW, preto, 14);
+      // Enunciado — texto JUSTIFICADO em preto, line-height generoso
+      const consumiu = drawWrappedJustified(q.enunciado, ML, y, font, 10, CW, preto, 14);
       y -= consumiu + 8;
 
       // Imagens (centralizadas, sem borda)
@@ -4566,18 +4619,21 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
           const alt = q.alternativas[k];
           const letra = String.fromCharCode(65 + k);
           const textoLimpo = alt.replace(/^[A-E]\)\s*/, '');
-          const linhasAlt = quebrarTexto(textoLimpo, font, 10, CW - 26);
+          const linhasAlt = quebrarTexto(textoLimpo, font, 10, CW - 30);
           const altH = linhasAlt.length * 14 + 4;
           if (y - altH < MB + 10) novaPagina();
-          // Letra circulada (estilo Ⓐ Ⓑ Ⓒ Ⓓ Ⓔ) - circulo + letra ao centro
-          const cx = ML + 8;
-          const cy = y - 1;
-          currentPage.drawCircle({ x: cx, y: cy, size: 8, borderColor: preto, borderWidth: 1.1, color: rgb(1, 1, 1) });
+          // Círculo + letra centralizada (estilo Ⓐ Ⓑ Ⓒ Ⓓ Ⓔ)
+          // Alinhar verticalmente o CENTRO do círculo com o CENTRO visual da primeira linha de texto
+          // Texto baseline em y; centro visual da linha = y + 3 (ascender ~3pt)
+          const cx = ML + 9;
+          const cy = y + 3;
+          currentPage.drawCircle({ x: cx, y: cy, size: 8.5, borderColor: preto, borderWidth: 1.2, color: rgb(1, 1, 1) });
           const lw = fontBold.widthOfTextAtSize(letra, 10);
-          currentPage.drawText(letra, { x: cx - lw/2, y: cy - 3.2, size: 10, font: fontBold, color: preto });
-          // Texto da alternativa, mais espacado
-          drawWrapped(textoLimpo, ML + 22, y, font, 10, CW - 22, preto, 14);
-          y -= altH + 5;
+          // Letra: baseline = cy - (ascender_letra / 2) ~ cy - 3.5
+          currentPage.drawText(letra, { x: cx - lw/2 + 0.2, y: cy - 3.5, size: 10, font: fontBold, color: preto });
+          // Texto da alternativa, justificado
+          drawWrappedJustified(textoLimpo, ML + 26, y, font, 10, CW - 26, preto, 14);
+          y -= altH + 6;
         }
       }
       y -= 18;
@@ -4587,7 +4643,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     if (includeGabaritoEmpty) {
       const gabPage = pdfDoc.addPage([W, H]);
       pages.push(gabPage);
-      gabPage.drawText('RADIX 2026  ·  MATEMATICA E SUAS TECNOLOGIAS', { x: ML, y: H - 35, size: 7, font: font, color: cinzaMedio });
+      gabPage.drawText('RADIX 2026  ·  MATEMÁTICA E SUAS TECNOLOGIAS', { x: ML, y: H - 35, size: 7, font: font, color: cinzaMedio });
       gabPage.drawText(sanit(nomeAluno), { x: W - MR - fontBold.widthOfTextAtSize(sanit(nomeAluno), 7), y: H - 35, size: 7, font: fontBold, color: cinzaMedio });
       gabPage.drawLine({ start: { x: ML, y: H - 45 }, end: { x: W - MR, y: H - 45 }, thickness: 0.5, color: preto });
 
