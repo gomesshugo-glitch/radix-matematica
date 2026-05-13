@@ -1240,6 +1240,62 @@
     border-bottom: 2px solid var(--radix-bg-soft);
   }
 
+
+  /* Histórico de notificações WhatsApp */
+  .notif-lista { display: flex; flex-direction: column; gap: 12px; }
+  .notif-card {
+    background: white;
+    border: 1px solid var(--radix-border);
+    border-left: 4px solid #25D366;
+    border-radius: 10px;
+    padding: 16px 18px;
+    transition: all 0.15s;
+  }
+  .notif-card:hover {
+    box-shadow: 0 4px 12px rgba(37,211,102,0.12);
+    transform: translateX(2px);
+  }
+  .notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .notif-tipo {
+    background: #E8F5E9;
+    color: #1B5E20;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .notif-data {
+    font-size: 12px;
+    color: var(--radix-gray-light);
+    font-variant-numeric: tabular-nums;
+  }
+  .notif-msg {
+    background: #F4F6FA;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--radix-gray);
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .notif-footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--radix-gray-light);
+    flex-wrap: wrap;
+  }
+
 </style>
 </head>
 <body>
@@ -2901,6 +2957,10 @@ function renderHome() {
           <div class="icon" style="background:#E8F5E9;color:#1B5E20;">💬</div>
           <div><h3>Notificar Alunos</h3><p>Mensagem via WhatsApp</p></div>
         </div>
+        <div class="quick-card" onclick="renderHistoricoNotificacoes()">
+          <div class="icon" style="background:#E0F7FA;color:#006064;">📜</div>
+          <div><h3>Histórico de Mensagens</h3><p>Mensagens enviadas</p></div>
+        </div>
         <div class="quick-card" onclick="abrirCadastroQuestao()">
           <div class="icon">➕</div>
           <div><h3>Cadastrar Questão</h3><p>Adicionar ao banco</p></div>
@@ -3497,6 +3557,111 @@ function renderDesempenho() {
   });
 }
 
+
+// ========== HISTÓRICO DE NOTIFICAÇÕES WHATSAPP ==========
+
+async function renderHistoricoNotificacoes() {
+  state.view = 'historico-notif';
+  const main = document.getElementById('main-content');
+
+  // Buscar todas as notificacoes (RLS permite professor)
+  const { data: notifs, error } = await sb.from('notificacoes_whatsapp')
+    .select('*')
+    .order('enviada_em', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    main.innerHTML = `<p>Erro: ${error.message}</p>`;
+    return;
+  }
+
+  // Para cada notificacao, buscar nome de quem enviou
+  const enviadoresIds = [...new Set((notifs || []).map(n => n.enviada_por).filter(Boolean))];
+  let perfilMap = {};
+  if (enviadoresIds.length > 0) {
+    const { data: perfis } = await sb.from('perfis').select('id, nome').in('id', enviadoresIds);
+    (perfis || []).forEach(p => perfilMap[p.id] = p.nome);
+  }
+
+  const totalMsg = notifs.length;
+  const totalDest = notifs.reduce((s, n) => s + (n.destinatarios_total || 0), 0);
+  const ultimosSeteDias = notifs.filter(n => {
+    const d = new Date(n.enviada_em);
+    return (Date.now() - d.getTime()) < 7 * 24 * 60 * 60 * 1000;
+  }).length;
+
+  const tipoLabel = {
+    'manual': '📝 Manual',
+    'novo_material': '📚 Novo material',
+    'nova_prova': '📝 Nova prova',
+    'lembrete_simulado': '⏱ Lembrete simulado',
+    'aula_extra': '📅 Aula extra',
+    'aviso_geral': '📢 Aviso geral'
+  };
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Histórico de Mensagens</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>📜 Histórico de Mensagens WhatsApp</h2>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Total de envios</div><div class="value">${totalMsg}</div></div>
+      <div class="stat-card"><div class="label">Destinatários atingidos</div><div class="value">${totalDest}</div></div>
+      <div class="stat-card"><div class="label">Nos últimos 7 dias</div><div class="value">${ultimosSeteDias}</div></div>
+    </div>
+
+    ${totalMsg === 0 ? `
+      <div style="text-align:center;padding:48px;color:var(--radix-gray-light);background:white;border-radius:14px;border:1px solid var(--radix-border);">
+        <div style="font-size:56px;margin-bottom:10px;">📭</div>
+        Nenhuma mensagem enviada ainda.
+      </div>
+    ` : `
+      <div class="notif-lista">
+        ${notifs.map(n => {
+          const d = new Date(n.enviada_em);
+          const dataFmt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const horaFmt = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const tipoTxt = tipoLabel[n.tipo] || ('📝 ' + n.tipo);
+          const enviador = perfilMap[n.enviada_por] || 'Sistema';
+          const previa = n.mensagem.length > 200 ? n.mensagem.substring(0, 200) + '...' : n.mensagem;
+          return `
+            <div class="notif-card">
+              <div class="notif-header">
+                <span class="notif-tipo">${tipoTxt}</span>
+                <span class="notif-data">${dataFmt} às ${horaFmt}</span>
+              </div>
+              <div class="notif-msg">${previa.replace(/\n/g, '<br>')}</div>
+              <div class="notif-footer">
+                <span>👤 ${enviador}</span>
+                <span>📤 Enviado para <strong>${n.destinatarios_total}</strong> aluno${n.destinatarios_total !== 1 ? 's' : ''}</span>
+                <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;margin-left:auto;" onclick="copiarMensagem(${n.id}, this)">📋 Copiar texto</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `}
+  `;
+
+  // Salvar no estado para uso do botão copiar
+  state._notifsCache = notifs;
+}
+
+function copiarMensagem(notifId, btn) {
+  const n = (state._notifsCache || []).find(x => x.id === notifId);
+  if (!n) return;
+  navigator.clipboard.writeText(n.mensagem).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado!';
+    btn.style.background = '#16A34A';
+    btn.style.color = 'white';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 1500);
+  });
+}
+
 function renderHistoricoSimulados() {
   state.view = 'historico';
   const meus = state.historicoSimulados.filter(h => h.aluno === state.usuario.nome);
@@ -3918,11 +4083,12 @@ function renderListaAlunos(perfis, statusAtual) {
               <td style="font-size:12px;color:var(--radix-gray-light);">${dataFmt}</td>
               <td style="text-align:right;white-space:nowrap;">
                 ${isProf ? '<span style="color:var(--radix-gray-light);font-size:12px;">—</span>' : `
+                  <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="abrirEditarAluno('${p.id}')">✏️ Editar</button>
                   ${statusAtual === 'pendente' ? `
                     <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Aprovar</button>
                     <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','bloqueado')">🚫 Bloquear</button>
                   ` : statusAtual === 'aprovado' ? `
-                    <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="reenviarSenhaAluno('${p.email}','${p.nome.replace(/'/g, '\\\'')}')">🔑 Reenviar senha</button>
+                    <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="reenviarSenhaAluno('${p.email}','${p.nome.replace(/'/g, '\\\'')}')">🔑 Senha</button>
                     <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','bloqueado')">🚫 Bloquear</button>
                   ` : `
                     <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Reativar</button>
@@ -3952,6 +4118,86 @@ async function mudarStatusAluno(alunoId, novoStatus) {
 }
 
 
+
+
+async function abrirEditarAluno(alunoId) {
+  const { data: p, error } = await sb.from('perfis').select('*').eq('id', alunoId).single();
+  if (error || !p) { alert('Erro ao buscar aluno: ' + (error?.message || '')); return; }
+
+  const telFmt = p.telefone
+    ? p.telefone.replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3')
+    : '';
+  const cpfFmt = p.cpf
+    ? p.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4')
+    : '';
+
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalEditarAluno()">
+      <div class="modal" style="max-width:520px;">
+        <h2>✏️ Editar aluno</h2>
+        <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
+          <strong>${p.email}</strong> · ${p.perfil === 'professor' ? '👨‍🏫 Professor' : '🎓 Aluno'}
+        </p>
+
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" id="edit-nome" value="${p.nome}">
+        </div>
+
+        <div class="form-group">
+          <label>WhatsApp (com DDD)</label>
+          <input type="tel" id="edit-whats" value="${telFmt}" placeholder="(11) 98765-4321" maxlength="16" oninput="mascararTelefone(this)">
+        </div>
+
+        <div class="form-group">
+          <label>CPF</label>
+          <input type="text" id="edit-cpf" value="${cpfFmt}" placeholder="000.000.000-00" maxlength="14" oninput="mascararCPF(this)">
+        </div>
+
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalEditarAluno()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarEditarAluno('${alunoId}')">Salvar alterações</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-editar-aluno">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+
+function fecharModalEditarAluno() {
+  const m = document.getElementById('modal-editar-aluno');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+async function salvarEditarAluno(alunoId) {
+  const nome = document.getElementById('edit-nome').value.trim();
+  const whats = document.getElementById('edit-whats').value.replace(/\D/g, '');
+  const cpf = document.getElementById('edit-cpf').value.replace(/\D/g, '');
+
+  if (!nome) { alert('Nome obrigatório'); return; }
+  if (whats && (whats.length < 10 || whats.length > 11)) {
+    alert('WhatsApp inválido (10 ou 11 dígitos com DDD).');
+    return;
+  }
+  if (cpf && cpf.length !== 11) {
+    alert('CPF inválido (11 dígitos).');
+    return;
+  }
+
+  const payload = {
+    nome,
+    telefone: whats || null,
+    cpf: cpf || null
+  };
+
+  const { error } = await sb.from('perfis').update(payload).eq('id', alunoId);
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+
+  fecharModalEditarAluno();
+  renderGerenciarAlunos();
+}
 
 async function reenviarSenhaAluno(email, nome) {
   if (!confirm(`Enviar e-mail de redefinição de senha para ${nome} (${email})?`)) return;
