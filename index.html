@@ -8,26 +8,343 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --radix-blue: #1E88E5;
-    --radix-blue-dark: #1565C0;
-    --radix-blue-darker: #0D47A1;
-    --radix-cyan: #4FC3F7;
-    --radix-red: #E53935;
-    --radix-gray: #3F3F46;
-    --radix-gray-light: #6B7280;
-    --radix-bg: #F4F8FC;
-    --radix-bg-soft: #E3F2FD;
-    --radix-border: #E0E7EE;
+    /* paleta brand Radix v3 — dark navy + ciano/azul + coral */
+    --radix-blue: #3b82f6;
+    --radix-blue-dark: #1d4ed8;
+    --radix-blue-darker: #1e3a8a;
+    --radix-cyan: #22d3ee;
+    --radix-red: #f87171;
+    --radix-coral: #ff7a5c;
+    --radix-gray: #eaf1ff;          /* texto principal sobre o dark */
+    --radix-gray-light: #8aa0c9;    /* texto secundário/muted */
+    --radix-bg: #0e1a36;            /* fundo principal navy */
+    --radix-bg-2: #13234a;
+    --radix-bg-soft: #19284e;       /* "soft" agora é uma superfície escura */
+    --radix-surface: #19284e;       /* cards */
+    --radix-surface-2: #223464;     /* hover/inputs */
+    --radix-surface-3: #2b417a;
+    --radix-line: rgba(255,255,255,0.08);
+    --radix-line-2: rgba(255,255,255,0.14);
+    --radix-border: rgba(255,255,255,0.10);
+    --radix-text: #eaf1ff;
+    --radix-text-2: #c6d2ec;
+    --radix-text-muted: #8aa0c9;
+    --radix-success: #34d399;
+    --radix-warning: #fbbf24;
+
+    /* gradientes prontos */
+    --radix-grad-brand: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+    --radix-grad-hero: linear-gradient(135deg, #1fc8ff 0%, #3b82f6 50%, #1e40af 100%);
+    --radix-grad-coral: linear-gradient(135deg, #ff8a7a 0%, #ff5e3a 100%);
+
+    /* tokens "papel" usados pelo questao-card.enem-style (mantém branco/papel) */
+    --paper: #ffffff;
+    --paper-ink: #1a1a1a;
+    --paper-line: #D4D2C8;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--radix-bg);
-    color: var(--radix-gray);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(59,130,246,.12), transparent 60%),
+      var(--radix-bg);
+    background-attachment: fixed;
+    color: var(--radix-text);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
+
+  /* ===================================================================
+     DARK THEME OVERRIDES (aplicação do mockup v3)
+     Mantém intacto: .questao-card.enem-style (papel branco do ENEM)
+     =================================================================== */
+
+  /* superfícies escuras nos cards que antes eram brancos */
+  .quick-card, .modulo-bloco, .simulado-header,
+  .stat-card, table, .resultado-box,
+  .lista-mod-bloco, .gerencia-mat-item {
+    background: var(--radix-surface) !important;
+    color: var(--radix-text);
+    border-color: var(--radix-line) !important;
+  }
+  .quick-card h3 { color: var(--radix-text); }
+  .quick-card p, .stat-card .label { color: var(--radix-text-muted); }
+  .stat-card .value { color: var(--radix-text); }
+  .stat-card { border-top: 3px solid transparent; background-image: linear-gradient(var(--radix-surface), var(--radix-surface)), var(--radix-grad-brand); background-origin: border-box; background-clip: padding-box, border-box; }
+
+  /* botões: gradiente ciano-azul */
+  .btn, .login-box button {
+    background: var(--radix-grad-brand) !important;
+    color: #0e1a36 !important;
+    box-shadow: 0 8px 24px -10px rgba(34,211,238,.45);
+    font-weight: 700 !important;
+  }
+  .btn:hover, .login-box button:hover { filter: brightness(1.08); background: var(--radix-grad-brand) !important; }
+  .btn-secondary {
+    background: var(--radix-surface-2) !important;
+    color: var(--radix-text) !important;
+    border: 1px solid var(--radix-line-2) !important;
+    box-shadow: none !important;
+  }
+  .btn-secondary:hover { background: var(--radix-surface-3) !important; filter: none; }
+  .btn-danger { background: linear-gradient(135deg, #ff8a7a 0%, #ff5e3a 100%) !important; color: #fff !important; }
+  .btn-danger:hover { filter: brightness(1.08); }
+  .btn-success { background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important; color: #052e16 !important; }
+
+  /* header com gradiente brand */
+  header {
+    background: var(--radix-grad-hero) !important;
+    box-shadow: 0 8px 24px -12px rgba(34,211,238,.4) !important;
+  }
+
+  /* login screen com hero do mockup */
+  .login-wrap {
+    background: var(--radix-grad-hero) !important;
+  }
+  .login-wrap::before { display: none; }  /* remove o √ Unicode antigo cortado */
+  .login-wrap::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    bottom: -120px;
+    width: 540px;
+    height: 540px;
+    opacity: 0.10;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><path d='M10 110 L40 110 L70 175 L110 30 L195 30' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
+  .login-box {
+    background: var(--radix-surface) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45) !important;
+    border: 1px solid var(--radix-line);
+  }
+  .login-box label { color: var(--radix-text-2) !important; }
+  .login-box input, .login-box select,
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--radix-bg-2) !important;
+    color: var(--radix-text) !important;
+    border: 1px solid var(--radix-line-2) !important;
+  }
+  .login-box input:focus, .login-box select:focus,
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--radix-cyan) !important;
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.15) !important;
+  }
+  .login-tagline { color: var(--radix-text-muted) !important; }
+  .login-prof { color: var(--radix-cyan) !important; }
+  .login-brand .radix-logo-img,
+  .header-logo { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+
+  /* breadcrumb e títulos */
+  .breadcrumb { color: var(--radix-text-muted) !important; }
+  .breadcrumb a { color: var(--radix-cyan) !important; }
+  h1, h2, h3 { color: var(--radix-text); }
+  .modulo-titulo h2 { color: #fff !important; }
+
+  /* tags */
+  .tag-tema   { background: rgba(34,211,238,0.15) !important; color: var(--radix-cyan) !important; }
+  .tag-facil  { background: rgba(52,211,153,0.15) !important; color: var(--radix-success) !important; }
+  .tag-media  { background: rgba(251,191,36,0.15) !important; color: var(--radix-warning) !important; }
+  .tag-dificil{ background: rgba(255,122,92,0.15) !important; color: var(--radix-coral) !important; }
+
+  /* tabelas */
+  th { background: var(--radix-bg-2) !important; color: var(--radix-cyan) !important; border-bottom: 1px solid var(--radix-line) !important; }
+  td { color: var(--radix-text); }
+  tr { border-color: var(--radix-line) !important; }
+  tr:hover { background: var(--radix-surface-2) !important; }
+
+  /* navegação de questões no simulado */
+  .nav-numero { background: var(--radix-bg-2) !important; color: var(--radix-text-2) !important; border: 1.5px solid var(--radix-line-2) !important; }
+  .nav-numero.atual { border-color: var(--radix-cyan) !important; }
+  .nav-numero.respondida { background: rgba(34,211,238,0.15) !important; color: var(--radix-cyan) !important; }
+  .nav-numero:hover { background: var(--radix-surface-2) !important; }
+
+  /* quick-card ícone */
+  .quick-card .icon { background: rgba(34,211,238,0.15) !important; color: var(--radix-cyan) !important; }
+  .quick-card .icon.red,
+  .quick-card .icon.icon-coral { background: rgba(255,122,92,0.15) !important; color: var(--radix-coral) !important; }
+  .quick-card .icon.icon-success { background: rgba(52,211,153,0.15) !important; color: var(--radix-success) !important; }
+  .quick-card .icon.icon-warn { background: rgba(251,191,36,0.15) !important; color: var(--radix-warning) !important; }
+  .quick-card .icon.icon-info { background: rgba(59,130,246,0.15) !important; color: var(--radix-blue) !important; }
+  .quick-card .icon svg { display: block; }
+  .quick-card:hover { border-color: var(--radix-cyan) !important; box-shadow: 0 12px 30px -10px rgba(34,211,238,0.25) !important; }
+
+  /* btn-mini, btn-mini-icon (mantém claro pra contraste) */
+  .btn-mini { background: transparent !important; border-color: var(--radix-cyan) !important; color: var(--radix-cyan) !important; }
+  .btn-mini:hover { background: var(--radix-cyan) !important; color: #0e1a36 !important; }
+  .btn-mini-icon { background: var(--radix-surface-2) !important; border-color: var(--radix-line-2) !important; color: var(--radix-text) !important; }
+
+  /* explicação (resposta correta) */
+  .explicacao { background: rgba(52,211,153,0.10) !important; border-left-color: var(--radix-success) !important; color: var(--radix-text-2) !important; }
+  .explicacao strong { color: var(--radix-success) !important; }
+
+  /* conferir gabarito - mantém claro mas com toques escuros */
+  .confer-card { background: var(--radix-surface) !important; border-color: var(--radix-line) !important; color: var(--radix-text); }
+  .confer-alt { background: var(--radix-bg-2) !important; border-color: var(--radix-line-2) !important; color: var(--radix-text); }
+
+  /* cronômetro */
+  .cronometro { color: var(--radix-cyan) !important; }
+
+  /* MODAIS — superfície escura */
+  .modal-overlay { background: rgba(8, 14, 30, 0.72) !important; }
+  .modal {
+    background: var(--radix-surface) !important;
+    color: var(--radix-text) !important;
+    border: 1px solid var(--radix-line);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6) !important;
+  }
+  .modal h2 { color: var(--radix-text) !important; }
+  .modal h3 { color: var(--radix-text) !important; }
+  .modal p { color: var(--radix-text-2); }
+  .modal-acoes { border-top-color: var(--radix-line) !important; }
+  .modal::-webkit-scrollbar-thumb { background: var(--radix-surface-3) !important; }
+  .modal::-webkit-scrollbar-thumb:hover { background: var(--radix-line-2) !important; }
+  .modal label { color: var(--radix-text-2) !important; }
+
+  /* DASHBOARD HERO — gradiente brand */
+  .dash-hero {
+    background: var(--radix-grad-hero) !important;
+    box-shadow: 0 20px 40px -20px rgba(34,211,238,0.35) !important;
+    position: relative; overflow: hidden;
+  }
+  .dash-hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(700px 400px at 100% -20%, rgba(255,122,92,.22), transparent 60%),
+      radial-gradient(500px 350px at 0% 120%, rgba(255,255,255,.12), transparent 60%);
+    pointer-events: none;
+  }
+  .dash-hero > * { position: relative; z-index: 1; }
+  .dash-hero .dash-saudacao { color: #fff !important; }
+  .dash-hero .dash-tagline { color: rgba(255,255,255,0.92) !important; }
+  .dash-hero .dash-data { color: rgba(255,255,255,0.88) !important; }
+
+  /* dash-stat cards: gradientes brand */
+  .dash-stat-1 { background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%) !important; }
+  .dash-stat-2 { background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important; }
+  .dash-stat-3 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important; }
+  .dash-stat-4 { background: linear-gradient(135deg, #ff8a7a 0%, #ff5e3a 100%) !important; }
+
+  /* dash-atividade icon (✓ ou ✗) — fica claro pro contraste */
+  .dash-atividade.correta .dash-ativ-icon { background: rgba(52,211,153,0.22) !important; color: var(--radix-success) !important; }
+  .dash-atividade.errada .dash-ativ-icon { background: rgba(255,122,92,0.22) !important; color: var(--radix-coral) !important; }
+  .dash-ativ-info { color: var(--radix-text); }
+
+  /* DASHBOARD do aluno — cards e atalhos */
+  .dash-card {
+    background: var(--radix-surface) !important;
+    border-color: var(--radix-line) !important;
+    color: var(--radix-text);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px -16px rgba(0,0,0,0.45) !important;
+  }
+  .dash-card h3 {
+    color: var(--radix-text) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .dash-card h3 .h-ico {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(34,211,238,0.15);
+    color: var(--radix-cyan);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .dash-card h3 .h-ico svg { display: block; }
+  .dash-empty { color: var(--radix-text-muted) !important; }
+  .dash-data-sem,
+  .dash-proxima-sub { color: var(--radix-text-muted) !important; }
+  .dash-proxima-titulo { color: var(--radix-text) !important; }
+  .dash-pill {
+    background: rgba(34,211,238,0.18) !important;
+    color: var(--radix-cyan) !important;
+  }
+  .dash-atalho {
+    background: var(--radix-bg-2) !important;
+    border-color: var(--radix-line) !important;
+  }
+  .dash-atalho:hover {
+    background: var(--radix-surface-2) !important;
+    border-color: var(--radix-cyan) !important;
+  }
+  .dash-atalho span { color: var(--radix-text) !important; }
+  .dash-atalho-icon {
+    background: rgba(34,211,238,0.15);
+    color: var(--radix-cyan);
+  }
+  .dash-atalho-icon.icon-coral { background: rgba(255,122,92,0.18); color: var(--radix-coral); }
+  .dash-atalho-icon.icon-success { background: rgba(52,211,153,0.18); color: var(--radix-success); }
+  .dash-atalho-icon.icon-warn { background: rgba(251,191,36,0.18); color: var(--radix-warning); }
+  .dash-atalho-icon.icon-info { background: rgba(59,130,246,0.18); color: var(--radix-blue); }
+  .dash-atalho-icon.icon-cyan { background: rgba(34,211,238,0.18); color: var(--radix-cyan); }
+  .dash-atalho-icon svg { display: block; }
+  .dash-atividade {
+    background: var(--radix-bg-2) !important;
+  }
+  .dash-atividade.correta { border-left-color: var(--radix-success) !important; }
+  .dash-atividade.errada { border-left-color: var(--radix-coral) !important; }
+  .dash-saudacao { color: var(--radix-text) !important; }
+
+  /* títulos de seção: section-title (com accent bar) */
+  .section-title { color: var(--radix-text) !important; }
+  .section-title-accent {
+    background: var(--radix-grad-brand) !important;
+  }
+
+  /* card-tema (interior dos módulos) */
+  .card-tema { background: var(--radix-surface-2) !important; color: var(--radix-text); border-color: var(--radix-line) !important; }
+  .card-tema h3 { color: var(--radix-text) !important; }
+  .card-tema p { color: var(--radix-text-muted) !important; }
+  .card-tema:hover { border-color: var(--radix-cyan) !important; }
+
+  /* badges de pendentes */
+  .badge-pendentes { background: var(--radix-coral) !important; }
+
+  /* texto secundário muted que usa --radix-gray-light em color: */
+  /* já é coberto pela troca de variável :root, mas para textos sobre divs claras: */
+  .stat-card .label,
+  .quick-card p,
+  .breadcrumb,
+  .dash-tagline { color: var(--radix-text-muted) !important; }
+
+  /* ===================================================================
+     PRESERVAÇÃO DO ESTILO ENEM (papel branco) - sempre o último!
+     =================================================================== */
+  .questao-card.enem-style,
+  .questao-card.enem-style * {
+    /* nada de override de cor aqui — herda o estilo papel original */
+  }
+  .questao-card.enem-style {
+    background: var(--paper) !important;
+    color: var(--paper-ink) !important;
+    border-color: var(--paper-line) !important;
+  }
+  .questao-card.enem-style .alternativa:not(.correta):not(.errada):not(.selecionada) {
+    background: var(--paper) !important;
+    color: var(--paper-ink) !important;
+    border-color: var(--paper-line) !important;
+  }
+  .questao-card.enem-style .alternativa:hover:not(.correta):not(.errada):not(.selecionada) {
+    border-color: var(--radix-blue) !important;
+    background: #f5f7fb !important;
+  }
+  .questao-card.enem-style .alternativa-letra { color: var(--paper-ink); }
+  .questao-card.enem-style .alternativa.correta .alternativa-letra,
+  .questao-card.enem-style .alternativa.errada .alternativa-letra,
+  .questao-card.enem-style .alternativa.selecionada .alternativa-letra { color: #fff !important; }
+  .questao-card.enem-style .enunciado,
+  .questao-card.enem-style .questao-enunciado { color: var(--paper-ink) !important; }
+  .questao-card.enem-style .questao-numero { color: var(--radix-blue-dark) !important; }
+  .questao-card.enem-style .questao-header { border-bottom-color: var(--paper-line) !important; }
   .hidden { display: none !important; }
 
   /* Logo Radix (oficial, PNG embutido) */
@@ -3472,7 +3789,7 @@ function renderHome() {
       </div>
       <div class="quick-actions">
         <div class="quick-card" onclick="renderGerenciarAlunos()" style="position:relative;">
-          <div class="icon" style="background:#FFF3E0;color:#E65100;">👥</div>
+          <div class="icon icon-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <div>
             <h3>Gerenciar Alunos</h3>
             <p>Aprovar cadastros novos</p>
@@ -3480,31 +3797,31 @@ function renderHome() {
           <span id="badge-pendentes" class="badge-pendentes hidden"></span>
         </div>
         <div class="quick-card" onclick="renderRelatorioProfessor()">
-          <div class="icon">📈</div>
+          <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
           <div><h3>Relatórios</h3><p>Ranking, evolução, top erradas</p></div>
         </div>
         <div class="quick-card" onclick="renderEditarCronograma()">
-          <div class="icon" style="background:#E1F5FE;color:#01579B;">📅</div>
+          <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
           <div><h3>Editar Cronograma</h3><p>Aulas extras, ajustes</p></div>
         </div>
         <div class="quick-card" onclick="renderGerenciarMateriais()">
-          <div class="icon" style="background:#FFEBEE;color:#C62828;">🎬</div>
+          <div class="icon icon-coral"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
           <div><h3>Vídeo-aulas e PDFs</h3><p>Gerenciar materiais</p></div>
         </div>
         <div class="quick-card" onclick="abrirNotificarWhatsApp()">
-          <div class="icon" style="background:#E8F5E9;color:#1B5E20;">💬</div>
+          <div class="icon icon-success"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
           <div><h3>Notificar Alunos</h3><p>Mensagem via WhatsApp</p></div>
         </div>
         <div class="quick-card" onclick="renderHistoricoNotificacoes()">
-          <div class="icon" style="background:#E0F7FA;color:#006064;">📜</div>
+          <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
           <div><h3>Histórico de Mensagens</h3><p>Mensagens enviadas</p></div>
         </div>
         <div class="quick-card" onclick="abrirCadastroQuestao()">
-          <div class="icon">➕</div>
+          <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
           <div><h3>Cadastrar Questão</h3><p>Adicionar ao banco</p></div>
         </div>
         <div class="quick-card" onclick="renderGerenciarQuestoes()">
-          <div class="icon">📚</div>
+          <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
           <div><h3>Gerenciar Banco</h3><p>Editar / excluir questões</p></div>
         </div>
       </div>
@@ -3609,7 +3926,7 @@ function renderDashboardAluno() {
     <!-- Cabeçalho de boas-vindas -->
     <div class="dash-hero">
       <div>
-        <div class="dash-saudacao">${saudacao}, ${nomeCurto}! 👋</div>
+        <div class="dash-saudacao">${saudacao}, ${nomeCurto}.</div>
         <div class="dash-tagline">"Raiz que vira resultado"</div>
       </div>
       <div class="dash-data">
@@ -3648,37 +3965,39 @@ function renderDashboardAluno() {
       const temaAtual = semAtual.temaId ? TEMAS.find(t => t.id === semAtual.temaId) : null;
       const modAtual = MODULOS.find(m => m.id === semAtual.moduloId);
       const statusAtual = statusDaSemana(semAtual.n);
-      const statusLabel = { 'nao_iniciado': '⚪ Ainda não iniciada', 'em_estudo': '🟡 Em estudo', 'concluido': '✅ Concluída' }[statusAtual];
+      const statusLabel = { 'nao_iniciado': 'Ainda não iniciada', 'em_estudo': 'Em estudo', 'concluido': 'Concluída' }[statusAtual];
+      const statusBg = { 'nao_iniciado': 'rgba(138,160,201,0.18)', 'em_estudo': 'rgba(251,191,36,0.18)', 'concluido': 'rgba(52,211,153,0.18)' }[statusAtual];
+      const statusFg = { 'nao_iniciado': 'var(--radix-text-muted)', 'em_estudo': 'var(--radix-warning)', 'concluido': 'var(--radix-success)' }[statusAtual];
       const isSpecial = ['simulado','recesso','revisao','evento'].includes(semAtual.tipo);
       return `
         <div class="dash-card dash-semana-atual" style="--mod-cor:${modAtual?.cor || 'var(--radix-blue)'};">
           <div class="dash-semana-header">
             <div>
-              <span class="dash-pill" style="background:#FEF3C7;color:#92400E;">📍 AULA DESTA SEMANA</span>
+              <span class="dash-pill" style="background:rgba(251,191,36,0.18);color:var(--radix-warning);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>AULA DESTA SEMANA</span>
               <span class="dash-data-sem">${semAtual.data}/2026</span>
             </div>
-            <span class="dash-pill" style="background:var(--radix-bg);color:var(--radix-gray);">${statusLabel}</span>
+            <span class="dash-pill" style="background:${statusBg};color:${statusFg};">${statusLabel}</span>
           </div>
           <h2 class="dash-semana-titulo">${semAtual.titulo}</h2>
           <div class="dash-semana-meta">
-            <span class="dash-pill" style="background:${modAtual?.cor || 'var(--radix-blue)'}30;color:${modAtual?.cor || 'var(--radix-blue-dark)'};">
+            <span class="dash-pill" style="background:rgba(34,211,238,0.18);color:var(--radix-cyan);">
               Módulo ${modAtual?.numero || ''} · Semana ${String(semAtual.n).padStart(2,'0')}
             </span>
-            ${temaAtual ? `<span class="dash-pill" style="background:var(--radix-bg-soft);color:var(--radix-blue-dark);">Tema: ${temaAtual.nome}</span>` : ''}
+            ${temaAtual ? `<span class="dash-pill" style="background:rgba(59,130,246,0.18);color:var(--radix-blue);">Tema: ${temaAtual.nome}</span>` : ''}
           </div>
-          ${semAtual.observacao ? `<p style="font-size:13px;color:var(--radix-gray-light);margin-top:10px;background:var(--radix-bg);padding:10px;border-radius:8px;">💡 ${semAtual.observacao}</p>` : ''}
+          ${semAtual.observacao ? `<p style="font-size:13px;color:var(--radix-text-muted);margin-top:10px;background:var(--radix-bg-2);padding:12px 14px;border-radius:10px;border-left:3px solid var(--radix-coral);">${semAtual.observacao}</p>` : ''}
           <div class="dash-semana-acoes">
             ${(() => {
               const matsDaSemana = (materiaisCache || []).filter(m => m.semana_numero === semAtual.n && m.visivel);
               return matsDaSemana.length > 0
-                ? `<button class="btn" style="background:#C62828;" onclick="abrirMateriaisDaSemana(${semAtual.n})">📺 Ver aulas e materiais (${matsDaSemana.length})</button>`
+                ? `<button class="btn btn-danger" onclick="abrirMateriaisDaSemana(${semAtual.n})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>Ver aulas e materiais (${matsDaSemana.length})</button>`
                 : '';
             })()}
             ${temaAtual ? `
-              <button class="btn" onclick="abrirTema('${temaAtual.id}')">🎯 Praticar essa matéria</button>
-              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${temaAtual.id}')">⏱ Mini-simulado</button>
+              <button class="btn" onclick="abrirTema('${temaAtual.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Praticar essa matéria</button>
+              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${temaAtual.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Mini-simulado</button>
             ` : ''}
-            <button class="btn btn-secondary" onclick="abrirEditorSemana(${semAtual.n})">📝 Marcar progresso</button>
+            <button class="btn btn-secondary" onclick="abrirEditorSemana(${semAtual.n})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Marcar progresso</button>
           </div>
         </div>
       `;
@@ -3688,27 +4007,27 @@ function renderDashboardAluno() {
     <div class="dash-grid">
       <!-- Próxima ação -->
       <div class="dash-card dash-proxima">
-        <h3>🎯 Sua próxima missão</h3>
+        <h3><span class="h-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>Sua próxima missão</h3>
         ${proximaSem ? `
           <div class="dash-proxima-meta">
-            <span class="dash-pill" style="background:${proxMod?.cor || 'var(--radix-blue)'}40;color:${proxMod?.cor || 'var(--radix-blue-dark)'};">
+            <span class="dash-pill" style="background:rgba(34,211,238,0.18);color:var(--radix-cyan);">
               Módulo ${proxMod?.numero || ''} · Semana ${String(proximaSem.n).padStart(2,'0')}
             </span>
-            <span class="dash-data-sem">📅 ${proximaSem.data || ''}</span>
+            <span class="dash-data-sem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${proximaSem.data || ''}</span>
           </div>
           <h2 class="dash-proxima-titulo">${proximaSem.titulo}</h2>
           ${proxTema ? `<p class="dash-proxima-sub">Tema: ${proxTema.nome}</p>` : ''}
           <div class="dash-proxima-acoes">
             ${proxTema ? `
-              <button class="btn" onclick="abrirTema('${proxTema.id}')">🎯 Praticar agora</button>
-              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${proxTema.id}')">⏱ Mini-simulado</button>
+              <button class="btn" onclick="abrirTema('${proxTema.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="m5 3 14 9-14 9z"/></svg>Praticar agora</button>
+              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${proxTema.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Mini-simulado</button>
             ` : ''}
-            <button class="btn btn-secondary" onclick="renderCronograma()">📅 Ver cronograma</button>
+            <button class="btn btn-secondary" onclick="renderCronograma()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Ver cronograma</button>
           </div>
         ` : `
           <div class="dash-empty">
-            <div style="font-size:48px;">🎉</div>
-            <p>Você concluiu todas as semanas do cronograma! Hora de revisar com simulados.</p>
+            <div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--radix-success);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg></div>
+            <p>Você concluiu todas as semanas do cronograma. Hora de revisar com simulados.</p>
             <button class="btn" onclick="abrirSimuladoConfig()">Fazer simulado</button>
           </div>
         `}
@@ -3716,36 +4035,36 @@ function renderDashboardAluno() {
 
       <!-- Atalhos rápidos -->
       <div class="dash-card">
-        <h3>🚀 Acesso rápido</h3>
+        <h3><span class="h-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/></svg></span>Acesso rápido</h3>
         <div class="dash-atalhos">
           <div class="dash-atalho" onclick="renderVideoAulas()">
-            <div class="dash-atalho-icon" style="background:#FFEBEE;color:#C62828;">🎬</div>
+            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
             <span>Vídeo-aulas</span>
           </div>
           <div class="dash-atalho" onclick="renderCronograma()">
-            <div class="dash-atalho-icon" style="background:#FFF3E0;color:#E65100;">📅</div>
+            <div class="dash-atalho-icon icon-warn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
             <span>Cronograma</span>
           </div>
           <div class="dash-atalho" onclick="abrirSimuladoConfig()">
-            <div class="dash-atalho-icon" style="background:#FFEBEE;color:#C62828;">⏱</div>
+            <div class="dash-atalho-icon icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
             <span>Simulado</span>
           </div>
           <div class="dash-atalho" onclick="abrirTema('')">
-            <div class="dash-atalho-icon" style="background:#E3F2FD;color:#1565C0;">📚</div>
+            <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
             <span>Questões</span>
           </div>
           <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
-            <div class="dash-atalho-icon" style="background:#E0F7FA;color:#006064;">📈</div>
+            <div class="dash-atalho-icon icon-success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
             <span>Estatísticas</span>
           </div>
           <div class="dash-atalho" onclick="renderHistoricoSimulados()">
-            <div class="dash-atalho-icon" style="background:#F3E5F5;color:#6A1B9A;">📋</div>
+            <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
             <span>Histórico</span>
           </div>
           <div class="dash-atalho" onclick="renderMontarLista()" style="position:relative;">
-            <div class="dash-atalho-icon" style="background:#FCE4EC;color:#AD1457;">📋</div>
+            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17l-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
             <span>Minha Lista</span>
-            <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:#AD1457;"></span>
+            <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:var(--radix-coral);"></span>
           </div>
         </div>
       </div>
@@ -3753,7 +4072,7 @@ function renderDashboardAluno() {
 
     <!-- Últimas atividades -->
     <div class="dash-card">
-      <h3>🕒 Suas últimas atividades</h3>
+      <h3><span class="h-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>Suas últimas atividades</h3>
       ${respostas.length === 0 ? `
         <p style="color:var(--radix-gray-light);text-align:center;padding:24px;">Você ainda não respondeu nenhuma questão. <a onclick="abrirTema('')" style="color:var(--radix-blue);cursor:pointer;">Começar agora →</a></p>
       ` : `
