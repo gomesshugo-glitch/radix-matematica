@@ -2890,7 +2890,7 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom()]);
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais()]);
   carregarListaLocal();
 
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
@@ -3665,6 +3665,12 @@ function renderDashboardAluno() {
           </div>
           ${semAtual.observacao ? `<p style="font-size:13px;color:var(--radix-gray-light);margin-top:10px;background:var(--radix-bg);padding:10px;border-radius:8px;">💡 ${semAtual.observacao}</p>` : ''}
           <div class="dash-semana-acoes">
+            ${(() => {
+              const matsDaSemana = (materiaisCache || []).filter(m => m.semana_numero === semAtual.n && m.visivel);
+              return matsDaSemana.length > 0
+                ? `<button class="btn" style="background:#C62828;" onclick="abrirMateriaisDaSemana(${semAtual.n})">📺 Ver aulas e materiais (${matsDaSemana.length})</button>`
+                : '';
+            })()}
             ${temaAtual ? `
               <button class="btn" onclick="abrirTema('${temaAtual.id}')">🎯 Praticar essa matéria</button>
               <button class="btn btn-secondary" onclick="fazerMiniSimulado('${temaAtual.id}')">⏱ Mini-simulado</button>
@@ -4351,8 +4357,30 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     const corTextoMedio = rgb(0.40, 0.40, 0.40);
     const corCinzaClaro = rgb(0.85, 0.85, 0.85);
 
+    function sanit(s) {
+      if (!s) return '';
+      // Substitui caracteres unicode nao suportados pelo WinAnsi
+      const map = {
+        '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+        '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+        '√':'raiz','π':'pi','∞':'inf','≤':'<=','≥':'>=','≠':'!=','≈':'~','÷':'/','×':'x',
+        '°':'°','·':'.','—':'-','–':'-','…':'...','‒':'-','„':'"','«':'"','»':'"',
+        '“':'"','”':'"','‘':"'","’":"'",
+        'α':'alfa','β':'beta','γ':'gama','δ':'delta','ε':'eps','θ':'teta','λ':'lambda','μ':'mu','σ':'sigma','τ':'tau','ϕ':'phi','φ':'phi','ω':'omega',
+        'Δ':'Delta','Σ':'Sigma','Π':'Pi','Ω':'Omega','Θ':'Teta','Λ':'Lambda','Φ':'Phi',
+        'ℓ':'l','∑':'soma','∫':'int','∂':'d','∇':'nabla','∈':'pertence','∉':'naopertence','⊂':'subset','⊃':'supset','∪':'uniao','∩':'intersec','∀':'paratodo','∃':'existe','∅':'vazio','→':'->','←':'<-','↔':'<->','⇒':'=>','⇐':'<=','⇔':'<=>','∴':'logo','∵':'pois','∝':'prop','⋅':'.'
+      };
+      let out = String(s);
+      for (const [k, v] of Object.entries(map)) {
+        out = out.split(k).join(v);
+      }
+      // Remover qualquer outro caractere fora do ASCII estendido (WinAnsi) que sobrou
+      out = out.replace(/[^\x00-\xFF]/g, '?');
+      return out;
+    }
+
     function quebrarTexto(texto, fonte, tam, larg) {
-      const palavras = String(texto || '').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').split(/(\s+)/);
+      const palavras = sanit(String(texto || '').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'')).split(/(\s+)/);
       const linhas = [];
       let linha = '';
       for (const p of palavras) {
@@ -4415,8 +4443,8 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     let yC = H - 280;
     capa.drawText('LISTA DE EXERCÍCIOS', { x: W/2 - 95, y: yC, size: 16, font: fontBold, color: corAzulEscuro });
     yC -= 28;
-    const tlW = fontBold.widthOfTextAtSize(tituloLista, 22);
-    capa.drawText(tituloLista, { x: (W - tlW) / 2, y: yC, size: 22, font: fontBold, color: corTextoEscuro });
+    const tlW = fontBold.widthOfTextAtSize(sanit(tituloLista), 22);
+    capa.drawText(sanit(tituloLista), { x: (W - tlW) / 2, y: yC, size: 22, font: fontBold, color: corTextoEscuro });
     yC -= 18;
     capa.drawLine({ start: { x: ML + 100, y: yC }, end: { x: W - MR - 100, y: yC }, thickness: 1, color: corAzulRadix });
     yC -= 24;
@@ -4429,7 +4457,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     capa.drawRectangle({ x: ML + 40, y: yC - 90, width: CW - 80, height: 90, borderColor: corAzulRadix, borderWidth: 1.5, color: rgb(0.96, 0.98, 1) });
     capa.drawText('IDENTIFICAÇÃO DO ALUNO', { x: ML + 56, y: yC - 14, size: 9, font: fontBold, color: corAzulRadix });
     capa.drawText('Nome:', { x: ML + 56, y: yC - 36, size: 9, font: fontBold, color: corTextoMedio });
-    capa.drawText(nomeAluno, { x: ML + 95, y: yC - 36, size: 11, font: fontBold, color: corTextoEscuro });
+    capa.drawText(sanit(nomeAluno), { x: ML + 95, y: yC - 36, size: 11, font: fontBold, color: corTextoEscuro });
     capa.drawText('CPF:', { x: ML + 56, y: yC - 56, size: 9, font: fontBold, color: corTextoMedio });
     capa.drawText(cpfFmt, { x: ML + 95, y: yC - 56, size: 11, font: font, color: corTextoEscuro });
     const hoje = new Date().toLocaleDateString('pt-BR');
@@ -4471,7 +4499,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       currentPage.drawText('2026', { x: ML + 84, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
       currentPage.drawText('MATEMÁTICA E SUAS TECNOLOGIAS', { x: W - MR - 195, y: H - 38, size: 9, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
       // Linha de identificação
-      currentPage.drawText(nomeAluno, { x: ML, y: H - 70, size: 7, font: fontBold, color: corTextoMedio });
+      currentPage.drawText(sanit(nomeAluno), { x: ML, y: H - 70, size: 7, font: fontBold, color: corTextoMedio });
       currentPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 7, font: font, color: corTextoMedio });
       currentPage.drawLine({ start: { x: ML, y: H - 76 }, end: { x: W - MR, y: H - 76 }, thickness: 0.3, color: corCinzaClaro });
       y = H - 100;
@@ -4510,7 +4538,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       currentPage.drawLine({ start: { x: ML + 78, y: y + 4 }, end: { x: W - MR, y: y + 4 }, thickness: 0.8, color: corAzulRadix });
       const tema = TEMAS.find(t => t.id === q.tema);
       if (tema) {
-        currentPage.drawText(tema.nome, { x: ML + 85, y: y, size: 8, font: fontItalic, color: corTextoMedio });
+        currentPage.drawText(sanit(tema.nome), { x: ML + 85, y: y, size: 8, font: fontItalic, color: corTextoMedio });
       }
       y -= 20;
 
@@ -4598,7 +4626,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       gabPage.drawRectangle({ x: ML + 66, y: H - 28, width: 4, height: 4, color: corVermelho });
       gabPage.drawText('2026', { x: ML + 84, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
       gabPage.drawText('FOLHA DE RESPOSTAS', { x: W - MR - 130, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
-      gabPage.drawText(nomeAluno, { x: ML, y: H - 70, size: 8, font: fontBold, color: corTextoMedio });
+      gabPage.drawText(sanit(nomeAluno), { x: ML, y: H - 70, size: 8, font: fontBold, color: corTextoMedio });
       gabPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 8, font: font, color: corTextoMedio });
 
       let yG = H - 110;
@@ -4641,7 +4669,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     pages.forEach((p, idx) => {
       // Marca d'água diagonal (só nas páginas de questão, não na capa)
       if (idx > 0) {
-        const wm = nomeAluno + '  ·  ' + cpfFmt;
+        const wm = sanit(nomeAluno + '  ·  ' + cpfFmt);
         const wmSize = 42;
         const wmWidth = fontBold.widthOfTextAtSize(wm, wmSize);
         p.drawText(wm, {
@@ -4654,7 +4682,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       if (idx === 0) {
         // Capa: rodapé já desenhado acima
       } else {
-        p.drawText(nomeAluno + '  ·  CPF ' + cpfFmt, { x: ML, y: 25, size: 7, font: font, color: corTextoMedio });
+        p.drawText(sanit(nomeAluno + '  ·  CPF ' + cpfFmt), { x: ML, y: 25, size: 7, font: font, color: corTextoMedio });
         p.drawText('app.radixmatematica.com.br', { x: W/2 - 60, y: 25, size: 7, font: font, color: corTextoMedio });
         p.drawText('Página ' + (idx + 1) + '/' + pages.length, { x: W - MR - 55, y: 25, size: 7, font: fontBold, color: corTextoMedio });
       }
@@ -5343,6 +5371,27 @@ function copiarMensagem(notifId, btn) {
       btn.style.color = '';
     }, 1500);
   });
+}
+
+
+async function abrirMateriaisDaSemana(semanaNum) {
+  await renderVideoAulas();
+  // Aguarda o render, depois scrolla pra seção dessa semana
+  setTimeout(() => {
+    const numStr = String(semanaNum).padStart(2, '0');
+    const titulos = document.querySelectorAll('.mat-semana-titulo');
+    let alvo = null;
+    titulos.forEach(t => {
+      const span = t.querySelector('.mat-semana-num');
+      if (span && span.textContent.trim() === 'SEM ' + numStr) alvo = t.closest('.mat-semana-secao');
+    });
+    if (alvo) {
+      alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      alvo.style.transition = 'background 0.5s';
+      alvo.style.background = '#FFF9C4';
+      setTimeout(() => { alvo.style.background = ''; }, 1800);
+    }
+  }, 250);
 }
 
 function renderHistoricoSimulados() {
