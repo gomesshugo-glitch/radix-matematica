@@ -5195,23 +5195,34 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       let out = String(s);
       for (const [k, v] of Object.entries(map)) out = out.split(k).join(v);
       out = out.replace(/[^\x00-\xFF]/g, '?');
+      // Remover newlines, tabs e caracteres de controle (WinAnsi não codifica)
+      out = out.replace(/[\r\n\t\v\f]+/g, ' ').replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '');
+      // Colapsa espaços múltiplos
+      out = out.replace(/ {2,}/g, ' ');
       return out;
     }
 
     function quebrarTexto(texto, fonte, tam, larg) {
-      const palavras = sanit(String(texto || '').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'')).split(/(\s+)/);
+      // Primeiro converte <br> em \n e strip HTML, ANTES de sanit
+      const semHtml = String(texto || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+      // Divide em blocos por quebra de linha original
+      const blocos = semHtml.split(/\r?\n/);
       const linhas = [];
-      let linha = '';
-      for (const p of palavras) {
-        if (p === '\n') { if (linha) { linhas.push(linha); linha = ''; } continue; }
-        const teste = linha + p;
-        const wid = fonte.widthOfTextAtSize(teste, tam);
-        if (wid > larg && linha) {
-          linhas.push(linha.trimEnd());
-          linha = p.trimStart();
-        } else linha = teste;
+      for (const bloco of blocos) {
+        const limpo = sanit(bloco);
+        if (!limpo.trim()) { linhas.push(''); continue; }
+        const palavras = limpo.split(/(\s+)/);
+        let linha = '';
+        for (const p of palavras) {
+          const teste = linha + p;
+          const wid = fonte.widthOfTextAtSize(teste, tam);
+          if (wid > larg && linha) {
+            linhas.push(linha.trimEnd());
+            linha = p.trimStart();
+          } else linha = teste;
+        }
+        if (linha) linhas.push(linha);
       }
-      if (linha) linhas.push(linha);
       return linhas;
     }
 
