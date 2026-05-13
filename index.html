@@ -4752,11 +4752,10 @@ async function abrirNotificarWhatsApp() {
 
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalWhats()">Cancelar</button>
-          <button class="btn btn-success" onclick="enviarWhatsLinks(${JSON.stringify(comTel.map(a=>({nome:a.nome,tel:a.telefone}))).replace(/"/g,'&quot;')})">Gerar links wa.me</button>
+          <button class="btn btn-success" onclick="enviarWhatsLinks(${JSON.stringify(comTel.map(a=>({nome:a.nome,tel:a.telefone}))).replace(/"/g,'&quot;')})">📤 Enviar para todos</button>
         </div>
         <p style="font-size:11px;color:var(--radix-gray-light);margin-top:10px;">
-          Os links abrem o WhatsApp Web com a mensagem pronta. Você clica em "Enviar" em cada janela.
-          (Em breve: envio automático via Z-API.)
+          ⚡ Envio automático via Z-API. As mensagens são disparadas em sequência (1.5s entre cada) pra evitar bloqueio do WhatsApp.
         </p>
       </div>
     </div>
@@ -4787,24 +4786,41 @@ async function enviarWhatsLinks(alunos) {
   const msg = document.getElementById('whats-msg').value.trim();
   if (!msg) { alert('Digite a mensagem'); return; }
   if (alunos.length === 0) { alert('Nenhum aluno com WhatsApp'); return; }
-  if (!confirm(`Abrir ${alunos.length} janelas do WhatsApp Web?`)) return;
+  const c1 = confirm(`Enviar essa mensagem para ${alunos.length} aluno(s) via WhatsApp automaticamente (Z-API)?`);
+  if (!c1) return;
 
-  // Salvar histórico
-  await sb.from('notificacoes_whatsapp').insert({
-    enviada_por: state.usuario.id,
-    destinatarios_total: alunos.length,
-    mensagem: msg,
-    tipo: 'manual'
-  });
+  // Mostrar progresso
+  const btnEl = event && event.target ? event.target : null;
+  const oldT = btnEl ? btnEl.textContent : '';
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Enviando...'; }
 
-  // Abrir cada link em nova aba
-  alunos.forEach((a, i) => {
-    const tel = '55' + a.tel.replace(/\D/g,'');
-    const url = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
-    setTimeout(() => window.open(url, '_blank'), i * 250);
-  });
-  alert(`Abertas ${alunos.length} janelas. Em cada uma, clique em "Enviar".`);
-  fecharModalWhats();
+  try {
+    const destinatarios = alunos.map(a => a.tel);
+    const { data, error } = await sb.functions.invoke('enviar-whatsapp', {
+      body: { mensagem: msg, destinatarios }
+    });
+    if (error) throw error;
+
+    // Registrar no historico
+    await sb.from('notificacoes_whatsapp').insert({
+      enviada_por: state.usuario.id,
+      destinatarios_total: alunos.length,
+      mensagem: msg,
+      tipo: 'manual'
+    });
+
+    if (data?.falhas > 0) {
+      alert(`✅ ${data.enviadas} mensagens enviadas com sucesso.\n⚠️ ${data.falhas} falharam (verifique no painel Z-API).`);
+    } else {
+      alert(`✅ ${data.enviadas} mensagens enviadas com sucesso!`);
+    }
+    fecharModalWhats();
+  } catch (e) {
+    console.error('Erro envio WhatsApp:', e);
+    alert('Erro: ' + (e.message || JSON.stringify(e)));
+  } finally {
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = oldT; }
+  }
 }
 
 // ========== CRONOGRAMA 2026 ==========
