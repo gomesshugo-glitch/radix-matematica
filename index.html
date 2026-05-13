@@ -1560,6 +1560,26 @@
   .confer-alt:hover { border-color:var(--radix-blue); }
   .confer-alt.sel { background:var(--radix-blue); border-color:var(--radix-blue); color:white; transform:scale(1.1); }
 
+
+  /* Gerenciar Materiais — agrupado por semana */
+  .gerencia-semana { background:var(--radix-bg); border-left:3px solid var(--radix-blue); border-radius:8px; padding:12px 14px; margin-bottom:10px; }
+  .gerencia-semana-titulo { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; color:var(--radix-blue-dark); flex-wrap:wrap; }
+  .gerencia-materiais-lista { display:flex; flex-direction:column; gap:6px; }
+  .gerencia-mat-item { display:flex; align-items:center; gap:12px; background:white; padding:10px 12px; border-radius:8px; border:1px solid var(--radix-border); }
+  .gerencia-mat-item.oculto { opacity:0.5; }
+  .gerencia-mat-ordem { background:var(--radix-blue); color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; flex-shrink:0; }
+  .gerencia-mat-ico { font-size:22px; flex-shrink:0; }
+  .gerencia-mat-info { flex:1; min-width:0; }
+  .gerencia-mat-titulo { font-size:13px; font-weight:600; color:var(--radix-gray); }
+  .gerencia-mat-tipo { font-size:11px; color:var(--radix-gray-light); margin-top:2px; }
+  .gerencia-mat-acoes { display:flex; gap:3px; flex-shrink:0; }
+
+  /* Visualização do aluno — separador de semana */
+  .mat-semana-secao { margin-bottom:20px; }
+  .mat-semana-titulo { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; color:var(--radix-gray); margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid var(--radix-bg-soft); flex-wrap:wrap; }
+  .mat-semana-num { background:var(--radix-blue); color:white; padding:3px 10px; border-radius:8px; font-size:11px; font-weight:800; letter-spacing:0.5px; }
+  .mat-semana-data { font-size:11px; color:var(--radix-gray-light); margin-left:auto; }
+
 </style>
 </head>
 <body>
@@ -4374,8 +4394,16 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     // Gradiente simulado com retângulos sobrepostos
     capa.drawRectangle({ x: 0, y: H - 220, width: W, height: 80, color: rgb(0.31, 0.76, 0.97), opacity: 0.35 });
 
-    // Logo Radix grande
-    capa.drawText('√', { x: W/2 - 95, y: H - 110, size: 64, font: fontBold, color: rgb(1,1,1) });
+    // Logo Radix grande - desenha radical como linhas
+    function drawRadical(page, x, y, size, color, thickness) {
+      const t = thickness || size * 0.07;
+      // Pequeno gancho descendente
+      page.drawLine({ start: { x: x, y: y + size*0.3 }, end: { x: x + size*0.12, y: y }, thickness: t, color: color });
+      page.drawLine({ start: { x: x + size*0.12, y: y }, end: { x: x + size*0.28, y: y + size*0.9 }, thickness: t, color: color });
+      // Linha horizontal superior
+      page.drawLine({ start: { x: x + size*0.28, y: y + size*0.9 }, end: { x: x + size, y: y + size*0.9 }, thickness: t, color: color });
+    }
+    drawRadical(capa, W/2 - 105, H - 145, 50, rgb(1,1,1), 4);
     capa.drawText('RADIX', { x: W/2 - 50, y: H - 100, size: 48, font: fontBold, color: rgb(1,1,1) });
     // Ponto vermelho sobre o "i"
     capa.drawRectangle({ x: W/2 + 71, y: H - 70, width: 9, height: 9, color: corVermelho });
@@ -4437,9 +4465,10 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       y = H - MT;
       // Cabeçalho compacto
       currentPage.drawRectangle({ x: 0, y: H - 55, width: W, height: 55, color: corAzulRadix });
-      currentPage.drawText('√ RADIX', { x: ML, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
-      currentPage.drawRectangle({ x: ML + 64, y: H - 28, width: 4, height: 4, color: corVermelho });
-      currentPage.drawText('2026', { x: ML + 82, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
+      drawRadical(currentPage, ML, H - 45, 18, rgb(1, 1, 1), 1.8);
+      currentPage.drawText('RADIX', { x: ML + 22, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
+      currentPage.drawRectangle({ x: ML + 66, y: H - 28, width: 4, height: 4, color: corVermelho });
+      currentPage.drawText('2026', { x: ML + 84, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
       currentPage.drawText('MATEMÁTICA E SUAS TECNOLOGIAS', { x: W - MR - 195, y: H - 38, size: 9, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
       // Linha de identificação
       currentPage.drawText(nomeAluno, { x: ML, y: H - 70, size: 7, font: fontBold, color: corTextoMedio });
@@ -4564,9 +4593,10 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       pages.push(gabPage);
       // Cabeçalho compacto
       gabPage.drawRectangle({ x: 0, y: H - 55, width: W, height: 55, color: corAzulRadix });
-      gabPage.drawText('√ RADIX', { x: ML, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
-      gabPage.drawRectangle({ x: ML + 64, y: H - 28, width: 4, height: 4, color: corVermelho });
-      gabPage.drawText('2026', { x: ML + 82, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
+      drawRadical(gabPage, ML, H - 45, 18, rgb(1, 1, 1), 1.8);
+      gabPage.drawText('RADIX', { x: ML + 22, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1) });
+      gabPage.drawRectangle({ x: ML + 66, y: H - 28, width: 4, height: 4, color: corVermelho });
+      gabPage.drawText('2026', { x: ML + 84, y: H - 38, size: 18, font: fontBold, color: rgb(1, 1, 1), opacity: 0.65 });
       gabPage.drawText('FOLHA DE RESPOSTAS', { x: W - MR - 130, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1), opacity: 0.95 });
       gabPage.drawText(nomeAluno, { x: ML, y: H - 70, size: 8, font: fontBold, color: corTextoMedio });
       gabPage.drawText('CPF ' + cpfFmt, { x: W - MR - 90, y: H - 70, size: 8, font: font, color: corTextoMedio });
@@ -5920,24 +5950,17 @@ function extrairYouTubeId(url) {
 async function renderVideoAulas() {
   state.view = 'videoaulas';
   await carregarMateriais();
+  await carregarCronogramaCustom();
   const main = document.getElementById('main-content');
 
   const visiveis = materiaisCache.filter(m => m.visivel);
+  const merged = getCronogramaMerged();
 
-  // Agrupar por módulo (e dentro do módulo, por tema)
-  const porModulo = {};
-  MODULOS.forEach(mod => porModulo[mod.id] = []);
-  const semModulo = [];
-  visiveis.forEach(mat => {
-    if (mat.modulo_id && porModulo[mat.modulo_id]) porModulo[mat.modulo_id].push(mat);
-    else semModulo.push(mat);
-  });
-
-  // Contadores totais
   const totAulas = visiveis.filter(m => m.tipo === 'aula_youtube').length;
   const totPDFs  = visiveis.filter(m => m.tipo === 'pdf').length;
   const totLinks = visiveis.filter(m => m.tipo === 'link_externo').length;
 
+  // Agrupar por modulo > semana
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Vídeo-aulas</div>
     <h2 class="section-title"><span class="section-title-accent"></span>🎬 Vídeo-aulas e Materiais</h2>
@@ -5955,7 +5978,7 @@ async function renderVideoAulas() {
         <option value="pdf">📄 Apenas PDFs</option>
         <option value="link_externo">🔗 Apenas links</option>
       </select>
-      <input type="text" id="filtro-busca" placeholder="🔍 Buscar por título..." oninput="filtrarMateriais()" style="flex:1;min-width:180px;">
+      <input type="text" id="filtro-busca" placeholder="🔍 Buscar..." oninput="filtrarMateriais()" style="flex:1;min-width:180px;">
     </div>
 
     ${visiveis.length === 0 ? `
@@ -5964,61 +5987,71 @@ async function renderVideoAulas() {
         Nenhum material publicado ainda.
       </div>
     ` : MODULOS.map(mod => {
-      const mats = porModulo[mod.id];
-      if (mats.length === 0) return '';
-      // Agrupar por tema dentro do módulo
-      const porTema = {};
-      mats.forEach(m => {
-        const tk = m.tema_id || '__sem_tema__';
-        if (!porTema[tk]) porTema[tk] = [];
-        porTema[tk].push(m);
-      });
-      // Ordenar temas pela ordem definida no módulo
-      const temasOrdenados = [...mod.temas, '__sem_tema__'].filter(t => porTema[t]);
+      // Achar materiais desse modulo
+      const matsMod = visiveis.filter(m => m.modulo_id === mod.id || (m.semana_numero !== null && merged.find(s => s.n === m.semana_numero && s.moduloId === mod.id)));
+      if (matsMod.length === 0) return '';
+      const semanasDoMod = merged.filter(s => s.moduloId === mod.id);
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
           <div class="cron-modulo-header">
             <div class="cron-modulo-numero">${mod.numero}</div>
             <div class="cron-modulo-info">
               <h3>${mod.nome}</h3>
-              <p>${mod.subtitulo}</p>
+              <p>${matsMod.length} materiais</p>
             </div>
-            <div class="cron-modulo-stats">${mats.length}</div>
           </div>
           <div style="padding:14px;">
-            ${temasOrdenados.map(tid => {
-              const tema = tid === '__sem_tema__' ? null : TEMAS.find(t => t.id === tid);
+            ${semanasDoMod.map(sem => {
+              const matsSem = visiveis
+                .filter(m => m.semana_numero === sem.n)
+                .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+              if (matsSem.length === 0) return '';
               return `
-                <div class="mat-tema-secao">
-                  <h4 class="mat-tema-titulo">${tema ? '√ ' + tema.nome : 'Sem tema específico'}</h4>
+                <div class="mat-semana-secao">
+                  <h4 class="mat-semana-titulo">
+                    <span class="mat-semana-num">SEM ${String(sem.n).padStart(2, '0')}</span>
+                    <span>${sem.titulo}</span>
+                    <span class="mat-semana-data">${sem.data ? sem.data + '/2026' : ''}</span>
+                  </h4>
                   <div class="materiais-grid">
-                    ${porTema[tid].map(m => cardMaterial(m)).join('')}
+                    ${matsSem.map(m => cardMaterial(m)).join('')}
                   </div>
                 </div>
               `;
             }).join('')}
+
+            ${(() => {
+              const semSemana = visiveis.filter(m => m.modulo_id === mod.id && (m.semana_numero === null || m.semana_numero === undefined));
+              if (semSemana.length === 0) return '';
+              return `
+                <div class="mat-semana-secao">
+                  <h4 class="mat-semana-titulo" style="opacity:0.7;">📌 Materiais gerais do módulo</h4>
+                  <div class="materiais-grid">
+                    ${semSemana.map(m => cardMaterial(m)).join('')}
+                  </div>
+                </div>
+              `;
+            })()}
           </div>
         </div>
       `;
     }).join('')}
 
-    ${semModulo.length > 0 ? `
-      <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;">
-        <div class="cron-modulo-header">
-          <div class="cron-modulo-numero">+</div>
-          <div class="cron-modulo-info">
-            <h3>Materiais Gerais</h3>
-            <p>Sem vínculo com módulo específico</p>
+    ${(() => {
+      const semMod = visiveis.filter(m => !m.modulo_id && (m.semana_numero === null || m.semana_numero === undefined));
+      if (semMod.length === 0) return '';
+      return `
+        <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;">
+          <div class="cron-modulo-header">
+            <div class="cron-modulo-numero">+</div>
+            <div class="cron-modulo-info"><h3>Materiais gerais</h3><p>Sem vínculo específico</p></div>
           </div>
-          <div class="cron-modulo-stats">${semModulo.length}</div>
-        </div>
-        <div style="padding:14px;">
-          <div class="materiais-grid">
-            ${semModulo.map(m => cardMaterial(m)).join('')}
+          <div style="padding:14px;">
+            <div class="materiais-grid">${semMod.map(m => cardMaterial(m)).join('')}</div>
           </div>
         </div>
-      </div>
-    ` : ''}
+      `;
+    })()}
   `;
 }
 
@@ -6031,10 +6064,9 @@ function filtrarMateriais() {
     const okB = !fb || titulo.includes(fb);
     c.style.display = (okT && okB) ? '' : 'none';
   });
-  // Esconder seções vazias
-  document.querySelectorAll('.mat-tema-secao').forEach(s => {
-    const visiveis = [...s.querySelectorAll('.card-material')].filter(c => c.style.display !== 'none');
-    s.style.display = visiveis.length === 0 ? 'none' : '';
+  document.querySelectorAll('.mat-semana-secao').forEach(s => {
+    const v = [...s.querySelectorAll('.card-material')].filter(c => c.style.display !== 'none');
+    s.style.display = v.length === 0 ? 'none' : '';
   });
 }
 
@@ -6215,45 +6247,196 @@ async function baixarPDFComMarcaDagua(matId) {
 async function renderGerenciarMateriais() {
   state.view = 'gerenciar-materiais';
   await carregarMateriais();
+  await carregarCronogramaCustom();
   const main = document.getElementById('main-content');
+
+  // Agrupar por modulo > semana
+  const merged = getCronogramaMerged();
+  const semanasPorMod = {};
+  MODULOS.forEach(m => semanasPorMod[m.id] = []);
+  merged.forEach(s => semanasPorMod[s.moduloId].push(s));
+
+  // Materiais sem semana definida (vão para "soltos")
+  const semSemana = materiaisCache.filter(m => m.visivel !== false && (m.semana_numero === null || m.semana_numero === undefined));
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Materiais</div>
     <h2 class="section-title">
-      <span><span class="section-title-accent"></span>🎬 Vídeo-aulas e PDFs</span>
+      <span><span class="section-title-accent"></span>🎬 Vídeo-aulas, PDFs e Gabaritos</span>
       <span>
         <button class="btn btn-success" onclick="abrirNovoMaterial('aula_youtube')">+ Vídeo-aula</button>
         <button class="btn btn-success" onclick="abrirNovoMaterial('pdf')">+ PDF</button>
-        <button class="btn btn-success" onclick="abrirNovoMaterial('link_externo')">+ Link externo</button>
+        <button class="btn btn-success" onclick="abrirNovoMaterial('link_externo')">+ Link</button>
       </span>
     </h2>
 
-    <table>
-      <thead>
-        <tr><th>Tipo</th><th>Título</th><th>Módulo</th><th>Status</th><th style="text-align:right;">Ações</th></tr>
-      </thead>
-      <tbody>
-        ${materiaisCache.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--radix-gray-light);padding:32px;">Nenhum material cadastrado.</td></tr>' : materiaisCache.map(m => {
-          const mod = MODULOS.find(x => x.id === m.modulo_id);
-          const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[m.tipo];
-          return `
-            <tr ${!m.visivel ? 'style="opacity:0.5;"' : ''}>
-              <td>${ico}</td>
-              <td><strong>${m.titulo}</strong>${m.descricao ? `<br><span style="font-size:11px;color:var(--radix-gray-light);">${m.descricao.substring(0,80)}</span>` : ''}</td>
-              <td>${mod ? `Mód. ${mod.numero}` : '—'}</td>
-              <td>${m.visivel ? '✅ Visível' : '🚫 Oculto'}</td>
-              <td style="text-align:right;">
-                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="abrirEdicaoMaterial(${m.id})">Editar</button>
-                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="toggleVisivelMaterial(${m.id})">${m.visivel ? 'Ocultar' : 'Mostrar'}</button>
-                <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="excluirMaterial(${m.id})">Excluir</button>
-              </td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    </table>
+    <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
+      Os materiais são organizados por <strong>semana do cronograma</strong>. Dentro de cada semana, você pode reordenar (vídeo-aula → apostila → gabarito, por exemplo).
+    </p>
+
+    ${MODULOS.map(mod => {
+      const semanas = semanasPorMod[mod.id];
+      const matsDesseModulo = materiaisCache.filter(mat => mat.modulo_id === mod.id || (mat.semana_numero !== null && semanas.some(s => s.n === mat.semana_numero)));
+      if (matsDesseModulo.length === 0) return '';
+      return `
+        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};margin-bottom:18px;">
+          <div class="cron-modulo-header">
+            <div class="cron-modulo-numero">${mod.numero}</div>
+            <div class="cron-modulo-info">
+              <h3>${mod.nome}</h3>
+              <p>${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'material' : 'materiais'}</p>
+            </div>
+          </div>
+          <div style="padding:10px 14px;">
+            ${semanas.map(sem => {
+              const matsDestaSem = materiaisCache
+                .filter(mat => mat.semana_numero === sem.n)
+                .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+              if (matsDestaSem.length === 0) return '';
+              return `
+                <div class="gerencia-semana">
+                  <div class="gerencia-semana-titulo">
+                    <strong>Semana ${String(sem.n).padStart(2, '0')} · ${sem.data || '—'} · ${sem.titulo}</strong>
+                    <button class="btn-mini" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}')">+ adicionar à esta semana</button>
+                  </div>
+                  <div class="gerencia-materiais-lista">
+                    ${matsDestaSem.map((mat, idx) => {
+                      const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
+                      const tipoLabel = { aula_youtube: 'Vídeo-aula', pdf: 'PDF', link_externo: 'Link' }[mat.tipo];
+                      const isPrimeiro = idx === 0;
+                      const isUltimo = idx === matsDestaSem.length - 1;
+                      return `
+                        <div class="gerencia-mat-item ${!mat.visivel ? 'oculto' : ''}">
+                          <span class="gerencia-mat-ordem">${idx + 1}</span>
+                          <span class="gerencia-mat-ico">${ico}</span>
+                          <div class="gerencia-mat-info">
+                            <div class="gerencia-mat-titulo">${mat.titulo}${!mat.visivel ? ' (oculto)' : ''}</div>
+                            <div class="gerencia-mat-tipo">${tipoLabel}${mat.duracao_min ? ' · ' + mat.duracao_min + ' min' : ''}</div>
+                          </div>
+                          <div class="gerencia-mat-acoes">
+                            <button class="btn-mini-icon" ${isPrimeiro ? 'disabled style="opacity:0.3;"' : ''} onclick="moverMaterial(${mat.id}, -1, ${sem.n})" title="Subir">↑</button>
+                            <button class="btn-mini-icon" ${isUltimo ? 'disabled style="opacity:0.3;"' : ''} onclick="moverMaterial(${mat.id}, 1, ${sem.n})" title="Descer">↓</button>
+                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
+                            <button class="btn-mini-icon" onclick="toggleVisivelMaterial(${mat.id})" title="${mat.visivel ? 'Ocultar' : 'Mostrar'}">${mat.visivel ? '👁️' : '🙈'}</button>
+                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir">🗑️</button>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+            ${(() => {
+              // Materiais ligados ao módulo mas sem semana definida
+              const semSem = materiaisCache.filter(mat => mat.modulo_id === mod.id && (mat.semana_numero === null || mat.semana_numero === undefined));
+              if (semSem.length === 0) return '';
+              return `
+                <div class="gerencia-semana" style="border-left-color:#9CA3AF;">
+                  <div class="gerencia-semana-titulo">
+                    <strong style="color:#6B7280;">⚠️ Sem semana definida</strong>
+                    <span style="font-size:11px;color:#9CA3AF;">Edite cada material e atribua a uma semana</span>
+                  </div>
+                  <div class="gerencia-materiais-lista">
+                    ${semSem.map((mat, idx) => {
+                      const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
+                      return `
+                        <div class="gerencia-mat-item ${!mat.visivel ? 'oculto' : ''}">
+                          <span class="gerencia-mat-ico">${ico}</span>
+                          <div class="gerencia-mat-info">
+                            <div class="gerencia-mat-titulo">${mat.titulo}</div>
+                          </div>
+                          <div class="gerencia-mat-acoes">
+                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
+                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir">🗑️</button>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `;
+            })()}
+          </div>
+        </div>
+      `;
+    }).join('')}
+
+    ${(() => {
+      const sem = materiaisCache.filter(m => !m.modulo_id);
+      if (sem.length === 0) return '';
+      return `
+        <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;margin-bottom:18px;">
+          <div class="cron-modulo-header">
+            <div class="cron-modulo-numero">+</div>
+            <div class="cron-modulo-info"><h3>Materiais gerais</h3><p>Sem módulo definido</p></div>
+          </div>
+          <div style="padding:10px 14px;">
+            ${sem.map(mat => {
+              const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
+              return `
+                <div class="gerencia-mat-item">
+                  <span class="gerencia-mat-ico">${ico}</span>
+                  <div class="gerencia-mat-info">
+                    <div class="gerencia-mat-titulo">${mat.titulo}</div>
+                  </div>
+                  <div class="gerencia-mat-acoes">
+                    <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})">✏️</button>
+                    <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})">🗑️</button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    })()}
   `;
 }
+
+function abrirNovoMaterialParaSemana(semanaNum, modId) {
+  // Abre o modal de novo material com semana e modulo pre-preenchidos
+  abrirModalMaterial(null, 'aula_youtube');
+  setTimeout(() => {
+    const modSel = document.getElementById('mat-mod');
+    const semInp = document.getElementById('mat-sem');
+    if (modSel) modSel.value = modId;
+    if (semInp) semInp.value = semanaNum;
+  }, 50);
+}
+
+async function moverMaterial(matId, delta, semanaNum) {
+  // Pegar todos os materiais dessa semana ordenados
+  const lista = materiaisCache
+    .filter(m => m.semana_numero === semanaNum)
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  const idx = lista.findIndex(m => m.id === matId);
+  if (idx < 0) return;
+  const novoIdx = idx + delta;
+  if (novoIdx < 0 || novoIdx >= lista.length) return;
+
+  // Swap ordens
+  const a = lista[idx];
+  const b = lista[novoIdx];
+  const ordemA = a.ordem || 0;
+  const ordemB = b.ordem || 0;
+
+  await Promise.all([
+    sb.from('materiais').update({ ordem: ordemB === ordemA ? ordemA + 1 : ordemB }).eq('id', a.id),
+    sb.from('materiais').update({ ordem: ordemB === ordemA ? ordemA : ordemA }).eq('id', b.id),
+  ]);
+
+  // Fix: garantir que ficaram com valores corretos. Vou usar uma estratégia mais simples:
+  // reescrever a ordem de todos os materiais dessa semana sequencialmente após o swap.
+  const novaLista = [...lista];
+  [novaLista[idx], novaLista[novoIdx]] = [novaLista[novoIdx], novaLista[idx]];
+  for (let i = 0; i < novaLista.length; i++) {
+    await sb.from('materiais').update({ ordem: i + 1 }).eq('id', novaLista[i].id);
+  }
+
+  renderGerenciarMateriais();
+}
+
 
 function abrirNovoMaterial(tipo) {
   abrirModalMaterial(null, tipo);
