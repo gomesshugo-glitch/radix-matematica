@@ -209,11 +209,15 @@
   .modal::-webkit-scrollbar-thumb:hover { background: var(--radix-line-2) !important; }
   .modal label { color: var(--radix-text-2) !important; }
 
-  /* DASHBOARD HERO — gradiente brand */
+  /* DASHBOARD HERO — gradiente brand (estilo mockup v3) */
   .dash-hero {
     background: var(--radix-grad-hero) !important;
     box-shadow: 0 20px 40px -20px rgba(34,211,238,0.35) !important;
     position: relative; overflow: hidden;
+    padding: 36px 40px !important;
+    border-radius: 20px !important;
+    margin-bottom: 24px !important;
+    display: block !important;
   }
   .dash-hero::before {
     content: ""; position: absolute; inset: 0;
@@ -222,10 +226,95 @@
       radial-gradient(500px 350px at 0% 120%, rgba(255,255,255,.12), transparent 60%);
     pointer-events: none;
   }
-  .dash-hero > * { position: relative; z-index: 1; }
-  .dash-hero .dash-saudacao { color: #fff !important; }
-  .dash-hero .dash-tagline { color: rgba(255,255,255,0.92) !important; }
-  .dash-hero .dash-data { color: rgba(255,255,255,0.88) !important; }
+  .v3-hero-date {
+    font-size: 11.5px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); font-weight: 700; margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+  .v3-hero-title {
+    font-size: 38px !important; letter-spacing: -1.2px;
+    font-weight: 800; margin: 0 0 8px; line-height: 1.1;
+    color: #fff !important;
+    position: relative; z-index: 1;
+  }
+  .v3-hero-sub {
+    color: rgba(255,255,255,0.92); font-size: 15px; max-width: 620px;
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+  .v3-hero-sub b {
+    background: rgba(255,255,255,0.18); padding: 1px 8px; border-radius: 6px;
+    font-weight: 700; color: #fff;
+  }
+  .v3-hero-actions {
+    display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .v3-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 22px; border-radius: 11px; font-size: 14px; font-weight: 700;
+    cursor: pointer; border: 1px solid transparent;
+    font-family: inherit; transition: filter .15s, transform .05s;
+  }
+  .v3-btn-light { background: #fff; color: #0e1a36; box-shadow: 0 8px 24px -10px rgba(0,0,0,0.3); }
+  .v3-btn-light:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  .v3-btn-ghost { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); color: #fff; }
+  .v3-btn-ghost:hover { background: rgba(255,255,255,0.22); }
+  .v3-btn svg { display: block; }
+
+  /* card head (título + link no canto direito) */
+  .v3-card-head {
+    display: flex !important; justify-content: space-between !important; align-items: baseline !important;
+    margin-bottom: 18px !important;
+  }
+  .v3-card-head h3 {
+    font-size: 18px !important; font-weight: 700 !important; margin: 0 !important;
+    letter-spacing: -0.3px; color: var(--radix-text) !important;
+  }
+  .v3-card-head a { font-size: 13px; color: var(--radix-cyan) !important; font-weight: 600; }
+
+  /* week-row (lista "Suas próximas aulas") */
+  .v3-week-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0;
+    border-top: 1px solid var(--radix-line);
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .v3-week-row:first-of-type { border-top: none; padding-top: 4px; }
+  .v3-week-row:hover { background: rgba(255,255,255,0.03); border-radius: 10px; }
+  .v3-week-num {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--radix-bg-2); color: var(--radix-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; flex-shrink: 0;
+  }
+  .v3-week-row.v3-week-now .v3-week-num { background: var(--radix-grad-brand); color: #0e1a36; }
+  .v3-week-row.v3-week-done .v3-week-num { background: rgba(52,211,153,0.18); color: var(--radix-success); }
+  .v3-week-body { flex: 1; min-width: 0; }
+  .v3-week-title { font-weight: 600; font-size: 14.5px; color: var(--radix-text); }
+  .v3-week-meta { font-size: 12.5px; color: var(--radix-text-muted); margin-top: 2px; }
+  .v3-week-pill {
+    padding: 5px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .v3-week-pill-now { background: rgba(34,211,238,0.18); color: var(--radix-cyan); }
+  .v3-week-pill-done { background: rgba(52,211,153,0.18); color: var(--radix-success); }
+  .v3-week-pill-todo { background: var(--radix-bg-2); color: var(--radix-text-muted); }
+
+  /* atalhos do dashboard — formato igual ao mockup (ícone + título + subtítulo) */
+  .dash-atalho {
+    text-align: left !important;
+    padding: 16px !important;
+  }
+  .dash-atalho-icon { margin: 0 0 10px 0 !important; }
+  .dash-atalho span { font-size: 14px !important; font-weight: 700 !important; display: block; }
+  .dash-atalho small {
+    font-size: 12px; color: var(--radix-text-muted);
+    font-weight: 500; display: block; margin-top: 2px;
+  }
+  .dash-atalhos { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
 
   /* dash-stat cards (novo estilo v3): superfície escura + ícone + barra */
   .dash-stat.dash-stat-v3 {
@@ -4269,15 +4358,45 @@ function renderDashboardAluno() {
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
   const nomeCurto = state.usuario.nome.split(' ')[0];
 
+  // Próximas aulas (próximas 4 + recentes concluídas)
+  const semAtual = getSemanaAtual();
+  const idxAtualSem = semAtual ? semanasValidas.findIndex(s => s.n === semAtual.n) : -1;
+  const proxAulas = [];
+  if (semAtual) proxAulas.push({ ...semAtual, _vstatus: 'now' });
+  if (idxAtualSem >= 0) {
+    for (let i = idxAtualSem + 1; i < semanasValidas.length && proxAulas.length < 2; i++) {
+      proxAulas.push({ ...semanasValidas[i], _vstatus: 'todo' });
+    }
+    for (let i = idxAtualSem - 1; i >= 0 && proxAulas.length < 4; i--) {
+      if (statusDaSemana(semanasValidas[i].n) === 'concluido') {
+        proxAulas.push({ ...semanasValidas[i], _vstatus: 'done' });
+      }
+    }
+  } else {
+    // se não há semana atual, mostrar as 4 primeiras
+    for (let i = 0; i < semanasValidas.length && proxAulas.length < 4; i++) {
+      proxAulas.push({ ...semanasValidas[i], _vstatus: 'todo' });
+    }
+  }
+
+  const temaSemAtual = semAtual?.temaId ? TEMAS.find(t => t.id === semAtual.temaId) : null;
+  const diasSemBR = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const mesesBR = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const heroDate = `${diasSemBR[hoje.getDay()]} · ${hoje.getDate()} de ${mesesBR[hoje.getMonth()]}`;
+
   main.innerHTML = `
-    <!-- Cabeçalho de boas-vindas -->
+    <!-- HERO -->
     <div class="dash-hero">
-      <div>
-        <div class="dash-saudacao">${saudacao}, ${nomeCurto}.</div>
-        <div class="dash-tagline">"Raiz que vira resultado"</div>
-      </div>
-      <div class="dash-data">
-        ${hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+      <div style="position:relative;z-index:1;width:100%;">
+        <div class="v3-hero-date">${heroDate.toUpperCase()}</div>
+        <h2 class="v3-hero-title">${saudacao}, ${nomeCurto}.</h2>
+        ${semAtual ? `
+          <div class="v3-hero-sub">Você está na <b>semana ${semAtual.n}</b> do cronograma${temaSemAtual ? ' — ' + temaSemAtual.nome : (semAtual.titulo ? ' — ' + semAtual.titulo : '')}.</div>
+        ` : ''}
+        <div class="v3-hero-actions">
+          ${temaSemAtual ? `<button class="v3-btn v3-btn-light" onclick="abrirTema('${temaSemAtual.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>Continuar de onde parei</button>` : ''}
+          <button class="v3-btn v3-btn-ghost" onclick="renderCronograma()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Ver cronograma</button>
+        </div>
       </div>
     </div>
 
@@ -4313,141 +4432,72 @@ function renderDashboardAluno() {
       </div>
     </div>
 
-    ${(() => {
-      const semAtual = getSemanaAtual();
-      if (!semAtual) return '';
-      const temaAtual = semAtual.temaId ? TEMAS.find(t => t.id === semAtual.temaId) : null;
-      const modAtual = MODULOS.find(m => m.id === semAtual.moduloId);
-      const statusAtual = statusDaSemana(semAtual.n);
-      const statusLabel = { 'nao_iniciado': 'Ainda não iniciada', 'em_estudo': 'Em estudo', 'concluido': 'Concluída' }[statusAtual];
-      const statusBg = { 'nao_iniciado': 'rgba(138,160,201,0.18)', 'em_estudo': 'rgba(251,191,36,0.18)', 'concluido': 'rgba(52,211,153,0.18)' }[statusAtual];
-      const statusFg = { 'nao_iniciado': 'var(--radix-text-muted)', 'em_estudo': 'var(--radix-warning)', 'concluido': 'var(--radix-success)' }[statusAtual];
-      const isSpecial = ['simulado','recesso','revisao','evento'].includes(semAtual.tipo);
-      return `
-        <div class="dash-card dash-semana-atual" style="--mod-cor:${modAtual?.cor || 'var(--radix-blue)'};">
-          <div class="dash-semana-header">
-            <div>
-              <span class="dash-pill" style="background:rgba(251,191,36,0.18);color:var(--radix-warning);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>AULA DESTA SEMANA</span>
-              <span class="dash-data-sem">${semAtual.data}/2026</span>
-            </div>
-            <span class="dash-pill" style="background:${statusBg};color:${statusFg};">${statusLabel}</span>
-          </div>
-          <h2 class="dash-semana-titulo">${semAtual.titulo}</h2>
-          <div class="dash-semana-meta">
-            <span class="dash-pill" style="background:rgba(34,211,238,0.18);color:var(--radix-cyan);">
-              Módulo ${modAtual?.numero || ''} · Semana ${String(semAtual.n).padStart(2,'0')}
-            </span>
-            ${temaAtual ? `<span class="dash-pill" style="background:rgba(59,130,246,0.18);color:var(--radix-blue);">Tema: ${temaAtual.nome}</span>` : ''}
-          </div>
-          ${semAtual.observacao ? `<p style="font-size:13px;color:var(--radix-text-muted);margin-top:10px;background:var(--radix-bg-2);padding:12px 14px;border-radius:10px;border-left:3px solid var(--radix-coral);">${semAtual.observacao}</p>` : ''}
-          <div class="dash-semana-acoes">
-            ${(() => {
-              const matsDaSemana = (materiaisCache || []).filter(m => m.semana_numero === semAtual.n && m.visivel);
-              return matsDaSemana.length > 0
-                ? `<button class="btn btn-danger" onclick="abrirMateriaisDaSemana(${semAtual.n})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>Ver aulas e materiais (${matsDaSemana.length})</button>`
-                : '';
-            })()}
-            ${temaAtual ? `
-              <button class="btn" onclick="abrirTema('${temaAtual.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Praticar essa matéria</button>
-              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${temaAtual.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Mini-simulado</button>
-            ` : ''}
-            <button class="btn btn-secondary" onclick="abrirEditorSemana(${semAtual.n})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Marcar progresso</button>
-          </div>
-        </div>
-      `;
-    })()}
-
-    <!-- 2 colunas: próxima ação + atalhos -->
+    <!-- 2 colunas: Suas próximas aulas + Atalhos -->
     <div class="dash-grid">
-      <!-- Próxima ação -->
-      <div class="dash-card dash-proxima">
-        <h3><span class="h-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>Sua próxima missão</h3>
-        ${proximaSem ? `
-          <div class="dash-proxima-meta">
-            <span class="dash-pill" style="background:rgba(34,211,238,0.18);color:var(--radix-cyan);">
-              Módulo ${proxMod?.numero || ''} · Semana ${String(proximaSem.n).padStart(2,'0')}
-            </span>
-            <span class="dash-data-sem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${proximaSem.data || ''}</span>
-          </div>
-          <h2 class="dash-proxima-titulo">${proximaSem.titulo}</h2>
-          ${proxTema ? `<p class="dash-proxima-sub">Tema: ${proxTema.nome}</p>` : ''}
-          <div class="dash-proxima-acoes">
-            ${proxTema ? `
-              <button class="btn" onclick="abrirTema('${proxTema.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="m5 3 14 9-14 9z"/></svg>Praticar agora</button>
-              <button class="btn btn-secondary" onclick="fazerMiniSimulado('${proxTema.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Mini-simulado</button>
-            ` : ''}
-            <button class="btn btn-secondary" onclick="renderCronograma()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Ver cronograma</button>
-          </div>
-        ` : `
+      <!-- Suas próximas aulas (lista) -->
+      <div class="dash-card">
+        <div class="v3-card-head">
+          <h3>Suas próximas aulas</h3>
+          <a onclick="renderCronograma()" style="cursor:pointer;">Ver cronograma completo →</a>
+        </div>
+        ${proxAulas.length === 0 ? `
           <div class="dash-empty">
-            <div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--radix-success);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg></div>
-            <p>Você concluiu todas as semanas do cronograma. Hora de revisar com simulados.</p>
-            <button class="btn" onclick="abrirSimuladoConfig()">Fazer simulado</button>
+            <p>Nenhuma aula configurada ainda.</p>
           </div>
-        `}
+        ` : proxAulas.map(s => {
+          const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
+          const mats = (materiaisCache || []).filter(m => m.semana_numero === s.n && m.visivel);
+          const matsCount = mats.length;
+          return `
+            <div class="v3-week-row v3-week-${s._vstatus}" onclick="${matsCount > 0 ? `abrirMateriaisDaSemana(${s.n})` : (tema ? `abrirTema('${tema.id}')` : `abrirEditorSemana(${s.n})`)}">
+              <div class="v3-week-num">${String(s.n).padStart(2,'0')}</div>
+              <div class="v3-week-body">
+                <div class="v3-week-title">${s.titulo}</div>
+                <div class="v3-week-meta">${tema ? tema.nome : 'Sem tema'}${matsCount > 0 ? ' · ' + matsCount + ' material' + (matsCount > 1 ? 'is' : '') : ''}</div>
+              </div>
+              <span class="v3-week-pill v3-week-pill-${s._vstatus}">${s._vstatus === 'now' ? 'Agora' : s._vstatus === 'todo' ? 'A seguir' : 'Concluída'}</span>
+            </div>
+          `;
+        }).join('')}
       </div>
 
-      <!-- Atalhos rápidos -->
+      <!-- Atalhos -->
       <div class="dash-card">
-        <h3><span class="h-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/></svg></span>Acesso rápido</h3>
+        <div class="v3-card-head"><h3>Atalhos</h3></div>
         <div class="dash-atalhos">
           <div class="dash-atalho" onclick="renderVideoAulas()">
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
             <span>Vídeo-aulas</span>
-          </div>
-          <div class="dash-atalho" onclick="renderCronograma()">
-            <div class="dash-atalho-icon icon-warn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-            <span>Cronograma</span>
+            <small>39 aulas</small>
           </div>
           <div class="dash-atalho" onclick="abrirSimuladoConfig()">
             <div class="dash-atalho-icon icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
             <span>Simulado</span>
+            <small>15 ou 45 questões</small>
           </div>
           <div class="dash-atalho" onclick="abrirTema('')">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-            <span>Questões</span>
+            <span>Banco de questões</span>
+            <small>134 oficiais</small>
           </div>
           <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
             <div class="dash-atalho-icon icon-success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
             <span>Estatísticas</span>
+            <small>Desempenho por tema</small>
+          </div>
+          <div class="dash-atalho" onclick="renderMontarLista()" style="position:relative;">
+            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17l-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <span>Minha lista</span>
+            <small>Questões salvas</small>
+            <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:var(--radix-coral);"></span>
           </div>
           <div class="dash-atalho" onclick="renderHistoricoSimulados()">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
             <span>Histórico</span>
-          </div>
-          <div class="dash-atalho" onclick="renderMontarLista()" style="position:relative;">
-            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17l-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <span>Minha Lista</span>
-            <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:var(--radix-coral);"></span>
+            <small>Simulados feitos</small>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Últimas atividades -->
-    <div class="dash-card">
-      <h3><span class="h-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>Suas últimas atividades</h3>
-      ${respostas.length === 0 ? `
-        <p style="color:var(--radix-gray-light);text-align:center;padding:24px;">Você ainda não respondeu nenhuma questão. <a onclick="abrirTema('')" style="color:var(--radix-blue);cursor:pointer;">Começar agora →</a></p>
-      ` : `
-        <div class="dash-atividades">
-          ${respostas.slice(0, 8).map(r => {
-            const tema = TEMAS.find(t => t.id === r.tema);
-            const d = new Date(r.data);
-            const tempoAtras = relativeTime(d);
-            return `
-              <div class="dash-atividade ${r.correto ? 'correta' : 'errada'}">
-                <span class="dash-ativ-icon">${r.correto ? '✓' : '✗'}</span>
-                <div class="dash-ativ-info">
-                  <div class="dash-ativ-tema">${tema ? tema.nome : 'Questão'}</div>
-                  <div class="dash-ativ-tempo">${tempoAtras}</div>
-                </div>
-                ${r.fonte === 'simulado' ? '<span class="dash-pill dash-pill-sm">SIMULADO</span>' : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `}
     </div>
   `;
 }
@@ -7589,305 +7639,4 @@ async function abrirNotificarWhatsApp() {
 function fecharModalWhats() {
   const m = document.getElementById('modal-whats');
   if (m) m.remove();
-  document.body.classList.remove('modal-open');
-}
-
-function aplicarModeloWhats() {
-  const tipo = document.getElementById('whats-modelo').value;
-  const templates = {
-    'novo_material': 'Olá! 📚 Acabei de disponibilizar um novo material na plataforma Radix. Acesse app.radixmatematica.com.br para conferir. Bons estudos! — Prof. Hugo',
-    'nova_prova': 'Olá! 📝 Adicionei uma nova prova ao banco de questões da Radix. Já pode praticar em app.radixmatematica.com.br. Bons estudos! — Prof. Hugo',
-    'lembrete_simulado': 'Olá! ⏱ Lembrete: temos simulado essa semana. Aproveite pra revisar em app.radixmatematica.com.br. — Prof. Hugo',
-    'aula_extra': 'Olá! 📅 Aula extra agendada — confira o cronograma atualizado em app.radixmatematica.com.br. — Prof. Hugo',
-    'aviso_geral': 'Olá! 📢 ',
-  };
-  if (templates[tipo]) document.getElementById('whats-msg').value = templates[tipo];
-}
-
-async function enviarWhatsLinks(alunos) {
-  const msg = document.getElementById('whats-msg').value.trim();
-  if (!msg) { alert('Digite a mensagem'); return; }
-  if (alunos.length === 0) { alert('Nenhum aluno com WhatsApp'); return; }
-  const c1 = confirm(`Enviar essa mensagem para ${alunos.length} aluno(s) via WhatsApp automaticamente (Z-API)?`);
-  if (!c1) return;
-
-  // Mostrar progresso
-  const btnEl = event && event.target ? event.target : null;
-  const oldT = btnEl ? btnEl.textContent : '';
-  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Enviando...'; }
-
-  try {
-    const destinatarios = alunos.map(a => a.tel);
-    const { data, error } = await sb.functions.invoke('enviar-whatsapp', {
-      body: { mensagem: msg, destinatarios }
-    });
-    if (error) throw error;
-
-    // Registrar no historico
-    await sb.from('notificacoes_whatsapp').insert({
-      enviada_por: state.usuario.id,
-      destinatarios_total: alunos.length,
-      mensagem: msg,
-      tipo: 'manual'
-    });
-
-    if (data?.falhas > 0) {
-      alert(`✅ ${data.enviadas} mensagens enviadas com sucesso.\n⚠️ ${data.falhas} falharam (verifique no painel Z-API).`);
-    } else {
-      alert(`✅ ${data.enviadas} mensagens enviadas com sucesso!`);
-    }
-    fecharModalWhats();
-  } catch (e) {
-    console.error('Erro envio WhatsApp:', e);
-    alert('Erro: ' + (e.message || JSON.stringify(e)));
-  } finally {
-    if (btnEl) { btnEl.disabled = false; btnEl.textContent = oldT; }
-  }
-}
-
-// ========== CRONOGRAMA 2026 ==========
-
-async function carregarProgressoCronograma() {
-  state.progressoCronograma = {};
-  if (!state.usuario?.id) return;
-  const { data } = await sb.from('progresso_semanas')
-    .select('*')
-    .eq('aluno_id', state.usuario.id);
-  (data || []).forEach(p => {
-    state.progressoCronograma[p.semana_numero] = {
-      status: p.status,
-      tecnicas: p.tecnicas || [],
-      nota_pessoal: p.nota_pessoal || ''
-    };
-  });
-}
-
-function statsDaSemana(semana) {
-  // Conta respostas do aluno em questões do tema dessa semana
-  if (!semana.temaId) return { total: 0, acertos: 0, taxa: 0 };
-  const resp = state.respostasAluno.filter(r => r.tema === semana.temaId);
-  const total = resp.length;
-  const acertos = resp.filter(r => r.correto).length;
-  const taxa = total ? Math.round((acertos / total) * 100) : 0;
-  return { total, acertos, taxa };
-}
-
-function statusDaSemana(numero) {
-  return state.progressoCronograma[numero]?.status || 'nao_iniciado';
-}
-
-function renderCronograma() {
-  state.view = 'cronograma';
-  const main = document.getElementById('main-content');
-
-  const merged = getCronogramaMerged();
-  // Calcula progresso geral
-  let totalSemanas = 0, concluidas = 0, emEstudo = 0;
-  merged.forEach(s => {
-    if (s.tipo === 'recesso' || s.cancelada) return;
-    totalSemanas++;
-    const st = statusDaSemana(s.n);
-    if (st === 'concluido') concluidas++;
-    else if (st === 'em_estudo') emEstudo++;
-  });
-  const pctConcluido = Math.round((concluidas / totalSemanas) * 100);
-
-  // Agrupa semanas por modulo
-  const semanasPorMod = {};
-  MODULOS.forEach(m => semanasPorMod[m.id] = []);
-  merged.forEach(s => semanasPorMod[s.moduloId].push(s));
-
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Cronograma 2026</div>
-    <h2 class="section-title"><span class="section-title-accent"></span>📅 Cronograma 2026 — Matemática</h2>
-
-    <div class="cronograma-resumo">
-      <div class="cron-resumo-info">
-        <div class="cron-resumo-numero">${concluidas} / ${totalSemanas}</div>
-        <div class="cron-resumo-label">semanas concluídas (${pctConcluido}%)</div>
-        <div class="cron-resumo-sub">${emEstudo} em estudo · ${totalSemanas - concluidas - emEstudo} a fazer</div>
-      </div>
-      <div class="cron-progress-bar">
-        <div class="cron-progress-fill" style="width: ${pctConcluido}%;"></div>
-      </div>
-    </div>
-
-    ${MODULOS.map(mod => {
-      const semanas = semanasPorMod[mod.id];
-      const semOk = semanas.filter(s => s.tipo !== 'recesso' && statusDaSemana(s.n) === 'concluido').length;
-      const semTotal = semanas.filter(s => s.tipo !== 'recesso').length;
-      return `
-        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
-          <div class="cron-modulo-header">
-            <div class="cron-modulo-numero">${mod.numero}</div>
-            <div class="cron-modulo-info">
-              <h3>${mod.nome}</h3>
-              <p>${mod.subtitulo}</p>
-            </div>
-            <div class="cron-modulo-stats">${semOk}/${semTotal}</div>
-          </div>
-          <div class="cron-semanas-grid">
-            ${semanas.map(s => renderSemanaCard(s)).join('')}
-          </div>
-        </div>
-      `;
-    }).join('')}
-  `;
-}
-
-function renderSemanaCard(s) {
-  const st = statusDaSemana(s.n);
-  const stats = statsDaSemana(s);
-  const stIcon = { 'nao_iniciado': '⚪', 'em_estudo': '🟡', 'concluido': '✅' }[st];
-  const stLabel = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' }[st];
-  const tipoBadge = s.tipo === 'simulado' ? '<span class="cron-tipo simulado-tipo">SIMULADO</span>' :
-                    s.tipo === 'recesso'  ? '<span class="cron-tipo recesso-tipo">RECESSO</span>' :
-                    s.tipo === 'revisao'  ? '<span class="cron-tipo revisao-tipo">REVISÃO</span>' :
-                    s.tipo === 'evento'   ? '<span class="cron-tipo evento-tipo">EVENTO</span>' : '';
-  const podeMarcar = s.tipo !== 'recesso';
-  return `
-    <div class="cron-semana ${st}" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
-      <div class="cron-semana-topo">
-        <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
-        <div class="cron-semana-meta">
-          <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
-          <div class="cron-semana-titulo">${s.titulo}</div>
-        </div>
-        <div class="cron-semana-status" title="${stLabel}">${stIcon}</div>
-      </div>
-      ${s.temaId ? `
-        <div class="cron-semana-stats">
-          <span>📝 ${stats.total} ${stats.total === 1 ? 'questão' : 'questões'}</span>
-          ${stats.total > 0 ? `<span>· 🎯 ${stats.taxa}% acerto</span>` : ''}
-        </div>
-      ` : ''}
-    </div>
-  `;
-}
-
-function abrirEditorSemana(n) {
-  const s = CRONOGRAMA_2026.find(x => x.n === n);
-  if (!s || s.tipo === 'recesso') return;
-  state.semanaEditando = n;
-  const prog = state.progressoCronograma[n] || { status: 'nao_iniciado', tecnicas: [], nota_pessoal: '' };
-  const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
-
-  const html = `
-    <div class="modal-overlay" onclick="if(event.target===this)fecharModalSemana()">
-      <div class="modal" style="max-width:560px;">
-        <h2>Semana ${String(s.n).padStart(2,'0')} — ${s.titulo}</h2>
-        <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:18px;">
-          Início: ${s.data}/2026 ${tema ? '· Tema: '+tema.nome : ''}
-        </p>
-
-        <div class="form-group">
-          <label>Status</label>
-          <div class="status-opcoes">
-            <label class="status-opc"><input type="radio" name="status-radio" value="nao_iniciado" ${prog.status==='nao_iniciado'?'checked':''}> <span>⚪ Não iniciado</span></label>
-            <label class="status-opc"><input type="radio" name="status-radio" value="em_estudo" ${prog.status==='em_estudo'?'checked':''}> <span>🟡 Em estudo</span></label>
-            <label class="status-opc"><input type="radio" name="status-radio" value="concluido" ${prog.status==='concluido'?'checked':''}> <span>✅ Concluído</span></label>
-          </div>
-        </div>
-
-        <div class="form-group" id="grupo-tecnicas" style="${prog.status==='nao_iniciado'?'display:none;':''}">
-          <label>Como você está estudando esta semana? (pode marcar várias)</label>
-          <div class="tecnicas-grid">
-            ${TECNICAS_ESTUDO.map(t => `
-              <label class="tecnica-item ${prog.tecnicas.includes(t.id)?'sel':''}">
-                <input type="checkbox" value="${t.id}" ${prog.tecnicas.includes(t.id)?'checked':''}>
-                <span>${t.emoji} ${t.nome}</span>
-              </label>
-            `).join('')}
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Notas pessoais (opcional)</label>
-          <textarea id="semana-nota" rows="3" placeholder="Dúvidas, observações, o que revisar...">${prog.nota_pessoal || ''}</textarea>
-        </div>
-
-        ${tema ? `
-          <div class="form-group" style="display:flex;gap:8px;flex-wrap:wrap;background:var(--radix-bg);padding:12px;border-radius:8px;">
-            <button class="btn btn-secondary" onclick="fecharModalSemana();abrirTema('${tema.id}')">🎯 Praticar questões</button>
-            <button class="btn btn-secondary" onclick="fecharModalSemana();fazerMiniSimulado('${tema.id}')">⏱ Mini-simulado (10 questões)</button>
-          </div>
-        ` : ''}
-
-        <div class="modal-acoes">
-          <button class="btn btn-secondary" onclick="fecharModalSemana()">Cancelar</button>
-          <button class="btn btn-success" onclick="salvarSemana()">Salvar</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', `<div id="modal-semana">${html}</div>`);
-  document.body.classList.add('modal-open');
-  // Mostra/esconde tecnicas conforme muda status
-  document.querySelectorAll('[name="status-radio"]').forEach(r => {
-    r.addEventListener('change', () => {
-      document.getElementById('grupo-tecnicas').style.display = r.value === 'nao_iniciado' ? 'none' : 'block';
-    });
-  });
-}
-
-function fecharModalSemana() {
-  const m = document.getElementById('modal-semana');
-  if (m) m.remove();
-  document.body.classList.remove('modal-open');
-  state.semanaEditando = null;
-}
-
-async function salvarSemana() {
-  const n = state.semanaEditando;
-  if (n === null) return;
-  const statusEl = document.querySelector('[name="status-radio"]:checked');
-  const status = statusEl ? statusEl.value : 'nao_iniciado';
-  const tecnicas = [...document.querySelectorAll('#grupo-tecnicas input[type=checkbox]:checked')].map(c => c.value);
-  const nota = document.getElementById('semana-nota').value.trim();
-
-  state.progressoCronograma[n] = { status, tecnicas, nota_pessoal: nota };
-
-  const { error } = await sb.from('progresso_semanas').upsert({
-    aluno_id: state.usuario.id,
-    semana_numero: n,
-    status, tecnicas, nota_pessoal: nota,
-    atualizado_em: new Date().toISOString()
-  }, { onConflict: 'aluno_id,semana_numero' });
-
-  if (error) { alert('Erro ao salvar: ' + error.message); return; }
-  fecharModalSemana();
-  renderCronograma();
-}
-
-function fazerMiniSimulado(temaId) {
-  // Sorteia até 10 questões do tema e inicia simulado de 10 min
-  let pool = state.questoes.filter(q => q.tema === temaId);
-  if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
-  const num = Math.min(10, pool.length);
-  pool = pool.sort(() => Math.random() - 0.5).slice(0, num);
-  state.simuladoAtual = {
-    questoes: pool, respostas: {}, indiceAtual: 0,
-    tempoTotal: 10 * 60, tempoRestante: 10 * 60,
-    iniciadoEm: Date.now(), finalizado: false,
-  };
-  renderSimulado();
-  iniciarCronometro();
-}
-
-// ========== INIT ==========
-(async function init() {
-  // Verifica se já há sessão ativa do Supabase
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await iniciarSessao();
-  }
-  // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
-  sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-      state.usuario = null;
-      document.getElementById('view-app').classList.add('hidden');
-      document.getElementById('view-login').classList.remove('hidden');
-    }
-  });
-})();
-</script>
+  document.body.classL
