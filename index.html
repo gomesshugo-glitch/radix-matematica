@@ -4634,7 +4634,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       yG -= 22;
       gabPage.drawText('Marque a letra de cada resposta no círculo correspondente.', { x: W/2 - 170, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
       yG -= 16;
-      gabPage.drawText('Depois, volte à plataforma em "Minha Lista" → "Conferir gabarito" para ver acertos e resoluções.', { x: W/2 - 240, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
+      gabPage.drawText(sanit('Depois, volte à plataforma em "Minha Lista" e clique em "Conferir gabarito" para ver acertos e resoluções.'), { x: W/2 - 240, y: yG, size: 9, font: fontItalic, color: corTextoMedio });
       yG -= 30;
 
       // Grade de respostas (4 colunas)
