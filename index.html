@@ -3248,6 +3248,30 @@
   }
   .tr-problemas { background: rgba(255,122,92,0.04) !important; }
 
+  /* Imagens dentro do enunciado (vindas de Markdown ![](url)) */
+  .enunciado-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 12px 0;
+    background: #fff;
+    border: 1px solid var(--radix-line);
+  }
+  .img-faltando {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255,122,92,0.15);
+    color: var(--radix-coral);
+    border: 1px dashed rgba(255,122,92,0.45);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: help;
+    margin: 4px 4px 4px 0;
+  }
+
 </style>
 </head>
 <body>
@@ -3576,10 +3600,19 @@ function formatarEnunciado(texto) {
 
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
 
-  // 1) Recupera "R$" perdido na importação:
-  //    "R500,00" -> "R$ 500,00";  "R 250,00" -> "R$ 250,00"
+  // 1) Recupera "R$" perdido na importação
   s = s.replace(/\bR(\s+)(\d)/g, 'R$ $2');
   s = s.replace(/\bR(\d)/g, 'R$ $1');
+
+  // 1.b) Símbolo de graus (markdown/latex): "30^(circ)" -> "30°"
+  s = s.replace(/\^\\?\(?\s*circ\s*\)?/g, '°');
+  s = s.replace(/(\d)\s*\^\s*o\b/g, '$1°');
+
+  // 1.c) Travessão duplo "--" -> em-dash "—"
+  s = s.replace(/(\s)--(\s)/g, '$1—$2');
+
+  // 1.d) Atributos Pandoc isolados: {width="..." height="..."} -> remover
+  s = s.replace(/\s*\{(width|height)="[^"]*"(?:\s+(width|height)="[^"]*")?\}/g, '');
 
   // 2) Letras gregas escritas como palavra -> símbolo Unicode
   const gregas = {
@@ -3619,6 +3652,26 @@ function formatarEnunciado(texto) {
   // 4.b) Limpeza pós-conversão: tira espaço entre símbolo e o sub/sup Unicode recém-criado
   s = s.replace(/(\S)\s+(²|³|¹|⁰|⁴|⁵|⁶|⁷|⁸|⁹)/g, '$1$2');
   s = s.replace(/(\S)\s+(₀|₁|₂|₃|₄|₅|₆|₇|₈|₉)/g, '$1$2');
+
+  // 4.c) Bold Markdown: **texto** -> <strong>
+  s = s.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+
+  // 4.d) Italic Markdown: *texto* -> <em>  (depois do bold para não conflitar)
+  //      Apenas com não-letra antes/depois para não pegar palavras com asterisco no meio
+  s = s.replace(/(^|[^\w*])\*([^*\n]+?)\*(?=[^\w*]|$)/g, '$1<em>$2</em>');
+
+  // 4.e) Imagens Markdown: ![alt](caminho){attrs} -> <img> ou placeholder
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)(?:\{[^}]*\})?/g, (m, alt, src) => {
+    src = src.trim();
+    if (/^(https?:|data:)/.test(src)) {
+      const altEsc = alt.replace(/"/g, '&quot;');
+      return '<img src="' + src + '" class="enunciado-img" alt="' + altEsc + '">';
+    }
+    // Caminho local não disponível — placeholder com nome do arquivo
+    const fileName = src.split('/').pop();
+    return '<span class="img-faltando" title="Imagem não disponível neste servidor: ' +
+           src.replace(/"/g,'&quot;') + '">📷 imagem ausente: ' + fileName + '</span>';
+  });
 
   // 5) Tabela: linhas no formato  \| col1 \| col2 \| col3 \|
   const linhasTab = s.match(/(?:\\\|[^\\]*?)+\\\|/g);
@@ -6677,6 +6730,10 @@ function diagnosticarQuestao(q) {
     probs.push('Gabarito inválido');
   }
   if (!q.explicacao || q.explicacao.trim().length < 10) probs.push('Sem explicação');
+  // Imagem Markdown apontando para caminho local (que não existe no servidor)
+  const allText = (q.enunciado || '') + ' ' + (q.explicacao || '') + ' ' + (q.alternativas || []).join(' ');
+  const imgsAusentes = (allText.match(/!\[[^\]]*\]\((?!https?:|data:)[^)]+\)/g) || []).length;
+  if (imgsAusentes > 0) probs.push(imgsAusentes + ' imagem' + (imgsAusentes>1?'ns':'') + ' ausente' + (imgsAusentes>1?'s':''));
   return probs;
 }
 
