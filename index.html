@@ -3126,6 +3126,80 @@
     font-family: 'Inter', system-ui, sans-serif !important;
   }
 
+  /* ============ Enunciado: listas e tabelas (formatação estilo ENEM) ============ */
+  .enunciado-lista {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0;
+  }
+  .enunciado-lista li {
+    position: relative;
+    padding: 6px 0 6px 22px;
+    line-height: 1.55;
+  }
+  .enunciado-lista li::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 16px;
+    width: 6px;
+    height: 6px;
+    background: var(--radix-cyan);
+    border-radius: 50%;
+  }
+  .enunciado-pos-lista {
+    margin: 14px 0 0 !important;
+    padding: 0 !important;
+  }
+  .enunciado-tabela-wrap {
+    margin: 14px 0;
+    overflow-x: auto;
+  }
+  .enunciado-tabela {
+    border-collapse: collapse;
+    border: 1px solid var(--radix-line-2);
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 100%;
+    font-size: 13.5px !important;
+  }
+  .enunciado-tabela th,
+  .enunciado-tabela td {
+    padding: 8px 14px !important;
+    border: 1px solid var(--radix-line) !important;
+    text-align: left;
+  }
+  .enunciado-tabela th {
+    background: var(--radix-bg-2) !important;
+    color: var(--radix-cyan) !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11.5px !important;
+  }
+  .enunciado-tabela td {
+    color: var(--radix-text) !important;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
+  .enunciado-tabela tr:nth-child(even) td {
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* Em estilo ENEM (papel branco), tabela mais clara */
+  .questao-card.enem-style .enunciado-tabela th {
+    background: #F5F5F0 !important;
+    color: #333 !important;
+  }
+  .questao-card.enem-style .enunciado-tabela td {
+    color: #1A1A1A !important;
+  }
+  .questao-card.enem-style .enunciado-tabela {
+    border-color: #D4D2C8 !important;
+  }
+  .questao-card.enem-style .enunciado-lista li::before {
+    background: #555 !important;
+  }
+
 </style>
 </head>
 <body>
@@ -3442,6 +3516,87 @@ function salvarDados() {
   // Nada a fazer aqui — cada resposta/simulado é salvo direto no Supabase
 }
 
+
+// === Sanitização de texto de questão ===
+// Limpa \n literais (escape sequences vindas de Word/PDF), newlines reais
+// e colapsa espaços. Mantém o conteúdo legível para o aluno.
+
+// === Formatador de enunciado: converte marcadores \- em listas e \| em tabelas ===
+// Faz HTML escape antes de qualquer transformação, depois injeta tags semânticas.
+function formatarEnunciado(texto) {
+  if (!texto) return '';
+  // 1) Escape HTML básico
+  let s = String(texto)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 2) Tabela: linhas no formato  \| col1 \| col2 \| ... \|
+  //    Detecta 2+ linhas consecutivas começando com "\|" — junta em <table>
+  //    Cada linha precisa ter ao menos 2 separadores \|
+  const linhasTab = s.match(/(?:\\\|[^\\]*?)+\\\|/g);
+  if (linhasTab && linhasTab.length >= 2) {
+    // Vai capturar TUDO entre a primeira e última linha de tabela.
+    const idxIni = s.indexOf(linhasTab[0]);
+    const ultima = linhasTab[linhasTab.length - 1];
+    const idxFim = s.indexOf(ultima) + ultima.length;
+    const pre = s.substring(0, idxIni).trim();
+    const tabRaw = s.substring(idxIni, idxFim);
+    const pos = s.substring(idxFim).trim();
+    const linhas = tabRaw.split(/\s*\\\|\s*/).filter(Boolean);
+    // Tentamos descobrir quantas colunas por linha de tabela
+    // Heurística simples: encontra o número de "\|" antes do primeiro \\ (literal duplo)
+    // mas, como já dividimos por "\|", vamos só agrupar de N em N células.
+    // N = nº de células da primeira linha capturada (linhasTab[0])
+    const nCols = (linhasTab[0].match(/\\\|/g) || []).length - 1;
+    if (nCols >= 2 && linhas.length >= nCols * 2) {
+      let tabHtml = '<div class="enunciado-tabela-wrap"><table class="enunciado-tabela"><thead><tr>';
+      for (let i = 0; i < nCols; i++) tabHtml += '<th>' + linhas[i].trim() + '</th>';
+      tabHtml += '</tr></thead><tbody>';
+      for (let i = nCols; i < linhas.length; i += nCols) {
+        tabHtml += '<tr>';
+        for (let j = 0; j < nCols; j++) tabHtml += '<td>' + (linhas[i + j] || '').trim() + '</td>';
+        tabHtml += '</tr>';
+      }
+      tabHtml += '</tbody></table></div>';
+      s = (pre ? pre + ' ' : '') + tabHtml + (pos ? ' ' + pos : '');
+    }
+  }
+
+  // 3) Lista: 2+ ocorrências de "\- " viram <ul><li>…</li></ul>
+  const bulletCount = (s.match(/\\- /g) || []).length;
+  if (bulletCount >= 2) {
+    const firstBullet = s.indexOf('\\- ');
+    const pre = s.substring(0, firstBullet).trim();
+    const rest = s.substring(firstBullet + 3); // pula "\- "
+    const items = rest.split(/\\- /);
+    // Pós-lista: último item pode conter um trecho de texto novo (começa com maiúscula após ponto)
+    let postLista = '';
+    const lastItem = items[items.length - 1];
+    const m = lastItem.match(/^(.+?[.;])\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ].{12,})$/s);
+    if (m) {
+      items[items.length - 1] = m[1].trim();
+      postLista = m[2].trim();
+    }
+    const listaHtml = '<ul class="enunciado-lista">' +
+                      items.map(it => '<li>' + it.trim() + '</li>').join('') +
+                      '</ul>';
+    s = (pre ? pre + ' ' : '') + listaHtml + (postLista ? ' <p class="enunciado-pos-lista">' + postLista + '</p>' : '');
+  }
+
+  return s;
+}
+
+function sanitizarTextoQuestao(s) {
+  if (!s || typeof s !== 'string') return s;
+  return s
+    .replace(/\\n/g, ' ')      // sequências literais "\n" (barra + n) vindas do import
+    .replace(/[\r\n]+/g, ' ')  // quebras de linha reais
+    .replace(/[ \t]+/g, ' ')    // colapsa espaços/tabs múltiplos
+    .replace(/ +([.,;:!?])/g, '$1') // tira espaço antes de pontuação
+    .trim();
+}
+
 async function carregarQuestoesDoBanco() {
   // Busca questões no Supabase. Se falhar, retorna null pro fallback.
   try {
@@ -3457,16 +3612,17 @@ async function carregarQuestoesDoBanco() {
       return null;
     }
     // Converter snake_case -> camelCase pro código existente
+    // Sanitiza texto que possa vir com \n literais do import inicial
     return data.map(q => ({
       id: q.id,
       tema: q.tema,
       dificuldade: q.dificuldade,
-      enunciado: q.enunciado,
-      alternativas: q.alternativas || [],
+      enunciado: sanitizarTextoQuestao(q.enunciado),
+      alternativas: (q.alternativas || []).map(a => sanitizarTextoQuestao(a)),
       alternativasImg: q.alternativas_img || null,
       imagens: q.imagens || null,
       correta: q.correta,
-      explicacao: q.explicacao || '',
+      explicacao: sanitizarTextoQuestao(q.explicacao || ''),
       prova: q.prova || null
     }));
   } catch (e) {
@@ -5075,13 +5231,13 @@ async function finalizarConferenciaGabarito() {
             <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
             ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
           </div>
-          <div class="questao-enunciado">${q.enunciado}</div>
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
             <strong>Sua resposta:</strong> ${String.fromCharCode(65 + d.minhaResp)}) ${d.correto ? '✅ Correto!' : '❌ Incorreto'}<br>
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-            <strong>Explicação:</strong> ${q.explicacao}
+            <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
           </div>
         </div>
       `;
@@ -5640,7 +5796,7 @@ function renderQuestao(q, numero, modoSimulado) {
           ${tema ? `<b>${tema.nome}</b>` : ''}
         </div>
       </div>
-      <div class="questao-enunciado">${q.enunciado}</div>
+      <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
       ${imgsHtml}
       <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">
         ${altsHtml}
@@ -5677,7 +5833,7 @@ function responderQuestao(qid, idx) {
     <div class="explicacao">
       <strong>${idx === q.correta ? '✓ Correto!' : '✗ Resposta incorreta.'}</strong><br>
       <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-      <strong>Explicação:</strong> ${q.explicacao}
+      <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
       ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
     </div>
   `;
@@ -5886,7 +6042,7 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
           ${tema ? `<b>${tema.nome}</b>` : ''}
         </div>
       </div>
-      <div class="questao-enunciado">${q.enunciado}</div>
+      <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
       ${imgsHtml}
       <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">
         ${altsHtml}
@@ -6032,12 +6188,12 @@ function renderResultadoSimulado(registro, porTempo) {
             <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
             ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
           </div>
-          <div class="questao-enunciado">${q.enunciado}</div>
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-            <strong>Explicação:</strong> ${q.explicacao}
+            <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
             ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
           </div>
         </div>
@@ -6334,14 +6490,14 @@ function abrirCadastroQuestao(idEdicao) {
 async function salvarQuestao(idEdicao) {
   const tema = document.getElementById('q-tema').value;
   const dificuldade = document.getElementById('q-dif').value;
-  const enunciado = document.getElementById('q-enunciado').value.trim();
+  const enunciado = sanitizarTextoQuestao(document.getElementById('q-enunciado').value);
   const alternativas = [0,1,2,3,4].map(i => {
     const letra = String.fromCharCode(65 + i);
-    const valor = document.getElementById(`q-alt-${i}`).value.trim();
+    const valor = sanitizarTextoQuestao(document.getElementById(`q-alt-${i}`).value);
     return `${letra}) ${valor}`;
   });
   const correta = parseInt(document.getElementById('q-correta').value);
-  const explicacao = document.getElementById('q-explicacao').value.trim();
+  const explicacao = sanitizarTextoQuestao(document.getElementById('q-explicacao').value);
 
   if (!enunciado || alternativas.some(a => a.length < 4)) {
     alert('Preencha todas as alternativas e o enunciado.');
