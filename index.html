@@ -969,16 +969,65 @@
   .revisao-tipo  { background: rgba(34,211,238,0.18) !important;      color: var(--radix-cyan) !important; }
   .evento-tipo   { background: rgba(251,191,36,0.18) !important;      color: var(--radix-warning) !important; }
 
-  /* resumo no topo do cronograma (números grandes) */
-  .cron-resumo-numero { color: var(--radix-cyan) !important; font-weight: 800; }
-  .cron-resumo-label { color: var(--radix-text-muted) !important; }
-  .cron-resumo-sub { color: var(--radix-text-2) !important; }
+  /* resumo no topo do cronograma — gradiente brand v3 */
+  .cronograma-resumo {
+    background: var(--radix-grad-hero) !important;
+    border-radius: 18px !important;
+    padding: 32px 36px !important;
+    margin-bottom: 22px !important;
+    position: relative; overflow: hidden;
+    box-shadow: 0 20px 40px -20px rgba(34,211,238,0.4) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 32px !important;
+    flex-wrap: wrap;
+    grid-template-columns: none !important;
+  }
+  .cronograma-resumo::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(700px 400px at 100% -20%, rgba(255,122,92,.22), transparent 60%),
+      radial-gradient(500px 350px at 0% 120%, rgba(255,255,255,.12), transparent 60%);
+    pointer-events: none;
+  }
+  .cronograma-resumo > * { position: relative; z-index: 1; }
+  .cron-resumo-info {
+    flex-shrink: 0;
+    min-width: 200px;
+  }
+  .cron-resumo-numero {
+    color: #fff !important;
+    font-weight: 800 !important;
+    font-size: 56px !important;
+    letter-spacing: -2px !important;
+    line-height: 1 !important;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .cron-resumo-numero::after { content: none; }
+  .cron-resumo-label {
+    color: rgba(255,255,255,0.95) !important;
+    font-size: 14px !important;
+    margin-top: 10px !important;
+    font-weight: 600;
+  }
+  .cron-resumo-sub {
+    color: rgba(255,255,255,0.82) !important;
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
   .cron-progress-bar {
-    background: var(--radix-bg-2) !important;
-    border-radius: 999px; overflow: hidden;
+    background: rgba(255,255,255,0.22) !important;
+    height: 12px !important;
+    border-radius: 999px;
+    overflow: hidden;
+    flex: 1;
+    min-width: 240px;
   }
   .cron-progress-fill {
-    background: var(--radix-grad-brand) !important;
+    background: #fff !important;
+    box-shadow: 0 0 12px rgba(255,255,255,0.5);
+    transition: width 0.5s ease;
+    height: 100%;
   }
 
   /* tabela dentro do cron-modulo-bloco (editar cronograma do professor) */
