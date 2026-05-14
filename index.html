@@ -3200,6 +3200,54 @@
     background: #555 !important;
   }
 
+  /* ============ Diagnóstico de questões incompletas (Gerenciar Banco) ============ */
+  .diag-alerta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin: 12px 0 14px;
+    background: rgba(255,122,92,0.10);
+    border: 1px solid rgba(255,122,92,0.35);
+    border-radius: 12px;
+    color: var(--radix-text);
+    font-size: 13.5px;
+    flex-wrap: wrap;
+  }
+  .diag-icon { font-size: 18px; line-height: 1; }
+  .diag-toggle {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--radix-text-muted);
+    font-size: 12.5px;
+  }
+  .diag-toggle input { accent-color: var(--radix-coral); }
+  .diag-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    background: rgba(255,122,92,0.15);
+    color: var(--radix-coral);
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: help;
+  }
+  .diag-ok {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    color: var(--radix-success);
+    font-size: 14px;
+    opacity: 0.5;
+  }
+  .tr-problemas { background: rgba(255,122,92,0.04) !important; }
+
 </style>
 </head>
 <body>
@@ -3521,22 +3569,60 @@ function salvarDados() {
 // Limpa \n literais (escape sequences vindas de Word/PDF), newlines reais
 // e colapsa espaços. Mantém o conteúdo legível para o aluno.
 
-// === Formatador de enunciado: converte marcadores \- em listas e \| em tabelas ===
-// Faz HTML escape antes de qualquer transformação, depois injeta tags semânticas.
+// === Formatador de enunciado: converte marcadores em HTML semântico ===
 function formatarEnunciado(texto) {
   if (!texto) return '';
-  // 1) Escape HTML básico
-  let s = String(texto)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  let s = String(texto);
 
-  // 2) Tabela: linhas no formato  \| col1 \| col2 \| ... \|
-  //    Detecta 2+ linhas consecutivas começando com "\|" — junta em <table>
-  //    Cada linha precisa ter ao menos 2 separadores \|
+  // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
+
+  // 1) Recupera "R$" perdido na importação:
+  //    "R500,00" -> "R$ 500,00";  "R 250,00" -> "R$ 250,00"
+  s = s.replace(/\bR(\s+)(\d)/g, 'R$ $2');
+  s = s.replace(/\bR(\d)/g, 'R$ $1');
+
+  // 2) Letras gregas escritas como palavra -> símbolo Unicode
+  const gregas = {
+    'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ',
+    'epsilon': 'ε', 'zeta': 'ζ', 'eta': 'η', 'theta': 'θ',
+    'iota': 'ι', 'kappa': 'κ', 'lambda': 'λ', 'mu': 'μ',
+    'nu': 'ν', 'xi': 'ξ', 'pi': 'π', 'rho': 'ρ',
+    'sigma': 'σ', 'tau': 'τ', 'upsilon': 'υ', 'phi': 'φ',
+    'chi': 'χ', 'psi': 'ψ', 'omega': 'ω'
+  };
+  for (const k of Object.keys(gregas)) {
+    s = s.replace(new RegExp('\\b' + k + '\\b', 'g'), gregas[k]);
+  }
+
+  // 3) Remove espaço entre número/letra e expoente Unicode: "m ²" -> "m²", "10 ²" -> "10²"
+  s = s.replace(/(\S)\s+(²|³|¹|⁰|⁴|⁵|⁶|⁷|⁸|⁹)/g, '$1$2');
+  s = s.replace(/(\S)\s+(₀|₁|₂|₃|₄|₅|₆|₇|₈|₉)/g, '$1$2');
+
+  // ---- ETAPA B: escape HTML (a partir daqui o que adicionarmos é tag real) ----
+  s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // ---- ETAPA C: marcadores que viram tags HTML ----
+
+  // 4) Markdown-like ^X^ -> sobrescrito; ~X~ -> subscrito
+  //    Se for um único dígito 0-9, troca pelo símbolo Unicode (consistente com o resto do texto)
+  const supDigits = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  const subDigits = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+  s = s.replace(/\^([^\s^~<>]+)\^/g, (m, c) => {
+    if (c.length === 1 && supDigits[c]) return supDigits[c];
+    return '<sup>' + c + '</sup>';
+  });
+  s = s.replace(/~([^\s^~<>]+)~/g, (m, c) => {
+    if (c.length === 1 && subDigits[c]) return subDigits[c];
+    return '<sub>' + c + '</sub>';
+  });
+
+  // 4.b) Limpeza pós-conversão: tira espaço entre símbolo e o sub/sup Unicode recém-criado
+  s = s.replace(/(\S)\s+(²|³|¹|⁰|⁴|⁵|⁶|⁷|⁸|⁹)/g, '$1$2');
+  s = s.replace(/(\S)\s+(₀|₁|₂|₃|₄|₅|₆|₇|₈|₉)/g, '$1$2');
+
+  // 5) Tabela: linhas no formato  \| col1 \| col2 \| col3 \|
   const linhasTab = s.match(/(?:\\\|[^\\]*?)+\\\|/g);
   if (linhasTab && linhasTab.length >= 2) {
-    // Vai capturar TUDO entre a primeira e última linha de tabela.
     const idxIni = s.indexOf(linhasTab[0]);
     const ultima = linhasTab[linhasTab.length - 1];
     const idxFim = s.indexOf(ultima) + ultima.length;
@@ -3544,10 +3630,6 @@ function formatarEnunciado(texto) {
     const tabRaw = s.substring(idxIni, idxFim);
     const pos = s.substring(idxFim).trim();
     const linhas = tabRaw.split(/\s*\\\|\s*/).filter(Boolean);
-    // Tentamos descobrir quantas colunas por linha de tabela
-    // Heurística simples: encontra o número de "\|" antes do primeiro \\ (literal duplo)
-    // mas, como já dividimos por "\|", vamos só agrupar de N em N células.
-    // N = nº de células da primeira linha capturada (linhasTab[0])
     const nCols = (linhasTab[0].match(/\\\|/g) || []).length - 1;
     if (nCols >= 2 && linhas.length >= nCols * 2) {
       let tabHtml = '<div class="enunciado-tabela-wrap"><table class="enunciado-tabela"><thead><tr>';
@@ -3563,14 +3645,13 @@ function formatarEnunciado(texto) {
     }
   }
 
-  // 3) Lista: 2+ ocorrências de "\- " viram <ul><li>…</li></ul>
+  // 6) Lista: 2+ ocorrências de "\- " viram <ul><li>...</li></ul>
   const bulletCount = (s.match(/\\- /g) || []).length;
   if (bulletCount >= 2) {
     const firstBullet = s.indexOf('\\- ');
     const pre = s.substring(0, firstBullet).trim();
-    const rest = s.substring(firstBullet + 3); // pula "\- "
+    const rest = s.substring(firstBullet + 3);
     const items = rest.split(/\\- /);
-    // Pós-lista: último item pode conter um trecho de texto novo (começa com maiúscula após ponto)
     let postLista = '';
     const lastItem = items[items.length - 1];
     const m = lastItem.match(/^(.+?[.;])\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ].{12,})$/s);
@@ -5221,7 +5302,7 @@ async function finalizarConferenciaGabarito() {
           return `
             <div class="alternativa ${cls}">
               <div class="alternativa-letra">${String.fromCharCode(65 + j)}</div>
-              <div>${alt.replace(/^[A-E]\)\s*/, '')}</div>
+              <div>${formatarEnunciado(alt.replace(/^[A-E]\)\s*/, ''))}</div>
             </div>`;
         }).join('');
       }
@@ -5776,7 +5857,7 @@ function renderQuestao(q, numero, modoSimulado) {
     altsHtml = q.alternativas.map((alt, i) => `
       <div class="alternativa" onclick="${modoSimulado ? `marcarSimulado(${q.id}, ${i})` : `responderQuestao(${q.id}, ${i})`}">
         <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
-        <div>${alt.replace(/^[A-E]\)\s*/, '')}</div>
+        <div>${formatarEnunciado(alt.replace(/^[A-E]\)\s*/, ''))}</div>
       </div>
     `).join('');
   }
@@ -6022,7 +6103,7 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
     altsHtml = q.alternativas.map((alt, i) => `
       <div class="alternativa ${respostaMarcada === i ? 'selecionada' : ''}" onclick="marcarSimulado(${q.id}, ${i})">
         <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
-        <div>${alt.replace(/^[A-E]\)\s*/, '')}</div>
+        <div>${formatarEnunciado(alt.replace(/^[A-E]\)\s*/, ''))}</div>
       </div>
     `).join('');
   }
@@ -6177,7 +6258,7 @@ function renderResultadoSimulado(registro, porTempo) {
           return `
             <div class="alternativa ${cls}">
               <div class="alternativa-letra">${String.fromCharCode(65 + j)}</div>
-              <div>${alt.replace(/^[A-E]\)\s*/, '')}</div>
+              <div>${formatarEnunciado(alt.replace(/^[A-E]\)\s*/, ''))}</div>
             </div>
           `;
         }).join('');
@@ -6578,19 +6659,60 @@ function renderGerenciarQuestoes() {
   filtrarGer();
 }
 
+// Diagnóstico de quesões: retorna array de problemas encontrados
+function diagnosticarQuestao(q) {
+  const probs = [];
+  if (!Array.isArray(q.alternativas) || q.alternativas.length === 0) {
+    probs.push('Sem alternativas');
+  } else {
+    if (q.alternativas.length !== 5) probs.push(`${q.alternativas.length} alternativas (esperado 5)`);
+    const vazias = q.alternativas.filter(a => {
+      const limpo = (a || '').replace(/^[A-E]\)\s*/, '').trim();
+      return limpo.length === 0;
+    }).length;
+    if (vazias > 0) probs.push(`${vazias} alternativa${vazias>1?'s':''} vazia${vazias>1?'s':''}`);
+  }
+  if (!q.enunciado || q.enunciado.trim().length < 30) probs.push('Enunciado curto/vazio');
+  if (q.correta == null || q.correta < 0 || (Array.isArray(q.alternativas) && q.correta >= q.alternativas.length)) {
+    probs.push('Gabarito inválido');
+  }
+  if (!q.explicacao || q.explicacao.trim().length < 10) probs.push('Sem explicação');
+  return probs;
+}
+
 function filtrarGer() {
   const t = document.getElementById('ger-tema').value;
+  const soProb = document.getElementById('ger-so-problemas')?.checked;
   let qs = state.questoes.slice();
   if (t) qs = qs.filter(q => q.tema === t);
+  // Pre-computa diagnóstico
+  qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q) }));
+  const totalProb = qs.filter(q => q._probs.length > 0).length;
+  if (soProb) qs = qs.filter(q => q._probs.length > 0);
   const cont = document.getElementById('ger-lista');
   cont.innerHTML = `
+    ${totalProb > 0 ? `
+      <div class="diag-alerta">
+        <span class="diag-icon">⚠️</span>
+        <span><strong>${totalProb}</strong> ${totalProb === 1 ? 'questão precisa' : 'questões precisam'} de revisão (alternativas faltando, enunciado curto, etc.)</span>
+        <label class="diag-toggle">
+          <input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()">
+          <span>mostrar só com problemas</span>
+        </label>
+      </div>
+    ` : ''}
     <table>
-      <thead><tr><th>Tema</th><th>Enunciado</th><th>Dif.</th><th>Ações</th></tr></thead>
+      <thead><tr><th style="width:40px;">⚠</th><th>Tema</th><th>Enunciado</th><th>Dif.</th><th>Ações</th></tr></thead>
       <tbody>
         ${qs.map(q => {
           const tema = TEMAS.find(x => x.id === q.tema);
+          const probs = q._probs;
+          const statusCell = probs.length > 0
+            ? `<span class="diag-badge" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
+            : '<span class="diag-ok" title="OK">✓</span>';
           return `
-            <tr>
+            <tr class="${probs.length > 0 ? 'tr-problemas' : ''}">
+              <td>${statusCell}</td>
               <td><span class="tag tag-tema">${tema ? tema.nome : '—'}</span></td>
               <td>${q.enunciado.substring(0, 90)}${q.enunciado.length > 90 ? '...' : ''}</td>
               <td>${q.dificuldade}</td>
