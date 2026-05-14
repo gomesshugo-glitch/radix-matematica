@@ -21,6 +21,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<!-- KaTeX para renderizar fórmulas matemáticas no enunciado e alternativas -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -3248,7 +3252,7 @@
   }
   .tr-problemas { background: rgba(255,122,92,0.04) !important; }
 
-  /* Imagens dentro do enunciado (vindas de Markdown ![](url)) */
+  /* Imagens dentro do enunciado (vindas de Markdown ![](url) ou marcador [IMG:N]) */
   .enunciado-img {
     max-width: 100%;
     height: auto;
@@ -3256,6 +3260,35 @@
     margin: 12px 0;
     background: #fff;
     border: 1px solid var(--radix-line);
+  }
+  /* Imagem inline já vem dentro do .questao-enunciado — centraliza e dá respiro */
+  .questao-enunciado .questao-img-wrap {
+    display: block;
+    margin: 14px auto;
+    max-width: 100%;
+  }
+
+  /* === KaTeX: fórmulas matemáticas dentro de enunciado/alternativa === */
+  .questao-enunciado .katex,
+  .alternativa .katex,
+  .explicacao .katex {
+    font-size: 1.05em;
+  }
+  /* Bloco display ($$...$$) com respiro vertical e scroll horizontal em telas estreitas */
+  .questao-enunciado .katex-display,
+  .explicacao .katex-display {
+    margin: 14px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 0;
+  }
+  /* Em estilo "papel branco", herda cor escura do texto */
+  .questao-card.enem-style .katex { color: #1A1A1A; }
+  /* Aviso de erro inline do KaTeX — discreto */
+  .katex-error {
+    color: var(--radix-coral) !important;
+    border-bottom: 1px dotted var(--radix-coral);
+    cursor: help;
   }
   .img-faltando {
     display: inline-flex;
@@ -3593,10 +3626,50 @@ function salvarDados() {
 // Limpa \n literais (escape sequences vindas de Word/PDF), newlines reais
 // e colapsa espaços. Mantém o conteúdo legível para o aluno.
 
+// === Renderiza LaTeX (KaTeX) dentro de um elemento já injetado no DOM ===
+// Chamado depois de cada container.innerHTML que contenha .questao-enunciado/.alternativa
+function renderMatematica(rootEl) {
+  if (!rootEl || typeof window.renderMathInElement !== 'function') return;
+  try {
+    window.renderMathInElement(rootEl, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$',  right: '$',  display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      throwOnError: false,
+      errorColor: '#ff7a5c',
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    });
+  } catch (e) {
+    console.warn('Falha renderizando LaTeX:', e);
+  }
+}
+
 // === Formatador de enunciado: converte marcadores em HTML semântico ===
-function formatarEnunciado(texto) {
+// opts.imagens: array de URLs para resolver marcadores [IMG:0], [IMG:1]...
+function formatarEnunciado(texto, opts) {
   if (!texto) return '';
+  const imagens = (opts && Array.isArray(opts.imagens)) ? opts.imagens : [];
   let s = String(texto);
+
+  // ---- ETAPA 0: proteger LaTeX antes de qualquer substituição ----
+  // Extrai $$...$$, \[...\], $...$, \(...\) e troca por placeholders únicos
+  // pra evitar que o restante do pipeline (escape HTML, regex de gregas, etc.)
+  // corrompa a fórmula. KaTeX precisa receber o texto original com os
+  // delimitadores intactos.
+  const mathSlots = [];
+  const stash = (full) => {
+    const token = ' MATH' + mathSlots.length + ' ';
+    mathSlots.push(full);
+    return token;
+  };
+  s = s.replace(/\$\$[\s\S]+?\$\$/g, stash);
+  s = s.replace(/\\\[[\s\S]+?\\\]/g, stash);
+  s = s.replace(/\\\([\s\S]+?\\\)/g, stash);
+  // $...$ inline: exige conteúdo não vazio e sem \n para não pegar "R$ 10"
+  s = s.replace(/\$(?!\s)([^\$\n]{1,200}?)(?<!\s)\$/g, m => stash(m));
 
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
 
@@ -3613,6 +3686,18 @@ function formatarEnunciado(texto) {
 
   // 1.d) Atributos Pandoc isolados: {width="..." height="..."} -> remover
   s = s.replace(/\s*\{(width|height)="[^"]*"(?:\s+(width|height)="[^"]*")?\}/g, '');
+
+  // 1.d.2) Mais lixo do Pandoc/LaTeX:
+  //   - notas de rodapé Pandoc: [^1] [^abc]  ->  remover
+  s = s.replace(/\[\^[\w-]+\]/g, '');
+  //   - escapes Pandoc para caracteres especiais: \$ \# \% \_ \{ \} \&  ->  caractere puro
+  s = s.replace(/\\([\$#%_&{}])/g, '$1');
+  //   - \textbackslash{} ou \textbackslash  ->  literal "\"
+  s = s.replace(/\\textbackslash\{?\}?/g, '\\');
+  //   - blocos \begin{X}...\end{X} órfãos sem conteúdo matemático -> remover
+  s = s.replace(/\\begin\{[^}]+\}([\s\S]*?)\\end\{[^}]+\}/g, (m, inner) => inner.trim());
+  //   - comentários LaTeX: % até fim da linha (mas não % escapado)
+  s = s.replace(/(^|[^\\])%[^\n]*/g, '$1');
 
   // 1.e) Limpa lixo de tabela Pandoc colapsada (linhas-separadoras viraram caracteres)
   //      +-----+ ou +======+  ->  some
@@ -3677,12 +3762,25 @@ function formatarEnunciado(texto) {
     src = src.trim();
     if (/^(https?:|data:)/.test(src)) {
       const altEsc = alt.replace(/"/g, '&quot;');
-      return '<img src="' + src + '" class="enunciado-img" alt="' + altEsc + '">';
+      return '<div class="questao-img-wrap"><img src="' + src +
+             '" class="questao-img enunciado-img" alt="' + altEsc + '"></div>';
     }
     // Caminho local não disponível — placeholder com nome do arquivo
     const fileName = src.split('/').pop();
     return '<span class="img-faltando" title="Imagem não disponível neste servidor: ' +
            src.replace(/"/g,'&quot;') + '">📷 imagem ausente: ' + fileName + '</span>';
+  });
+
+  // 4.f) Marcador inline de figura: [IMG:0], [IMG:1]... -> resolve via opts.imagens
+  s = s.replace(/\[IMG:(\d+)\]/g, (m, n) => {
+    const idx = parseInt(n, 10);
+    const src = imagens[idx];
+    if (!src) {
+      return '<span class="img-faltando" title="Posição [IMG:' + n +
+             '] não tem imagem correspondente em q.imagens">📷 [IMG:' + n + '] ausente</span>';
+    }
+    return '<div class="questao-img-wrap"><img class="questao-img" src="' + src +
+           '" alt="figura ' + (idx + 1) + '"></div>';
   });
 
   // 5) Tabela: linhas no formato  \| col1 \| col2 \| col3 \|
@@ -3730,7 +3828,19 @@ function formatarEnunciado(texto) {
     s = (pre ? pre + ' ' : '') + listaHtml + (postLista ? ' <p class="enunciado-pos-lista">' + postLista + '</p>' : '');
   }
 
+  // ---- ETAPA D: restaurar segmentos de matemática protegidos na ETAPA 0 ----
+  // KaTeX vai processar os delimitadores depois, no DOM, via renderMatematica().
+  s = s.replace(/ MATH(\d+) /g, (m, i) => mathSlots[parseInt(i, 10)] || m);
+
   return s;
+}
+
+// Detecta se um enunciado já posiciona suas próprias imagens (marcador [IMG:N]
+// ou markdown ![](url)). Quando sim, suprimimos o bloco "imagens no rodapé"
+// para não duplicar.
+function enunciadoTemImagemInline(texto) {
+  if (!texto) return false;
+  return /\[IMG:\d+\]/.test(texto) || /!\[[^\]]*\]\([^)]+\)/.test(texto);
 }
 
 function sanitizarTextoQuestao(s) {
@@ -5344,7 +5454,8 @@ async function finalizarConferenciaGabarito() {
     ${detalhes.map((d, i) => {
       const q = d.q;
       const tema = TEMAS.find(t => t.id === q.tema);
-      const imgsHtml = (q.imagens || []).map(src =>
+      const inline = enunciadoTemImagemInline(q.enunciado);
+      const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
         `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
       ).join('');
       let altsHtml;
@@ -5377,7 +5488,7 @@ async function finalizarConferenciaGabarito() {
             <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
             ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
           </div>
-          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
@@ -5389,6 +5500,7 @@ async function finalizarConferenciaGabarito() {
       `;
     }).join('')}
   `;
+  renderMatematica(main);
 }
 
 // ========== GERAR PDF DAS QUESTÕES (Estilo ENEM) ==========
@@ -5896,6 +6008,7 @@ function filtrarQuestoes() {
     return;
   }
   container.innerHTML = questoes.map((q, idx) => renderQuestao(q, idx + 1, false)).join('');
+  renderMatematica(container);
 }
 
 function renderQuestao(q, numero, modoSimulado) {
@@ -5904,8 +6017,10 @@ function renderQuestao(q, numero, modoSimulado) {
   const difClass = { facil: 'tag-facil', media: 'tag-media', dificil: 'tag-dificil' }[q.dificuldade];
   const tema = TEMAS.find(t => t.id === q.tema);
 
-  // Imagens do enunciado (uma ou mais figuras)
-  const imgsHtml = (q.imagens || []).map(src =>
+  // Imagens: se o enunciado posiciona as figuras inline ([IMG:N] ou ![](url)),
+  // não emite o bloco no rodapé pra evitar duplicar.
+  const inline = enunciadoTemImagemInline(q.enunciado);
+  const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
     `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura da questão"></div>`
   ).join('');
 
@@ -5942,7 +6057,7 @@ function renderQuestao(q, numero, modoSimulado) {
           ${tema ? `<b>${tema.nome}</b>` : ''}
         </div>
       </div>
-      <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
+      <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
       ${imgsHtml}
       <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">
         ${altsHtml}
@@ -5975,7 +6090,8 @@ function responderQuestao(qid, idx) {
     else if (i === idx) el.classList.add('errada');
     el.onclick = null;
   });
-  document.getElementById(`explicacao-${qid}`).innerHTML = `
+  const explEl = document.getElementById(`explicacao-${qid}`);
+  explEl.innerHTML = `
     <div class="explicacao">
       <strong>${idx === q.correta ? '✓ Correto!' : '✗ Resposta incorreta.'}</strong><br>
       <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
@@ -5983,6 +6099,7 @@ function responderQuestao(qid, idx) {
       ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
     </div>
   `;
+  renderMatematica(explEl);
   const correto = idx === q.correta;
   const nova = {
     questaoId: qid, tema: q.tema,
@@ -6144,6 +6261,7 @@ function renderSimulado() {
         : `<button class="btn" onclick="navSim(1)">Próxima →</button>`}
     </div>
   `;
+  renderMatematica(main);
   atualizarCronometroDisplay();
 }
 
@@ -6152,7 +6270,8 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
   const difLabel = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[q.dificuldade];
   const difClass = { facil: 'tag-facil', media: 'tag-media', dificil: 'tag-dificil' }[q.dificuldade];
 
-  const imgsHtml = (q.imagens || []).map(src =>
+  const inline = enunciadoTemImagemInline(q.enunciado);
+  const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
     `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
   ).join('');
 
@@ -6188,7 +6307,7 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
           ${tema ? `<b>${tema.nome}</b>` : ''}
         </div>
       </div>
-      <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
+      <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
       ${imgsHtml}
       <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">
         ${altsHtml}
@@ -6299,7 +6418,8 @@ function renderResultadoSimulado(registro, porTempo) {
     ${registro.detalhes.map((d, i) => {
       const q = d.questao;
       const tema = TEMAS.find(t => t.id === q.tema);
-      const imgsHtml = (q.imagens || []).map(src =>
+      const inline = enunciadoTemImagemInline(q.enunciado);
+      const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
         `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
       ).join('');
       let altsHtml;
@@ -6334,7 +6454,7 @@ function renderResultadoSimulado(registro, porTempo) {
             <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
             ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
           </div>
-          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
@@ -6346,6 +6466,7 @@ function renderResultadoSimulado(registro, porTempo) {
       `;
     }).join('')}
   `;
+  renderMatematica(main);
 }
 
 // ========== DESEMPENHO ==========
