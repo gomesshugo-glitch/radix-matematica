@@ -3665,17 +3665,27 @@ function formatarEnunciado(texto, opts) {
     mathSlots.push(full);
     return token;
   };
+  // PRÉ-passo: blinda "R$" para que o regex de $...$ não capture preço como math.
+  // "R$500,00 e ... R$250,00" -> "R$ 500,00 e ... R$ 250,00"  (com espaço após $).
+  // Combinado com o lookbehind (?<!\s)\$ no regex inline, isso impede que o
+  // cifrão do preço seja confundido com delimitador de fórmula.
+  s = s.replace(/R\$\s*(\d)/g, 'R$ $1');
+  s = s.replace(/\bR(\s+)(\d)/g, 'R$ $2');
+  s = s.replace(/\bR(\d)/g, 'R$ $1');
+
   s = s.replace(/\$\$[\s\S]+?\$\$/g, stash);
   s = s.replace(/\\\[[\s\S]+?\\\]/g, stash);
   s = s.replace(/\\\([\s\S]+?\\\)/g, stash);
-  // $...$ inline: exige conteúdo não vazio e sem \n para não pegar "R$ 10"
-  s = s.replace(/\$(?!\s)([^\$\n]{1,200}?)(?<!\s)\$/g, m => stash(m));
+  // $...$ inline conservador: só extrai se o conteúdo parecer LaTeX de verdade
+  // (comando \cmd, ^, _, chaves, símbolos relacionais). Evita pegar texto puro
+  // entre dois cifrões soltos (preços, "$500,00 ... $250,00").
+  const pareceLatex = (str) => /\\[a-zA-Z]+|[\^_{}]|\\\\/.test(str);
+  s = s.replace(/\$(?!\s)([^\$\n]{1,200}?)(?<!\s)\$/g, (m, inner) => {
+    if (!pareceLatex(inner)) return m;
+    return stash(m);
+  });
 
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
-
-  // 1) Recupera "R$" perdido na importação
-  s = s.replace(/\bR(\s+)(\d)/g, 'R$ $2');
-  s = s.replace(/\bR(\d)/g, 'R$ $1');
 
   // 1.b) Símbolo de graus (markdown/latex): "30^(circ)" -> "30°"
   s = s.replace(/\^\\?\(?\s*circ\s*\)?/g, '°');
@@ -3690,14 +3700,15 @@ function formatarEnunciado(texto, opts) {
   // 1.d.2) Mais lixo do Pandoc/LaTeX:
   //   - notas de rodapé Pandoc: [^1] [^abc]  ->  remover
   s = s.replace(/\[\^[\w-]+\]/g, '');
-  //   - escapes Pandoc para caracteres especiais: \$ \# \% \_ \{ \} \&  ->  caractere puro
-  s = s.replace(/\\([\$#%_&{}])/g, '$1');
+  //   - escapes Pandoc para caracteres especiais: \$ \# \_ \{ \} \&  ->  caractere puro
+  //     OBS: NÃO incluir % aqui — em pt-BR é porcentagem ("80%"), não escape.
+  s = s.replace(/\\([\$#_&{}])/g, '$1');
   //   - \textbackslash{} ou \textbackslash  ->  literal "\"
   s = s.replace(/\\textbackslash\{?\}?/g, '\\');
-  //   - blocos \begin{X}...\end{X} órfãos sem conteúdo matemático -> remover
-  s = s.replace(/\\begin\{[^}]+\}([\s\S]*?)\\end\{[^}]+\}/g, (m, inner) => inner.trim());
-  //   - comentários LaTeX: % até fim da linha (mas não % escapado)
-  s = s.replace(/(^|[^\\])%[^\n]*/g, '$1');
+  // OBS importante: NÃO existe mais regra de "comentário LaTeX %... até fim de linha".
+  // Em texto pt-BR, "%" é porcentagem (ex.: "80% do cilindro"). A regra destruía
+  // o restante da frase. \begin{}\end{} órfãos também foram removidos por
+  // engolirem conteúdo legítimo no formato Pandoc colapsado.
 
   // 1.e) Limpa lixo de tabela Pandoc colapsada (linhas-separadoras viraram caracteres)
   //      +-----+ ou +======+  ->  some
