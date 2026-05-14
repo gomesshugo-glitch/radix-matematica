@@ -4803,6 +4803,39 @@ function salvarDados() {
   // Nada a fazer aqui — cada resposta/simulado é salvo direto no Supabase
 }
 
+async function carregarQuestoesDoBanco() {
+  // Busca questões no Supabase. Se falhar, retorna null pro fallback.
+  try {
+    const { data, error } = await sb.from('questoes')
+      .select('*')
+      .order('id');
+    if (error) {
+      console.warn('Erro buscando questões no Supabase:', error.message);
+      return null;
+    }
+    if (!data || data.length === 0) {
+      console.warn('Tabela questoes vazia no Supabase.');
+      return null;
+    }
+    // Converter snake_case -> camelCase pro código existente
+    return data.map(q => ({
+      id: q.id,
+      tema: q.tema,
+      dificuldade: q.dificuldade,
+      enunciado: q.enunciado,
+      alternativas: q.alternativas || [],
+      alternativasImg: q.alternativas_img || null,
+      imagens: q.imagens || null,
+      correta: q.correta,
+      explicacao: q.explicacao || '',
+      prova: q.prova || null
+    }));
+  } catch (e) {
+    console.warn('Exceção buscando questões:', e);
+    return null;
+  }
+}
+
 async function carregarDados() {
   // Limpar caches antigos do localStorage (versões anteriores)
   localStorage.removeItem('radix_questoes');
@@ -4811,8 +4844,15 @@ async function carregarDados() {
   localStorage.removeItem('radix_respostas');
   localStorage.removeItem('radix_simulados');
 
-  // Questões: sempre vêm do código (imagens grandes)
-  state.questoes = QUESTOES_INICIAIS.slice();
+  // Questões: tenta Supabase, com fallback no array local
+  const remotas = await carregarQuestoesDoBanco();
+  if (remotas && remotas.length >= 100) {
+    state.questoes = remotas;
+    console.log('[Radix] %d questões carregadas do Supabase.', remotas.length);
+  } else {
+    state.questoes = QUESTOES_INICIAIS.slice();
+    console.log('[Radix] Fallback: %d questões do array local.', state.questoes.length);
+  }
   state.respostasAluno = [];
   state.historicoSimulados = [];
 
