@@ -2953,6 +2953,179 @@
     line-height: 1;
   }
 
+  /* ============ V3.1 — CRONOGRAMA: TIPOGRAFIA CONSISTENTE ============ */
+  /* Garante Inter em todo o cronograma, sobrescrevendo Times remanescente */
+  .cronograma-resumo,
+  .cronograma-resumo *,
+  .cron-modulo-bloco,
+  .cron-modulo-bloco *,
+  .cron-semanas-grid,
+  .cron-semana,
+  .cron-semana * {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  /* Card de semana — visual polido na paleta dark */
+  .cron-semana {
+    background: var(--radix-bg-2) !important;
+    border: 1px solid var(--radix-line-2) !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease !important;
+  }
+  .cron-semana:hover:not([onclick=""]) {
+    border-color: var(--radix-cyan) !important;
+    background: var(--radix-surface) !important;
+    transform: translateY(-1px);
+  }
+  .cron-semana-topo { gap: 12px !important; align-items: flex-start !important; }
+
+  /* Bloco "SEM XX" — pílula moderna */
+  .cron-semana-num {
+    background: rgba(34,211,238,0.12) !important;
+    color: var(--radix-cyan) !important;
+    border: 1px solid rgba(34,211,238,0.25) !important;
+    padding: 7px 8px !important;
+    border-radius: 10px !important;
+    min-width: 44px !important;
+    font-size: 9.5px !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+  }
+  .cron-semana-num b {
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px !important;
+    display: block !important;
+    margin-top: 3px !important;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
+  .cron-semana.em_estudo .cron-semana-num {
+    background: rgba(251,191,36,0.16) !important;
+    color: var(--radix-warning) !important;
+    border-color: rgba(251,191,36,0.30) !important;
+  }
+  .cron-semana.concluido .cron-semana-num {
+    background: rgba(52,211,153,0.16) !important;
+    color: var(--radix-success) !important;
+    border-color: rgba(52,211,153,0.30) !important;
+  }
+
+  /* Texto das semanas */
+  .cron-semana-data {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: var(--radix-text-muted) !important;
+    letter-spacing: 0.02em !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .cron-semana-titulo {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: var(--radix-text) !important;
+    line-height: 1.35 !important;
+    margin-top: 4px !important;
+    letter-spacing: -0.1px !important;
+  }
+  .cron-semana-stats {
+    font-size: 11.5px !important;
+    color: var(--radix-text-muted) !important;
+    margin-top: 10px !important;
+    padding-top: 10px !important;
+    border-top: 1px dashed var(--radix-line) !important;
+    display: flex !important;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Status — substitui emoji ⚪🟡✅ por dot colorido com halo sutil */
+  .cron-semana-status {
+    font-size: 0 !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background: var(--radix-text-muted) !important;
+    flex-shrink: 0;
+    margin-top: 8px;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+    align-self: flex-start;
+  }
+  .cron-semana.em_estudo .cron-semana-status {
+    background: var(--radix-warning) !important;
+    box-shadow: 0 0 0 4px rgba(251,191,36,0.20) !important;
+  }
+  .cron-semana.concluido .cron-semana-status {
+    background: var(--radix-success) !important;
+    box-shadow: 0 0 0 4px rgba(52,211,153,0.22) !important;
+  }
+
+  /* Badges SIMULADO / RECESSO / REVISÃO / EVENTO */
+  .cron-tipo {
+    display: inline-block;
+    padding: 2px 9px !important;
+    border-radius: 999px !important;
+    font-size: 9.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    line-height: 1.5 !important;
+    margin-left: 4px;
+  }
+
+  /* Header de módulo no cronograma — respiração e tipografia mais clara */
+  .cron-modulo-header {
+    padding: 20px 24px !important;
+  }
+  .cron-modulo-info h3 {
+    font-size: 19px !important;
+    letter-spacing: -0.3px !important;
+  }
+  .cron-modulo-info p {
+    font-size: 12.5px !important;
+    margin-top: 4px !important;
+    letter-spacing: 0.01em !important;
+    line-height: 1.4 !important;
+  }
+  .cron-modulo-stats {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    padding: 6px 14px !important;
+    border-radius: 999px !important;
+    letter-spacing: 0.02em !important;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
+  .cron-semanas-grid {
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+
+  /* Resumo no topo — números tabulares e label mais legível */
+  .cron-resumo-numero {
+    font-feature-settings: 'tnum' on, 'lnum' on;
+    font-size: 56px !important;
+    line-height: 1 !important;
+    letter-spacing: -2px !important;
+    font-weight: 800 !important;
+  }
+  .cron-resumo-label {
+    letter-spacing: 0 !important;
+    font-weight: 600 !important;
+  }
+  .cron-resumo-sub {
+    letter-spacing: 0.01em !important;
+  }
+
+  /* Modal "Editar semana" — status options sem destaque pesado de emoji */
+  .status-opc span {
+    font-weight: 600 !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
+  }
+
 </style>
 </head>
 <body>
