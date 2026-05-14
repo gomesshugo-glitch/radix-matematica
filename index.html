@@ -3614,6 +3614,18 @@ function formatarEnunciado(texto) {
   // 1.d) Atributos Pandoc isolados: {width="..." height="..."} -> remover
   s = s.replace(/\s*\{(width|height)="[^"]*"(?:\s+(width|height)="[^"]*")?\}/g, '');
 
+  // 1.e) Limpa lixo de tabela Pandoc colapsada (linhas-separadoras viraram caracteres)
+  //      +-----+ ou +======+  ->  some
+  s = s.replace(/\+[-=+\s]{3,}\+/g, ' ');
+  //      sequências longas de '-' ou '=' (5+ chars) viraram lixo visual
+  s = s.replace(/[-]{5,}/g, ' ');
+  s = s.replace(/[=]{5,}/g, ' ');
+  //      pipes redundantes "| |" ou "||" -> consolida em " · " visualmente
+  //      (preserva o conteúdo das células, só elimina os bordões vazios)
+  s = s.replace(/\|\s*\|/g, '|');
+  //      colapsa espaços múltiplos pós-limpeza
+  s = s.replace(/[ \t]{2,}/g, ' ');
+
   // 2) Letras gregas escritas como palavra -> símbolo Unicode
   const gregas = {
     'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ',
@@ -6734,6 +6746,9 @@ function diagnosticarQuestao(q) {
   const allText = (q.enunciado || '') + ' ' + (q.explicacao || '') + ' ' + (q.alternativas || []).join(' ');
   const imgsAusentes = (allText.match(/!\[[^\]]*\]\((?!https?:|data:)[^)]+\)/g) || []).length;
   if (imgsAusentes > 0) probs.push(imgsAusentes + ' imagem' + (imgsAusentes>1?'ns':'') + ' ausente' + (imgsAusentes>1?'s':''));
+  // Tabela markdown corrompida: presença de separadores Pandoc OU sequência de 4+ pipes
+  const temTabelaQuebrada = /\+[-=]{3,}|\|\s*\|\s*\||(?:\|[^|\n]{0,20}){4,}\|/.test(allText);
+  if (temTabelaQuebrada) probs.push('Tabela corrompida (precisa reformular)');
   return probs;
 }
 
