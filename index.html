@@ -3144,6 +3144,134 @@
     font-family: 'Inter', system-ui, sans-serif !important;
   }
 
+  /* Ícones de status — SVG stroke no padrão visual do resto do site */
+  .status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    color: var(--radix-text-muted);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--radix-line);
+    transition: color .15s, background .15s, border-color .15s;
+  }
+  .status-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.2;
+  }
+  .status-icon-em_estudo {
+    color: var(--radix-warning);
+    background: rgba(251,191,36,0.12);
+    border-color: rgba(251,191,36,0.30);
+  }
+  .status-icon-concluido {
+    color: var(--radix-success);
+    background: rgba(52,211,153,0.14);
+    border-color: rgba(52,211,153,0.32);
+  }
+  body.theme-light .status-icon {
+    background: rgba(15,23,42,0.04);
+    border-color: rgba(15,23,42,0.10);
+  }
+  body.theme-light .status-icon-em_estudo {
+    background: rgba(245,158,11,0.10);
+    border-color: rgba(245,158,11,0.30);
+    color: #b45309;
+  }
+  body.theme-light .status-icon-concluido {
+    background: rgba(22,163,74,0.10);
+    border-color: rgba(22,163,74,0.30);
+    color: #15803d;
+  }
+  /* Ícone SVG inline dentro de botões do modal */
+  .btn-icon {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Opção selecionada: borda + fundo brand (espelha .tecnica-item.sel) */
+  .status-opc:has(input:checked) {
+    border-color: var(--radix-cyan) !important;
+    background: rgba(34,211,238,0.10) !important;
+  }
+  body.theme-light .status-opc:has(input:checked) {
+    background: rgba(34,211,238,0.08) !important;
+    border-color: var(--radix-cyan) !important;
+  }
+
+  /* Radio nativo do .status-opc fica visualmente escondido (a11y mantida):
+     o dot colorido + a borda ciano já comunicam o estado, então não precisamos
+     do círculo extra do radio competindo com o dot. */
+  .status-opc input[type="radio"] {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  /* ============ SIMULADO CONFIG — coerência dark/light ============ */
+  .config-box {
+    background: var(--radix-surface) !important;
+    color: var(--radix-text);
+    border: 1px solid var(--radix-line) !important;
+    box-shadow: 0 2px 12px rgba(30,136,229,0.08) !important;
+  }
+  .form-group label {
+    color: var(--radix-text) !important;
+  }
+  /* Cabeçalho de cada módulo na lista de temas */
+  .modulo-checkbox-titulo {
+    background: rgba(34,211,238,0.10) !important;
+    color: var(--radix-cyan) !important;
+    border: 1px solid rgba(34,211,238,0.22) !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+  }
+  body.theme-light .modulo-checkbox-titulo {
+    background: rgba(59,130,246,0.08) !important;
+    color: var(--radix-blue-dark) !important;
+    border: 1px solid rgba(59,130,246,0.18) !important;
+  }
+  /* Cards de tema */
+  .checkbox-item {
+    background: var(--radix-bg-2) !important;
+    border: 1px solid var(--radix-line) !important;
+    color: var(--radix-text);
+    transition: border-color .15s, background .15s;
+  }
+  .checkbox-item:hover {
+    border-color: var(--radix-cyan) !important;
+  }
+  .checkbox-item:has(input:checked) {
+    border-color: var(--radix-cyan) !important;
+    background: rgba(34,211,238,0.10) !important;
+  }
+  body.theme-light .checkbox-item {
+    background: #ffffff !important;
+    border: 1px solid rgba(15,23,42,0.08) !important;
+    box-shadow: 0 1px 4px rgba(30,136,229,0.04) !important;
+  }
+  body.theme-light .checkbox-item:has(input:checked) {
+    background: rgba(34,211,238,0.08) !important;
+  }
+
   /* ============ V3.2 — CRONOGRAMA NO LIGHT MODE ============
      Alinha os cards de semana ao mesmo padrão visual dos demais
      cards do app (.dash-card): superfície branca + sombra azul sutil. */
@@ -6334,6 +6462,7 @@ function abrirSimuladoConfig() {
           <option value="10" selected>10 questões</option>
           <option value="15">15 questões</option>
           <option value="20">20 questões</option>
+          <option value="45">45 questões</option>
         </select>
       </div>
       <div class="form-group">
@@ -6368,7 +6497,7 @@ function abrirSimuladoConfig() {
           </div>
         `).join('')}
       </div>
-      <button class="btn btn-success" style="width:100%;padding:14px;" onclick="iniciarSimulado()">Iniciar Simulado</button>
+      <button class="btn" style="width:100%;padding:14px;" onclick="iniciarSimulado()">Iniciar Simulado</button>
     </div>
   `;
 }
@@ -8780,9 +8909,27 @@ function abrirEditorSemana(n) {
         <div class="form-group">
           <label>Status</label>
           <div class="status-opcoes">
-            <label class="status-opc"><input type="radio" name="status-radio" value="nao_iniciado" ${prog.status==='nao_iniciado'?'checked':''}> <span>⚪ Não iniciado</span></label>
-            <label class="status-opc"><input type="radio" name="status-radio" value="em_estudo" ${prog.status==='em_estudo'?'checked':''}> <span>🟡 Em estudo</span></label>
-            <label class="status-opc"><input type="radio" name="status-radio" value="concluido" ${prog.status==='concluido'?'checked':''}> <span>✅ Concluído</span></label>
+            <label class="status-opc">
+              <input type="radio" name="status-radio" value="nao_iniciado" ${prog.status==='nao_iniciado'?'checked':''}>
+              <span class="status-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+              </span>
+              <span>Não iniciado</span>
+            </label>
+            <label class="status-opc">
+              <input type="radio" name="status-radio" value="em_estudo" ${prog.status==='em_estudo'?'checked':''}>
+              <span class="status-icon status-icon-em_estudo" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 13.5"/></svg>
+              </span>
+              <span>Em estudo</span>
+            </label>
+            <label class="status-opc">
+              <input type="radio" name="status-radio" value="concluido" ${prog.status==='concluido'?'checked':''}>
+              <span class="status-icon status-icon-concluido" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </span>
+              <span>Concluído</span>
+            </label>
           </div>
         </div>
 
@@ -8805,8 +8952,14 @@ function abrirEditorSemana(n) {
 
         ${tema ? `
           <div class="form-group" style="display:flex;gap:8px;flex-wrap:wrap;background:var(--radix-bg);padding:12px;border-radius:8px;">
-            <button class="btn btn-secondary" onclick="fecharModalSemana();abrirTema('${tema.id}')">🎯 Praticar questões</button>
-            <button class="btn btn-secondary" onclick="fecharModalSemana();fazerMiniSimulado('${tema.id}')">⏱ Mini-simulado (10 questões)</button>
+            <button class="btn btn-secondary" onclick="fecharModalSemana();abrirTema('${tema.id}')">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Praticar questões
+            </button>
+            <button class="btn btn-secondary" onclick="fecharModalSemana();fazerMiniSimulado('${tema.id}')">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="8"/><path d="M12 10v4l2.5 1.5"/><path d="M9 2h6"/><path d="M12 6V2"/></svg>
+              Mini-simulado (10 questões)
+            </button>
           </div>
         ` : ''}
 
