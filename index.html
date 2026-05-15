@@ -3132,6 +3132,45 @@
     font-family: 'Inter', system-ui, sans-serif !important;
   }
 
+  /* ============ V3.2 — CRONOGRAMA NO LIGHT MODE ============
+     Alinha os cards de semana ao mesmo padrão visual dos demais
+     cards do app (.dash-card): superfície branca + sombra azul sutil. */
+  body.theme-light .cron-semana {
+    background: #ffffff !important;
+    border-color: rgba(15,23,42,0.08) !important;
+    box-shadow: 0 2px 8px rgba(30,136,229,0.06) !important;
+  }
+  body.theme-light .cron-semana:hover:not([onclick=""]) {
+    background: #ffffff !important;
+    border-color: var(--radix-blue) !important;
+    box-shadow: 0 6px 18px rgba(30,136,229,0.12) !important;
+  }
+  /* Estados visualmente tonalizados (mantém a leitura rápida do progresso) */
+  body.theme-light .cron-semana.em_estudo {
+    background: #fffbeb !important;
+    border-color: rgba(245,158,11,0.35) !important;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.08) !important;
+  }
+  body.theme-light .cron-semana.concluido {
+    background: #f0fdf4 !important;
+    border-color: rgba(22,163,74,0.30) !important;
+    box-shadow: 0 2px 8px rgba(22,163,74,0.08) !important;
+  }
+  /* Container do módulo no light mode: superfície branca já vem via --radix-surface,
+     mas reforçamos a sombra na mesma intensidade dos demais cards do app */
+  body.theme-light .cron-modulo-bloco {
+    box-shadow: 0 2px 12px rgba(30,136,229,0.08) !important;
+  }
+  /* Opções de status do modal no light mode: superfície clara mais discreta */
+  body.theme-light .status-opc {
+    background: #f8fafc !important;
+    border: 1px solid rgba(15,23,42,0.06) !important;
+  }
+  body.theme-light .status-opc:hover {
+    background: #ffffff !important;
+    border-color: var(--radix-cyan) !important;
+  }
+
   /* ============ Enunciado: listas e tabelas (formatação estilo ENEM) ============ */
   .enunciado-lista {
     list-style: none;
@@ -8761,7 +8800,7 @@ function abrirEditorSemana(n) {
 
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalSemana()">Cancelar</button>
-          <button class="btn btn-success" onclick="salvarSemana()">Salvar</button>
+          <button class="btn" onclick="salvarSemana()">Salvar</button>
         </div>
       </div>
     </div>
