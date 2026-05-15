@@ -18,9 +18,11 @@
 <meta name="twitter:title" content="Radix — Curso de Matemática">
 <meta name="twitter:description" content="Curso de Matemática para o ENEM, do básico ao avançado desde 2010.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M 7 19 L 10 17 L 14 24 L 20 8 L 26 8' stroke='%23fff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <!-- KaTeX para renderizar fórmulas matemáticas no enunciado e alternativas -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
@@ -3305,9 +3307,83 @@
     margin: 4px 4px 4px 0;
   }
 
+  /* ===== BOOT LOADER (overlay inicial enquanto o app decide login/app/status) ===== */
+  .boot-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(59,130,246,.12), transparent 60%),
+      var(--radix-bg);
+    transition: opacity 220ms ease;
+  }
+  .boot-loader.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .boot-loader-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .boot-spinner {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.12);
+    border-top-color: var(--radix-cyan);
+    animation: boot-spin 0.8s linear infinite;
+  }
+  @keyframes boot-spin { to { transform: rotate(360deg); } }
+  .boot-text {
+    color: var(--radix-text-muted);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== Botões em estado "loading" — usado em Entrar / Criar conta ===== */
+  .mk-btn-primary.is-loading,
+  .btn.is-loading,
+  .login-box button.is-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  .mk-btn-primary.is-loading > *,
+  .btn.is-loading > *,
+  .login-box button.is-loading > * {
+    visibility: hidden;
+  }
+  .mk-btn-primary.is-loading::after,
+  .btn.is-loading::after,
+  .login-box button.is-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 18px; height: 18px;
+    margin: -9px 0 0 -9px;
+    border-radius: 50%;
+    border: 2px solid rgba(14,26,54,0.25);
+    border-top-color: var(--radix-bg);
+    animation: boot-spin 0.7s linear infinite;
+  }
+
 </style>
 </head>
 <body>
+
+<!-- BOOT LOADER (visível por padrão; escondido pelo init() quando o app decide o que mostrar) -->
+<div id="boot-loader" class="boot-loader" aria-hidden="true">
+  <div class="boot-loader-inner">
+    <div class="boot-spinner" role="status" aria-label="Carregando"></div>
+    <div class="boot-text">Carregando…</div>
+  </div>
+</div>
 
 <!-- LOGIN -->
 <div id="view-login" class="login-wrap mk-login-wrap">
@@ -4062,28 +4138,34 @@ async function fazerCadastro() {
     setMsg('Informe um WhatsApp válido com DDD (10 ou 11 dígitos).', 'var(--radix-red)');
     return;
   }
+  const btn = document.querySelector('#form-signup .mk-btn-primary');
+  btn?.classList.add('is-loading');
   setMsg('Criando sua conta...');
-  const { data, error } = await sb.auth.signUp({
-    email, password: senha,
-    options: { data: { nome, telefone: whats, cpf } }
-  });
-  if (error) {
-    setMsg('Erro: ' + error.message, 'var(--radix-red)');
-    return;
-  }
-  // Salvar telefone na perfis (caso o trigger não capture)
-  if (data.user) {
-    setTimeout(async () => {
-      await sb.from('perfis').update({ telefone: whats, cpf: cpf || null }).eq('id', data.user.id);
-    }, 800);
-  }
-  if (data.user && !data.session) {
-    setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
-    trocarAba('signin');
-    document.getElementById('signin-email').value = email;
-  } else {
-    setMsg('Conta criada! Entrando...', 'green');
-    await iniciarSessao();
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: senha,
+      options: { data: { nome, telefone: whats, cpf } }
+    });
+    if (error) {
+      setMsg('Erro: ' + error.message, 'var(--radix-red)');
+      return;
+    }
+    // Salvar telefone na perfis (caso o trigger não capture)
+    if (data.user) {
+      setTimeout(async () => {
+        await sb.from('perfis').update({ telefone: whats, cpf: cpf || null }).eq('id', data.user.id);
+      }, 800);
+    }
+    if (data.user && !data.session) {
+      setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
+      trocarAba('signin');
+      document.getElementById('signin-email').value = email;
+    } else {
+      setMsg('Conta criada! Entrando...', 'green');
+      await iniciarSessao();
+    }
+  } finally {
+    btn?.classList.remove('is-loading');
   }
 }
 
@@ -4094,13 +4176,19 @@ async function fazerLogin() {
     setMsg('Preencha e-mail e senha.', 'var(--radix-red)');
     return;
   }
+  const btn = document.querySelector('#form-signin .mk-btn-primary');
+  btn?.classList.add('is-loading');
   setMsg('Entrando...');
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-  if (error) {
-    setMsg('E-mail ou senha incorretos.', 'var(--radix-red)');
-    return;
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+    if (error) {
+      setMsg('E-mail ou senha incorretos.', 'var(--radix-red)');
+      return;
+    }
+    await iniciarSessao();
+  } finally {
+    btn?.classList.remove('is-loading');
   }
-  await iniciarSessao();
 }
 
 async function esqueciSenha() {
@@ -8691,10 +8779,20 @@ function fazerMiniSimulado(temaId) {
 
 // ========== INIT ==========
 (async function init() {
-  // Verifica se já há sessão ativa do Supabase
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await iniciarSessao();
+  const loader = document.getElementById('boot-loader');
+  const esconderLoader = () => {
+    if (!loader) return;
+    loader.classList.add('is-hidden');
+    setTimeout(() => loader.remove(), 260);
+  };
+  try {
+    // Verifica se já há sessão ativa do Supabase
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      await iniciarSessao();
+    }
+  } finally {
+    esconderLoader();
   }
   // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
   sb.auth.onAuthStateChange((event, session) => {
