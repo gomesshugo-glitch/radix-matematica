@@ -1897,7 +1897,9 @@
   }
   .form-group { margin-bottom: 20px; }
   .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--radix-gray); }
-  .form-group input, .form-group select, .form-group textarea {
+  .form-group input:not([type="radio"]):not([type="checkbox"]),
+  .form-group select,
+  .form-group textarea {
     width: 100%;
     padding: 11px;
     border: 1.5px solid var(--radix-border);
@@ -1906,10 +1908,20 @@
     font-family: inherit;
     background: white;
   }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  .form-group input:not([type="radio"]):not([type="checkbox"]):focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
     outline: none;
     border-color: var(--radix-blue);
     box-shadow: 0 0 0 3px rgba(30,136,229,0.1);
+  }
+  /* Radio/checkbox dentro de .form-group: tamanho nativo, alinhado ao lado da label */
+  .form-group input[type="radio"],
+  .form-group input[type="checkbox"] {
+    width: auto;
+    flex-shrink: 0;
+    accent-color: var(--radix-cyan);
+    cursor: pointer;
   }
   .form-group textarea { resize: vertical; min-height: 80px; }
   .checkbox-group {
