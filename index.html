@@ -3646,8 +3646,8 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
           </div>
           <div>
-            <div class="mk-pt">134+ questões oficiais do ENEM</div>
-            <div class="mk-ps">Edições 2024, 2025 e simulados gerados</div>
+            <div class="mk-pt">Questões oficiais do ENEM</div>
+            <div class="mk-ps">Edições recentes e simulados gerados</div>
           </div>
         </div>
         <div class="mk-pill">
@@ -5348,7 +5348,7 @@ function renderDashboardAluno() {
           <div class="dash-atalho" onclick="abrirTema('')">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
             <span>Banco de questões</span>
-            <small>134 oficiais</small>
+            <small>${state.questoes.length} oficiais</small>
           </div>
           <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
             <div class="dash-atalho-icon icon-success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
@@ -5647,11 +5647,25 @@ function renderMontarLista() {
     </h2>
 
     ${minhasQ.length === 0 ? `
-      <div style="text-align:center;padding:48px;background:white;border-radius:14px;border:1px solid var(--radix-border);">
-        <div style="font-size:56px;margin-bottom:10px;">📋</div>
-        <h3 style="color:var(--radix-gray);margin:0 0 8px;">Sua lista está vazia</h3>
-        <p style="color:var(--radix-gray-light);max-width:480px;margin:0 auto 16px;">Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar. Depois você pode gerar um PDF para imprimir e estudar offline.</p>
-        <button class="btn" onclick="abrirTema('')">🎯 Navegar pelo banco de questões</button>
+      <div style="text-align:center;padding:48px;background:var(--radix-surface);border-radius:14px;border:1px solid var(--radix-border);">
+        <div style="width:72px;height:72px;border-radius:20px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;background:rgba(255,122,92,0.12);color:var(--radix-coral);border:1px solid rgba(255,122,92,0.30);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="8" y="2" width="8" height="4" rx="1"/>
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <line x1="8" y1="11" x2="16" y2="11"/>
+            <line x1="8" y1="15" x2="14" y2="15"/>
+          </svg>
+        </div>
+        <h3 style="color:var(--radix-text);margin:0 0 8px;">Sua lista está vazia</h3>
+        <p style="color:var(--radix-text-muted);max-width:480px;margin:0 auto 16px;">Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar. Depois você pode gerar um PDF para imprimir e estudar offline.</p>
+        <button class="btn" onclick="abrirTema('')" style="display:inline-flex;align-items:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+            <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+          </svg>
+          Navegar pelo banco de questões
+        </button>
       </div>
     ` : `
       <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
