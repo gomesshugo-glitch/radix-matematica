@@ -8662,4 +8662,47 @@ async function salvarSemana() {
 
   state.progressoCronograma[n] = { status, tecnicas, nota_pessoal: nota };
 
-  const { error }
+  const { error } = await sb.from('progresso_semanas').upsert({
+    aluno_id: state.usuario.id,
+    semana_numero: n,
+    status, tecnicas, nota_pessoal: nota,
+    atualizado_em: new Date().toISOString()
+  }, { onConflict: 'aluno_id,semana_numero' });
+
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+  fecharModalSemana();
+  renderCronograma();
+}
+
+function fazerMiniSimulado(temaId) {
+  // Sorteia até 10 questões do tema e inicia simulado de 10 min
+  let pool = state.questoes.filter(q => q.tema === temaId);
+  if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
+  const num = Math.min(10, pool.length);
+  pool = pool.sort(() => Math.random() - 0.5).slice(0, num);
+  state.simuladoAtual = {
+    questoes: pool, respostas: {}, indiceAtual: 0,
+    tempoTotal: 10 * 60, tempoRestante: 10 * 60,
+    iniciadoEm: Date.now(), finalizado: false,
+  };
+  renderSimulado();
+  iniciarCronometro();
+}
+
+// ========== INIT ==========
+(async function init() {
+  // Verifica se já há sessão ativa do Supabase
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await iniciarSessao();
+  }
+  // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      state.usuario = null;
+      document.getElementById('view-app').classList.add('hidden');
+      document.getElementById('view-login').classList.remove('hidden');
+    }
+  });
+})();
+</script>
