@@ -4016,27 +4016,33 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais()]);
+  const alunoId = state.usuario.id;
+  // Dispara TUDO em paralelo: 3 carregadores + respostas + simulados.
+  // Antes eram 3 RTTs sequenciais; agora cabe em 1 ida-e-volta efetiva.
+  const [, , , respRes, simRes] = await Promise.all([
+    carregarProgressoCronograma(),
+    carregarCronogramaCustom(),
+    carregarMateriais(),
+    sb.from('respostas')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('respondido_em', { ascending: false })
+      .limit(2000),
+    sb.from('simulados_realizados')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('realizado_em', { ascending: false })
+      .limit(500)
+  ]);
   carregarListaLocal();
 
-  // Carrega só as respostas e simulados deste aluno (RLS já filtra)
-  const { data: resp } = await sb.from('respostas')
-    .select('*')
-    .eq('aluno_id', state.usuario.id)
-    .order('respondido_em', { ascending: false })
-    .limit(2000);
-  state.respostasAluno = (resp || []).map(r => ({
+  state.respostasAluno = (respRes.data || []).map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
     data: r.respondido_em, aluno: state.usuario.nome,
     fonte: r.fonte
   }));
-  const { data: sim } = await sb.from('simulados_realizados')
-    .select('*')
-    .eq('aluno_id', state.usuario.id)
-    .order('realizado_em', { ascending: false })
-    .limit(500);
-  state.historicoSimulados = (sim || []).map(s => ({
+  state.historicoSimulados = (simRes.data || []).map(s => ({
     id: s.id, aluno: state.usuario.nome,
     data: s.realizado_em, acertos: s.acertos,
     total: s.total_questoes, percentual: s.percentual,
@@ -4045,17 +4051,24 @@ async function carregarDadosAluno() {
 }
 
 async function carregarDadosProfessor() {
-  await carregarCronogramaCustom();
-  // Professor vê tudo (RLS permite via is_professor())
-  const { data: perfis } = await sb.from('perfis').select('id, nome, email');
+  // Professor vê tudo (RLS permite via is_professor()).
+  // Dispara 4 cargas em paralelo: cronograma + perfis + respostas + simulados.
+  const [, perfisRes, respRes, simRes] = await Promise.all([
+    carregarCronogramaCustom(),
+    sb.from('perfis').select('id, nome, email'),
+    sb.from('respostas')
+      .select('*')
+      .order('respondido_em', { ascending: false })
+      .limit(5000),
+    sb.from('simulados_realizados')
+      .select('*')
+      .order('realizado_em', { ascending: false })
+      .limit(1000)
+  ]);
   const perfilMap = {};
-  (perfis || []).forEach(p => perfilMap[p.id] = p);
+  (perfisRes.data || []).forEach(p => perfilMap[p.id] = p);
 
-  const { data: resp } = await sb.from('respostas')
-    .select('*')
-    .order('respondido_em', { ascending: false })
-    .limit(5000);
-  state.respostasAluno = (resp || []).map(r => ({
+  state.respostasAluno = (respRes.data || []).map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
     data: r.respondido_em,
@@ -4065,11 +4078,7 @@ async function carregarDadosProfessor() {
     fonte: r.fonte
   }));
 
-  const { data: sim } = await sb.from('simulados_realizados')
-    .select('*')
-    .order('realizado_em', { ascending: false })
-    .limit(1000);
-  state.historicoSimulados = (sim || []).map(s => ({
+  state.historicoSimulados = (simRes.data || []).map(s => ({
     id: s.id,
     aluno: perfilMap[s.aluno_id]?.nome || 'Aluno',
     aluno_id: s.aluno_id,
@@ -4162,7 +4171,7 @@ async function fazerCadastro() {
       document.getElementById('signin-email').value = email;
     } else {
       setMsg('Conta criada! Entrando...', 'green');
-      await iniciarSessao();
+      await iniciarSessao(data.user);
     }
   } finally {
     btn?.classList.remove('is-loading');
@@ -4185,7 +4194,7 @@ async function fazerLogin() {
       setMsg('E-mail ou senha incorretos.', 'var(--radix-red)');
       return;
     }
-    await iniciarSessao();
+    await iniciarSessao(data.user);
   } finally {
     btn?.classList.remove('is-loading');
   }
@@ -4202,12 +4211,22 @@ async function esqueciSenha() {
   else setMsg('Link de recuperação enviado para seu e-mail.', 'green');
 }
 
-async function iniciarSessao() {
-  const { data: { user } } = await sb.auth.getUser();
+async function iniciarSessao(userJaConhecido) {
+  // Se quem chamou já tem o user (signInWithPassword / getSession), pula 1 RTT
+  let user = userJaConhecido;
+  if (!user) {
+    const { data: { user: u } } = await sb.auth.getUser();
+    user = u;
+  }
   if (!user) return;
 
-  // Buscar o perfil dele para checar status de aprovação
-  const { data: meuPerfil } = await sb.from('perfis').select('*').eq('id', user.id).single();
+  // Paraleliza: perfil (decide status/role) + banco de questões (sempre necessário).
+  // Antes eram sequenciais — agora rodam em uma única ida-e-volta efetiva.
+  const [perfilRes, questoesData] = await Promise.all([
+    sb.from('perfis').select('*').eq('id', user.id).single(),
+    carregarQuestoesDoBanco()
+  ]);
+  const meuPerfil = perfilRes.data;
   if (!meuPerfil) {
     setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
     return;
@@ -4233,7 +4252,31 @@ async function iniciarSessao() {
     mostrarTelaUploadFotoObrigatorio();
     return;
   }
-  await carregarDados();
+
+  // Limpa caches antigos do localStorage (migração de versões anteriores)
+  localStorage.removeItem('radix_questoes');
+  localStorage.removeItem('radix_questoes_enem25');
+  localStorage.removeItem('radix_questoes_radix26');
+  localStorage.removeItem('radix_respostas');
+  localStorage.removeItem('radix_simulados');
+
+  // Aproveita as questões que já vieram em paralelo com o perfil
+  if (questoesData && questoesData.length > 0) {
+    state.questoes = questoesData;
+    console.log('[Radix] %d questões carregadas do Supabase.', questoesData.length);
+  } else {
+    state.questoes = [];
+    console.error('[Radix] FALHA: não foi possível carregar questões do Supabase.');
+    alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
+  }
+  state.respostasAluno = [];
+  state.historicoSimulados = [];
+
+  if (meuPerfil.perfil === 'professor') {
+    await carregarDadosProfessor();
+  } else {
+    await carregarDadosAluno();
+  }
   mostrarApp();
 }
 
@@ -8789,7 +8832,7 @@ function fazerMiniSimulado(temaId) {
     // Verifica se já há sessão ativa do Supabase
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
-      await iniciarSessao();
+      await iniciarSessao(session.user);
     }
   } finally {
     esconderLoader();
