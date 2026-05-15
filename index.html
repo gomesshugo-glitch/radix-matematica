@@ -3839,6 +3839,17 @@ function formatarEnunciado(texto, opts) {
     s = (pre ? pre + ' ' : '') + listaHtml + (postLista ? ' <p class="enunciado-pos-lista">' + postLista + '</p>' : '');
   }
 
+  // ---- ETAPA C.2: isolar $ remanescentes (preços) em text-node próprio ----
+  // Qualquer "$" que sobreviveu até aqui NÃO foi capturado como math pela ETAPA 0
+  // (porque o conteúdo não pareceu LaTeX). Tipicamente são cifrões de preço vindos
+  // de \$ escapado pelo Pandoc — depois do unescape na linha de cima, sobraram dois
+  // "$" soltos no texto e o KaTeX auto-render os casaria como par $...$ no DOM,
+  // renderizando o trecho inteiro em modo matemático (italico + sem espaços entre
+  // palavras). Embrulhar cada "$" num <span> coloca-o em seu próprio text-node:
+  // KaTeX processa text-nodes um a um e não consegue formar par entre nodes irmãos.
+  // Não afeta math real, que neste ponto ainda está como placeholder " MATH<n> ".
+  s = s.replace(/\$/g, '<span class="prc-dollar">$</span>');
+
   // ---- ETAPA D: restaurar segmentos de matemática protegidos na ETAPA 0 ----
   // KaTeX vai processar os delimitadores depois, no DOM, via renderMatematica().
   s = s.replace(/ MATH(\d+) /g, (m, i) => mathSlots[parseInt(i, 10)] || m);
@@ -6881,6 +6892,14 @@ function diagnosticarQuestao(q) {
   // Tabela markdown corrompida: presença de separadores Pandoc OU sequência de 4+ pipes
   const temTabelaQuebrada = /\+[-=]{3,}|\|\s*\|\s*\||(?:\|[^|\n]{0,20}){4,}\|/.test(allText);
   if (temTabelaQuebrada) probs.push('Tabela corrompida (precisa reformular)');
+  // LaTeX corrompido: nomes de comandos LaTeX aparecendo como palavras soltas
+  // (sem a barra invertida), padrão típico de import via Pandoc/PDF-extractor
+  // que stripou os "\". Ex.: "left(...)right" no lugar de "\left(...\right)",
+  // "frac{a}{b}" sem barra, "cdot" entre números, etc. Os comandos abaixo são
+  // muito específicos do LaTeX matemático e quase nunca aparecem em texto pt-BR
+  // como palavras seguidas de (, [ ou {.
+  const sinalLatexQuebrado = /\b(left|right|frac|cdot|sqrt|sum|int|infty|leq|geq|neq|approx|times|vec|mathrm|mathbf|overline|underline)\s*[\(\[\{]/;
+  if (sinalLatexQuebrado.test(allText)) probs.push('LaTeX corrompido (comandos sem "\\")');
   return probs;
 }
 
@@ -8643,47 +8662,4 @@ async function salvarSemana() {
 
   state.progressoCronograma[n] = { status, tecnicas, nota_pessoal: nota };
 
-  const { error } = await sb.from('progresso_semanas').upsert({
-    aluno_id: state.usuario.id,
-    semana_numero: n,
-    status, tecnicas, nota_pessoal: nota,
-    atualizado_em: new Date().toISOString()
-  }, { onConflict: 'aluno_id,semana_numero' });
-
-  if (error) { alert('Erro ao salvar: ' + error.message); return; }
-  fecharModalSemana();
-  renderCronograma();
-}
-
-function fazerMiniSimulado(temaId) {
-  // Sorteia até 10 questões do tema e inicia simulado de 10 min
-  let pool = state.questoes.filter(q => q.tema === temaId);
-  if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
-  const num = Math.min(10, pool.length);
-  pool = pool.sort(() => Math.random() - 0.5).slice(0, num);
-  state.simuladoAtual = {
-    questoes: pool, respostas: {}, indiceAtual: 0,
-    tempoTotal: 10 * 60, tempoRestante: 10 * 60,
-    iniciadoEm: Date.now(), finalizado: false,
-  };
-  renderSimulado();
-  iniciarCronometro();
-}
-
-// ========== INIT ==========
-(async function init() {
-  // Verifica se já há sessão ativa do Supabase
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await iniciarSessao();
-  }
-  // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
-  sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-      state.usuario = null;
-      document.getElementById('view-app').classList.add('hidden');
-      document.getElementById('view-login').classList.remove('hidden');
-    }
-  });
-})();
-</script>
+  const { error }
