@@ -20,6 +20,8 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M 7 19 L 10 17 L 14 24 L 20 8 L 26 8' stroke='%23fff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://bvvfalzwpwvkoghmjvom.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://bvvfalzwpwvkoghmjvom.supabase.co">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -937,13 +939,13 @@
   .cron-modulo-stats { background: rgba(255,255,255,0.22) !important; color: #fff !important; }
 
   .cron-semana {
-    background: var(--radix-bg-2) !important;
+    background: var(--radix-surface-2) !important;
     border-color: var(--radix-line-2) !important;
     color: var(--radix-text);
   }
   .cron-semana:hover:not([onclick=""]) {
     border-color: var(--radix-cyan) !important;
-    background: var(--radix-surface-2) !important;
+    background: var(--radix-surface-3) !important;
   }
   .cron-semana.em_estudo {
     border-color: var(--radix-warning) !important;
@@ -2983,18 +2985,24 @@
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   }
 
-  /* Card de semana — visual polido na paleta dark */
+  /* ===================================================================
+     CRONOGRAMA — Cards Elevados
+     =================================================================== */
   .cron-semana {
-    background: var(--radix-bg-2) !important;
-    border: 1px solid var(--radix-line-2) !important;
-    border-radius: 12px !important;
-    padding: 14px !important;
-    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease !important;
+    background: var(--radix-surface-2);
+    border: 1px solid var(--radix-line-2);
+    border-radius: 12px;
+    padding: 14px;
+    color: var(--radix-text);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: all 0.15s ease;
   }
+
   .cron-semana:hover:not([onclick=""]) {
-    border-color: var(--radix-cyan) !important;
-    background: var(--radix-surface) !important;
-    transform: translateY(-1px);
+    border-color: var(--radix-cyan);
+    background: var(--radix-surface-3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(34, 211, 238, 0.15);
   }
   .cron-semana-topo { gap: 12px !important; align-items: flex-start !important; }
 
@@ -3594,6 +3602,33 @@
     animation: boot-spin 0.7s linear infinite;
   }
 
+  /* ===================================================================
+     BASE COMPONENTS — Consolidado
+     =================================================================== */
+  .login-box, .quick-card, .modulo-bloco, .card-tema,
+  .questao-card, .simulado-header, .stat-card,
+  .chart-container, table, .resultado-box, .filtros,
+  .mat-resumo-item, .notif-card, .lista-mod-bloco,
+  .gerencia-mat-item, .dash-card, .modal {
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    color: var(--radix-text);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  .modulo-numero, .cron-modulo-numero {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .modulo-titulo h2, .cron-modulo-info h3 {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--radix-text);
+  }
+
 </style>
 </head>
 <body>
@@ -4174,6 +4209,46 @@ function sanitizarTextoQuestao(s) {
     .trim();
 }
 
+// ===== Cache local do banco de questões =====
+// Estratégia: cache em localStorage com TTL de 24h. Cache hit retorna instantâneo
+// e ainda dispara um refresh em background. Cache miss faz fetch direto.
+const QUESTOES_CACHE_KEY = 'radix_questoes_cache_v1';
+const QUESTOES_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function lerCacheQuestoes() {
+  try {
+    const raw = localStorage.getItem(QUESTOES_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.ts || (Date.now() - parsed.ts) > QUESTOES_CACHE_TTL_MS) return null;
+    return Array.isArray(parsed.data) ? parsed.data : null;
+  } catch (e) { return null; }
+}
+
+function gravarCacheQuestoes(data) {
+  try {
+    localStorage.setItem(QUESTOES_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+  } catch (e) { /* localStorage cheio ou indisponível — silencioso */ }
+}
+
+// Aguarda o carregamento do banco de questões (se ainda em background).
+// Telas dependentes do banco (Simulado, Banco, Estatísticas, etc.) chamam isso.
+async function ensureQuestoesLoaded() {
+  if (state.questoes && state.questoes.length > 0) return;
+  if (state.questoesPromise) {
+    try { await state.questoesPromise; }
+    catch (e) { console.warn('Erro aguardando questoes:', e); }
+  }
+}
+
+// Atualiza in-place os contadores do banco em qualquer DOM já renderizado.
+function atualizarContadoresQuestoes() {
+  const n = (state.questoes || []).length;
+  document.querySelectorAll('[data-questoes-count]').forEach(el => {
+    el.textContent = n > 0 ? `${n} ${n === 1 ? 'oficial' : 'oficiais'}` : 'Carregando…';
+  });
+}
+
 async function carregarQuestoesDoBanco() {
   // Busca questões no Supabase. Se falhar, retorna null pro fallback.
   try {
@@ -4443,13 +4518,32 @@ async function iniciarSessao(userJaConhecido) {
   }
   if (!user) return;
 
-  // Paraleliza: perfil (decide status/role) + banco de questões (sempre necessário).
-  // Antes eram sequenciais — agora rodam em uma única ida-e-volta efetiva.
-  const [perfilRes, questoesData] = await Promise.all([
-    sb.from('perfis').select('*').eq('id', user.id).single(),
-    carregarQuestoesDoBanco()
-  ]);
-  const meuPerfil = perfilRes.data;
+  // Cache hit: popula state.questoes IMEDIATAMENTE com dados locais (sem RTT).
+  // Cache miss: state.questoes fica [] até o fetch resolver em background.
+  const cached = lerCacheQuestoes();
+  if (cached && cached.length > 0) {
+    state.questoes = cached;
+    console.log('[Radix] %d questões do cache local.', cached.length);
+  }
+
+  // Dispara o banco de questões SEM await — não bloqueia o login.
+  // A home renderiza fast e a contagem se auto-atualiza via atualizarContadoresQuestoes()
+  // quando o fetch resolver. Telas dependentes usam ensureQuestoesLoaded().
+  state.questoesPromise = carregarQuestoesDoBanco().then(remotas => {
+    if (remotas && remotas.length > 0) {
+      state.questoes = remotas;
+      gravarCacheQuestoes(remotas);
+      atualizarContadoresQuestoes();
+      console.log('[Radix] %d questões sincronizadas do Supabase.', remotas.length);
+    } else if (!state.questoes || state.questoes.length === 0) {
+      console.error('[Radix] FALHA: banco vazio e sem cache local.');
+      alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
+    }
+    return state.questoes;
+  });
+
+  // Perfil precisa ser síncrono no fluxo (decide status/role)
+  const { data: meuPerfil } = await sb.from('perfis').select('*').eq('id', user.id).single();
   if (!meuPerfil) {
     setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
     return;
@@ -4483,15 +4577,6 @@ async function iniciarSessao(userJaConhecido) {
   localStorage.removeItem('radix_respostas');
   localStorage.removeItem('radix_simulados');
 
-  // Aproveita as questões que já vieram em paralelo com o perfil
-  if (questoesData && questoesData.length > 0) {
-    state.questoes = questoesData;
-    console.log('[Radix] %d questões carregadas do Supabase.', questoesData.length);
-  } else {
-    state.questoes = [];
-    console.error('[Radix] FALHA: não foi possível carregar questões do Supabase.');
-    alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
-  }
   state.respostasAluno = [];
   state.historicoSimulados = [];
 
@@ -5152,7 +5237,8 @@ function renderHome() {
   }
 }
 
-function renderModulos() {
+async function renderModulos() {
+  await ensureQuestoesLoaded();
   const container = document.getElementById('modulos-container');
   container.innerHTML = MODULOS.map(mod => {
     const temasMod = mod.temas.map(tid => TEMAS.find(t => t.id === tid)).filter(Boolean);
@@ -5348,7 +5434,7 @@ function renderDashboardAluno() {
           <div class="dash-atalho" onclick="abrirTema('')">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
             <span>Banco de questões</span>
-            <small>${state.questoes.length} oficiais</small>
+            <small data-questoes-count>${state.questoes.length > 0 ? state.questoes.length + ' oficiais' : 'Carregando…'}</small>
           </div>
           <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
             <div class="dash-atalho-icon icon-success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
@@ -5387,6 +5473,7 @@ function relativeTime(date) {
 // ========== ESTATÍSTICAS AVANÇADAS DO ALUNO ==========
 
 async function renderEstatisticasAvancadas() {
+  await ensureQuestoesLoaded();
   state.view = 'estatisticas-avancadas';
   const main = document.getElementById('main-content');
 
@@ -5640,10 +5727,19 @@ function renderMontarLista() {
     <h2 class="section-title">
       <span><span class="section-title-accent"></span><span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></span>Minha Lista de Questões</span>
       ${minhasQ.length > 0 ? `<span style="display:flex;gap:8px;">
-        <button class="btn" style="background:#DC2626;" onclick="baixarMinhaListaPDF()">📥 Baixar PDF para impressão</button>
-        <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito()">✏️ Conferir gabarito</button>
-        <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:#DC2626;border-color:#DC2626;">🗑️ Limpar lista</button>
-      </span>` : ''}
+  <button class="btn" style="background:var(--radix-red);display:inline-flex;align-items:center;gap:6px;" onclick="baixarMinhaListaPDF()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Baixar PDF
+  </button>
+  <button class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;" onclick="iniciarConferenciaGabarito()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    Conferir gabarito
+  </button>
+  <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:var(--radix-red);border-color:var(--radix-red);display:inline-flex;align-items:center;gap:6px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+    Limpar lista
+  </button>
+</span>` : ''}
     </h2>
 
     ${minhasQ.length === 0 ? `
@@ -6327,7 +6423,8 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
 }
 
 // ========== BANCO POR TEMA ==========
-function abrirTema(temaId) {
+async function abrirTema(temaId) {
+  await ensureQuestoesLoaded();
   state.view = 'tema';
   state.temaAtual = temaId;
   const tema = temaId ? TEMAS.find(t => t.id === temaId) : { nome: 'Todas as Questões' };
@@ -6506,7 +6603,8 @@ function responderQuestao(qid, idx) {
 }
 
 // ========== SIMULADO ==========
-function abrirSimuladoConfig() {
+async function abrirSimuladoConfig() {
+  await ensureQuestoesLoaded();
   state.view = 'simulado-config';
   const main = document.getElementById('main-content');
   main.innerHTML = `
@@ -9068,7 +9166,8 @@ async function salvarSemana() {
   renderCronograma();
 }
 
-function fazerMiniSimulado(temaId) {
+async function fazerMiniSimulado(temaId) {
+  await ensureQuestoesLoaded();
   // Sorteia até 10 questões do tema e inicia simulado de 10 min
   let pool = state.questoes.filter(q => q.tema === temaId);
   if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
