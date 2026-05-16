@@ -18,17 +18,11 @@
 <meta name="twitter:title" content="Radix — Curso de Matemática">
 <meta name="twitter:description" content="Curso de Matemática para o ENEM, do básico ao avançado desde 2010.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M 7 19 L 10 17 L 14 24 L 20 8 L 26 8' stroke='%23fff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-<link rel="preconnect" href="https://bvvfalzwpwvkoghmjvom.supabase.co" crossorigin>
-<link rel="dns-prefetch" href="https://bvvfalzwpwvkoghmjvom.supabase.co">
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<!-- KaTeX para renderizar fórmulas matemáticas no enunciado e alternativas -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -78,15 +72,13 @@
      V3 OVERRIDES — aplicação da paleta dark + componentes do mockup
      =================================================================== */
   /* superfícies escuras nos cards que antes eram brancos */
-  /* superfícies: !important removido — o bloco "BASE COMPONENTS — Consolidado"
-     no fim do CSS já garante estes mesmos valores por ordem de cascata. */
   .quick-card, .modulo-bloco, .simulado-header,
   .stat-card, table, .resultado-box,
   .lista-mod-bloco, .gerencia-mat-item, .dash-card,
   .modal {
-    background: var(--radix-surface);
+    background: var(--radix-surface) !important;
     color: var(--radix-text);
-    border-color: var(--radix-line);
+    border-color: var(--radix-line) !important;
   }
   .quick-card h3, .stat-card .value, .dash-card h3, .modal h2, .modal h3 {
     color: var(--radix-text) !important;
@@ -129,7 +121,16 @@
   .section-title { color: var(--radix-text) !important; }
   .section-title-accent { background: var(--radix-grad-brand) !important; }
 
-  /* inputs: consolidados no bloco "FORMULÁRIOS E INPUTS" (sem !important) */
+  /* inputs */
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--radix-bg-2) !important;
+    color: var(--radix-text) !important;
+    border: 1px solid var(--radix-line-2) !important;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--radix-cyan) !important;
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.15) !important;
+  }
 
   /* tags */
   .tag-tema   { background: rgba(34,211,238,0.15) !important; color: var(--radix-cyan) !important; }
@@ -160,7 +161,7 @@
   /* btn-mini */
   .btn-mini { background: transparent !important; border-color: var(--radix-cyan) !important; color: var(--radix-cyan) !important; }
   .btn-mini:hover { background: var(--radix-cyan) !important; color: #0e1a36 !important; }
-  /* .btn-mini-icon consolidado mais abaixo (sem !important pra o :hover funcionar) */
+  .btn-mini-icon { background: var(--radix-surface-2) !important; border-color: var(--radix-line-2) !important; color: var(--radix-text) !important; }
 
   /* cronômetro */
   .cronometro { color: var(--radix-cyan) !important; }
@@ -368,15 +369,16 @@
 
   /* QUESTÃO — estilo mockup v3 (dark + badge ciano + alternativas circuladas) */
   .questao-card, .questao-card.enem-style {
-    background: var(--radix-surface);
-    color: var(--radix-text);
-    border: 1px solid var(--radix-line);
+    background: var(--radix-surface) !important;
+    color: var(--radix-text) !important;
+    border: 1px solid var(--radix-line) !important;
     border-radius: 18px !important;
     padding: 40px 48px !important;
     box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 24px 48px -20px rgba(0,0,0,0.55) !important;
     position: relative !important;
     overflow: hidden !important;
     margin-bottom: 16px !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   }
   .questao-card::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0;
@@ -433,6 +435,7 @@
     font-size: 16px !important;
     line-height: 1.65 !important;
     margin-bottom: 28px !important;
+    font-family: 'Inter', sans-serif !important;
   }
   .questao-card .questao-enunciado p { margin: 0 0 12px !important; color: var(--radix-text) !important; }
   /* alternativas */
@@ -444,6 +447,7 @@
     padding: 14px 18px !important;
     color: var(--radix-text) !important;
     transition: border-color .15s, background-color .15s !important;
+    font-family: 'Inter', sans-serif !important;
     display: flex !important; align-items: center !important; gap: 16px !important;
   }
   .questao-card .alternativa:hover:not(.correta):not(.errada):not(.selecionada) {
@@ -458,6 +462,7 @@
     font-weight: 700 !important; font-size: 14px !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     flex-shrink: 0 !important;
+    font-family: 'Inter', sans-serif !important;
   }
   .questao-card .alternativa.selecionada {
     border-color: var(--radix-cyan) !important;
@@ -922,10 +927,20 @@
     box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px -16px rgba(0,0,0,0.45) !important;
     margin-bottom: 18px;
   }
-  /* .cron-modulo-info h3/p e .cron-modulo-stats consolidados no bloco
-     "V3 — REFINO MÓDULOS" (regras antigas aqui eram código morto sobrescrito). */
+  /* o header do módulo já usa --mod-cor (cor própria do módulo) — não tocar */
+  .cron-modulo-info h3 { color: #fff !important; }
+  .cron-modulo-info p { color: rgba(255,255,255,0.85) !important; }
+  .cron-modulo-stats { background: rgba(255,255,255,0.22) !important; color: #fff !important; }
 
-  /* .cron-semana base+hover consolidados no bloco "CRONOGRAMA — Cards Elevados" */
+  .cron-semana {
+    background: var(--radix-bg-2) !important;
+    border-color: var(--radix-line-2) !important;
+    color: var(--radix-text);
+  }
+  .cron-semana:hover:not([onclick=""]) {
+    border-color: var(--radix-cyan) !important;
+    background: var(--radix-surface-2) !important;
+  }
   .cron-semana.em_estudo {
     border-color: var(--radix-warning) !important;
     background: rgba(251,191,36,0.08) !important;
@@ -1301,17 +1316,8 @@
   body.theme-light .btn-secondary { background: #fff !important; border-color: var(--radix-line-2) !important; }
   body.theme-light .login-box, body.theme-light .mk-login-right { background: #fff !important; }
   body.theme-light .mk-login { background: #fff; }
-  body.theme-light .form-group input:not([type="radio"]):not([type="checkbox"]),
-  body.theme-light .form-group select,
-  body.theme-light .form-group textarea {
-    background: #fff;
-    border-color: rgba(15,23,42,0.14);
-  }
-  body.theme-light .form-group input:not([type="radio"]):not([type="checkbox"]):focus,
-  body.theme-light .form-group select:focus,
-  body.theme-light .form-group textarea:focus {
-    background: #fff;
-    border-color: var(--radix-cyan);
+  body.theme-light .form-group input, body.theme-light .form-group select, body.theme-light .form-group textarea {
+    background: #fff !important;
   }
   body.theme-light .v3-btn-light { background: var(--radix-text) !important; color: #fff !important; }
   body.theme-light .v3-btn-ghost { background: rgba(255,255,255,0.2); color: #fff; }
@@ -1886,46 +1892,20 @@
     border: 1px solid var(--radix-border);
   }
   .form-group { margin-bottom: 20px; }
-  /* ===================================================================
-     FORMULÁRIOS E INPUTS
-     =================================================================== */
-  .form-group label {
-    display: block;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--radix-text-2);
-    margin-bottom: 8px;
-  }
-
-  .form-group input:not([type="radio"]):not([type="checkbox"]),
-  .form-group select,
-  .form-group textarea {
+  .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--radix-gray); }
+  .form-group input, .form-group select, .form-group textarea {
     width: 100%;
-    padding: 12px 14px;
-    background: var(--radix-bg-2);
-    border: 1px solid var(--radix-line-2);
-    color: var(--radix-text);
+    padding: 11px;
+    border: 1.5px solid var(--radix-border);
     border-radius: 10px;
-    font-size: 14.5px;
+    font-size: 14px;
     font-family: inherit;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    background: white;
   }
-
-  .form-group input:not([type="radio"]):not([type="checkbox"]):focus,
-  .form-group select:focus,
-  .form-group textarea:focus {
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     outline: none;
-    background: var(--radix-surface);
-    border-color: var(--radix-cyan);
-    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
-  }
-  /* Radio/checkbox dentro de .form-group: tamanho nativo, alinhado ao lado da label */
-  .form-group input[type="radio"],
-  .form-group input[type="checkbox"] {
-    width: auto;
-    flex-shrink: 0;
-    accent-color: var(--radix-cyan);
-    cursor: pointer;
+    border-color: var(--radix-blue);
+    box-shadow: 0 0 0 3px rgba(30,136,229,0.1);
   }
   .form-group textarea { resize: vertical; min-height: 80px; }
   .checkbox-group {
@@ -1933,53 +1913,28 @@
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 8px;
   }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--radix-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .checkbox-item input { width: auto; margin: 0; }
   .modulo-checkbox-grupo { margin-bottom: 16px; }
-
-  /* Cabeçalho de cada módulo na lista de temas */
   .modulo-checkbox-titulo {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(34, 211, 238, 0.10);
-    color: var(--radix-cyan);
-    border: 1px solid rgba(34, 211, 238, 0.20);
-    padding: 10px 14px;
-    border-radius: 10px;
     font-size: 13px;
-    margin-bottom: 10px;
-  }
-
-  /* Cards interativos de seleção de tema */
-  .checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: var(--radix-surface-2);
-    border: 1px solid var(--radix-line-2);
-    border-radius: 10px;
-    color: var(--radix-text);
-    font-size: 13.5px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .checkbox-item:hover {
-    border-color: var(--radix-cyan);
-    background: var(--radix-surface-3);
-  }
-
-  .checkbox-item:has(input:checked) {
-    border-color: var(--radix-cyan);
-    background: rgba(34, 211, 238, 0.12);
-  }
-
-  .checkbox-item input[type="checkbox"] {
-    accent-color: var(--radix-cyan);
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    cursor: pointer;
+    color: var(--radix-blue-dark);
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    background: var(--radix-bg-soft);
+    border-radius: 6px;
   }
   .btn-mini {
     background: transparent;
@@ -2251,7 +2206,19 @@
     gap: 10px;
     padding: 14px;
   }
-  /* .cron-semana base+hover consolidados no bloco "CRONOGRAMA — Cards Elevados" */
+  .cron-semana {
+    border: 1.5px solid var(--radix-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: white;
+    transition: all 0.15s;
+  }
+  .cron-semana:hover:not([onclick=""]) {
+    border-color: var(--radix-blue);
+    background: var(--radix-bg-soft);
+    transform: translateY(-1px);
+  }
   .cron-semana.em_estudo { border-color: #F59E0B; background: #FFFBEB; }
   .cron-semana.concluido { border-color: #16A34A; background: #F0FDF4; }
   .cron-semana-topo { display: flex; gap: 10px; align-items: center; }
@@ -2871,28 +2838,8 @@
   .lista-tema { font-size:11px; color:var(--radix-blue-dark); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
   .lista-enun { font-size:13px; color:var(--radix-gray); margin-top:2px; line-height:1.4; }
   .lista-acoes { display:flex; gap:4px; flex-shrink:0; }
-  .btn-mini-icon {
-    background: var(--radix-surface-2);
-    border: 1px solid var(--radix-line-2);
-    color: var(--radix-text);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-  }
-  .btn-mini-icon:hover {
-    background: var(--radix-surface-3);
-    border-color: var(--radix-cyan);
-    color: var(--radix-cyan);
-  }
-  .btn-mini-icon[style*="color:#DC2626"]:hover {
-    border-color: var(--radix-red);
-    color: var(--radix-red);
-  }
+  .btn-mini-icon { background:white; border:1px solid var(--radix-border); width:30px; height:30px; border-radius:8px; cursor:pointer; font-weight:700; }
+  .btn-mini-icon:hover { background:var(--radix-bg-soft); border-color:var(--radix-blue); }
 
   /* Conferir gabarito */
   .confer-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:10px; }
@@ -2939,6 +2886,7 @@
   }
   .modulo-numero,
   .cron-modulo-numero {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     background: var(--mod-cor, var(--radix-blue)) !important;
     color: #fff !important;
     width: 56px !important;
@@ -2963,6 +2911,7 @@
   }
   .modulo-titulo h2,
   .cron-modulo-info h3 {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     color: var(--radix-text) !important;
     font-weight: 700 !important;
     letter-spacing: -0.3px !important;
@@ -3006,25 +2955,30 @@
     line-height: 1;
   }
 
-  /* ===================================================================
-     CRONOGRAMA — Cards Elevados
-     =================================================================== */
-  .cron-semana {
-    background: var(--radix-surface-2);
-    border: 1px solid var(--radix-line-2);
-    border-radius: 12px;
-    padding: 14px;
-    color: var(--radix-text);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    transition: all 0.15s ease;
+  /* ============ V3.1 — CRONOGRAMA: TIPOGRAFIA CONSISTENTE ============ */
+  /* Garante Inter em todo o cronograma, sobrescrevendo Times remanescente */
+  .cronograma-resumo,
+  .cronograma-resumo *,
+  .cron-modulo-bloco,
+  .cron-modulo-bloco *,
+  .cron-semanas-grid,
+  .cron-semana,
+  .cron-semana * {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   }
 
+  /* Card de semana — visual polido na paleta dark */
+  .cron-semana {
+    background: var(--radix-bg-2) !important;
+    border: 1px solid var(--radix-line-2) !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease !important;
+  }
   .cron-semana:hover:not([onclick=""]) {
-    border-color: var(--radix-cyan);
-    background: var(--radix-surface-3);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(34, 211, 238, 0.15);
+    border-color: var(--radix-cyan) !important;
+    background: var(--radix-surface) !important;
+    transform: translateY(-1px);
   }
   .cron-semana-topo { gap: 12px !important; align-items: flex-start !important; }
 
@@ -3171,198 +3125,7 @@
   /* Modal "Editar semana" — status options sem destaque pesado de emoji */
   .status-opc span {
     font-weight: 600 !important;
-  }
-
-  /* Ícones de status — SVG stroke no padrão visual do resto do site */
-  .status-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 999px;
-    flex-shrink: 0;
-    color: var(--radix-text-muted);
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--radix-line);
-    transition: color .15s, background .15s, border-color .15s;
-  }
-  .status-icon svg {
-    width: 15px;
-    height: 15px;
-    stroke-width: 2.2;
-  }
-  .status-icon-em_estudo {
-    color: var(--radix-warning);
-    background: rgba(251,191,36,0.12);
-    border-color: rgba(251,191,36,0.30);
-  }
-  .status-icon-concluido {
-    color: var(--radix-success);
-    background: rgba(52,211,153,0.14);
-    border-color: rgba(52,211,153,0.32);
-  }
-  body.theme-light .status-icon {
-    background: rgba(15,23,42,0.04);
-    border-color: rgba(15,23,42,0.10);
-  }
-  body.theme-light .status-icon-em_estudo {
-    background: rgba(245,158,11,0.10);
-    border-color: rgba(245,158,11,0.30);
-    color: #b45309;
-  }
-  body.theme-light .status-icon-concluido {
-    background: rgba(22,163,74,0.10);
-    border-color: rgba(22,163,74,0.30);
-    color: #15803d;
-  }
-  /* Ícone SVG inline dentro de botões do modal */
-  .btn-icon {
-    width: 16px;
-    height: 16px;
-    stroke-width: 2;
-    flex-shrink: 0;
-  }
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  /* Chip de ícone das técnicas de estudo — versão menor do .status-icon
-     com efeito de "toggle" quando o checkbox está marcado */
-  .tecnica-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 7px;
-    flex-shrink: 0;
-    color: var(--radix-cyan);
-    background: rgba(34,211,238,0.10);
-    border: 1px solid rgba(34,211,238,0.22);
-    transition: color .15s, background .15s, border-color .15s;
-  }
-  .tecnica-icon svg {
-    width: 14px;
-    height: 14px;
-    stroke-width: 2;
-  }
-  .tecnica-item:has(input:checked) .tecnica-icon,
-  .tecnica-item.sel .tecnica-icon {
-    color: #0e1a36;
-    background: var(--radix-cyan);
-    border-color: var(--radix-cyan);
-  }
-  body.theme-light .tecnica-icon {
-    background: rgba(59,130,246,0.08);
-    border-color: rgba(59,130,246,0.22);
-    color: var(--radix-blue-dark);
-  }
-  body.theme-light .tecnica-item:has(input:checked) .tecnica-icon,
-  body.theme-light .tecnica-item.sel .tecnica-icon {
-    background: var(--radix-blue);
-    border-color: var(--radix-blue);
-    color: #ffffff;
-  }
-  .tecnica-label {
-    font-weight: 600;
-    line-height: 1.25;
-  }
-
-  /* Opção selecionada: borda + fundo brand (espelha .tecnica-item.sel) */
-  .status-opc:has(input:checked) {
-    border-color: var(--radix-cyan) !important;
-    background: rgba(34,211,238,0.10) !important;
-  }
-  body.theme-light .status-opc:has(input:checked) {
-    background: rgba(34,211,238,0.08) !important;
-    border-color: var(--radix-cyan) !important;
-  }
-
-  /* Radio nativo do .status-opc fica visualmente escondido (a11y mantida):
-     o dot colorido + a borda ciano já comunicam o estado, então não precisamos
-     do círculo extra do radio competindo com o dot. */
-  .status-opc input[type="radio"] {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-  }
-
-  /* ============ SIMULADO CONFIG — coerência dark/light ============ */
-  .config-box {
-    background: var(--radix-surface) !important;
-    color: var(--radix-text);
-    border: 1px solid var(--radix-line) !important;
-    box-shadow: 0 2px 12px rgba(30,136,229,0.08) !important;
-  }
-  /* .form-group label, .modulo-checkbox-titulo e .checkbox-item (dark) foram
-     consolidados no bloco "FORMULÁRIOS E INPUTS". Aqui ficam só os ajustes
-     de LIGHT MODE (especificidade body.theme-light já vence — sem !important). */
-  body.theme-light .modulo-checkbox-titulo {
-    background: rgba(59,130,246,0.08);
-    color: var(--radix-blue-dark);
-    border-color: rgba(59,130,246,0.18);
-  }
-  body.theme-light .checkbox-item {
-    background: #ffffff;
-    border-color: rgba(15,23,42,0.10);
-    box-shadow: 0 1px 4px rgba(30,136,229,0.04);
-  }
-  body.theme-light .checkbox-item:hover {
-    border-color: var(--radix-cyan);
-    background: #ffffff;
-  }
-  body.theme-light .checkbox-item:has(input:checked) {
-    background: rgba(34,211,238,0.08);
-    border-color: var(--radix-cyan);
-  }
-
-  /* ============ V3.2 — CRONOGRAMA NO LIGHT MODE ============
-     Alinha os cards de semana ao mesmo padrão visual dos demais
-     cards do app (.dash-card): superfície branca + sombra azul sutil. */
-  body.theme-light .cron-semana {
-    background: #ffffff;
-    border-color: rgba(15,23,42,0.08);
-    box-shadow: 0 2px 8px rgba(30,136,229,0.06);
-  }
-  body.theme-light .cron-semana:hover:not([onclick=""]) {
-    background: #ffffff;
-    border-color: var(--radix-blue);
-    box-shadow: 0 6px 18px rgba(30,136,229,0.12);
-  }
-  /* Estados visualmente tonalizados (mantém a leitura rápida do progresso) */
-  body.theme-light .cron-semana.em_estudo {
-    background: #fffbeb !important;
-    border-color: rgba(245,158,11,0.35) !important;
-    box-shadow: 0 2px 8px rgba(245,158,11,0.08) !important;
-  }
-  body.theme-light .cron-semana.concluido {
-    background: #f0fdf4 !important;
-    border-color: rgba(22,163,74,0.30) !important;
-    box-shadow: 0 2px 8px rgba(22,163,74,0.08) !important;
-  }
-  /* Container do módulo no light mode: superfície branca já vem via --radix-surface,
-     mas reforçamos a sombra na mesma intensidade dos demais cards do app */
-  body.theme-light .cron-modulo-bloco {
-    box-shadow: 0 2px 12px rgba(30,136,229,0.08) !important;
-  }
-  /* Opções de status do modal no light mode: superfície clara mais discreta */
-  body.theme-light .status-opc {
-    background: #f8fafc !important;
-    border: 1px solid rgba(15,23,42,0.06) !important;
-  }
-  body.theme-light .status-opc:hover {
-    background: #ffffff !important;
-    border-color: var(--radix-cyan) !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
   }
 
   /* ============ Enunciado: listas e tabelas (formatação estilo ENEM) ============ */
@@ -3487,7 +3250,7 @@
   }
   .tr-problemas { background: rgba(255,122,92,0.04) !important; }
 
-  /* Imagens dentro do enunciado (vindas de Markdown ![](url) ou marcador [IMG:N]) */
+  /* Imagens dentro do enunciado (vindas de Markdown ![](url)) */
   .enunciado-img {
     max-width: 100%;
     height: auto;
@@ -3495,35 +3258,6 @@
     margin: 12px 0;
     background: #fff;
     border: 1px solid var(--radix-line);
-  }
-  /* Imagem inline já vem dentro do .questao-enunciado — centraliza e dá respiro */
-  .questao-enunciado .questao-img-wrap {
-    display: block;
-    margin: 14px auto;
-    max-width: 100%;
-  }
-
-  /* === KaTeX: fórmulas matemáticas dentro de enunciado/alternativa === */
-  .questao-enunciado .katex,
-  .alternativa .katex,
-  .explicacao .katex {
-    font-size: 1.05em;
-  }
-  /* Bloco display ($$...$$) com respiro vertical e scroll horizontal em telas estreitas */
-  .questao-enunciado .katex-display,
-  .explicacao .katex-display {
-    margin: 14px 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 4px 0;
-  }
-  /* Em estilo "papel branco", herda cor escura do texto */
-  .questao-card.enem-style .katex { color: #1A1A1A; }
-  /* Aviso de erro inline do KaTeX — discreto */
-  .katex-error {
-    color: var(--radix-coral) !important;
-    border-bottom: 1px dotted var(--radix-coral);
-    cursor: help;
   }
   .img-faltando {
     display: inline-flex;
@@ -3540,110 +3274,31 @@
     margin: 4px 4px 4px 0;
   }
 
-  /* ===== BOOT LOADER (overlay inicial enquanto o app decide login/app/status) ===== */
-  .boot-loader {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent 60%),
-      radial-gradient(900px 500px at -10% 20%, rgba(59,130,246,.12), transparent 60%),
-      var(--radix-bg);
-    transition: opacity 220ms ease;
-  }
-  .boot-loader.is-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .boot-loader-inner {
-    display: flex;
+  /* Fração visual (numerador empilhado em cima do denominador) */
+  .frac {
+    display: inline-flex;
     flex-direction: column;
-    align-items: center;
-    gap: 18px;
+    align-items: stretch;
+    vertical-align: middle;
+    font-size: 0.95em;
+    margin: 0 3px;
+    line-height: 1.1;
+    text-align: center;
   }
-  .boot-spinner {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.12);
-    border-top-color: var(--radix-cyan);
-    animation: boot-spin 0.8s linear infinite;
+  .frac-num {
+    padding: 0 6px 1px;
+    border-bottom: 1.5px solid currentColor;
   }
-  @keyframes boot-spin { to { transform: rotate(360deg); } }
-  .boot-text {
-    color: var(--radix-text-muted);
-    font-size: 14px;
-    letter-spacing: 0.04em;
+  .frac-den {
+    padding: 1px 6px 0;
   }
-
-  /* ===== Botões em estado "loading" — usado em Entrar / Criar conta ===== */
-  .mk-btn-primary.is-loading,
-  .btn.is-loading,
-  .login-box button.is-loading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.9;
-  }
-  .mk-btn-primary.is-loading > *,
-  .btn.is-loading > *,
-  .login-box button.is-loading > * {
-    visibility: hidden;
-  }
-  .mk-btn-primary.is-loading::after,
-  .btn.is-loading::after,
-  .login-box button.is-loading::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 18px; height: 18px;
-    margin: -9px 0 0 -9px;
-    border-radius: 50%;
-    border: 2px solid rgba(14,26,54,0.25);
-    border-top-color: var(--radix-bg);
-    animation: boot-spin 0.7s linear infinite;
-  }
-
-  /* ===================================================================
-     BASE COMPONENTS — Consolidado
-     =================================================================== */
-  .login-box, .quick-card, .modulo-bloco, .card-tema,
-  .questao-card, .simulado-header, .stat-card,
-  .chart-container, table, .resultado-box, .filtros,
-  .mat-resumo-item, .notif-card, .lista-mod-bloco,
-  .gerencia-mat-item, .dash-card, .modal {
-    background: var(--radix-surface);
-    border: 1px solid var(--radix-line);
-    color: var(--radix-text);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  }
-
-  .modulo-numero, .cron-modulo-numero {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-weight: 800;
-    letter-spacing: -1px;
-  }
-
-  .modulo-titulo h2, .cron-modulo-info h3 {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--radix-text);
-  }
+  /* Garante que KaTeX use a fonte do tema e não rompa o layout */
+  .katex { font-size: 1.05em; }
+  .katex-display { margin: 12px 0 !important; }
 
 </style>
 </head>
 <body>
-
-<!-- BOOT LOADER (visível por padrão; escondido pelo init() quando o app decide o que mostrar) -->
-<div id="boot-loader" class="boot-loader" aria-hidden="true">
-  <div class="boot-loader-inner">
-    <div class="boot-spinner" role="status" aria-label="Carregando"></div>
-    <div class="boot-text">Carregando…</div>
-  </div>
-</div>
 
 <!-- LOGIN -->
 <div id="view-login" class="login-wrap mk-login-wrap">
@@ -3685,8 +3340,8 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
           </div>
           <div>
-            <div class="mk-pt">Questões oficiais do ENEM</div>
-            <div class="mk-ps">Edições recentes e simulados gerados</div>
+            <div class="mk-pt">134+ questões oficiais do ENEM</div>
+            <div class="mk-ps">Edições 2024, 2025 e simulados gerados</div>
           </div>
         </div>
         <div class="mk-pill">
@@ -3889,16 +3544,14 @@ const CRONOGRAMA_2026 = [
 
 // Técnicas de estudo que o aluno pode marcar
 const TECNICAS_ESTUDO = [
-  // Ícones SVG inline (paths internos) — renderizados dentro de <svg viewBox="0 0 24 24" ...>
-  // Mesma linguagem visual dos ícones de status e dos botões de ação.
-  { id: 'aula',       nome: 'Assistiu aula',         icon: '<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>' },
-  { id: 'videoaula',  nome: 'Videoaula',             icon: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8Z"/>' },
-  { id: 'teoria',     nome: 'Estudou teoria/livro',  icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-  { id: 'resumo',     nome: 'Fez resumo',            icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>' },
-  { id: 'mapa',       nome: 'Mapa mental',           icon: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="11.49"/>' },
-  { id: 'flashcards', nome: 'Flashcards',            icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>' },
-  { id: 'lista',      nome: 'Lista de exercícios',   icon: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>' },
-  { id: 'questoes',   nome: 'Banco de questões',     icon: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>' },
+  { id: 'aula',       nome: 'Assistiu aula',          emoji: '👨‍🏫' },
+  { id: 'videoaula',  nome: 'Videoaula',              emoji: '🎬' },
+  { id: 'teoria',     nome: 'Estudou teoria/livro',   emoji: '📖' },
+  { id: 'resumo',     nome: 'Fez resumo',             emoji: '📝' },
+  { id: 'mapa',       nome: 'Mapa mental',            emoji: '🧠' },
+  { id: 'flashcards', nome: 'Flashcards',             emoji: '🃏' },
+  { id: 'lista',      nome: 'Lista de exercícios',    emoji: '✏️' },
+  { id: 'questoes',   nome: 'Banco de questões',      emoji: '🎯' },
 ];
 
 const TEMAS = [
@@ -3964,78 +3617,37 @@ function salvarDados() {
 // Limpa \n literais (escape sequences vindas de Word/PDF), newlines reais
 // e colapsa espaços. Mantém o conteúdo legível para o aluno.
 
-// === Renderiza LaTeX (KaTeX) dentro de um elemento já injetado no DOM ===
-// Chamado depois de cada container.innerHTML que contenha .questao-enunciado/.alternativa
-function renderMatematica(rootEl) {
-  if (!rootEl || typeof window.renderMathInElement !== 'function') return;
-  try {
-    window.renderMathInElement(rootEl, {
-      delimiters: [
-        { left: '$$', right: '$$', display: true },
-        { left: '\\[', right: '\\]', display: true },
-        { left: '$',  right: '$',  display: false },
-        { left: '\\(', right: '\\)', display: false }
-      ],
-      throwOnError: false,
-      errorColor: '#ff7a5c',
-      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-    });
-  } catch (e) {
-    console.warn('Falha renderizando LaTeX:', e);
-  }
-}
-
 // === Formatador de enunciado: converte marcadores em HTML semântico ===
-// opts.imagens: array de URLs para resolver marcadores [IMG:0], [IMG:1]...
-function formatarEnunciado(texto, opts) {
+function formatarEnunciado(texto) {
   if (!texto) return '';
-  const imagens = (opts && Array.isArray(opts.imagens)) ? opts.imagens : [];
   let s = String(texto);
 
-  // ---- ETAPA 0: proteger LaTeX antes de qualquer substituição ----
-  // Extrai $$...$$, \[...\], $...$, \(...\) e troca por placeholders únicos
-  // pra evitar que o restante do pipeline (escape HTML, regex de gregas, etc.)
-  // corrompa a fórmula. KaTeX precisa receber o texto original com os
-  // delimitadores intactos.
-  const mathSlots = [];
-  const stash = (full) => {
-    const token = ' MATH' + mathSlots.length + ' ';
-    mathSlots.push(full);
-    return token;
-  };
-  // PRÉ-passo: blinda "R$" para que o regex de $...$ não capture preço como math.
-  // "R$500,00 e ... R$250,00" -> "R$ 500,00 e ... R$ 250,00"  (com espaço após $).
-  // Combinado com o lookbehind (?<!\s)\$ no regex inline, isso impede que o
-  // cifrão do preço seja confundido com delimitador de fórmula.
-  s = s.replace(/R\$\s*(\d)/g, 'R$ $1');
-  s = s.replace(/\bR(\s+)(\d)/g, 'R$ $2');
-  s = s.replace(/\bR(\d)/g, 'R$ $1');
-
-  s = s.replace(/\$\$[\s\S]+?\$\$/g, stash);
-  s = s.replace(/\\\[[\s\S]+?\\\]/g, stash);
-  s = s.replace(/\\\([\s\S]+?\\\)/g, stash);
-  // $...$ inline conservador: só extrai se o conteúdo parecer LaTeX de verdade
-  // (comando \cmd, ^, _, chaves, símbolos relacionais). Evita pegar texto puro
-  // entre dois cifrões soltos (preços, "$500,00 ... $250,00").
-  const pareceLatex = (str) => /\\[a-zA-Z]+|[\^_{}]|\\\\/.test(str);
-  s = s.replace(/\$(?!\s)([^\$\n]{1,200}?)(?<!\s)\$/g, (m, inner) => {
-    if (!pareceLatex(inner)) return m;
-    return stash(m);
+  // ---- ETAPA Pré-A: extrair fórmulas LaTeX ($...$ e $$...$$) antes de qualquer transformação ----
+  // Substitui por placeholders únicos. KaTeX renderiza no final.
+  const _katexBlocks = [];
+  const _hasKatex = typeof katex !== 'undefined';
+  function _stashKatex(tex, displayMode) {
+    if (!_hasKatex) return null;
+    try {
+      const html = katex.renderToString(tex, { displayMode: displayMode, throwOnError: false, strict: false });
+      _katexBlocks.push(html);
+      return '\u0000KATEX' + (_katexBlocks.length - 1) + '\u0000';
+    } catch (e) { return null; }
+  }
+  // $$...$$ (display)
+  s = s.replace(/\$\$([^$]+?)\$\$/g, (m, tex) => _stashKatex(tex.trim(), true) || m);
+  // $...$ (inline) — evita capturar moeda "$ 100" exigindo que o conteúdo tenha letra ou comando \
+  s = s.replace(/\$([^$\n]{2,}?)\$/g, (m, tex) => {
+    const t = tex.trim();
+    if (!/[a-zA-Z\\^_{}]/.test(t)) return m; // sem letra/comando: provavelmente moeda
+    return _stashKatex(t, false) || m;
   });
 
-  // ---- ETAPA 0.5: Curativo automático para LaTeX quebrado ----
-  // Tenta recolocar a barra invertida em comandos comuns que o OCR/Pandoc engoliu
-  s = s.replace(/\b(left)\s*\(/g, '\\left(');
-  s = s.replace(/\b(right)\s*\)/g, '\\right)');
-  s = s.replace(/\b(frac)\s*\{/g, '\\frac{');
-  s = s.replace(/\b(sqrt)\s*\{/g, '\\sqrt{');
-  s = s.replace(/\b(sigma)_/g, '\\sigma_');
-  s = s.replace(/\b(alpha)_/g, '\\alpha_');
-  s = s.replace(/\b(beta)_/g, '\\beta_');
-  s = s.replace(/\b(theta)_/g, '\\theta_');
-  s = s.replace(/\b(pi)_/g, '\\pi_');
-
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
+
+  // 1) Recupera "R$" perdido na importação
+  s = s.replace(/\bR(\s+)(\d)/g, 'R$ $2');
+  s = s.replace(/\bR(\d)/g, 'R$ $1');
 
   // 1.b) Símbolo de graus (markdown/latex): "30^(circ)" -> "30°"
   s = s.replace(/\^\\?\(?\s*circ\s*\)?/g, '°');
@@ -4046,19 +3658,6 @@ function formatarEnunciado(texto, opts) {
 
   // 1.d) Atributos Pandoc isolados: {width="..." height="..."} -> remover
   s = s.replace(/\s*\{(width|height)="[^"]*"(?:\s+(width|height)="[^"]*")?\}/g, '');
-
-  // 1.d.2) Mais lixo do Pandoc/LaTeX:
-  //   - notas de rodapé Pandoc: [^1] [^abc]  ->  remover
-  s = s.replace(/\[\^[\w-]+\]/g, '');
-  //   - escapes Pandoc para caracteres especiais: \$ \# \_ \{ \} \&  ->  caractere puro
-  //     OBS: NÃO incluir % aqui — em pt-BR é porcentagem ("80%"), não escape.
-  s = s.replace(/\\([\$#_&{}])/g, '$1');
-  //   - \textbackslash{} ou \textbackslash  ->  literal "\"
-  s = s.replace(/\\textbackslash\{?\}?/g, '\\');
-  // OBS importante: NÃO existe mais regra de "comentário LaTeX %... até fim de linha".
-  // Em texto pt-BR, "%" é porcentagem (ex.: "80% do cilindro"). A regra destruía
-  // o restante da frase. \begin{}\end{} órfãos também foram removidos por
-  // engolirem conteúdo legítimo no formato Pandoc colapsado.
 
   // 1.e) Limpa lixo de tabela Pandoc colapsada (linhas-separadoras viraram caracteres)
   //      +-----+ ou +======+  ->  some
@@ -4123,25 +3722,12 @@ function formatarEnunciado(texto, opts) {
     src = src.trim();
     if (/^(https?:|data:)/.test(src)) {
       const altEsc = alt.replace(/"/g, '&quot;');
-      return '<div class="questao-img-wrap"><img src="' + src +
-             '" class="questao-img enunciado-img" alt="' + altEsc + '"></div>';
+      return '<img src="' + src + '" class="enunciado-img" alt="' + altEsc + '">';
     }
     // Caminho local não disponível — placeholder com nome do arquivo
     const fileName = src.split('/').pop();
     return '<span class="img-faltando" title="Imagem não disponível neste servidor: ' +
            src.replace(/"/g,'&quot;') + '">📷 imagem ausente: ' + fileName + '</span>';
-  });
-
-  // 4.f) Marcador inline de figura: [IMG:0], [IMG:1]... -> resolve via opts.imagens
-  s = s.replace(/\[IMG:(\d+)\]/g, (m, n) => {
-    const idx = parseInt(n, 10);
-    const src = imagens[idx];
-    if (!src) {
-      return '<span class="img-faltando" title="Posição [IMG:' + n +
-             '] não tem imagem correspondente em q.imagens">📷 [IMG:' + n + '] ausente</span>';
-    }
-    return '<div class="questao-img-wrap"><img class="questao-img" src="' + src +
-           '" alt="figura ' + (idx + 1) + '"></div>';
   });
 
   // 5) Tabela: linhas no formato  \| col1 \| col2 \| col3 \|
@@ -4189,30 +3775,18 @@ function formatarEnunciado(texto, opts) {
     s = (pre ? pre + ' ' : '') + listaHtml + (postLista ? ' <p class="enunciado-pos-lista">' + postLista + '</p>' : '');
   }
 
-  // ---- ETAPA C.2: isolar $ remanescentes (preços) em text-node próprio ----
-  // Qualquer "$" que sobreviveu até aqui NÃO foi capturado como math pela ETAPA 0
-  // (porque o conteúdo não pareceu LaTeX). Tipicamente são cifrões de preço vindos
-  // de \$ escapado pelo Pandoc — depois do unescape na linha de cima, sobraram dois
-  // "$" soltos no texto e o KaTeX auto-render os casaria como par $...$ no DOM,
-  // renderizando o trecho inteiro em modo matemático (italico + sem espaços entre
-  // palavras). Embrulhar cada "$" num <span> coloca-o em seu próprio text-node:
-  // KaTeX processa text-nodes um a um e não consegue formar par entre nodes irmãos.
-  // Não afeta math real, que neste ponto ainda está como placeholder " MATH<n> ".
-  s = s.replace(/\$/g, '<span class="prc-dollar">$</span>');
+  // 7) Frações estilo OCR: (X)/(Y) -> fração visual real (numerador/denominador)
+  //    Conteúdo curto, sem parênteses aninhados.
+  s = s.replace(/\(([^()\n]{1,60})\)\s*\/\s*\(([^()\n]{1,60})\)/g, (m, num, den) => {
+    return '<span class="frac"><span class="frac-num">' + num.trim() + '</span><span class="frac-den">' + den.trim() + '</span></span>';
+  });
 
-  // ---- ETAPA D: restaurar segmentos de matemática protegidos na ETAPA 0 ----
-  // KaTeX vai processar os delimitadores depois, no DOM, via renderMatematica().
-  s = s.replace(/ MATH(\d+) /g, (m, i) => mathSlots[parseInt(i, 10)] || m);
+  // 8) Re-injetar blocos KaTeX renderizados (extraídos no início)
+  if (_katexBlocks.length > 0) {
+    s = s.replace(/\u0000KATEX(\d+)\u0000/g, (m, idx) => _katexBlocks[parseInt(idx)] || '');
+  }
 
   return s;
-}
-
-// Detecta se um enunciado já posiciona suas próprias imagens (marcador [IMG:N]
-// ou markdown ![](url)). Quando sim, suprimimos o bloco "imagens no rodapé"
-// para não duplicar.
-function enunciadoTemImagemInline(texto) {
-  if (!texto) return false;
-  return /\[IMG:\d+\]/.test(texto) || /!\[[^\]]*\]\([^)]+\)/.test(texto);
 }
 
 function sanitizarTextoQuestao(s) {
@@ -4223,46 +3797,6 @@ function sanitizarTextoQuestao(s) {
     .replace(/[ \t]+/g, ' ')    // colapsa espaços/tabs múltiplos
     .replace(/ +([.,;:!?])/g, '$1') // tira espaço antes de pontuação
     .trim();
-}
-
-// ===== Cache local do banco de questões =====
-// Estratégia: cache em localStorage com TTL de 24h. Cache hit retorna instantâneo
-// e ainda dispara um refresh em background. Cache miss faz fetch direto.
-const QUESTOES_CACHE_KEY = 'radix_questoes_cache_v1';
-const QUESTOES_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-
-function lerCacheQuestoes() {
-  try {
-    const raw = localStorage.getItem(QUESTOES_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed?.ts || (Date.now() - parsed.ts) > QUESTOES_CACHE_TTL_MS) return null;
-    return Array.isArray(parsed.data) ? parsed.data : null;
-  } catch (e) { return null; }
-}
-
-function gravarCacheQuestoes(data) {
-  try {
-    localStorage.setItem(QUESTOES_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
-  } catch (e) { /* localStorage cheio ou indisponível — silencioso */ }
-}
-
-// Aguarda o carregamento do banco de questões (se ainda em background).
-// Telas dependentes do banco (Simulado, Banco, Estatísticas, etc.) chamam isso.
-async function ensureQuestoesLoaded() {
-  if (state.questoes && state.questoes.length > 0) return;
-  if (state.questoesPromise) {
-    try { await state.questoesPromise; }
-    catch (e) { console.warn('Erro aguardando questoes:', e); }
-  }
-}
-
-// Atualiza in-place os contadores do banco em qualquer DOM já renderizado.
-function atualizarContadoresQuestoes() {
-  const n = (state.questoes || []).length;
-  document.querySelectorAll('[data-questoes-count]').forEach(el => {
-    el.textContent = n > 0 ? `${n} ${n === 1 ? 'oficial' : 'oficiais'}` : 'Carregando…';
-  });
 }
 
 async function carregarQuestoesDoBanco() {
@@ -4330,33 +3864,27 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  const alunoId = state.usuario.id;
-  // Dispara TUDO em paralelo: 3 carregadores + respostas + simulados.
-  // Antes eram 3 RTTs sequenciais; agora cabe em 1 ida-e-volta efetiva.
-  const [, , , respRes, simRes] = await Promise.all([
-    carregarProgressoCronograma(),
-    carregarCronogramaCustom(),
-    carregarMateriais(),
-    sb.from('respostas')
-      .select('*')
-      .eq('aluno_id', alunoId)
-      .order('respondido_em', { ascending: false })
-      .limit(2000),
-    sb.from('simulados_realizados')
-      .select('*')
-      .eq('aluno_id', alunoId)
-      .order('realizado_em', { ascending: false })
-      .limit(500)
-  ]);
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais()]);
   carregarListaLocal();
 
-  state.respostasAluno = (respRes.data || []).map(r => ({
+  // Carrega só as respostas e simulados deste aluno (RLS já filtra)
+  const { data: resp } = await sb.from('respostas')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .order('respondido_em', { ascending: false })
+    .limit(2000);
+  state.respostasAluno = (resp || []).map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
     data: r.respondido_em, aluno: state.usuario.nome,
     fonte: r.fonte
   }));
-  state.historicoSimulados = (simRes.data || []).map(s => ({
+  const { data: sim } = await sb.from('simulados_realizados')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .order('realizado_em', { ascending: false })
+    .limit(500);
+  state.historicoSimulados = (sim || []).map(s => ({
     id: s.id, aluno: state.usuario.nome,
     data: s.realizado_em, acertos: s.acertos,
     total: s.total_questoes, percentual: s.percentual,
@@ -4365,24 +3893,17 @@ async function carregarDadosAluno() {
 }
 
 async function carregarDadosProfessor() {
-  // Professor vê tudo (RLS permite via is_professor()).
-  // Dispara 4 cargas em paralelo: cronograma + perfis + respostas + simulados.
-  const [, perfisRes, respRes, simRes] = await Promise.all([
-    carregarCronogramaCustom(),
-    sb.from('perfis').select('id, nome, email'),
-    sb.from('respostas')
-      .select('*')
-      .order('respondido_em', { ascending: false })
-      .limit(5000),
-    sb.from('simulados_realizados')
-      .select('*')
-      .order('realizado_em', { ascending: false })
-      .limit(1000)
-  ]);
+  await carregarCronogramaCustom();
+  // Professor vê tudo (RLS permite via is_professor())
+  const { data: perfis } = await sb.from('perfis').select('id, nome, email');
   const perfilMap = {};
-  (perfisRes.data || []).forEach(p => perfilMap[p.id] = p);
+  (perfis || []).forEach(p => perfilMap[p.id] = p);
 
-  state.respostasAluno = (respRes.data || []).map(r => ({
+  const { data: resp } = await sb.from('respostas')
+    .select('*')
+    .order('respondido_em', { ascending: false })
+    .limit(5000);
+  state.respostasAluno = (resp || []).map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
     data: r.respondido_em,
@@ -4392,7 +3913,11 @@ async function carregarDadosProfessor() {
     fonte: r.fonte
   }));
 
-  state.historicoSimulados = (simRes.data || []).map(s => ({
+  const { data: sim } = await sb.from('simulados_realizados')
+    .select('*')
+    .order('realizado_em', { ascending: false })
+    .limit(1000);
+  state.historicoSimulados = (sim || []).map(s => ({
     id: s.id,
     aluno: perfilMap[s.aluno_id]?.nome || 'Aluno',
     aluno_id: s.aluno_id,
@@ -4461,40 +3986,28 @@ async function fazerCadastro() {
     setMsg('Informe um WhatsApp válido com DDD (10 ou 11 dígitos).', 'var(--radix-red)');
     return;
   }
-  const btn = document.querySelector('#form-signup .mk-btn-primary');
-  btn?.classList.add('is-loading');
   setMsg('Criando sua conta...');
-  try {
-    const { data, error } = await sb.auth.signUp({
-      email, password: senha,
-      options: { data: { nome, telefone: whats, cpf } }
-    });
-    if (error) {
-      setMsg('Erro: ' + error.message, 'var(--radix-red)');
-      return;
-    }
-    // Salvar telefone/cpf na "perfis" — só faz sentido quando JÁ existe sessão
-    // (sem sessão o RLS bloqueia e falharia em silêncio). Quando o cadastro
-    // exige confirmação de e-mail, o dado fica no metadata do Auth e o
-    // backfill auto-curativo em iniciarSessao() persiste no primeiro login.
-    if (data.user && data.session) {
-      setTimeout(async () => {
-        const { error: upErr } = await sb.from('perfis')
-          .update({ telefone: whats, cpf: cpf || null })
-          .eq('id', data.user.id);
-        if (upErr) console.warn('[Radix] update perfil pós-cadastro falhou:', upErr.message);
-      }, 800);
-    }
-    if (data.user && !data.session) {
-      setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
-      trocarAba('signin');
-      document.getElementById('signin-email').value = email;
-    } else {
-      setMsg('Conta criada! Entrando...', 'green');
-      await iniciarSessao(data.user);
-    }
-  } finally {
-    btn?.classList.remove('is-loading');
+  const { data, error } = await sb.auth.signUp({
+    email, password: senha,
+    options: { data: { nome, telefone: whats, cpf } }
+  });
+  if (error) {
+    setMsg('Erro: ' + error.message, 'var(--radix-red)');
+    return;
+  }
+  // Salvar telefone na perfis (caso o trigger não capture)
+  if (data.user) {
+    setTimeout(async () => {
+      await sb.from('perfis').update({ telefone: whats, cpf: cpf || null }).eq('id', data.user.id);
+    }, 800);
+  }
+  if (data.user && !data.session) {
+    setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
+    trocarAba('signin');
+    document.getElementById('signin-email').value = email;
+  } else {
+    setMsg('Conta criada! Entrando...', 'green');
+    await iniciarSessao();
   }
 }
 
@@ -4505,19 +4018,13 @@ async function fazerLogin() {
     setMsg('Preencha e-mail e senha.', 'var(--radix-red)');
     return;
   }
-  const btn = document.querySelector('#form-signin .mk-btn-primary');
-  btn?.classList.add('is-loading');
   setMsg('Entrando...');
-  try {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-    if (error) {
-      setMsg('E-mail ou senha incorretos.', 'var(--radix-red)');
-      return;
-    }
-    await iniciarSessao(data.user);
-  } finally {
-    btn?.classList.remove('is-loading');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+  if (error) {
+    setMsg('E-mail ou senha incorretos.', 'var(--radix-red)');
+    return;
   }
+  await iniciarSessao();
 }
 
 async function esqueciSenha() {
@@ -4531,68 +4038,16 @@ async function esqueciSenha() {
   else setMsg('Link de recuperação enviado para seu e-mail.', 'green');
 }
 
-async function iniciarSessao(userJaConhecido) {
-  // Se quem chamou já tem o user (signInWithPassword / getSession), pula 1 RTT
-  let user = userJaConhecido;
-  if (!user) {
-    const { data: { user: u } } = await sb.auth.getUser();
-    user = u;
-  }
+async function iniciarSessao() {
+  const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
 
-  // Cache hit: popula state.questoes IMEDIATAMENTE com dados locais (sem RTT).
-  // Cache miss: state.questoes fica [] até o fetch resolver em background.
-  const cached = lerCacheQuestoes();
-  if (cached && cached.length > 0) {
-    state.questoes = cached;
-    console.log('[Radix] %d questões do cache local.', cached.length);
-  }
-
-  // Dispara o banco de questões SEM await — não bloqueia o login.
-  // A home renderiza fast e a contagem se auto-atualiza via atualizarContadoresQuestoes()
-  // quando o fetch resolver. Telas dependentes usam ensureQuestoesLoaded().
-  state.questoesPromise = carregarQuestoesDoBanco().then(remotas => {
-    if (remotas && remotas.length > 0) {
-      state.questoes = remotas;
-      gravarCacheQuestoes(remotas);
-      atualizarContadoresQuestoes();
-      console.log('[Radix] %d questões sincronizadas do Supabase.', remotas.length);
-    } else if (!state.questoes || state.questoes.length === 0) {
-      console.error('[Radix] FALHA: banco vazio e sem cache local.');
-      alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
-    }
-    return state.questoes;
-  });
-
-  // Perfil precisa ser síncrono no fluxo (decide status/role)
+  // Buscar o perfil dele para checar status de aprovação
   const { data: meuPerfil } = await sb.from('perfis').select('*').eq('id', user.id).single();
   if (!meuPerfil) {
     setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
     return;
   }
-
-  // --- Backfill auto-curativo de telefone/cpf ---
-  // No signUp esses dados vão pro metadata do Auth (confiável), mas o trigger /
-  // fallback que copia pra tabela "perfis" pode falhar — notadamente em cadastros
-  // com confirmação de e-mail, onde o update roda SEM sessão e o RLS bloqueia
-  // (erro era silenciosamente ignorado). Aqui temos sessão autenticada válida,
-  // então o RLS permite o usuário atualizar a própria linha. Roda antes da
-  // checagem de status pra cobrir até aluno "pendente" (professor enxerga o
-  // WhatsApp na tela de gestão/moderação já no primeiro login do aluno).
-  const _meta = user.user_metadata || {};
-  const _patch = {};
-  if (!meuPerfil.telefone && _meta.telefone) _patch.telefone = _meta.telefone;
-  if (!meuPerfil.cpf && _meta.cpf) _patch.cpf = _meta.cpf;
-  if (Object.keys(_patch).length > 0) {
-    const { error: _bfErr } = await sb.from('perfis').update(_patch).eq('id', user.id);
-    if (_bfErr) {
-      console.warn('[Radix] Backfill de perfil falhou:', _bfErr.message);
-    } else {
-      Object.assign(meuPerfil, _patch);
-      console.log('[Radix] Backfill de perfil aplicado:', Object.keys(_patch).join(', '));
-    }
-  }
-
   if (meuPerfil.status === 'pendente') {
     mostrarTelaAguardandoAprovacao(meuPerfil);
     return;
@@ -4614,22 +4069,7 @@ async function iniciarSessao(userJaConhecido) {
     mostrarTelaUploadFotoObrigatorio();
     return;
   }
-
-  // Limpa caches antigos do localStorage (migração de versões anteriores)
-  localStorage.removeItem('radix_questoes');
-  localStorage.removeItem('radix_questoes_enem25');
-  localStorage.removeItem('radix_questoes_radix26');
-  localStorage.removeItem('radix_respostas');
-  localStorage.removeItem('radix_simulados');
-
-  state.respostasAluno = [];
-  state.historicoSimulados = [];
-
-  if (meuPerfil.perfil === 'professor') {
-    await carregarDadosProfessor();
-  } else {
-    await carregarDadosAluno();
-  }
+  await carregarDados();
   mostrarApp();
 }
 
@@ -5282,8 +4722,7 @@ function renderHome() {
   }
 }
 
-async function renderModulos() {
-  await ensureQuestoesLoaded();
+function renderModulos() {
   const container = document.getElementById('modulos-container');
   container.innerHTML = MODULOS.map(mod => {
     const temasMod = mod.temas.map(tid => TEMAS.find(t => t.id === tid)).filter(Boolean);
@@ -5479,7 +4918,7 @@ function renderDashboardAluno() {
           <div class="dash-atalho" onclick="abrirTema('')">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
             <span>Banco de questões</span>
-            <small data-questoes-count>${state.questoes.length > 0 ? state.questoes.length + ' oficiais' : 'Carregando…'}</small>
+            <small>134 oficiais</small>
           </div>
           <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
             <div class="dash-atalho-icon icon-success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
@@ -5518,7 +4957,6 @@ function relativeTime(date) {
 // ========== ESTATÍSTICAS AVANÇADAS DO ALUNO ==========
 
 async function renderEstatisticasAvancadas() {
-  await ensureQuestoesLoaded();
   state.view = 'estatisticas-avancadas';
   const main = document.getElementById('main-content');
 
@@ -5772,41 +5210,18 @@ function renderMontarLista() {
     <h2 class="section-title">
       <span><span class="section-title-accent"></span><span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></span>Minha Lista de Questões</span>
       ${minhasQ.length > 0 ? `<span style="display:flex;gap:8px;">
-  <button class="btn" style="background:var(--radix-red);display:inline-flex;align-items:center;gap:6px;" onclick="baixarMinhaListaPDF()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Baixar PDF
-  </button>
-  <button class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;" onclick="iniciarConferenciaGabarito()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-    Conferir gabarito
-  </button>
-  <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:var(--radix-red);border-color:var(--radix-red);display:inline-flex;align-items:center;gap:6px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-    Limpar lista
-  </button>
-</span>` : ''}
+        <button class="btn" style="background:#DC2626;" onclick="baixarMinhaListaPDF()">📥 Baixar PDF para impressão</button>
+        <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito()">✏️ Conferir gabarito</button>
+        <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:#DC2626;border-color:#DC2626;">🗑️ Limpar lista</button>
+      </span>` : ''}
     </h2>
 
     ${minhasQ.length === 0 ? `
-      <div style="text-align:center;padding:48px;background:var(--radix-surface);border-radius:14px;border:1px solid var(--radix-border);">
-        <div style="width:72px;height:72px;border-radius:20px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;background:rgba(255,122,92,0.12);color:var(--radix-coral);border:1px solid rgba(255,122,92,0.30);">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="8" y="2" width="8" height="4" rx="1"/>
-            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-            <line x1="8" y1="11" x2="16" y2="11"/>
-            <line x1="8" y1="15" x2="14" y2="15"/>
-          </svg>
-        </div>
-        <h3 style="color:var(--radix-text);margin:0 0 8px;">Sua lista está vazia</h3>
-        <p style="color:var(--radix-text-muted);max-width:480px;margin:0 auto 16px;">Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar. Depois você pode gerar um PDF para imprimir e estudar offline.</p>
-        <button class="btn" onclick="abrirTema('')" style="display:inline-flex;align-items:center;gap:8px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-            <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
-            <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
-          </svg>
-          Navegar pelo banco de questões
-        </button>
+      <div style="text-align:center;padding:48px;background:white;border-radius:14px;border:1px solid var(--radix-border);">
+        <div style="font-size:56px;margin-bottom:10px;">📋</div>
+        <h3 style="color:var(--radix-gray);margin:0 0 8px;">Sua lista está vazia</h3>
+        <p style="color:var(--radix-gray-light);max-width:480px;margin:0 auto 16px;">Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar. Depois você pode gerar um PDF para imprimir e estudar offline.</p>
+        <button class="btn" onclick="abrirTema('')">🎯 Navegar pelo banco de questões</button>
       </div>
     ` : `
       <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
@@ -5985,8 +5400,7 @@ async function finalizarConferenciaGabarito() {
     ${detalhes.map((d, i) => {
       const q = d.q;
       const tema = TEMAS.find(t => t.id === q.tema);
-      const inline = enunciadoTemImagemInline(q.enunciado);
-      const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
+      const imgsHtml = (q.imagens || []).map(src =>
         `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
       ).join('');
       let altsHtml;
@@ -6019,7 +5433,7 @@ async function finalizarConferenciaGabarito() {
             <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
             ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
           </div>
-          <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
@@ -6031,7 +5445,6 @@ async function finalizarConferenciaGabarito() {
       `;
     }).join('')}
   `;
-  renderMatematica(main);
 }
 
 // ========== GERAR PDF DAS QUESTÕES (Estilo ENEM) ==========
@@ -6468,8 +5881,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
 }
 
 // ========== BANCO POR TEMA ==========
-async function abrirTema(temaId) {
-  await ensureQuestoesLoaded();
+function abrirTema(temaId) {
   state.view = 'tema';
   state.temaAtual = temaId;
   const tema = temaId ? TEMAS.find(t => t.id === temaId) : { nome: 'Todas as Questões' };
@@ -6540,7 +5952,6 @@ function filtrarQuestoes() {
     return;
   }
   container.innerHTML = questoes.map((q, idx) => renderQuestao(q, idx + 1, false)).join('');
-  renderMatematica(container);
 }
 
 function renderQuestao(q, numero, modoSimulado) {
@@ -6549,10 +5960,8 @@ function renderQuestao(q, numero, modoSimulado) {
   const difClass = { facil: 'tag-facil', media: 'tag-media', dificil: 'tag-dificil' }[q.dificuldade];
   const tema = TEMAS.find(t => t.id === q.tema);
 
-  // Imagens: se o enunciado posiciona as figuras inline ([IMG:N] ou ![](url)),
-  // não emite o bloco no rodapé pra evitar duplicar.
-  const inline = enunciadoTemImagemInline(q.enunciado);
-  const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
+  // Imagens do enunciado (uma ou mais figuras)
+  const imgsHtml = (q.imagens || []).map(src =>
     `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura da questão"></div>`
   ).join('');
 
@@ -6589,7 +5998,7 @@ function renderQuestao(q, numero, modoSimulado) {
           ${tema ? `<b>${tema.nome}</b>` : ''}
         </div>
       </div>
-      <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
+      <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
       ${imgsHtml}
       <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">
         ${altsHtml}
@@ -6622,8 +6031,7 @@ function responderQuestao(qid, idx) {
     else if (i === idx) el.classList.add('errada');
     el.onclick = null;
   });
-  const explEl = document.getElementById(`explicacao-${qid}`);
-  explEl.innerHTML = `
+  document.getElementById(`explicacao-${qid}`).innerHTML = `
     <div class="explicacao">
       <strong>${idx === q.correta ? '✓ Correto!' : '✗ Resposta incorreta.'}</strong><br>
       <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
@@ -6631,7 +6039,6 @@ function responderQuestao(qid, idx) {
       ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
     </div>
   `;
-  renderMatematica(explEl);
   const correto = idx === q.correta;
   const nova = {
     questaoId: qid, tema: q.tema,
@@ -6648,8 +6055,7 @@ function responderQuestao(qid, idx) {
 }
 
 // ========== SIMULADO ==========
-async function abrirSimuladoConfig() {
-  await ensureQuestoesLoaded();
+function abrirSimuladoConfig() {
   state.view = 'simulado-config';
   const main = document.getElementById('main-content');
   main.innerHTML = `
@@ -6663,7 +6069,6 @@ async function abrirSimuladoConfig() {
           <option value="10" selected>10 questões</option>
           <option value="15">15 questões</option>
           <option value="20">20 questões</option>
-          <option value="45">45 questões</option>
         </select>
       </div>
       <div class="form-group">
@@ -6698,7 +6103,7 @@ async function abrirSimuladoConfig() {
           </div>
         `).join('')}
       </div>
-      <button class="btn" style="width:100%;padding:14px;" onclick="iniciarSimulado()">Iniciar Simulado</button>
+      <button class="btn btn-success" style="width:100%;padding:14px;" onclick="iniciarSimulado()">Iniciar Simulado</button>
     </div>
   `;
 }
@@ -6795,7 +6200,6 @@ function renderSimulado() {
         : `<button class="btn" onclick="navSim(1)">Próxima →</button>`}
     </div>
   `;
-  renderMatematica(main);
   atualizarCronometroDisplay();
 }
 
@@ -6804,8 +6208,7 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
   const difLabel = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[q.dificuldade];
   const difClass = { facil: 'tag-facil', media: 'tag-media', dificil: 'tag-dificil' }[q.dificuldade];
 
-  const inline = enunciadoTemImagemInline(q.enunciado);
-  const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
+  const imgsHtml = (q.imagens || []).map(src =>
     `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
   ).join('');
 
@@ -6841,7 +6244,7 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
           ${tema ? `<b>${tema.nome}</b>` : ''}
         </div>
       </div>
-      <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
+      <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
       ${imgsHtml}
       <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">
         ${altsHtml}
@@ -6952,8 +6355,7 @@ function renderResultadoSimulado(registro, porTempo) {
     ${registro.detalhes.map((d, i) => {
       const q = d.questao;
       const tema = TEMAS.find(t => t.id === q.tema);
-      const inline = enunciadoTemImagemInline(q.enunciado);
-      const imgsHtml = inline ? '' : (q.imagens || []).map(src =>
+      const imgsHtml = (q.imagens || []).map(src =>
         `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura"></div>`
       ).join('');
       let altsHtml;
@@ -6988,7 +6390,7 @@ function renderResultadoSimulado(registro, porTempo) {
             <span class="questao-numero">QUESTÃO ${i + 1} ${d.correto ? '✓' : '✗'}</span>
             ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
           </div>
-          <div class="questao-enunciado">${formatarEnunciado(q.enunciado, { imagens: q.imagens })}</div>
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
@@ -7000,7 +6402,6 @@ function renderResultadoSimulado(registro, porTempo) {
       `;
     }).join('')}
   `;
-  renderMatematica(main);
 }
 
 // ========== DESEMPENHO ==========
@@ -7404,25 +6805,6 @@ function diagnosticarQuestao(q) {
   // Tabela markdown corrompida: presença de separadores Pandoc OU sequência de 4+ pipes
   const temTabelaQuebrada = /\+[-=]{3,}|\|\s*\|\s*\||(?:\|[^|\n]{0,20}){4,}\|/.test(allText);
   if (temTabelaQuebrada) probs.push('Tabela corrompida (precisa reformular)');
-  // LaTeX corrompido: nomes de comandos LaTeX aparecendo como palavras soltas
-  // (sem a barra invertida), padrão típico de import via Pandoc/PDF-extractor
-  // que stripou os "\". Ex.: "left(...)right" no lugar de "\left(...\right)",
-  // "frac{a}{b}" sem barra, "cdot" entre números, etc. Os comandos abaixo são
-  // muito específicos do LaTeX matemático e quase nunca aparecem em texto pt-BR
-  // como palavras seguidas de (, [ ou {.
-  // Caça comandos LaTeX que perderam a barra (ex: "left(", "frac{").
-  // O (?<!\\) garante que ele não apite erro se a barra já estiver lá.
-  const sinalLatexQuebrado = /(?<!\\)\b(left|right|frac|cdot|sqrt|sum|int|infty|leq|geq|neq|approx|times|vec|mathrm|mathbf|overline|underline|sigma|alpha|beta|theta|pi)\s*[\(\[\{_]/i;
-  if (sinalLatexQuebrado.test(allText)) probs.push('LaTeX corrompido (comandos sem "\\")');
-
-  // Caça frações esmagadas típicas de OCR (ex: "/(()", ")/(-)")
-  if (/\/\(\(|\)\/\(/.test(allText)) probs.push('Fração destruída pelo OCR');
-
-  // Caça matemática que esqueceu os delimitadores $...$
-  // Se tem "_" ou "^" mas não tem "$" em lugar nenhum do texto, provável erro.
-  if ((allText.includes('_') || allText.includes('^')) && !allText.includes('$')) {
-     probs.push('Faltam delimitadores $...$ na matemática');
-  }
   return probs;
 }
 
@@ -7707,26 +7089,10 @@ async function renderGerenciarAlunos() {
 }
 
 function renderListaAlunos(perfis, statusAtual) {
-  const _selecionaveis = perfis.filter(p => p.perfil !== 'professor');
-  const _acoesBloco = ({
-    pendente:  [{ s:'aprovado',  cls:'btn-success', txt:'Liberar acesso' }, { s:'bloqueado', cls:'btn-danger', txt:'Bloquear' }],
-    aprovado:  [{ s:'bloqueado', cls:'btn-danger',  txt:'Bloquear' }],
-    bloqueado: [{ s:'aprovado',  cls:'btn-success', txt:'Reativar acesso' }],
-  })[statusAtual] || [];
   return `
-    ${_selecionaveis.length > 0 ? `
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--radix-surface-2);border:1px solid var(--radix-line-2);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
-        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--radix-text);">
-          <input type="checkbox" onchange="toggleSelecaoTodos('${statusAtual}', this)" style="accent-color:var(--radix-cyan);width:16px;height:16px;cursor:pointer;"> Selecionar todos
-        </label>
-        <span id="bulk-count-${statusAtual}" style="font-size:13px;color:var(--radix-text-muted);">0 selecionados</span>
-        <span style="flex:1;"></span>
-        ${_acoesBloco.map(a => `<button class="btn ${a.cls}" id="bulk-${a.s}-${statusAtual}" disabled style="padding:7px 14px;font-size:13px;opacity:0.45;cursor:not-allowed;" onclick="mudarStatusEmBloco('${statusAtual}','${a.s}')">${a.txt}</button>`).join('')}
-      </div>
-    ` : ''}
     <table>
       <thead>
-        <tr><th style="width:36px;text-align:center;"></th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Perfil</th><th>Cadastro</th><th>Último acesso</th><th style="text-align:right;">Ações</th></tr>
+        <tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Perfil</th><th>Cadastro</th><th>Último acesso</th><th style="text-align:right;">Ações</th></tr>
       </thead>
       <tbody>
         ${perfis.map(p => {
@@ -7756,12 +7122,8 @@ function renderListaAlunos(perfis, statusAtual) {
             else { label = dUlt.toLocaleDateString('pt-BR'); cor = 'var(--radix-coral)'; }
             ultAcessoHtml = `<span style="color:${cor};font-size:12px;font-weight:600;">${label}</span>`;
           }
-          const _chkCell = isProf
-            ? '<td></td>'
-            : `<td style="text-align:center;"><input type="checkbox" class="aluno-check aluno-check-${statusAtual}" value="${p.id}" onchange="atualizarContadorSelecao('${statusAtual}')" style="accent-color:var(--radix-cyan);width:16px;height:16px;cursor:pointer;" aria-label="Selecionar ${p.nome.replace(/"/g,'')}"></td>`;
           return `
             <tr>
-              ${_chkCell}
               <td>
                 <div style="display:flex;align-items:center;gap:10px;">
                   ${avatarHTML(p, 32)}
@@ -7805,47 +7167,6 @@ async function mudarStatusAluno(alunoId, novoStatus) {
     .eq('id', alunoId);
 
   if (error) { alert('Erro: ' + error.message); return; }
-  renderGerenciarAlunos();
-  atualizarBadgePendentes();
-}
-
-// ===== Seleção múltipla / ação em bloco na gestão de alunos =====
-function _alunosSelecionados(statusAtual) {
-  return [...document.querySelectorAll('.aluno-check-' + statusAtual + ':checked')].map(c => c.value);
-}
-
-function toggleSelecaoTodos(statusAtual, masterEl) {
-  document.querySelectorAll('.aluno-check-' + statusAtual).forEach(c => { c.checked = masterEl.checked; });
-  atualizarContadorSelecao(statusAtual);
-}
-
-function atualizarContadorSelecao(statusAtual) {
-  const ids = _alunosSelecionados(statusAtual);
-  const span = document.getElementById('bulk-count-' + statusAtual);
-  if (span) span.textContent = ids.length + (ids.length === 1 ? ' selecionado' : ' selecionados');
-  // Habilita/desabilita os botões de bloco daquela lista
-  ['aprovado', 'bloqueado'].forEach(s => {
-    const b = document.getElementById('bulk-' + s + '-' + statusAtual);
-    if (b) {
-      b.disabled = ids.length === 0;
-      b.style.opacity = ids.length === 0 ? '0.45' : '1';
-      b.style.cursor = ids.length === 0 ? 'not-allowed' : 'pointer';
-    }
-  });
-}
-
-async function mudarStatusEmBloco(statusAtual, novoStatus) {
-  const ids = _alunosSelecionados(statusAtual);
-  if (ids.length === 0) { alert('Selecione ao menos um aluno.'); return; }
-  const acaoLabel = { aprovado: 'liberar o acesso de', bloqueado: 'bloquear' }[novoStatus] || 'alterar';
-  if (!confirm(`Confirma ${acaoLabel} ${ids.length} aluno(s)?`)) return;
-
-  const { error } = await sb.from('perfis')
-    .update({ status: novoStatus })
-    .in('id', ids);
-
-  if (error) { alert('Erro: ' + error.message); return; }
-  alert(`${ids.length} aluno(s) atualizado(s) com sucesso.`);
   renderGerenciarAlunos();
   atualizarBadgePendentes();
 }
@@ -8354,7 +7675,7 @@ async function renderGerenciarMateriais() {
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Materiais</div>
     <h2 class="section-title has-actions">
-      <span><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></span>Vídeo-aulas, PDFs e Gabaritos</span>
+      <span><span class="section-title-accent"></span>🎬 Vídeo-aulas, PDFs e Gabaritos</span>
       <span>
         <button class="btn-add-material" onclick="abrirNovoMaterial('aula_youtube')"><span class="ico">+</span> Vídeo-aula</button>
         <button class="btn-add-material" onclick="abrirNovoMaterial('pdf')"><span class="ico">+</span> PDF</button>
@@ -8393,11 +7714,7 @@ async function renderGerenciarMateriais() {
                   </div>
                   <div class="gerencia-materiais-lista">
                     ${matsDestaSem.map((mat, idx) => {
-                      const ico = {
-                        aula_youtube: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>',
-                        pdf: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>',
-                        link_externo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
-                      }[mat.tipo];
+                      const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
                       const tipoLabel = { aula_youtube: 'Vídeo-aula', pdf: 'PDF', link_externo: 'Link' }[mat.tipo];
                       const isPrimeiro = idx === 0;
                       const isUltimo = idx === matsDestaSem.length - 1;
@@ -8412,9 +7729,9 @@ async function renderGerenciarMateriais() {
                           <div class="gerencia-mat-acoes">
                             <button class="btn-mini-icon" ${isPrimeiro ? 'disabled style="opacity:0.3;"' : ''} onclick="moverMaterial(${mat.id}, -1, ${sem.n})" title="Subir">↑</button>
                             <button class="btn-mini-icon" ${isUltimo ? 'disabled style="opacity:0.3;"' : ''} onclick="moverMaterial(${mat.id}, 1, ${sem.n})" title="Descer">↓</button>
-                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
-                            <button class="btn-mini-icon" onclick="toggleVisivelMaterial(${mat.id})" title="${mat.visivel ? 'Ocultar' : 'Mostrar'}">${mat.visivel ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'}</button>
-                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
+                            <button class="btn-mini-icon" onclick="toggleVisivelMaterial(${mat.id})" title="${mat.visivel ? 'Ocultar' : 'Mostrar'}">${mat.visivel ? '👁️' : '🙈'}</button>
+                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir">🗑️</button>
                           </div>
                         </div>
                       `;
@@ -8435,11 +7752,7 @@ async function renderGerenciarMateriais() {
                   </div>
                   <div class="gerencia-materiais-lista">
                     ${semSem.map((mat, idx) => {
-                      const ico = {
-                        aula_youtube: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>',
-                        pdf: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>',
-                        link_externo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
-                      }[mat.tipo];
+                      const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
                       return `
                         <div class="gerencia-mat-item ${!mat.visivel ? 'oculto' : ''}">
                           <span class="gerencia-mat-ico">${ico}</span>
@@ -8447,8 +7760,8 @@ async function renderGerenciarMateriais() {
                             <div class="gerencia-mat-titulo">${mat.titulo}</div>
                           </div>
                           <div class="gerencia-mat-acoes">
-                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
-                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
+                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir">🗑️</button>
                           </div>
                         </div>
                       `;
@@ -8473,11 +7786,7 @@ async function renderGerenciarMateriais() {
           </div>
           <div style="padding:10px 14px;">
             ${sem.map(mat => {
-              const ico = {
-                        aula_youtube: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>',
-                        pdf: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>',
-                        link_externo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
-                      }[mat.tipo];
+              const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
               return `
                 <div class="gerencia-mat-item">
                   <span class="gerencia-mat-ico">${ico}</span>
@@ -8485,8 +7794,8 @@ async function renderGerenciarMateriais() {
                     <div class="gerencia-mat-titulo">${mat.titulo}</div>
                   </div>
                   <div class="gerencia-mat-acoes">
-                    <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
-                    <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                    <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})">✏️</button>
+                    <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})">🗑️</button>
                   </div>
                 </div>
               `;
@@ -8553,7 +7862,7 @@ function abrirEdicaoMaterial(matId) {
 
 function abrirModalMaterial(material, tipo) {
   const isNovo = !material;
-  const tipoLabel = { 'aula_youtube': 'Vídeo-aula (YouTube)', 'pdf': 'PDF / Apostila', 'link_externo': 'Link externo' }[tipo];
+  const tipoLabel = { 'aula_youtube': '🎬 Vídeo-aula (YouTube)', 'pdf': '📄 PDF / Apostila', 'link_externo': '🔗 Link externo' }[tipo];
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalMaterial()">
       <div class="modal" style="max-width:600px;">
@@ -9194,27 +8503,9 @@ function abrirEditorSemana(n) {
         <div class="form-group">
           <label>Status</label>
           <div class="status-opcoes">
-            <label class="status-opc">
-              <input type="radio" name="status-radio" value="nao_iniciado" ${prog.status==='nao_iniciado'?'checked':''}>
-              <span class="status-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
-              </span>
-              <span>Não iniciado</span>
-            </label>
-            <label class="status-opc">
-              <input type="radio" name="status-radio" value="em_estudo" ${prog.status==='em_estudo'?'checked':''}>
-              <span class="status-icon status-icon-em_estudo" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 13.5"/></svg>
-              </span>
-              <span>Em estudo</span>
-            </label>
-            <label class="status-opc">
-              <input type="radio" name="status-radio" value="concluido" ${prog.status==='concluido'?'checked':''}>
-              <span class="status-icon status-icon-concluido" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              </span>
-              <span>Concluído</span>
-            </label>
+            <label class="status-opc"><input type="radio" name="status-radio" value="nao_iniciado" ${prog.status==='nao_iniciado'?'checked':''}> <span>⚪ Não iniciado</span></label>
+            <label class="status-opc"><input type="radio" name="status-radio" value="em_estudo" ${prog.status==='em_estudo'?'checked':''}> <span>🟡 Em estudo</span></label>
+            <label class="status-opc"><input type="radio" name="status-radio" value="concluido" ${prog.status==='concluido'?'checked':''}> <span>✅ Concluído</span></label>
           </div>
         </div>
 
@@ -9224,8 +8515,7 @@ function abrirEditorSemana(n) {
             ${TECNICAS_ESTUDO.map(t => `
               <label class="tecnica-item ${prog.tecnicas.includes(t.id)?'sel':''}">
                 <input type="checkbox" value="${t.id}" ${prog.tecnicas.includes(t.id)?'checked':''}>
-                <span class="tecnica-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg></span>
-                <span class="tecnica-label">${t.nome}</span>
+                <span>${t.emoji} ${t.nome}</span>
               </label>
             `).join('')}
           </div>
@@ -9238,20 +8528,14 @@ function abrirEditorSemana(n) {
 
         ${tema ? `
           <div class="form-group" style="display:flex;gap:8px;flex-wrap:wrap;background:var(--radix-bg);padding:12px;border-radius:8px;">
-            <button class="btn btn-secondary" onclick="fecharModalSemana();abrirTema('${tema.id}')">
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-              Praticar questões
-            </button>
-            <button class="btn btn-secondary" onclick="fecharModalSemana();fazerMiniSimulado('${tema.id}')">
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="8"/><path d="M12 10v4l2.5 1.5"/><path d="M9 2h6"/><path d="M12 6V2"/></svg>
-              Mini-simulado (10 questões)
-            </button>
+            <button class="btn btn-secondary" onclick="fecharModalSemana();abrirTema('${tema.id}')">🎯 Praticar questões</button>
+            <button class="btn btn-secondary" onclick="fecharModalSemana();fazerMiniSimulado('${tema.id}')">⏱ Mini-simulado (10 questões)</button>
           </div>
         ` : ''}
 
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalSemana()">Cancelar</button>
-          <button class="btn" onclick="salvarSemana()">Salvar</button>
+          <button class="btn btn-success" onclick="salvarSemana()">Salvar</button>
         </div>
       </div>
     </div>
@@ -9295,8 +8579,7 @@ async function salvarSemana() {
   renderCronograma();
 }
 
-async function fazerMiniSimulado(temaId) {
-  await ensureQuestoesLoaded();
+function fazerMiniSimulado(temaId) {
   // Sorteia até 10 questões do tema e inicia simulado de 10 min
   let pool = state.questoes.filter(q => q.tema === temaId);
   if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
@@ -9313,20 +8596,10 @@ async function fazerMiniSimulado(temaId) {
 
 // ========== INIT ==========
 (async function init() {
-  const loader = document.getElementById('boot-loader');
-  const esconderLoader = () => {
-    if (!loader) return;
-    loader.classList.add('is-hidden');
-    setTimeout(() => loader.remove(), 260);
-  };
-  try {
-    // Verifica se já há sessão ativa do Supabase
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) {
-      await iniciarSessao(session.user);
-    }
-  } finally {
-    esconderLoader();
+  // Verifica se já há sessão ativa do Supabase
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await iniciarSessao();
   }
   // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
   sb.auth.onAuthStateChange((event, session) => {
