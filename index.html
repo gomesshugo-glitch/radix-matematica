@@ -6763,7 +6763,11 @@ function renderGerenciarQuestoes() {
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Banco</div>
     <h2 class="section-title has-actions">
       <span><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>Gerenciar Banco</span>
-      <button class="btn" onclick="abrirCadastroQuestao()">+ Nova Questão</button>
+      <span style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
+        <button class="btn btn-danger" onclick="limparBancoQuestoes()">Limpar banco</button>
+        <button class="btn" onclick="abrirCadastroQuestao()">+ Nova Questão</button>
+      </span>
     </h2>
     <div class="filtros">
       <select id="ger-tema" onchange="filtrarGer()">
@@ -6869,6 +6873,159 @@ async function excluirQuestao(id) {
   } catch (e) {
     console.error('Erro ao excluir questão:', e);
     alert('Erro ao excluir: ' + (e.message || JSON.stringify(e)));
+  }
+}
+
+// ===== IMPORTAÇÃO EM MASSA (JSON) =====
+function abrirImportarQuestoes() {
+  const temaOpts = MODULOS.map(mod => `
+    <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
+      ${mod.temas.map(tid => { const t = TEMAS.find(x => x.id === tid); return `<option value="${tid}">${t ? t.nome : tid}</option>`; }).join('')}
+    </optgroup>`).join('');
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalImportar()">
+      <div class="modal" style="max-width:680px;">
+        <h2>Importar questões (JSON em massa)</h2>
+        <p style="color:var(--radix-text-muted);font-size:13px;margin-bottom:14px;">
+          Cole um <strong>array JSON</strong>. Cada item precisa de <code>enunciado</code>, <code>alternativas</code> (array
+          no formato <code>"A) texto"</code>) e <code>gabarito</code> (letra A–E) ou <code>correta</code> (índice 0–4).
+          <code>tema</code>/<code>dificuldade</code> por item são opcionais — se faltarem, usa-se a seleção do lote abaixo.
+        </p>
+        <div class="form-group">
+          <label>Tema do lote (usado quando o item não traz "tema")</label>
+          <select id="imp-tema"><option value="">— selecione um tema —</option>${temaOpts}</select>
+        </div>
+        <div class="form-group">
+          <label>Dificuldade do lote</label>
+          <select id="imp-dif">
+            <option value="media">Média</option>
+            <option value="facil">Fácil</option>
+            <option value="dificil">Difícil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>JSON</label>
+          <textarea id="imp-json" rows="10" placeholder='[ { "enunciado": "...", "alternativas": ["A) ...", "B) ..."], "gabarito": "E" } ]'></textarea>
+        </div>
+        <p id="imp-msg" style="font-size:13px;min-height:18px;margin:4px 0;"></p>
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalImportar()">Cancelar</button>
+          <button class="btn" onclick="executarImportarQuestoes()">Importar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-importar">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+
+function fecharModalImportar() {
+  const m = document.getElementById('modal-importar');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+async function executarImportarQuestoes() {
+  const msgEl = document.getElementById('imp-msg');
+  const setM = (t, c) => { if (msgEl) { msgEl.textContent = t; msgEl.style.color = c || 'var(--radix-text-muted)'; } };
+  let arr;
+  try {
+    arr = JSON.parse(document.getElementById('imp-json').value);
+  } catch (e) {
+    setM('JSON inválido: ' + e.message, 'var(--radix-red)');
+    return;
+  }
+  if (!Array.isArray(arr) || arr.length === 0) {
+    setM('O JSON precisa ser um array com pelo menos 1 questão.', 'var(--radix-red)');
+    return;
+  }
+  const temaLote = document.getElementById('imp-tema').value;
+  const difLote = document.getElementById('imp-dif').value || 'media';
+  const LET = { A: 0, B: 1, C: 2, D: 3, E: 4 };
+  const validas = [], invalidas = [];
+  arr.forEach((o, i) => {
+    let correta = (typeof o.correta === 'number')
+      ? o.correta
+      : (typeof o.gabarito === 'string' ? LET[o.gabarito.trim().toUpperCase()] : undefined);
+    const tema = o.tema || temaLote;
+    const dificuldade = o.dificuldade || difLote;
+    const alts = Array.isArray(o.alternativas) ? o.alternativas : [];
+    const enun = (o.enunciado || '').trim();
+    const errs = [];
+    if (!enun) errs.push('enunciado vazio');
+    if (alts.length < 2) errs.push('alternativas insuficientes');
+    if (!Number.isInteger(correta) || correta < 0 || correta >= alts.length) errs.push('gabarito/correta inválido');
+    if (!tema) errs.push('sem tema (selecione o tema do lote)');
+    if (errs.length) {
+      invalidas.push(`#${i + 1}: ${errs.join(', ')}`);
+    } else {
+      validas.push({
+        tema, dificuldade,
+        enunciado: enun,
+        alternativas: alts,
+        correta,
+        explicacao: (o.explicacao || '').trim(),
+        atualizado_em: new Date().toISOString()
+      });
+    }
+  });
+  if (validas.length === 0) {
+    setM('Nenhuma questão válida. Problemas: ' + invalidas.join(' | '), 'var(--radix-red)');
+    return;
+  }
+  if (invalidas.length > 0 &&
+      !confirm(`${invalidas.length} questão(ões) inválida(s) serão IGNORADAS:\n\n${invalidas.join('\n')}\n\nImportar mesmo assim as ${validas.length} válidas?`)) {
+    return;
+  }
+  setM(`Importando ${validas.length}…`);
+  try {
+    let inseridas = 0;
+    for (let k = 0; k < validas.length; k += 50) {
+      const chunk = validas.slice(k, k + 50);
+      const { error } = await sb.from('questoes').insert(chunk);
+      if (error) throw error;
+      inseridas += chunk.length;
+      setM(`Importando ${inseridas}/${validas.length}…`);
+    }
+    const frescas = await carregarQuestoesDoBanco();
+    if (frescas && frescas.length) {
+      state.questoes = frescas;
+      // Atualiza cache/contadores apenas se essas features existirem nesta versão
+      if (typeof gravarCacheQuestoes === 'function') gravarCacheQuestoes(frescas);
+      if (typeof atualizarContadoresQuestoes === 'function') atualizarContadoresQuestoes();
+    }
+    setM(`✓ ${inseridas} questão(ões) importada(s) com sucesso.`, 'var(--radix-success)');
+    setTimeout(() => { fecharModalImportar(); renderGerenciarQuestoes(); }, 1000);
+  } catch (e) {
+    console.error('Erro ao importar questões:', e);
+    setM('Erro ao importar: ' + (e.message || JSON.stringify(e)) + ' — confira se você está logado como professor (RLS).', 'var(--radix-red)');
+  }
+}
+
+// ===== EXCLUSÃO EM MASSA (LIMPAR BANCO) — irreversível =====
+async function limparBancoQuestoes() {
+  const n = (state.questoes || []).length;
+  const txt = prompt(`AÇÃO IRREVERSÍVEL\n\nIsto vai APAGAR TODAS as ${n} questões do banco no Supabase.\n\nPara confirmar, digite exatamente:  APAGAR TUDO`);
+  if (txt !== 'APAGAR TUDO') {
+    if (txt !== null) alert('Confirmação incorreta. Nada foi apagado.');
+    return;
+  }
+  if (!confirm(`Última confirmação: apagar definitivamente ${n} questão(ões)? Não há desfazer.`)) return;
+  try {
+    // Supabase exige um filtro no delete; id é BIGSERIAL (>= 1), então gte(0) pega tudo.
+    const { error } = await sb.from('questoes').delete().gte('id', 0);
+    if (error) throw error;
+    state.questoes = [];
+    // Limpa qualquer cache local de questões (chaves conhecidas / versões anteriores)
+    try {
+      ['radix_questoes', 'radix_questoes_enem25', 'radix_questoes_radix26', 'radix_questoes_cache_v1']
+        .forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    if (typeof atualizarContadoresQuestoes === 'function') atualizarContadoresQuestoes();
+    alert('Banco de questões apagado com sucesso.');
+    renderGerenciarQuestoes();
+  } catch (e) {
+    console.error('Erro ao limpar banco:', e);
+    alert('Erro ao apagar: ' + (e.message || JSON.stringify(e)) + ' — confira se você está logado como professor (RLS).');
   }
 }
 
