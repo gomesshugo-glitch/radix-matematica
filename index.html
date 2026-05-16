@@ -4473,10 +4473,16 @@ async function fazerCadastro() {
       setMsg('Erro: ' + error.message, 'var(--radix-red)');
       return;
     }
-    // Salvar telefone na perfis (caso o trigger não capture)
-    if (data.user) {
+    // Salvar telefone/cpf na "perfis" — só faz sentido quando JÁ existe sessão
+    // (sem sessão o RLS bloqueia e falharia em silêncio). Quando o cadastro
+    // exige confirmação de e-mail, o dado fica no metadata do Auth e o
+    // backfill auto-curativo em iniciarSessao() persiste no primeiro login.
+    if (data.user && data.session) {
       setTimeout(async () => {
-        await sb.from('perfis').update({ telefone: whats, cpf: cpf || null }).eq('id', data.user.id);
+        const { error: upErr } = await sb.from('perfis')
+          .update({ telefone: whats, cpf: cpf || null })
+          .eq('id', data.user.id);
+        if (upErr) console.warn('[Radix] update perfil pós-cadastro falhou:', upErr.message);
       }, 800);
     }
     if (data.user && !data.session) {
@@ -4564,6 +4570,29 @@ async function iniciarSessao(userJaConhecido) {
     setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
     return;
   }
+
+  // --- Backfill auto-curativo de telefone/cpf ---
+  // No signUp esses dados vão pro metadata do Auth (confiável), mas o trigger /
+  // fallback que copia pra tabela "perfis" pode falhar — notadamente em cadastros
+  // com confirmação de e-mail, onde o update roda SEM sessão e o RLS bloqueia
+  // (erro era silenciosamente ignorado). Aqui temos sessão autenticada válida,
+  // então o RLS permite o usuário atualizar a própria linha. Roda antes da
+  // checagem de status pra cobrir até aluno "pendente" (professor enxerga o
+  // WhatsApp na tela de gestão/moderação já no primeiro login do aluno).
+  const _meta = user.user_metadata || {};
+  const _patch = {};
+  if (!meuPerfil.telefone && _meta.telefone) _patch.telefone = _meta.telefone;
+  if (!meuPerfil.cpf && _meta.cpf) _patch.cpf = _meta.cpf;
+  if (Object.keys(_patch).length > 0) {
+    const { error: _bfErr } = await sb.from('perfis').update(_patch).eq('id', user.id);
+    if (_bfErr) {
+      console.warn('[Radix] Backfill de perfil falhou:', _bfErr.message);
+    } else {
+      Object.assign(meuPerfil, _patch);
+      console.log('[Radix] Backfill de perfil aplicado:', Object.keys(_patch).join(', '));
+    }
+  }
+
   if (meuPerfil.status === 'pendente') {
     mostrarTelaAguardandoAprovacao(meuPerfil);
     return;
