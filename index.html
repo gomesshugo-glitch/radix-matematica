@@ -78,13 +78,15 @@
      V3 OVERRIDES — aplicação da paleta dark + componentes do mockup
      =================================================================== */
   /* superfícies escuras nos cards que antes eram brancos */
+  /* superfícies: !important removido — o bloco "BASE COMPONENTS — Consolidado"
+     no fim do CSS já garante estes mesmos valores por ordem de cascata. */
   .quick-card, .modulo-bloco, .simulado-header,
   .stat-card, table, .resultado-box,
   .lista-mod-bloco, .gerencia-mat-item, .dash-card,
   .modal {
-    background: var(--radix-surface) !important;
+    background: var(--radix-surface);
     color: var(--radix-text);
-    border-color: var(--radix-line) !important;
+    border-color: var(--radix-line);
   }
   .quick-card h3, .stat-card .value, .dash-card h3, .modal h2, .modal h3 {
     color: var(--radix-text) !important;
@@ -375,16 +377,15 @@
 
   /* QUESTÃO — estilo mockup v3 (dark + badge ciano + alternativas circuladas) */
   .questao-card, .questao-card.enem-style {
-    background: var(--radix-surface) !important;
-    color: var(--radix-text) !important;
-    border: 1px solid var(--radix-line) !important;
+    background: var(--radix-surface);
+    color: var(--radix-text);
+    border: 1px solid var(--radix-line);
     border-radius: 18px !important;
     padding: 40px 48px !important;
     box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 24px 48px -20px rgba(0,0,0,0.55) !important;
     position: relative !important;
     overflow: hidden !important;
     margin-bottom: 16px !important;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   }
   .questao-card::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0;
@@ -441,7 +442,6 @@
     font-size: 16px !important;
     line-height: 1.65 !important;
     margin-bottom: 28px !important;
-    font-family: 'Inter', sans-serif !important;
   }
   .questao-card .questao-enunciado p { margin: 0 0 12px !important; color: var(--radix-text) !important; }
   /* alternativas */
@@ -453,7 +453,6 @@
     padding: 14px 18px !important;
     color: var(--radix-text) !important;
     transition: border-color .15s, background-color .15s !important;
-    font-family: 'Inter', sans-serif !important;
     display: flex !important; align-items: center !important; gap: 16px !important;
   }
   .questao-card .alternativa:hover:not(.correta):not(.errada):not(.selecionada) {
@@ -468,7 +467,6 @@
     font-weight: 700 !important; font-size: 14px !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     flex-shrink: 0 !important;
-    font-family: 'Inter', sans-serif !important;
   }
   .questao-card .alternativa.selecionada {
     border-color: var(--radix-cyan) !important;
@@ -933,20 +931,10 @@
     box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px -16px rgba(0,0,0,0.45) !important;
     margin-bottom: 18px;
   }
-  /* o header do módulo já usa --mod-cor (cor própria do módulo) — não tocar */
-  .cron-modulo-info h3 { color: #fff !important; }
-  .cron-modulo-info p { color: rgba(255,255,255,0.85) !important; }
-  .cron-modulo-stats { background: rgba(255,255,255,0.22) !important; color: #fff !important; }
+  /* .cron-modulo-info h3/p e .cron-modulo-stats consolidados no bloco
+     "V3 — REFINO MÓDULOS" (regras antigas aqui eram código morto sobrescrito). */
 
-  .cron-semana {
-    background: var(--radix-surface-2) !important;
-    border-color: var(--radix-line-2) !important;
-    color: var(--radix-text);
-  }
-  .cron-semana:hover:not([onclick=""]) {
-    border-color: var(--radix-cyan) !important;
-    background: var(--radix-surface-3) !important;
-  }
+  /* .cron-semana base+hover consolidados no bloco "CRONOGRAMA — Cards Elevados" */
   .cron-semana.em_estudo {
     border-color: var(--radix-warning) !important;
     background: rgba(251,191,36,0.08) !important;
@@ -2224,19 +2212,7 @@
     gap: 10px;
     padding: 14px;
   }
-  .cron-semana {
-    border: 1.5px solid var(--radix-border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    cursor: pointer;
-    background: white;
-    transition: all 0.15s;
-  }
-  .cron-semana:hover:not([onclick=""]) {
-    border-color: var(--radix-blue);
-    background: var(--radix-bg-soft);
-    transform: translateY(-1px);
-  }
+  /* .cron-semana base+hover consolidados no bloco "CRONOGRAMA — Cards Elevados" */
   .cron-semana.em_estudo { border-color: #F59E0B; background: #FFFBEB; }
   .cron-semana.concluido { border-color: #16A34A; background: #F0FDF4; }
   .cron-semana-topo { display: flex; gap: 10px; align-items: center; }
@@ -2904,7 +2880,6 @@
   }
   .modulo-numero,
   .cron-modulo-numero {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     background: var(--mod-cor, var(--radix-blue)) !important;
     color: #fff !important;
     width: 56px !important;
@@ -2929,7 +2904,6 @@
   }
   .modulo-titulo h2,
   .cron-modulo-info h3 {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     color: var(--radix-text) !important;
     font-weight: 700 !important;
     letter-spacing: -0.3px !important;
@@ -2973,18 +2947,6 @@
     line-height: 1;
   }
 
-  /* ============ V3.1 — CRONOGRAMA: TIPOGRAFIA CONSISTENTE ============ */
-  /* Garante Inter em todo o cronograma, sobrescrevendo Times remanescente */
-  .cronograma-resumo,
-  .cronograma-resumo *,
-  .cron-modulo-bloco,
-  .cron-modulo-bloco *,
-  .cron-semanas-grid,
-  .cron-semana,
-  .cron-semana * {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  }
-
   /* ===================================================================
      CRONOGRAMA — Cards Elevados
      =================================================================== */
@@ -2994,6 +2956,7 @@
     border-radius: 12px;
     padding: 14px;
     color: var(--radix-text);
+    cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     transition: all 0.15s ease;
   }
@@ -3149,7 +3112,6 @@
   /* Modal "Editar semana" — status options sem destaque pesado de emoji */
   .status-opc span {
     font-weight: 600 !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
   }
 
   /* Ícones de status — SVG stroke no padrão visual do resto do site */
@@ -3326,14 +3288,14 @@
      Alinha os cards de semana ao mesmo padrão visual dos demais
      cards do app (.dash-card): superfície branca + sombra azul sutil. */
   body.theme-light .cron-semana {
-    background: #ffffff !important;
-    border-color: rgba(15,23,42,0.08) !important;
-    box-shadow: 0 2px 8px rgba(30,136,229,0.06) !important;
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.08);
+    box-shadow: 0 2px 8px rgba(30,136,229,0.06);
   }
   body.theme-light .cron-semana:hover:not([onclick=""]) {
-    background: #ffffff !important;
-    border-color: var(--radix-blue) !important;
-    box-shadow: 0 6px 18px rgba(30,136,229,0.12) !important;
+    background: #ffffff;
+    border-color: var(--radix-blue);
+    box-shadow: 0 6px 18px rgba(30,136,229,0.12);
   }
   /* Estados visualmente tonalizados (mantém a leitura rápida do progresso) */
   body.theme-light .cron-semana.em_estudo {
