@@ -129,16 +129,7 @@
   .section-title { color: var(--radix-text) !important; }
   .section-title-accent { background: var(--radix-grad-brand) !important; }
 
-  /* inputs */
-  .form-group input, .form-group select, .form-group textarea {
-    background: var(--radix-bg-2) !important;
-    color: var(--radix-text) !important;
-    border: 1px solid var(--radix-line-2) !important;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--radix-cyan) !important;
-    box-shadow: 0 0 0 4px rgba(34,211,238,0.15) !important;
-  }
+  /* inputs: consolidados no bloco "FORMULÁRIOS E INPUTS" (sem !important) */
 
   /* tags */
   .tag-tema   { background: rgba(34,211,238,0.15) !important; color: var(--radix-cyan) !important; }
@@ -1310,8 +1301,17 @@
   body.theme-light .btn-secondary { background: #fff !important; border-color: var(--radix-line-2) !important; }
   body.theme-light .login-box, body.theme-light .mk-login-right { background: #fff !important; }
   body.theme-light .mk-login { background: #fff; }
-  body.theme-light .form-group input, body.theme-light .form-group select, body.theme-light .form-group textarea {
-    background: #fff !important;
+  body.theme-light .form-group input:not([type="radio"]):not([type="checkbox"]),
+  body.theme-light .form-group select,
+  body.theme-light .form-group textarea {
+    background: #fff;
+    border-color: rgba(15,23,42,0.14);
+  }
+  body.theme-light .form-group input:not([type="radio"]):not([type="checkbox"]):focus,
+  body.theme-light .form-group select:focus,
+  body.theme-light .form-group textarea:focus {
+    background: #fff;
+    border-color: var(--radix-cyan);
   }
   body.theme-light .v3-btn-light { background: var(--radix-text) !important; color: #fff !important; }
   body.theme-light .v3-btn-ghost { background: rgba(255,255,255,0.2); color: #fff; }
@@ -1886,24 +1886,38 @@
     border: 1px solid var(--radix-border);
   }
   .form-group { margin-bottom: 20px; }
-  .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--radix-gray); }
+  /* ===================================================================
+     FORMULÁRIOS E INPUTS
+     =================================================================== */
+  .form-group label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--radix-text-2);
+    margin-bottom: 8px;
+  }
+
   .form-group input:not([type="radio"]):not([type="checkbox"]),
   .form-group select,
   .form-group textarea {
     width: 100%;
-    padding: 11px;
-    border: 1.5px solid var(--radix-border);
+    padding: 12px 14px;
+    background: var(--radix-bg-2);
+    border: 1px solid var(--radix-line-2);
+    color: var(--radix-text);
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 14.5px;
     font-family: inherit;
-    background: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
+
   .form-group input:not([type="radio"]):not([type="checkbox"]):focus,
   .form-group select:focus,
   .form-group textarea:focus {
     outline: none;
-    border-color: var(--radix-blue);
-    box-shadow: 0 0 0 3px rgba(30,136,229,0.1);
+    background: var(--radix-surface);
+    border-color: var(--radix-cyan);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
   }
   /* Radio/checkbox dentro de .form-group: tamanho nativo, alinhado ao lado da label */
   .form-group input[type="radio"],
@@ -1919,28 +1933,53 @@
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 8px;
   }
-  .checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--radix-bg);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-  }
-  .checkbox-item input { width: auto; margin: 0; }
   .modulo-checkbox-grupo { margin-bottom: 16px; }
+
+  /* Cabeçalho de cada módulo na lista de temas */
   .modulo-checkbox-titulo {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(34, 211, 238, 0.10);
+    color: var(--radix-cyan);
+    border: 1px solid rgba(34, 211, 238, 0.20);
+    padding: 10px 14px;
+    border-radius: 10px;
     font-size: 13px;
-    color: var(--radix-blue-dark);
-    margin-bottom: 8px;
-    padding: 6px 8px;
-    background: var(--radix-bg-soft);
-    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+
+  /* Cards interativos de seleção de tema */
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--radix-surface-2);
+    border: 1px solid var(--radix-line-2);
+    border-radius: 10px;
+    color: var(--radix-text);
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .checkbox-item:hover {
+    border-color: var(--radix-cyan);
+    background: var(--radix-surface-3);
+  }
+
+  .checkbox-item:has(input:checked) {
+    border-color: var(--radix-cyan);
+    background: rgba(34, 211, 238, 0.12);
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    accent-color: var(--radix-cyan);
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
   }
   .btn-mini {
     background: transparent;
@@ -3245,43 +3284,26 @@
     border: 1px solid var(--radix-line) !important;
     box-shadow: 0 2px 12px rgba(30,136,229,0.08) !important;
   }
-  .form-group label {
-    color: var(--radix-text) !important;
-  }
-  /* Cabeçalho de cada módulo na lista de temas */
-  .modulo-checkbox-titulo {
-    background: rgba(34,211,238,0.10) !important;
-    color: var(--radix-cyan) !important;
-    border: 1px solid rgba(34,211,238,0.22) !important;
-    padding: 10px 14px !important;
-    border-radius: 10px !important;
-  }
+  /* .form-group label, .modulo-checkbox-titulo e .checkbox-item (dark) foram
+     consolidados no bloco "FORMULÁRIOS E INPUTS". Aqui ficam só os ajustes
+     de LIGHT MODE (especificidade body.theme-light já vence — sem !important). */
   body.theme-light .modulo-checkbox-titulo {
-    background: rgba(59,130,246,0.08) !important;
-    color: var(--radix-blue-dark) !important;
-    border: 1px solid rgba(59,130,246,0.18) !important;
-  }
-  /* Cards de tema */
-  .checkbox-item {
-    background: var(--radix-bg-2) !important;
-    border: 1px solid var(--radix-line) !important;
-    color: var(--radix-text);
-    transition: border-color .15s, background .15s;
-  }
-  .checkbox-item:hover {
-    border-color: var(--radix-cyan) !important;
-  }
-  .checkbox-item:has(input:checked) {
-    border-color: var(--radix-cyan) !important;
-    background: rgba(34,211,238,0.10) !important;
+    background: rgba(59,130,246,0.08);
+    color: var(--radix-blue-dark);
+    border-color: rgba(59,130,246,0.18);
   }
   body.theme-light .checkbox-item {
-    background: #ffffff !important;
-    border: 1px solid rgba(15,23,42,0.08) !important;
-    box-shadow: 0 1px 4px rgba(30,136,229,0.04) !important;
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.10);
+    box-shadow: 0 1px 4px rgba(30,136,229,0.04);
+  }
+  body.theme-light .checkbox-item:hover {
+    border-color: var(--radix-cyan);
+    background: #ffffff;
   }
   body.theme-light .checkbox-item:has(input:checked) {
-    background: rgba(34,211,238,0.08) !important;
+    background: rgba(34,211,238,0.08);
+    border-color: var(--radix-cyan);
   }
 
   /* ============ V3.2 — CRONOGRAMA NO LIGHT MODE ============
