@@ -7410,8 +7410,9 @@ function diagnosticarQuestao(q) {
   // "frac{a}{b}" sem barra, "cdot" entre números, etc. Os comandos abaixo são
   // muito específicos do LaTeX matemático e quase nunca aparecem em texto pt-BR
   // como palavras seguidas de (, [ ou {.
-  // Caça comandos LaTeX que perderam a barra (ex: "left(", "frac{", "sigma_")
-  const sinalLatexQuebrado = /\b(left|right|frac|cdot|sqrt|sum|int|infty|leq|geq|neq|approx|times|vec|mathrm|mathbf|overline|underline|sigma|alpha|beta|theta|pi)\s*[\(\[\{_]/i;
+  // Caça comandos LaTeX que perderam a barra (ex: "left(", "frac{").
+  // O (?<!\\) garante que ele não apite erro se a barra já estiver lá.
+  const sinalLatexQuebrado = /(?<!\\)\b(left|right|frac|cdot|sqrt|sum|int|infty|leq|geq|neq|approx|times|vec|mathrm|mathbf|overline|underline|sigma|alpha|beta|theta|pi)\s*[\(\[\{_]/i;
   if (sinalLatexQuebrado.test(allText)) probs.push('LaTeX corrompido (comandos sem "\\")');
 
   // Caça frações esmagadas típicas de OCR (ex: "/(()", ")/(-)")
