@@ -7706,10 +7706,26 @@ async function renderGerenciarAlunos() {
 }
 
 function renderListaAlunos(perfis, statusAtual) {
+  const _selecionaveis = perfis.filter(p => p.perfil !== 'professor');
+  const _acoesBloco = ({
+    pendente:  [{ s:'aprovado',  cls:'btn-success', txt:'Liberar acesso' }, { s:'bloqueado', cls:'btn-danger', txt:'Bloquear' }],
+    aprovado:  [{ s:'bloqueado', cls:'btn-danger',  txt:'Bloquear' }],
+    bloqueado: [{ s:'aprovado',  cls:'btn-success', txt:'Reativar acesso' }],
+  })[statusAtual] || [];
   return `
+    ${_selecionaveis.length > 0 ? `
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--radix-surface-2);border:1px solid var(--radix-line-2);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--radix-text);">
+          <input type="checkbox" onchange="toggleSelecaoTodos('${statusAtual}', this)" style="accent-color:var(--radix-cyan);width:16px;height:16px;cursor:pointer;"> Selecionar todos
+        </label>
+        <span id="bulk-count-${statusAtual}" style="font-size:13px;color:var(--radix-text-muted);">0 selecionados</span>
+        <span style="flex:1;"></span>
+        ${_acoesBloco.map(a => `<button class="btn ${a.cls}" id="bulk-${a.s}-${statusAtual}" disabled style="padding:7px 14px;font-size:13px;opacity:0.45;cursor:not-allowed;" onclick="mudarStatusEmBloco('${statusAtual}','${a.s}')">${a.txt}</button>`).join('')}
+      </div>
+    ` : ''}
     <table>
       <thead>
-        <tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Perfil</th><th>Cadastro</th><th>Último acesso</th><th style="text-align:right;">Ações</th></tr>
+        <tr><th style="width:36px;text-align:center;"></th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Perfil</th><th>Cadastro</th><th>Último acesso</th><th style="text-align:right;">Ações</th></tr>
       </thead>
       <tbody>
         ${perfis.map(p => {
@@ -7739,8 +7755,12 @@ function renderListaAlunos(perfis, statusAtual) {
             else { label = dUlt.toLocaleDateString('pt-BR'); cor = 'var(--radix-coral)'; }
             ultAcessoHtml = `<span style="color:${cor};font-size:12px;font-weight:600;">${label}</span>`;
           }
+          const _chkCell = isProf
+            ? '<td></td>'
+            : `<td style="text-align:center;"><input type="checkbox" class="aluno-check aluno-check-${statusAtual}" value="${p.id}" onchange="atualizarContadorSelecao('${statusAtual}')" style="accent-color:var(--radix-cyan);width:16px;height:16px;cursor:pointer;" aria-label="Selecionar ${p.nome.replace(/"/g,'')}"></td>`;
           return `
             <tr>
+              ${_chkCell}
               <td>
                 <div style="display:flex;align-items:center;gap:10px;">
                   ${avatarHTML(p, 32)}
@@ -7784,6 +7804,47 @@ async function mudarStatusAluno(alunoId, novoStatus) {
     .eq('id', alunoId);
 
   if (error) { alert('Erro: ' + error.message); return; }
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
+}
+
+// ===== Seleção múltipla / ação em bloco na gestão de alunos =====
+function _alunosSelecionados(statusAtual) {
+  return [...document.querySelectorAll('.aluno-check-' + statusAtual + ':checked')].map(c => c.value);
+}
+
+function toggleSelecaoTodos(statusAtual, masterEl) {
+  document.querySelectorAll('.aluno-check-' + statusAtual).forEach(c => { c.checked = masterEl.checked; });
+  atualizarContadorSelecao(statusAtual);
+}
+
+function atualizarContadorSelecao(statusAtual) {
+  const ids = _alunosSelecionados(statusAtual);
+  const span = document.getElementById('bulk-count-' + statusAtual);
+  if (span) span.textContent = ids.length + (ids.length === 1 ? ' selecionado' : ' selecionados');
+  // Habilita/desabilita os botões de bloco daquela lista
+  ['aprovado', 'bloqueado'].forEach(s => {
+    const b = document.getElementById('bulk-' + s + '-' + statusAtual);
+    if (b) {
+      b.disabled = ids.length === 0;
+      b.style.opacity = ids.length === 0 ? '0.45' : '1';
+      b.style.cursor = ids.length === 0 ? 'not-allowed' : 'pointer';
+    }
+  });
+}
+
+async function mudarStatusEmBloco(statusAtual, novoStatus) {
+  const ids = _alunosSelecionados(statusAtual);
+  if (ids.length === 0) { alert('Selecione ao menos um aluno.'); return; }
+  const acaoLabel = { aprovado: 'liberar o acesso de', bloqueado: 'bloquear' }[novoStatus] || 'alterar';
+  if (!confirm(`Confirma ${acaoLabel} ${ids.length} aluno(s)?`)) return;
+
+  const { error } = await sb.from('perfis')
+    .update({ status: novoStatus })
+    .in('id', ids);
+
+  if (error) { alert('Erro: ' + error.message); return; }
+  alert(`${ids.length} aluno(s) atualizado(s) com sucesso.`);
   renderGerenciarAlunos();
   atualizarBadgePendentes();
 }
