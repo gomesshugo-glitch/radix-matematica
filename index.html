@@ -6846,7 +6846,7 @@ function diagnosticarQuestao(q) {
   if (q.correta == null || q.correta < 0 || (Array.isArray(q.alternativas) && q.correta >= q.alternativas.length)) {
     probs.push('Gabarito inválido');
   }
-  if (!q.explicacao || q.explicacao.trim().length < 10) probs.push('Sem explicação');
+  // Resolução é OPCIONAL (Ajuste 3): ausência NÃO é defeito — não marca a questão.
   // Imagem Markdown apontando para caminho local (que não existe no servidor)
   const allText = (q.enunciado || '') + ' ' + (q.explicacao || '') + ' ' + (q.alternativas || []).join(' ');
   const imgsAusentes = (allText.match(/!\[[^\]]*\]\((?!https?:|data:)[^)]+\)/g) || []).length;
