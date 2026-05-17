@@ -20,6 +20,13 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M 7 19 L 10 17 L 14 24 L 20 8 L 26 8' stroke='%23fff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Parsing de gabarito: XLSX (SheetJS) e PDF (pdf.js) — usados só na importação -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+</script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
@@ -6706,69 +6713,88 @@ function abrirCadastroQuestao(idEdicao) {
   `;
 }
 
-async function salvarQuestao(idEdicao) {
-  const tema = document.getElementById('q-tema').value;
-  const dificuldade = document.getElementById('q-dif').value;
-  const enunciado = sanitizarTextoQuestao(document.getElementById('q-enunciado').value);
-  const alternativas = [0,1,2,3,4].map(i => {
-    const letra = String.fromCharCode(65 + i);
-    const valor = sanitizarTextoQuestao(document.getElementById(`q-alt-${i}`).value);
-    return `${letra}) ${valor}`;
-  });
-  const correta = parseInt(document.getElementById('q-correta').value);
-  const explicacao = sanitizarTextoQuestao(document.getElementById('q-explicacao').value);
+// ===== VALIDAÇÃO COMPARTILHADA (CONTRATO_IMPORTACAO_JSON.md §3) =====
+// Recebe um payload ESTRUTURADO e devolve { criticos:[], warnings:[] }.
+// Crítico = bloqueia publicação. Warning = publica em revisão (não bloqueia).
+const NIVEIS_ENEM = ['basico','intermediario','avancado','elite'];
+function radixValidarPayload(p) {
+  const criticos = [], warnings = [];
+  const enun = (p.enunciado || '').trim();
+  if (enun.length < 30) criticos.push('Enunciado ausente ou < 30 caracteres');
+  if (!p.tema || !TEMAS.some(t => t.id === p.tema)) criticos.push('Tema ausente/inexistente');
+  if (!NIVEIS_ENEM.includes(p.nivel_enem)) criticos.push('nivel_enem inválido');
+  const alts = Array.isArray(p.alternativas) ? p.alternativas : [];
+  if (alts.length !== 5) criticos.push(`${alts.length} alternativas (esperado 5 A–E)`);
+  const corretas = alts.filter(a => a && a.correta === true).length;
+  if (corretas === 0) criticos.push('Gabarito ausente/inconsistente — defina a alternativa correta');
+  else if (corretas > 1) criticos.push(`${corretas} alternativas marcadas como corretas (esperado 1)`);
+  if (alts.some(a => !a || (!((a.texto||'').trim()) && !a.imagem_path)))
+    criticos.push('Alternativa vazia');
+  // imagem citada no texto, mas com caminho local (não existe no servidor)
+  const allTxt = enun + ' ' + alts.map(a => (a && a.texto) || '').join(' ');
+  if ((allTxt.match(/!\[[^\]]*\]\((?!https?:|data:)[^)]+\)/g) || []).length > 0)
+    criticos.push('Imagem citada com caminho local/ausente');
+  // warnings (não bloqueiam — Ajuste 3)
+  if (!p.resolucao || !((p.resolucao.texto||'').trim() || (p.resolucao.video_url||'').trim()))
+    warnings.push('Sem resolução');
+  if (/(?<!\\)\b(left|right|frac|cdot|sqrt)\b/.test(allTxt))
+    warnings.push('LaTeX suspeito (\\ possivelmente removido)');
+  if (/\+[-=]{3,}|(?:\|[^|\n]{0,20}){4,}\|/.test(allTxt))
+    warnings.push('Tabela markdown possivelmente corrompida');
+  return { criticos, warnings };
+}
 
-  if (!enunciado || alternativas.some(a => a.length < 4)) {
-    alert('Preencha todas as alternativas e o enunciado.');
+// Lê o formulário manual e devolve um payload ESTRUTURADO (igual ao do contrato).
+function radixMontarPayloadDeForm() {
+  const alternativas = [0,1,2,3,4].map(i => ({
+    letra: String.fromCharCode(65 + i),
+    texto: sanitizarTextoQuestao(document.getElementById(`q-alt-${i}`).value).trim(),
+    correta: parseInt(document.getElementById('q-correta').value) === i
+  }));
+  const enunciado = sanitizarTextoQuestao(document.getElementById('q-enunciado').value).trim();
+  const explic = sanitizarTextoQuestao(document.getElementById('q-explicacao').value).trim();
+  return {
+    tema: document.getElementById('q-tema').value,
+    nivel_enem: document.getElementById('q-nivel').value,
+    dificuldade: document.getElementById('q-dif').value || null,
+    tipo_origem: 'autoral',                 // criação manual = autoral por padrão
+    texto_original: enunciado,              // sem pipeline: original = enunciado
+    enunciado,
+    alternativas,
+    resolucao: explic ? { tipo: 'comentada', texto: explic } : null
+  };
+}
+
+// Modo manual: cria questão nova (rascunho/publicada) ou nova versão (edição).
+async function salvarQuestao(idEdicao, modo) {
+  const payload = radixMontarPayloadDeForm();
+  const { criticos, warnings } = radixValidarPayload(payload);
+  if (criticos.length) {
+    alert('Não é possível salvar — corrija:\n\n• ' + criticos.join('\n• '));
     return;
   }
-
-  // Persiste no Supabase
-  const payload = {
-    tema, dificuldade, enunciado,
-    alternativas,        // jsonb
-    correta,
-    explicacao,
-    atualizado_em: new Date().toISOString()
-  };
-
+  if (warnings.length &&
+      !confirm('Avisos (não bloqueiam):\n\n• ' + warnings.join('\n• ') +
+               '\n\nSalvar mesmo assim?')) return;
   try {
     if (idEdicao) {
-      // UPDATE
-      const { error } = await sb.from('questoes')
-        .update(payload)
-        .eq('id', idEdicao);
+      const { error } = await sb.rpc('fn_nova_versao_questao',
+        { p_questao_id: idEdicao, p_payload: payload });
       if (error) throw error;
-
-      // Reflete na cópia local
-      const q = state.questoes.find(x => x.id === idEdicao);
-      if (q) Object.assign(q, { tema, dificuldade, enunciado, alternativas, correta, explicacao });
     } else {
-      // INSERT — o id é gerado pelo banco (BIGSERIAL)
-      const { data, error } = await sb.from('questoes')
-        .insert(payload)
-        .select()
-        .single();
+      const { error } = await sb.rpc('fn_publicar_questao',
+        { p_payload: payload, p_status: modo === 'rascunho' ? 'rascunho' : 'publicada' });
       if (error) throw error;
-
-      // Adiciona à cópia local (snake_case → camelCase)
-      state.questoes.push({
-        id: data.id,
-        tema: data.tema,
-        dificuldade: data.dificuldade,
-        enunciado: data.enunciado,
-        alternativas: data.alternativas || [],
-        alternativasImg: data.alternativas_img || null,
-        imagens: data.imagens || null,
-        correta: data.correta,
-        explicacao: data.explicacao || ''
-      });
     }
-    alert('Questão salva!');
+    const frescas = await carregarQuestoesDoBanco();
+    if (frescas) state.questoes = frescas;
+    alert(idEdicao ? 'Nova versão salva!'
+                   : (modo === 'rascunho' ? 'Rascunho salvo!' : 'Questão publicada!'));
     renderGerenciarQuestoes();
   } catch (e) {
     console.error('Erro ao salvar questão:', e);
-    alert('Erro ao salvar: ' + (e.message || JSON.stringify(e)));
+    alert('Erro ao salvar: ' + (e.message || JSON.stringify(e)) +
+          '\n\n(Confira se está logado como professor — RLS.)');
   }
 }
 
@@ -6782,6 +6808,7 @@ function renderGerenciarQuestoes() {
       <span><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>Gerenciar Banco</span>
       <span style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
+        <button class="btn btn-secondary" onclick="renderRevisarImportacoes()">Fila de revisão</button>
         <button class="btn btn-danger" onclick="limparBancoQuestoes()">Limpar banco</button>
         <button class="btn" onclick="abrirCadastroQuestao()">+ Nova Questão</button>
       </span>
@@ -6882,7 +6909,7 @@ function editarQuestao(id) { abrirCadastroQuestao(id); }
 async function excluirQuestao(id) {
   if (!confirm('Tem certeza que deseja excluir esta questão?')) return;
   try {
-    const { error } = await sb.from('questoes').delete().eq('id', id);
+    const { error } = await sb.from('questao').delete().eq('id', id);
     if (error) throw error;
     state.questoes = state.questoes.filter(q => q.id !== id);
     if (state.view === 'gerenciar') filtrarGer();
@@ -6904,20 +6931,44 @@ function abrirImportarQuestoes() {
       <div class="modal" style="max-width:680px;">
         <h2>Importar questões (JSON em massa)</h2>
         <p style="color:var(--radix-text-muted);font-size:13px;margin-bottom:14px;">
-          Cole um <strong>array JSON</strong>. Cada item precisa de <code>enunciado</code>, <code>alternativas</code> (array
-          no formato <code>"A) texto"</code>) e <code>gabarito</code> (letra A–E) ou <code>correta</code> (índice 0–4).
-          <code>tema</code>/<code>dificuldade</code> por item são opcionais — se faltarem, usa-se a seleção do lote abaixo.
+          Cole um <strong>array JSON</strong>. Cada item precisa de <code>enunciado</code>, <code>alternativas</code>,
+          e <code>numero</code> (nº da questão na prova) para cruzar com o <strong>gabarito oficial</strong> abaixo.
+          <code>tema</code>/<code>nivel_enem</code>/<code>tipo_origem</code> por item são opcionais — usa-se a seleção do lote.
+          O gabarito oficial é <strong>obrigatório</strong>: sem ele a questão fica bloqueada (corrigível na fila de revisão).
+          Itens vão para a <strong>fila de revisão</strong> (staging), nunca direto ao banco.
         </p>
+        <div class="form-group">
+          <label>PDF da prova (auditoria/referência — questões vêm do JSON)</label>
+          <input type="file" id="imp-prova-pdf" accept="application/pdf">
+        </div>
+        <div class="form-group">
+          <label>Gabarito oficial — arquivo (PDF / CSV / XLSX)</label>
+          <input type="file" id="imp-gab-file" accept=".pdf,.csv,.xlsx,.xls,text/csv,application/pdf">
+        </div>
+        <div class="form-group">
+          <label>…ou colar o gabarito (ex.: <code>1-C 2-A 3-E</code> ou <code>1 C</code> por linha)</label>
+          <textarea id="imp-gab-texto" rows="3" placeholder="1 C&#10;2 A&#10;3 E"></textarea>
+        </div>
         <div class="form-group">
           <label>Tema do lote (usado quando o item não traz "tema")</label>
           <select id="imp-tema"><option value="">— selecione um tema —</option>${temaOpts}</select>
         </div>
         <div class="form-group">
-          <label>Dificuldade do lote</label>
-          <select id="imp-dif">
-            <option value="media">Média</option>
-            <option value="facil">Fácil</option>
-            <option value="dificil">Difícil</option>
+          <label>Nível ENEM do lote</label>
+          <select id="imp-nivel">
+            <option value="basico">Básico</option>
+            <option value="intermediario" selected>Intermediário</option>
+            <option value="avancado">Avançado</option>
+            <option value="elite">Elite</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de origem do lote</label>
+          <select id="imp-tipo">
+            <option value="oficial" selected>Oficial (ENEM/vestibular)</option>
+            <option value="autoral">Autoral (Radix)</option>
+            <option value="adaptada">Adaptada</option>
+            <option value="externa">Externa</option>
           </select>
         </div>
         <div class="form-group">
@@ -6941,80 +6992,425 @@ function fecharModalImportar() {
   document.body.classList.remove('modal-open');
 }
 
+// hash leve p/ idempotência no staging (unique(lote_id, hash_norm))
+function radixHash(s) {
+  let h = 5381; s = s || '';
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
+
+// Normaliza um item do JSON (estruturado OU legado "A) .." + gabarito) para o
+// payload ESTRUTURADO do contrato. Não bloqueia aqui — validação é separada.
+function radixNormalizarItemImport(o, temaLote, nivelLote, tipoLote) {
+  const LET = { A: 0, B: 1, C: 2, D: 3, E: 4 };
+  let alternativas;
+  const a = Array.isArray(o.alternativas) ? o.alternativas : [];
+  if (a.length && typeof a[0] === 'object') {
+    // formato estruturado
+    alternativas = a.slice(0, 5).map((x, i) => ({
+      letra: (x.letra || String.fromCharCode(65 + i)).toString().trim().toUpperCase(),
+      texto: sanitizarTextoQuestao((x.texto || '')).trim(),
+      imagem_path: x.imagem_path || null,
+      correta: x.correta === true
+    }));
+  } else {
+    // formato legado: ["A) ...", ...] + gabarito/correta
+    const idxCorr = (typeof o.correta === 'number')
+      ? o.correta
+      : (typeof o.gabarito === 'string' ? LET[o.gabarito.trim().toUpperCase()] : -1);
+    alternativas = a.slice(0, 5).map((s, i) => ({
+      letra: String.fromCharCode(65 + i),
+      texto: sanitizarTextoQuestao(String(s).replace(/^[A-E]\)\s*/, '')).trim(),
+      imagem_path: null,
+      correta: i === idxCorr
+    }));
+  }
+  const explic = (o.resolucao && typeof o.resolucao === 'object')
+    ? o.resolucao
+    : ((o.explicacao || '').trim() ? { tipo: 'comentada', texto: (o.explicacao || '').trim() } : null);
+  return {
+    numero: (o.numero != null ? String(o.numero).trim() : null),  // cruza c/ gabarito oficial
+    tema: o.tema || temaLote || '',
+    nivel_enem: o.nivel_enem || nivelLote || '',
+    tipo_origem: o.tipo_origem || tipoLote || 'oficial',
+    dificuldade: o.dificuldade || null,
+    texto_original: (typeof o.texto_original === 'string' && o.texto_original.trim())
+      ? o.texto_original : (o.enunciado || ''),
+    enunciado: sanitizarTextoQuestao(o.enunciado || '').trim(),
+    texto_base: o.texto_base || null,
+    comando: o.comando || null,
+    origem_prova: o.origem_prova || null,
+    origem_banca: o.origem_banca || null,
+    origem_ano: o.origem_ano || null,
+    alternativas,
+    imagens: Array.isArray(o.imagens) ? o.imagens.map(im => ({
+      papel: im.papel || 'enunciado',
+      storage_path: im.storage_path || im.ref || im.url || '',
+      ordem: im.ordem || 0
+    })).filter(im => im.storage_path) : [],
+    resolucao: explic
+  };
+}
+
+// ===== GABARITO OFICIAL — parsing e normalização p/ mapa {"1":"C",...} =====
+function radixParseGabaritoTexto(txt) {
+  const map = {};
+  const re = /(\d{1,3})\s*[-).:º°ª\]]*\s*([A-Ea-e])\b/g;
+  let m;
+  while ((m = re.exec(txt || '')) !== null) {
+    const n = String(parseInt(m[1], 10));
+    map[n] = m[2].toUpperCase();
+  }
+  return map;
+}
+function radixParseGabaritoCSV(text) {
+  const map = {};
+  (text || '').split(/\r?\n/).forEach(linha => {
+    const c = linha.split(/[;,\t]/).map(s => s.trim());
+    if (c.length < 2) return;
+    const n = parseInt(c[0], 10);
+    const l = (c[1] || '').toUpperCase();
+    if (!isNaN(n) && /^[A-E]$/.test(l)) map[String(n)] = l;
+  });
+  return map;
+}
+async function radixParseGabaritoXLSX(buf) {
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const linhas = XLSX.utils.sheet_to_json(ws, { header: 1 });
+  const map = {};
+  linhas.forEach(r => {
+    const n = parseInt(r[0], 10);
+    const l = String(r[1] || '').trim().toUpperCase();
+    if (!isNaN(n) && /^[A-E]$/.test(l)) map[String(n)] = l;
+  });
+  return map;
+}
+async function radixParseGabaritoPDF(buf) {
+  if (!window.pdfjsLib) throw new Error('pdf.js não carregou');
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  let txt = '';
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    txt += ' ' + tc.items.map(i => i.str).join(' ');
+  }
+  return { map: radixParseGabaritoTexto(txt), original: txt.trim().slice(0, 20000) };
+}
+// Lê os campos do modal e devolve { map, original } (original p/ auditoria).
+async function radixObterGabarito() {
+  const fileEl = document.getElementById('imp-gab-file');
+  const txtEl  = document.getElementById('imp-gab-texto');
+  const f = fileEl && fileEl.files && fileEl.files[0];
+  if (f) {
+    const nome = f.name.toLowerCase();
+    if (nome.endsWith('.pdf')) {
+      const r = await radixParseGabaritoPDF(await f.arrayBuffer());
+      return { map: r.map, original: r.original };
+    }
+    if (nome.endsWith('.xlsx') || nome.endsWith('.xls')) {
+      const map = await radixParseGabaritoXLSX(await f.arrayBuffer());
+      return { map, original: '[XLSX] ' + f.name + ' — ' + JSON.stringify(map) };
+    }
+    const text = await f.text();           // csv / txt
+    const map = radixParseGabaritoCSV(text);
+    const m2 = Object.keys(map).length ? map : radixParseGabaritoTexto(text);
+    return { map: m2, original: text.slice(0, 20000) };
+  }
+  const t = (txtEl && txtEl.value || '').trim();
+  if (t) return { map: radixParseGabaritoTexto(t), original: t.slice(0, 20000) };
+  return { map: {}, original: '' };
+}
+
+// IMPORTAÇÃO → STAGING (questao_import). NÃO grava em `questao` direto.
+// Cruza nº da questão × gabarito oficial. Sem gabarito = erro crítico (fica no staging).
 async function executarImportarQuestoes() {
   const msgEl = document.getElementById('imp-msg');
   const setM = (t, c) => { if (msgEl) { msgEl.textContent = t; msgEl.style.color = c || 'var(--radix-text-muted)'; } };
   let arr;
-  try {
-    arr = JSON.parse(document.getElementById('imp-json').value);
-  } catch (e) {
-    setM('JSON inválido: ' + e.message, 'var(--radix-red)');
-    return;
-  }
+  try { arr = JSON.parse(document.getElementById('imp-json').value); }
+  catch (e) { setM('JSON inválido: ' + e.message, 'var(--radix-red)'); return; }
   if (!Array.isArray(arr) || arr.length === 0) {
     setM('O JSON precisa ser um array com pelo menos 1 questão.', 'var(--radix-red)');
     return;
   }
-  const temaLote = document.getElementById('imp-tema').value;
-  const difLote = document.getElementById('imp-dif').value || 'media';
-  const LET = { A: 0, B: 1, C: 2, D: 3, E: 4 };
-  const validas = [], invalidas = [];
-  arr.forEach((o, i) => {
-    let correta = (typeof o.correta === 'number')
-      ? o.correta
-      : (typeof o.gabarito === 'string' ? LET[o.gabarito.trim().toUpperCase()] : undefined);
-    const tema = o.tema || temaLote;
-    const dificuldade = o.dificuldade || difLote;
-    const alts = Array.isArray(o.alternativas) ? o.alternativas : [];
-    const enun = (o.enunciado || '').trim();
-    const errs = [];
-    if (!enun) errs.push('enunciado vazio');
-    if (alts.length < 2) errs.push('alternativas insuficientes');
-    if (!Number.isInteger(correta) || correta < 0 || correta >= alts.length) errs.push('gabarito/correta inválido');
-    if (!tema) errs.push('sem tema (selecione o tema do lote)');
-    if (errs.length) {
-      invalidas.push(`#${i + 1}: ${errs.join(', ')}`);
-    } else {
-      validas.push({
-        tema, dificuldade,
-        enunciado: enun,
-        alternativas: alts,
-        correta,
-        explicacao: (o.explicacao || '').trim(),
-        atualizado_em: new Date().toISOString()
-      });
+  const temaLote  = document.getElementById('imp-tema').value;
+  const nivelLote = document.getElementById('imp-nivel').value;
+  const tipoLote  = document.getElementById('imp-tipo').value;
+
+  // --- gabarito oficial (obrigatório p/ publicar) ---
+  let gab = { map: {}, original: '' };
+  try { setM('Lendo gabarito oficial…'); gab = await radixObterGabarito(); }
+  catch (e) { setM('Falha ao ler gabarito: ' + e.message + ' — tente colar o texto.', 'var(--radix-red)'); return; }
+  const gabMap = gab.map || {};
+  const temGab = Object.keys(gabMap).length > 0;
+  if (!temGab && !confirm(
+      'Nenhum gabarito reconhecido. Todas as questões entrarão BLOQUEADAS (corrigíveis na fila). Continuar?')) return;
+
+  // --- PDF da prova (auditoria — best-effort) ---
+  let provaPath = null;
+  const provaEl = document.getElementById('imp-prova-pdf');
+  const provaFile = provaEl && provaEl.files && provaEl.files[0];
+  if (provaFile) {
+    try {
+      setM('Enviando PDF da prova…');
+      const path = 'lotes/' + Date.now() + '_' + provaFile.name.replace(/[^\w.\-]/g, '_');
+      const { error: eUp } = await sb.storage.from('questoes').upload(path, provaFile, { upsert: true });
+      if (eUp) throw eUp;
+      provaPath = path;
+    } catch (e) {
+      console.warn('Upload da prova falhou (segue sem):', e);
+      setM('Aviso: PDF da prova não subiu (bucket/RLS). Importação continua…', '#b26a00');
     }
+  }
+
+  let nCrit = 0, nWarn = 0;
+  const linhas = arr.map((o, i) => {
+    const parsed = radixNormalizarItemImport(o, temaLote, nivelLote, tipoLote);
+    const numero = parsed.numero || String(i + 1);
+    parsed.numero = numero;
+    const gabLetra = gabMap[numero] || null;
+    parsed.gabarito_oficial = gabLetra;
+    // gabarito é AUTORITATIVO: redefine a correta pelo oficial
+    if (gabLetra) parsed.alternativas.forEach(a => { a.correta = (a.letra === gabLetra); });
+    else          parsed.alternativas.forEach(a => { a.correta = false; });
+    const { criticos, warnings } = radixValidarPayload(parsed);
+    if (!gabLetra) criticos.unshift('Gabarito oficial ausente/inconsistente p/ questão nº ' + numero);
+    if (criticos.length) nCrit++;
+    if (warnings.length) nWarn++;
+    return {
+      raw: o,
+      texto_original: parsed.texto_original,
+      parsed,
+      hash_norm: radixHash((parsed.tema || '') + '|' + parsed.enunciado),
+      estado: criticos.length ? 'rejeitado' : 'validado',
+      erros: [
+        ...criticos.map(c => ({ severidade: 'critico', detalhe: c })),
+        ...warnings.map(w => ({ severidade: 'warning', detalhe: w }))
+      ]
+    };
   });
-  if (validas.length === 0) {
-    setM('Nenhuma questão válida. Problemas: ' + invalidas.join(' | '), 'var(--radix-red)');
-    return;
+
+  setM('Criando lote de importação…');
+  const { data: lote, error: eL } = await sb.from('import_lote')
+    .insert({
+      origem: 'Importação JSON' + (provaFile ? ' + ' + provaFile.name : ''),
+      total: linhas.length,
+      validas: linhas.filter(l => l.estado === 'validado').length,
+      rejeitadas: linhas.filter(l => l.estado === 'rejeitado').length,
+      gabarito_original: gab.original || null,   // preservado p/ auditoria
+      gabarito_map: gabMap,
+      prova_pdf_path: provaPath
+    }).select().single();
+  if (eL) { setM('Erro ao criar lote: ' + (eL.message || JSON.stringify(eL)) + ' (RLS?)', 'var(--radix-red)'); return; }
+
+  // dedup por hash dentro do lote (unique(lote_id, hash_norm))
+  const vistos = new Set();
+  const rows = [];
+  for (const l of linhas) {
+    if (vistos.has(l.hash_norm)) continue;
+    vistos.add(l.hash_norm);
+    rows.push({ lote_id: lote.id, raw: l.raw, texto_original: l.texto_original,
+                parsed: l.parsed, hash_norm: l.hash_norm, estado: l.estado, erros: l.erros });
   }
-  if (invalidas.length > 0 &&
-      !confirm(`${invalidas.length} questão(ões) inválida(s) serão IGNORADAS:\n\n${invalidas.join('\n')}\n\nImportar mesmo assim as ${validas.length} válidas?`)) {
-    return;
-  }
-  setM(`Importando ${validas.length}…`);
   try {
-    let inseridas = 0;
-    for (let k = 0; k < validas.length; k += 50) {
-      const chunk = validas.slice(k, k + 50);
-      const { error } = await sb.from('questoes').insert(chunk);
+    for (let k = 0; k < rows.length; k += 50) {
+      const { error } = await sb.from('questao_import').insert(rows.slice(k, k + 50));
       if (error) throw error;
-      inseridas += chunk.length;
-      setM(`Importando ${inseridas}/${validas.length}…`);
+      setM(`Enviando ${Math.min(k + 50, rows.length)}/${rows.length}…`);
     }
-    const frescas = await carregarQuestoesDoBanco();
-    if (frescas && frescas.length) {
-      state.questoes = frescas;
-      // Atualiza cache/contadores apenas se essas features existirem nesta versão
-      if (typeof gravarCacheQuestoes === 'function') gravarCacheQuestoes(frescas);
-      if (typeof atualizarContadoresQuestoes === 'function') atualizarContadoresQuestoes();
-    }
-    setM(`✓ ${inseridas} questão(ões) importada(s) com sucesso.`, 'var(--radix-success)');
-    setTimeout(() => { fecharModalImportar(); renderGerenciarQuestoes(); }, 1000);
+    setM(`✓ ${rows.length} na fila — ${nCrit} bloqueada(s), ${nWarn} c/ aviso. Gabarito: ${Object.keys(gabMap).length} respostas.`, 'var(--radix-success)');
+    setTimeout(() => { fecharModalImportar(); renderRevisarImportacoes(); }, 1600);
   } catch (e) {
-    console.error('Erro ao importar questões:', e);
-    setM('Erro ao importar: ' + (e.message || JSON.stringify(e)) + ' — confira se você está logado como professor (RLS).', 'var(--radix-red)');
+    console.error('Erro ao enviar p/ staging:', e);
+    setM('Erro ao enviar: ' + (e.message || JSON.stringify(e)) + ' — confira RLS (professor).', 'var(--radix-red)');
+  }
+}
+
+// ===== TELA DE REVISÃO (staging questao_import) =====
+function radixBadgeEstado(e) {
+  const cor = { importado:'#888', limpo:'#0277BD', validado:'#1565C0',
+                revisado:'#7b1fa2', publicado:'var(--radix-success)',
+                rejeitado:'var(--radix-red)' }[e] || '#888';
+  return `<span style="background:${cor};color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;">${e}</span>`;
+}
+
+async function renderRevisarImportacoes() {
+  state.view = 'revisar-import';
+  const main = document.getElementById('main-content');
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> /
+      <a onclick="renderGerenciarQuestoes()">Gerenciar Banco</a> / Revisar Importações</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>Fila de Revisão</h2>
+    <div class="filtros">
+      <select id="rev-estado" onchange="renderRevisarImportacoes()">
+        <option value="">Todos os estados</option>
+        ${['validado','rejeitado','revisado','publicado'].map(e =>
+          `<option value="${e}" ${state._revEstado===e?'selected':''}>${e}</option>`).join('')}
+      </select>
+    </div>
+    <div id="rev-lista">Carregando…</div>`;
+  const selEl = document.getElementById('rev-estado');
+  if (selEl && state._revEstado) selEl.value = state._revEstado;
+
+  let q = sb.from('questao_import').select('*').order('id', { ascending: false }).limit(500);
+  const { data, error } = await q;
+  const cont = document.getElementById('rev-lista');
+  if (error) { cont.innerHTML = `<p style="color:var(--radix-red)">Erro: ${error.message} (RLS?)</p>`; return; }
+  state._imp = data || [];
+  const filtro = (document.getElementById('rev-estado') || {}).value || '';
+  state._revEstado = filtro;
+  const linhas = state._imp.filter(r => !filtro || r.estado === filtro);
+  if (!linhas.length) { cont.innerHTML = '<p>Nenhum item.</p>'; return; }
+  cont.innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Estado</th><th>Tema</th><th>Nível</th>
+        <th>Enunciado</th><th>Problemas</th><th>Ações</th></tr></thead>
+      <tbody>
+      ${linhas.map(r => {
+        const p = r.parsed || {};
+        const errs = (r.erros || []);
+        const crit = errs.filter(e => e.severidade === 'critico');
+        const warn = errs.filter(e => e.severidade === 'warning');
+        const podePub = crit.length === 0 && r.estado !== 'publicado';
+        return `<tr>
+          <td>${r.id}</td>
+          <td>${radixBadgeEstado(r.estado)}</td>
+          <td>${p.tema || '—'}</td>
+          <td>${p.nivel_enem || '—'}</td>
+          <td>${(p.enunciado || '').substring(0, 70)}${(p.enunciado||'').length>70?'…':''}</td>
+          <td style="font-size:11px;">
+            ${crit.length?`<span style="color:var(--radix-red)">⛔ ${crit.map(e=>e.detalhe).join('; ')}</span><br>`:''}
+            ${warn.length?`<span style="color:#b26a00">⚠ ${warn.map(e=>e.detalhe).join('; ')}</span>`:''}
+            ${!crit.length&&!warn.length?'✓':''}
+          </td>
+          <td style="white-space:nowrap;">
+            ${r.estado!=='publicado'?`<button class="btn btn-secondary" style="padding:5px 9px;font-size:12px;" onclick="abrirRevisarItem(${r.id})">Editar</button>`:''}
+            ${podePub?`<button class="btn btn-success" style="padding:5px 9px;font-size:12px;" onclick="publicarImportItem(${r.id})">Publicar</button>`:''}
+          </td></tr>`;
+      }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function abrirRevisarItem(id) {
+  const r = (state._imp || []).find(x => x.id === id);
+  if (!r) return;
+  const p = r.parsed || {};
+  const alts = (p.alternativas || []);
+  const idxCorr = alts.findIndex(a => a && a.correta === true);
+  const temaOpts = MODULOS.map(mod => `
+    <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
+      ${mod.temas.map(tid => { const t = TEMAS.find(x => x.id === tid);
+        return `<option value="${tid}" ${p.tema===tid?'selected':''}>${t?t.nome:tid}</option>`; }).join('')}
+    </optgroup>`).join('');
+  const niv = ['basico','intermediario','avancado','elite'];
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalRev()">
+      <div class="modal" style="max-width:720px;">
+        <h2>Revisar item #${r.id}</h2>
+        <p style="font-size:13px;color:var(--radix-text-muted);margin:-6px 0 10px;">
+          Questão nº <strong>${p.numero || '—'}</strong> ·
+          Gabarito oficial: <strong>${p.gabarito_oficial || '⛔ ausente — defina abaixo'}</strong>
+        </p>
+        <div class="form-group"><label>Tema</label>
+          <select id="rv-tema">${temaOpts}</select></div>
+        <div class="form-group"><label>Nível ENEM</label>
+          <select id="rv-nivel">${niv.map(n=>`<option value="${n}" ${p.nivel_enem===n?'selected':''}>${n}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Enunciado</label>
+          <textarea id="rv-enun" rows="4">${(p.enunciado||'').replace(/</g,'&lt;')}</textarea></div>
+        ${[0,1,2,3,4].map(i=>`<div class="form-group"><label>Alternativa ${String.fromCharCode(65+i)}</label>
+          <input type="text" id="rv-alt-${i}" value="${((alts[i]&&alts[i].texto)||'').replace(/"/g,'&quot;')}"></div>`).join('')}
+        <div class="form-group"><label>Correta</label>
+          <select id="rv-corr">${[0,1,2,3,4].map(i=>`<option value="${i}" ${idxCorr===i?'selected':''}>${String.fromCharCode(65+i)}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Resolução (opcional)</label>
+          <textarea id="rv-res" rows="2">${((p.resolucao&&p.resolucao.texto)||'').replace(/</g,'&lt;')}</textarea></div>
+        <p id="rv-msg" style="font-size:13px;min-height:18px;"></p>
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalRev()">Cancelar</button>
+          <button class="btn" onclick="salvarRevisaoItem(${r.id},false)">Salvar revisão</button>
+          <button class="btn btn-success" onclick="salvarRevisaoItem(${r.id},true)">Salvar e publicar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-rev">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+function fecharModalRev() {
+  const m = document.getElementById('modal-rev');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+function radixPayloadDoModalRev(base) {
+  const corr = parseInt(document.getElementById('rv-corr').value);
+  const res = document.getElementById('rv-res').value.trim();
+  return Object.assign({}, base, {
+    tema: document.getElementById('rv-tema').value,
+    nivel_enem: document.getElementById('rv-nivel').value,
+    enunciado: sanitizarTextoQuestao(document.getElementById('rv-enun').value).trim(),
+    alternativas: [0,1,2,3,4].map(i => ({
+      letra: String.fromCharCode(65 + i),
+      texto: sanitizarTextoQuestao(document.getElementById('rv-alt-'+i).value).trim(),
+      imagem_path: null,
+      correta: i === corr
+    })),
+    resolucao: res ? { tipo: 'comentada', texto: res } : null
+  });
+}
+
+async function salvarRevisaoItem(id, publicar) {
+  const r = (state._imp || []).find(x => x.id === id);
+  if (!r) return;
+  const msg = document.getElementById('rv-msg');
+  const setM = (t,c)=>{ if(msg){msg.textContent=t;msg.style.color=c||'var(--radix-text-muted)';} };
+  const payload = radixPayloadDoModalRev(r.parsed || {});
+  const { criticos, warnings } = radixValidarPayload(payload);
+  const erros = [
+    ...criticos.map(c => ({ severidade:'critico', detalhe:c })),
+    ...warnings.map(w => ({ severidade:'warning', detalhe:w }))
+  ];
+  if (publicar && criticos.length) {
+    setM('Não pode publicar — corrija: ' + criticos.join('; '), 'var(--radix-red)');
+    return;
+  }
+  try {
+    const { error: e1 } = await sb.from('questao_import')
+      .update({ parsed: payload, erros, estado: criticos.length ? 'rejeitado' : 'revisado' })
+      .eq('id', id);
+    if (e1) throw e1;
+    if (publicar) {
+      const { error: e2 } = await sb.rpc('fn_publicar_questao',
+        { p_payload: payload, p_import_id: id, p_status: 'publicada' });
+      if (e2) throw e2;
+      const frescas = await carregarQuestoesDoBanco();
+      if (frescas) state.questoes = frescas;
+    }
+    fecharModalRev();
+    renderRevisarImportacoes();
+  } catch (e) {
+    console.error('Erro na revisão:', e);
+    setM('Erro: ' + (e.message || JSON.stringify(e)), 'var(--radix-red)');
+  }
+}
+
+async function publicarImportItem(id) {
+  const r = (state._imp || []).find(x => x.id === id);
+  if (!r) return;
+  const payload = r.parsed || {};
+  const { criticos, warnings } = radixValidarPayload(payload);
+  if (criticos.length) { alert('Bloqueado:\n\n• ' + criticos.join('\n• ')); return; }
+  if (warnings.length && !confirm('Avisos (não bloqueiam):\n\n• ' + warnings.join('\n• ') + '\n\nPublicar?')) return;
+  try {
+    const { error } = await sb.rpc('fn_publicar_questao',
+      { p_payload: payload, p_import_id: id, p_status: 'publicada' });
+    if (error) throw error;
+    const frescas = await carregarQuestoesDoBanco();
+    if (frescas) state.questoes = frescas;
+    renderRevisarImportacoes();
+  } catch (e) {
+    console.error('Erro ao publicar:', e);
+    alert('Erro ao publicar: ' + (e.message || JSON.stringify(e)) + '\n(RLS / duplicata exata?)');
   }
 }
 
@@ -7029,7 +7425,7 @@ async function limparBancoQuestoes() {
   if (!confirm(`Última confirmação: apagar definitivamente ${n} questão(ões)? Não há desfazer.`)) return;
   try {
     // Supabase exige um filtro no delete; id é BIGSERIAL (>= 1), então gte(0) pega tudo.
-    const { error } = await sb.from('questoes').delete().gte('id', 0);
+    const { error } = await sb.from('questao').delete().gte('id', 0);
     if (error) throw error;
     state.questoes = [];
     // Limpa qualquer cache local de questões (chaves conhecidas / versões anteriores)
