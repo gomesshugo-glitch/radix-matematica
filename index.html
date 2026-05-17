@@ -6722,7 +6722,8 @@ function radixValidarPayload(p) {
   const enun = (p.enunciado || '').trim();
   if (enun.length < 30) criticos.push('Enunciado ausente ou < 30 caracteres');
   if (!p.tema || !TEMAS.some(t => t.id === p.tema)) criticos.push('Tema ausente/inexistente');
-  if (!NIVEIS_ENEM.includes(p.nivel_enem)) criticos.push('nivel_enem inválido');
+  if (!NIVEIS_ENEM.includes(p.nivel_enem))
+    criticos.push(`nivel_enem deve ser um de: ${NIVEIS_ENEM.join(', ')}. Recebido: "${p.nivel_enem == null ? '' : p.nivel_enem}"`);
   const alts = Array.isArray(p.alternativas) ? p.alternativas : [];
   if (alts.length !== 5) criticos.push(`${alts.length} alternativas (esperado 5 A–E)`);
   const corretas = alts.filter(a => a && a.correta === true).length;
@@ -6978,7 +6979,8 @@ function abrirImportarQuestoes() {
         <p id="imp-msg" style="font-size:13px;min-height:18px;margin:4px 0;"></p>
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalImportar()">Cancelar</button>
-          <button class="btn" onclick="executarImportarQuestoes()">Importar</button>
+          <button class="btn btn-danger" id="imp-btn-abortar" style="display:none;" onclick="radixCancelarImport=true;">Abortar</button>
+          <button class="btn" id="imp-btn" onclick="executarImportarQuestoes()">Importar</button>
         </div>
       </div>
     </div>`;
@@ -6987,6 +6989,7 @@ function abrirImportarQuestoes() {
 }
 
 function fecharModalImportar() {
+  radixCancelarImport = true;   // fechar durante import = abortar
   const m = document.getElementById('modal-importar');
   if (m) m.remove();
   document.body.classList.remove('modal-open');
@@ -7057,24 +7060,36 @@ function radixNormalizarItemImport(o, temaLote, nivelLote, tipoLote) {
 }
 
 // ===== GABARITO OFICIAL — parsing e normalização p/ mapa {"1":"C",...} =====
+// (2.2) Normalizadores robustos — usados em TODOS os pontos:
+const stripBOM   = (s) => String(s == null ? '' : s).replace(/^﻿/, '');
+const normNumero = (n) => {
+  const i = parseInt(String(n == null ? '' : n).trim(), 10);
+  return Number.isFinite(i) && i > 0 ? i : null;   // sempre INTEIRO (ou null)
+};
+const normLetra  = (l) => {
+  const s = String(l == null ? '' : l).trim().toUpperCase();
+  return ['A','B','C','D','E'].includes(s) ? s : null;
+};
+
 function radixParseGabaritoTexto(txt) {
   const map = {};
-  const re = /(\d{1,3})\s*[-).:º°ª\]]*\s*([A-Ea-e])\b/g;
+  const re = /(\d{1,3})\s*[-).:,;º°ª\]]*\s*([A-Ea-e])\b/g;
   let m;
-  while ((m = re.exec(txt || '')) !== null) {
-    const n = String(parseInt(m[1], 10));
-    map[n] = m[2].toUpperCase();
+  while ((m = re.exec(stripBOM(txt))) !== null) {
+    const n = normNumero(m[1]);
+    const l = normLetra(m[2]);
+    if (n != null && l) map[String(n)] = l;
   }
   return map;
 }
 function radixParseGabaritoCSV(text) {
   const map = {};
-  (text || '').split(/\r?\n/).forEach(linha => {
+  stripBOM(text).split(/\r?\n/).forEach(linha => {
     const c = linha.split(/[;,\t]/).map(s => s.trim());
     if (c.length < 2) return;
-    const n = parseInt(c[0], 10);
-    const l = (c[1] || '').toUpperCase();
-    if (!isNaN(n) && /^[A-E]$/.test(l)) map[String(n)] = l;
+    const n = normNumero(c[0]);
+    const l = normLetra(c[1]);
+    if (n != null && l) map[String(n)] = l;
   });
   return map;
 }
@@ -7084,17 +7099,21 @@ async function radixParseGabaritoXLSX(buf) {
   const linhas = XLSX.utils.sheet_to_json(ws, { header: 1 });
   const map = {};
   linhas.forEach(r => {
-    const n = parseInt(r[0], 10);
-    const l = String(r[1] || '').trim().toUpperCase();
-    if (!isNaN(n) && /^[A-E]$/.test(l)) map[String(n)] = l;
+    const n = normNumero(r[0]);
+    const l = normLetra(r[1]);
+    if (n != null && l) map[String(n)] = l;
   });
   return map;
 }
 async function radixParseGabaritoPDF(buf) {
   if (!window.pdfjsLib) throw new Error('pdf.js não carregou');
   const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  const msgEl = document.getElementById('imp-msg');
+  const N = pdf.numPages;
   let txt = '';
-  for (let p = 1; p <= pdf.numPages; p++) {
+  for (let p = 1; p <= N; p++) {
+    if (radixCancelarImport) throw new Error('Importação abortada pelo usuário.');
+    if (msgEl) msgEl.textContent = `Lendo gabarito PDF — página ${p} de ${N}…`;
     const page = await pdf.getPage(p);
     const tc = await page.getTextContent();
     txt += ' ' + tc.items.map(i => i.str).join(' ');
@@ -7116,19 +7135,35 @@ async function radixObterGabarito() {
       const map = await radixParseGabaritoXLSX(await f.arrayBuffer());
       return { map, original: '[XLSX] ' + f.name + ' — ' + JSON.stringify(map) };
     }
-    const text = await f.text();           // csv / txt
+    const text = stripBOM(await f.text());     // csv / txt — sem BOM
     const map = radixParseGabaritoCSV(text);
     const m2 = Object.keys(map).length ? map : radixParseGabaritoTexto(text);
     return { map: m2, original: text.slice(0, 20000) };
   }
-  const t = (txtEl && txtEl.value || '').trim();
+  const t = stripBOM((txtEl && txtEl.value) || '').trim();
   if (t) return { map: radixParseGabaritoTexto(t), original: t.slice(0, 20000) };
   return { map: {}, original: '' };
 }
 
 // IMPORTAÇÃO → STAGING (questao_import). NÃO grava em `questao` direto.
 // Cruza nº da questão × gabarito oficial. Sem gabarito = erro crítico (fica no staging).
+// (2.3) Estado de cancelamento + UI anti double-click
+let radixCancelarImport = false;
+function radixSetImportRunning(running) {
+  const b = document.getElementById('imp-btn');
+  if (b) { b.disabled = running; b.textContent = running ? 'Importando…' : 'Importar'; }
+  const a = document.getElementById('imp-btn-abortar');
+  if (a) a.style.display = running ? '' : 'none';
+}
 async function executarImportarQuestoes() {
+  const b = document.getElementById('imp-btn');
+  if (b && b.disabled) return;                 // anti double-click
+  radixCancelarImport = false;
+  radixSetImportRunning(true);
+  try { return await _execImportCore(); }
+  finally { radixSetImportRunning(false); }
+}
+async function _execImportCore() {
   const msgEl = document.getElementById('imp-msg');
   const setM = (t, c) => { if (msgEl) { msgEl.textContent = t; msgEl.style.color = c || 'var(--radix-text-muted)'; } };
   let arr;
@@ -7168,10 +7203,21 @@ async function executarImportarQuestoes() {
     }
   }
 
+  // (2.2) Unicidade de `numero` no lote — ANTES de qualquer INSERT
+  const numsProvidos = arr.map(o => normNumero(o && o.numero)).filter(n => n != null);
+  const dup = numsProvidos.filter((n, i, a) => a.indexOf(n) !== i);
+  if (dup.length > 0) {
+    setM('Números de questão duplicados no JSON: ' +
+         [...new Set(dup)].join(', ') + '. Cada questão precisa de nº único. Nada foi importado.',
+         'var(--radix-red)');
+    return;
+  }
+
   let nCrit = 0, nWarn = 0;
   const linhas = arr.map((o, i) => {
     const parsed = radixNormalizarItemImport(o, temaLote, nivelLote, tipoLote);
-    const numero = parsed.numero || String(i + 1);
+    const numN = normNumero(o && o.numero);
+    const numero = numN != null ? String(numN) : String(i + 1);  // INTEIRO normalizado
     parsed.numero = numero;
     const gabLetra = gabMap[numero] || null;
     parsed.gabarito_oficial = gabLetra;
@@ -7201,6 +7247,7 @@ async function executarImportarQuestoes() {
     };
   });
 
+  if (radixCancelarImport) { setM('Importação abortada — nada foi gravado.', 'var(--radix-red)'); return; }
   setM('Criando lote de importação…');
   const { data: lote, error: eL } = await sb.from('import_lote')
     .insert({
