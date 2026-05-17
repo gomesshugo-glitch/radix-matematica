@@ -7043,6 +7043,10 @@ function radixNormalizarItemImport(o, temaLote, nivelLote, tipoLote) {
     origem_banca: o.origem_banca || null,
     origem_ano: o.origem_ano || null,
     alternativas,
+    // Ajuste 2: possui_figura automático (![figura](...) no enunciado OU alternativas-imagem)
+    possui_figura: (o.possui_figura === true)
+      || /!\[[^\]]*\]\([^)]*\)/.test(o.enunciado || '')
+      || alternativas.some(a => a.imagem_path || /^\(figura/i.test((a.texto || '').trim())),
     imagens: Array.isArray(o.imagens) ? o.imagens.map(im => ({
       papel: im.papel || 'enunciado',
       storage_path: im.storage_path || im.ref || im.url || '',
@@ -7171,11 +7175,17 @@ async function executarImportarQuestoes() {
     parsed.numero = numero;
     const gabLetra = gabMap[numero] || null;
     parsed.gabarito_oficial = gabLetra;
-    // gabarito é AUTORITATIVO: redefine a correta pelo oficial
+    // letra declarada no JSON (correta:true / gabarito) ANTES de sobrescrever
+    const declarada = (parsed.alternativas.find(a => a.correta) || {}).letra || null;
+    // gabarito oficial é AUTORITATIVO: redefine a correta pelo oficial
     if (gabLetra) parsed.alternativas.forEach(a => { a.correta = (a.letra === gabLetra); });
     else          parsed.alternativas.forEach(a => { a.correta = false; });
     const { criticos, warnings } = radixValidarPayload(parsed);
     if (!gabLetra) criticos.unshift('Gabarito oficial ausente/inconsistente p/ questão nº ' + numero);
+    // Ajuste 1: divergência entre JSON e gabarito oficial = crítico (fica no staging)
+    else if (declarada && declarada !== gabLetra)
+      criticos.unshift('Divergência de gabarito na questão nº ' + numero +
+                       ': JSON indica ' + declarada + ', oficial é ' + gabLetra);
     if (criticos.length) nCrit++;
     if (warnings.length) nWarn++;
     return {
@@ -7296,6 +7306,7 @@ async function renderRevisarImportacoes() {
 function abrirRevisarItem(id) {
   const r = (state._imp || []).find(x => x.id === id);
   if (!r) return;
+  state._rvIaUsada = false;
   const p = r.parsed || {};
   const alts = (p.alternativas || []);
   const idxCorr = alts.findIndex(a => a && a.correta === true);
@@ -7323,8 +7334,18 @@ function abrirRevisarItem(id) {
           <input type="text" id="rv-alt-${i}" value="${((alts[i]&&alts[i].texto)||'').replace(/"/g,'&quot;')}"></div>`).join('')}
         <div class="form-group"><label>Correta</label>
           <select id="rv-corr">${[0,1,2,3,4].map(i=>`<option value="${i}" ${idxCorr===i?'selected':''}>${String.fromCharCode(65+i)}</option>`).join('')}</select></div>
-        <div class="form-group"><label>Resolução (opcional)</label>
-          <textarea id="rv-res" rows="2">${((p.resolucao&&p.resolucao.texto)||'').replace(/</g,'&lt;')}</textarea></div>
+        <div class="form-group"><label>Resolução comentada (opcional)</label>
+          <textarea id="rv-res" rows="6">${((p.resolucao&&p.resolucao.texto)||'').replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" type="button" id="rv-ia-btn" onclick="gerarResolucaoIA(${r.id})">✨ Gerar resolução com IA</button>
+            <button class="btn btn-secondary" type="button" onclick="document.getElementById('rv-res').value=''; state._rvIaUsada=false;">Descartar resolução</button>
+          </div>
+          <p style="font-size:12px;color:var(--radix-text-muted);margin-top:6px;">
+            A IA gera um <strong>rascunho editável</strong>. Nada é publicado ou aprovado
+            automaticamente — você revisa, edita e só então clica em Salvar/Publicar.
+            ${ /!\[[^\]]*\]\(PENDENTE\)/.test(p.enunciado||'') ? '<br><strong>⚠ Questão depende de figura pendente:</strong> a IA fará apenas uma resolução parcial.' : '' }
+          </p>
+        </div>
         <p id="rv-msg" style="font-size:13px;min-height:18px;"></p>
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalRev()">Cancelar</button>
@@ -7342,6 +7363,52 @@ function fecharModalRev() {
   document.body.classList.remove('modal-open');
 }
 
+// ===== GERAÇÃO DE RESOLUÇÃO COM IA (rascunho — nunca publica/aprova sozinha) =====
+// Chama a Edge Function 'gerar-resolucao' (a chave da IA fica no servidor, NUNCA aqui).
+async function gerarResolucaoIA(id) {
+  const btn = document.getElementById('rv-ia-btn');
+  const msg = document.getElementById('rv-msg');
+  const setM = (t,c)=>{ if(msg){msg.textContent=t;msg.style.color=c||'var(--radix-text-muted)';} };
+  const corr = parseInt(document.getElementById('rv-corr').value);
+  const enun = document.getElementById('rv-enun').value.trim();
+  const alternativas = [0,1,2,3,4].map(i => ({
+    letra: String.fromCharCode(65 + i),
+    texto: document.getElementById('rv-alt-'+i).value.trim()
+  }));
+  const r = (state._imp || []).find(x => x.id === id) || {};
+  const p = r.parsed || {};
+  const figuraPendente = /!\[[^\]]*\]\(PENDENTE\)/.test(enun);
+  const payload = {
+    numero: p.numero || null,
+    tema: document.getElementById('rv-tema').value,
+    nivel_enem: document.getElementById('rv-nivel').value,
+    enunciado: enun,
+    alternativas,
+    gabarito: String.fromCharCode(65 + corr),
+    possui_figura: p.possui_figura === true || figuraPendente,
+    figura_pendente: figuraPendente,
+    imagens: Array.isArray(p.imagens) ? p.imagens : []
+  };
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Gerando…'; }
+  setM('Gerando resolução com IA…');
+  try {
+    const { data, error } = await sb.functions.invoke('gerar-resolucao', { body: payload });
+    if (error) throw error;
+    const texto = (data && (data.resolucao || data.texto)) || '';
+    if (!texto) throw new Error('A IA não retornou texto.');
+    const ta = document.getElementById('rv-res');
+    ta.value = texto;
+    state._rvIaUsada = true;
+    setM('✓ Rascunho gerado pela IA. Revise e edite antes de salvar.', 'var(--radix-success)');
+  } catch (e) {
+    console.error('Erro IA:', e);
+    setM('Erro ao gerar com IA: ' + (e.message || JSON.stringify(e)) +
+         ' — confira se a Edge Function "gerar-resolucao" está publicada.', 'var(--radix-red)');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Gerar resolução com IA'; }
+  }
+}
+
 function radixPayloadDoModalRev(base) {
   const corr = parseInt(document.getElementById('rv-corr').value);
   const res = document.getElementById('rv-res').value.trim();
@@ -7355,7 +7422,8 @@ function radixPayloadDoModalRev(base) {
       imagem_path: null,
       correta: i === corr
     })),
-    resolucao: res ? { tipo: 'comentada', texto: res } : null
+    resolucao: res ? { tipo: 'comentada', texto: res,
+                        origem: state._rvIaUsada ? 'ia' : 'manual' } : null
   });
 }
 
