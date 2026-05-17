@@ -3802,7 +3802,7 @@ function sanitizarTextoQuestao(s) {
 async function carregarQuestoesDoBanco() {
   // Busca questões no Supabase. Se falhar, retorna null pro fallback.
   try {
-    const { data, error } = await sb.from('questoes')
+    const { data, error } = await sb.from('v_questoes_legado')
       .select('*')
       .order('id');
     if (error) {
@@ -6657,8 +6657,18 @@ function abrirCadastroQuestao(idEdicao) {
         </select>
       </div>
       <div class="form-group">
-        <label>Dificuldade</label>
+        <label>Nível ENEM (eixo pedagógico principal)</label>
+        <select id="q-nivel">
+          <option value="basico">Básico</option>
+          <option value="intermediario" selected>Intermediário</option>
+          <option value="avancado">Avançado</option>
+          <option value="elite">Elite</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Dificuldade (legado, opcional)</label>
         <select id="q-dif">
+          <option value="">— não definir —</option>
           <option value="facil" ${editando?.dificuldade==='facil'?'selected':''}>Fácil</option>
           <option value="media" ${editando?.dificuldade==='media'?'selected':''}>Média</option>
           <option value="dificil" ${editando?.dificuldade==='dificil'?'selected':''}>Difícil</option>
@@ -6684,7 +6694,14 @@ function abrirCadastroQuestao(idEdicao) {
         <label>Explicação / Resolução</label>
         <textarea id="q-explicacao" rows="3">${editando?.explicacao || ''}</textarea>
       </div>
-      <button class="btn btn-success" style="width:100%;padding:14px;" onclick="salvarQuestao(${idEdicao || 'null'})">${editando ? 'Salvar Alterações' : 'Cadastrar Questão'}</button>
+      ${editando ? `
+        <button class="btn btn-success" style="width:100%;padding:14px;" onclick="salvarQuestao(${idEdicao},'publicada')">Salvar (nova versão)</button>
+      ` : `
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="flex:1;padding:14px;" onclick="salvarQuestao(null,'rascunho')">Salvar rascunho</button>
+          <button class="btn btn-success" style="flex:1;padding:14px;" onclick="salvarQuestao(null,'publicada')">Publicar</button>
+        </div>
+      `}
     </div>
   `;
 }
