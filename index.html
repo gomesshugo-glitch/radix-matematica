@@ -3641,6 +3641,10 @@ function formatarEnunciado(texto) {
       return '\u0000KATEX' + (_katexBlocks.length - 1) + '\u0000';
     } catch (e) { return null; }
   }
+  // PROTEÇÃO MOEDA: "R$" é dinheiro, não delimitador de fórmula. Esconde o
+  // cifrão de moeda ANTES do KaTeX (senão dois "R$" viram um span de fórmula
+  // e embaralham o texto entre eles). Restaurado após a extração de fórmulas.
+  s = s.replace(/R\$/g, ' RCASH ');
   // $$...$$ (display)
   s = s.replace(/\$\$([^$]+?)\$\$/g, (m, tex) => _stashKatex(tex.trim(), true) || m);
   // $...$ (inline) — evita capturar moeda "$ 100" exigindo que o conteúdo tenha letra ou comando \
@@ -3649,6 +3653,8 @@ function formatarEnunciado(texto) {
     if (!/[a-zA-Z\\^_{}]/.test(t)) return m; // sem letra/comando: provavelmente moeda
     return _stashKatex(t, false) || m;
   });
+  // restaura o cifrão de moeda como texto normal (KaTeX já não o vê mais)
+  s = s.replace(/ RCASH /g, 'R$');
 
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
 
