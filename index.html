@@ -5739,6 +5739,82 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       return out;
     }
 
+    // ===== LaTeX -> texto legível p/ PDF (Helvetica não renderiza KaTeX) =====
+    // Gera símbolos Unicode (σ, √, ×, ≤…) que o sanit() depois translitera p/ ASCII.
+    function _grupoBalanceado(str, i) {        // str[i] === '{'
+      let d = 0, j = i;
+      for (; j < str.length; j++) {
+        if (str[j] === '{') d++;
+        else if (str[j] === '}') { d--; if (d === 0) { j++; break; } }
+      }
+      return [str.slice(i + 1, j - 1), j];
+    }
+    function _argLatex(str, i) {
+      while (str[i] === ' ') i++;
+      if (str[i] === '{') return _grupoBalanceado(str, i);
+      if (str[i] === '\\') { const m = str.slice(i).match(/^\\[a-zA-Z]+/); if (m) return [m[0], i + m[0].length]; }
+      return [str[i] || '', i + 1];
+    }
+    function latexToPlain(tex) {
+      let s = String(tex == null ? '' : tex);
+      // \frac \dfrac \tfrac (recursivo)
+      let guard = 0;
+      while (/\\(d|t)?frac/.test(s) && guard++ < 40) {
+        let out = '', i = 0;
+        while (i < s.length) {
+          const m = s.slice(i).match(/^\\(d|t)?frac\s*/);
+          if (m) {
+            i += m[0].length;
+            let a, b; [a, i] = _argLatex(s, i); [b, i] = _argLatex(s, i);
+            out += '(' + latexToPlain(a) + ')/(' + latexToPlain(b) + ')';
+          } else { out += s[i]; i++; }
+        }
+        s = out;
+      }
+      // \sqrt[n]{x} e \sqrt{x}
+      s = s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g, (m, n, x) => 'raiz_' + n + '(' + x + ')');
+      { let r = '', i = 0;
+        while (i < s.length) {
+          const m = s.slice(i).match(/^\\sqrt\s*/);
+          if (m) { i += m[0].length; let x; [x, i] = _argLatex(s, i); r += '√(' + x + ')'; }
+          else { r += s[i]; i++; }
+        }
+        s = r; }
+      // \text{} \mathrm{} etc -> conteúdo
+      s = s.replace(/\\(text|mathrm|mathbf|mathit|mathsf|operatorname)\s*\{([^{}]*)\}/g, '$2');
+      // super/sub índices
+      s = s.replace(/\^\{([^{}]*)\}/g, '^($1)').replace(/_\{([^{}]*)\}/g, '_($1)');
+      // espaçadores LaTeX
+      s = s.replace(/\\left\s*/g, '').replace(/\\right\s*/g, '')
+           .replace(/\\,|\\;|\\:|\\ |~/g, ' ').replace(/\\!/g, '')
+           .replace(/\\quad|\\qquad/g, '  ');
+      // símbolos
+      const sym = {
+        '\\cdot':'·','\\times':'×','\\div':'÷','\\pm':'±','\\ast':'*',
+        '\\leq':'≤','\\le':'≤','\\geq':'≥','\\ge':'≥','\\neq':'≠','\\ne':'≠',
+        '\\approx':'≈','\\equiv':'=','\\sim':'~','\\propto':'∝','\\infty':'∞',
+        '\\rightarrow':'->','\\to':'->','\\leftarrow':'<-','\\Rightarrow':'=>','\\Leftrightarrow':'<=>',
+        '\\alpha':'α','\\beta':'β','\\gamma':'γ','\\delta':'δ','\\epsilon':'ε','\\varepsilon':'ε',
+        '\\theta':'θ','\\lambda':'λ','\\mu':'μ','\\pi':'π','\\rho':'ρ','\\sigma':'σ','\\tau':'τ',
+        '\\phi':'φ','\\varphi':'φ','\\omega':'ω','\\Delta':'Δ','\\Sigma':'Σ','\\Omega':'Ω',
+        '\\ldots':'...','\\dots':'...','\\cdots':'...','\\circ':'°',
+        '\\%':'%','\\$':'$','\\&':'&','\\#':'#','\\_':'_','\\{':'{','\\}':'}'
+      };
+      for (const k in sym) s = s.split(k).join(sym[k]);
+      // comando desconhecido \abc -> abc
+      s = s.replace(/\\([a-zA-Z]+)/g, '$1');
+      // remove chaves de agrupamento restantes e normaliza espaços
+      s = s.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+      return s;
+    }
+    function desLatexPdf(txt) {
+      if (!txt || String(txt).indexOf('$') === -1) return txt;
+      let s = String(txt);
+      s = s.replace(/\$\$([^$]+?)\$\$/g, (m, t) => latexToPlain(t));
+      s = s.replace(/\$([^$\n]+?)\$/g, (m, t) => latexToPlain(t));
+      return s;
+    }
+
     function quebrarTexto(texto, fonte, tam, larg) {
       // Primeiro converte <br> em \n e strip HTML, ANTES de sanit
       const semHtml = String(texto || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
@@ -5763,17 +5839,40 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       return linhas;
     }
 
-    async function embedImg(dataUrl) {
+    const _imgCache = {};
+    async function embedImg(srcRaw) {
+      const src = String(srcRaw || '').trim();
+      if (!src) return null;
+      if (_imgCache[src] !== undefined) return _imgCache[src];
       try {
-        if (dataUrl.startsWith('data:image/png')) {
-          const bin = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
-          return await pdfDoc.embedPng(bin);
-        } else if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
-          const bin = Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
-          return await pdfDoc.embedJpg(bin);
+        let bytes = null;
+        if (src.startsWith('data:')) {
+          const b64 = src.split(',')[1] || '';
+          bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        } else if (/^https?:/i.test(src)) {
+          // imagens hospedadas (ex.: Supabase Storage público) — precisa de fetch+CORS
+          const resp = await fetch(src, { mode: 'cors', cache: 'force-cache' });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          bytes = new Uint8Array(await resp.arrayBuffer());
+        } else {
+          _imgCache[src] = null; return null;
         }
-      } catch (e) { return null; }
-      return null;
+        if (!bytes || !bytes.length) { _imgCache[src] = null; return null; }
+        // Detecta o formato pelos magic bytes (mais confiável que extensão/MIME)
+        const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+        const isJpg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+        let img;
+        if (isPng) img = await pdfDoc.embedPng(bytes);
+        else if (isJpg) img = await pdfDoc.embedJpg(bytes);
+        else if (/\.png(\?|$)/i.test(src)) img = await pdfDoc.embedPng(bytes);
+        else img = await pdfDoc.embedJpg(bytes);
+        _imgCache[src] = img || null;
+        return _imgCache[src];
+      } catch (e) {
+        console.warn('embedImg falhou para', src, e);
+        _imgCache[src] = null;
+        return null;
+      }
     }
 
     function drawRadical(page, x, y, size, color, thickness) {
@@ -5921,7 +6020,9 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       const linhasTexto = Math.ceil(enun.length / 78);
       const numAlts = (q.alternativas || q.alternativasImg || []).length || 5;
       let altura = 30 + linhasTexto * 14 + numAlts * 22 + 30;
-      if (q.imagens && q.imagens.length) altura += 220;
+      const nImgsMd = (String(q.enunciado || '').match(/!\[[^\]]*\]\([^)]*\)/g) || []).length;
+      const nImgs = (q.imagens ? q.imagens.length : 0) + nImgsMd;
+      if (nImgs) altura += 250 * nImgs;
       if (q.alternativasImg && q.alternativasImg.length) altura += 100;
       return altura;
     }
@@ -5939,13 +6040,22 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       });
       y -= 18;
 
+      // Extrai imagens em Markdown ![alt](url) do enunciado: a URL não deve
+      // virar texto, e a figura precisa ser desenhada como imagem.
+      const _imgsMd = [];
+      const enunLimpo = String(q.enunciado || '')
+        .replace(/!\[[^\]]*\]\(([^)]+)\)/g, (m, u) => { _imgsMd.push(u.trim()); return ''; })
+        .replace(/[ \t]*\n[ \t]*\n[ \t]*\n+/g, '\n\n')
+        .trim();
+      const _todasImgs = _imgsMd.concat(Array.isArray(q.imagens) ? q.imagens : []);
+
       // Enunciado — texto JUSTIFICADO em preto, line-height generoso
-      const consumiu = drawWrappedJustified(q.enunciado, ML, y, font, 10, CW, preto, 14);
+      const consumiu = drawWrappedJustified(desLatexPdf(enunLimpo), ML, y, font, 10, CW, preto, 14);
       y -= consumiu + 8;
 
-      // Imagens (centralizadas, sem borda)
-      if (q.imagens && q.imagens.length) {
-        for (const imgData of q.imagens) {
+      // Imagens (centralizadas, sem borda) — Markdown do enunciado + q.imagens
+      if (_todasImgs.length) {
+        for (const imgData of _todasImgs) {
           const img = await embedImg(imgData);
           if (img) {
             const dim = img.scale(1);
@@ -5990,7 +6100,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
         for (let k = 0; k < q.alternativas.length; k++) {
           const alt = q.alternativas[k];
           const letra = String.fromCharCode(65 + k);
-          const textoLimpo = alt.replace(/^[A-E]\)\s*/, '');
+          const textoLimpo = desLatexPdf(String(alt).replace(/^[A-E]\)\s*/, ''));
           const linhasAlt = quebrarTexto(textoLimpo, font, 10, CW - 30);
           const altH = linhasAlt.length * 14 + 4;
           if (y - altH < MB + 10) novaPagina();
