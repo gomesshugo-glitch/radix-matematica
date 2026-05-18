@@ -6911,6 +6911,7 @@ function filtrarGer() {
               <td>${q.dificuldade}</td>
               <td>
                 <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="abrirCadastroQuestao(${q.id})">Editar</button>
+                <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="abrirResolucaoIA(${q.id})">✨ Resolução IA</button>
                 <button class="btn btn-danger" style="padding:6px 10px;font-size:12px;" onclick="excluirQuestao(${q.id})">Excluir</button>
               </td>
             </tr>
@@ -6922,6 +6923,108 @@ function filtrarGer() {
 }
 
 function editarQuestao(id) { abrirCadastroQuestao(id); }
+
+// ===== RESOLUÇÃO IA p/ questão JÁ PUBLICADA (atualiza só a resolução) =====
+// Não exclui, não cria versão nova, não conflita com hash_norm.
+function abrirResolucaoIA(id) {
+  const q = (state.questoes || []).find(x => x.id === id);
+  if (!q) { alert('Questão não encontrada.'); return; }
+  const enunEsc = (q.enunciado || '').replace(/</g, '&lt;');
+  const resAtual = (q.explicacao || '').replace(/</g, '&lt;');
+  const figuraPend = /!\[[^\]]*\]\(PENDENTE\)/.test(q.enunciado || '');
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalResIA()">
+      <div class="modal" style="max-width:720px;">
+        <h2>Resolução comentada — questão #${q.id}</h2>
+        <p style="font-size:13px;color:var(--radix-text-muted);max-height:120px;overflow:auto;border:1px solid var(--radix-line);border-radius:8px;padding:8px;">
+          ${enunEsc}
+        </p>
+        <div class="form-group"><label>Resolução (rascunho editável)</label>
+          <textarea id="resia-txt" rows="9">${resAtual}</textarea>
+          <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" type="button" id="resia-btn" onclick="gerarResolucaoIApublicada(${q.id})">✨ Gerar com IA</button>
+            <button class="btn btn-secondary" type="button" onclick="document.getElementById('resia-txt').value='';">Limpar</button>
+          </div>
+          <p style="font-size:12px;color:var(--radix-text-muted);margin-top:6px;">
+            A IA gera um rascunho. Você revisa, edita e só então salva. Nada é publicado/aprovado automaticamente.
+            ${figuraPend ? '<br><strong>⚠ Depende de figura pendente:</strong> a IA fará só uma resolução parcial.' : ''}
+          </p>
+        </div>
+        <p id="resia-msg" style="font-size:13px;min-height:18px;"></p>
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalResIA()">Fechar</button>
+          <button class="btn btn-success" onclick="salvarResolucaoIA(${q.id})">Salvar resolução</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-resia">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+function fecharModalResIA() {
+  const m = document.getElementById('modal-resia');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+async function gerarResolucaoIApublicada(id) {
+  const q = (state.questoes || []).find(x => x.id === id);
+  if (!q) return;
+  const btn = document.getElementById('resia-btn');
+  const msg = document.getElementById('resia-msg');
+  const setM = (t,c)=>{ if(msg){msg.textContent=t;msg.style.color=c||'var(--radix-text-muted)';} };
+  const alternativas = (q.alternativas || []).map((a, i) => ({
+    letra: String.fromCharCode(65 + i),
+    texto: String(a).replace(/^[A-E]\)\s*/, '').trim()
+  }));
+  const figuraPend = /!\[[^\]]*\]\(PENDENTE\)/.test(q.enunciado || '');
+  const payload = {
+    numero: null,
+    tema: q.tema || '',
+    nivel_enem: '',
+    enunciado: q.enunciado || '',
+    alternativas,
+    gabarito: (q.correta != null && q.correta >= 0) ? String.fromCharCode(65 + q.correta) : '',
+    possui_figura: !!(q.imagens && q.imagens.length) || !!q.alternativasImg || figuraPend,
+    figura_pendente: figuraPend,
+    imagens: Array.isArray(q.imagens) ? q.imagens : []
+  };
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Gerando…'; }
+  setM('Gerando resolução com IA…');
+  try {
+    const { data, error } = await sb.functions.invoke('gerar-resolucao', { body: payload });
+    if (error) throw error;
+    const texto = (data && (data.resolucao || data.texto)) || '';
+    if (!texto) throw new Error('A IA não retornou texto.');
+    document.getElementById('resia-txt').value = texto;
+    setM('✓ Rascunho gerado. Revise e edite antes de salvar.', 'var(--radix-success)');
+  } catch (e) {
+    console.error('Erro IA:', e);
+    setM('Erro ao gerar: ' + (e.message || JSON.stringify(e)) +
+         ' — confira a Edge Function/credito.', 'var(--radix-red)');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Gerar com IA'; }
+  }
+}
+async function salvarResolucaoIA(id) {
+  const msg = document.getElementById('resia-msg');
+  const setM = (t,c)=>{ if(msg){msg.textContent=t;msg.style.color=c||'var(--radix-text-muted)';} };
+  const texto = (document.getElementById('resia-txt').value || '').trim();
+  if (!texto) { setM('Escreva ou gere uma resolução antes de salvar.', 'var(--radix-red)'); return; }
+  setM('Salvando…');
+  try {
+    const { error } = await sb.rpc('fn_set_resolucao',
+      { p_questao_id: id, p_tipo: 'comentada', p_texto: texto, p_video_url: null });
+    if (error) throw error;
+    const frescas = await carregarQuestoesDoBanco();
+    if (frescas) state.questoes = frescas;
+    fecharModalResIA();
+    if (state.view === 'gerenciar') filtrarGer();
+    alert('Resolução salva na questão #' + id + '.');
+  } catch (e) {
+    console.error('Erro ao salvar resolução:', e);
+    setM('Erro ao salvar: ' + (e.message || JSON.stringify(e)) +
+         ' — rodou o RPC_RESOLUCAO.sql? está logado como professor?', 'var(--radix-red)');
+  }
+}
 
 async function excluirQuestao(id) {
   if (!confirm('Tem certeza que deseja excluir esta questão?')) return;
