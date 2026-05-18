@@ -3794,6 +3794,14 @@ function formatarEnunciado(texto) {
     return '<span class="frac"><span class="frac-num">' + num.trim() + '</span><span class="frac-den">' + den.trim() + '</span></span>';
   });
 
+  // 7.b) Preserva as quebras de linha do texto original (listas, passos de
+  //      enunciado). Sem isso o HTML junta tudo numa linha só. 2+ quebras =
+  //      separação de parágrafo; 1 quebra = nova linha.
+  s = s.replace(/\r\n?/g, '\n')
+       .replace(/\n[ \t]*\n[ \t]*\n+/g, '<br><br>')
+       .replace(/\n{2}/g, '<br><br>')
+       .replace(/\n/g, '<br>');
+
   // 8) Re-injetar blocos KaTeX renderizados (extraídos no início)
   if (_katexBlocks.length > 0) {
     s = s.replace(/\u0000KATEX(\d+)\u0000/g, (m, idx) => _katexBlocks[parseInt(idx)] || '');
@@ -3805,9 +3813,11 @@ function formatarEnunciado(texto) {
 function sanitizarTextoQuestao(s) {
   if (!s || typeof s !== 'string') return s;
   return s
-    .replace(/\\n/g, ' ')      // sequências literais "\n" (barra + n) vindas do import
-    .replace(/[\r\n]+/g, ' ')  // quebras de linha reais
-    .replace(/[ \t]+/g, ' ')    // colapsa espaços/tabs múltiplos
+    .replace(/\\r\\n|\\n/g, '\n') // literais "\n"/"\r\n" do import -> quebra REAL
+    .replace(/\r\n?/g, '\n')      // CRLF/CR -> LF
+    .replace(/[ \t]+/g, ' ')       // colapsa espaços/tabs (NÃO toca em quebra de linha)
+    .replace(/ *\n */g, '\n')      // remove espaços ao redor das quebras
+    .replace(/\n{3,}/g, '\n\n')    // no máximo uma linha em branco
     .replace(/ +([.,;:!?])/g, '$1') // tira espaço antes de pontuação
     .trim();
 }
