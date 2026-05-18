@@ -3303,6 +3303,181 @@
   .katex { font-size: 1.05em; }
   .katex-display { margin: 12px 0 !important; }
 
+/* ===================================================================
+   1. DESIGN SYSTEM: INPUTS E FORMS (Padrão V3)
+   =================================================================== */
+.form-group { margin-bottom: 18px; }
+.form-group label { 
+  display: block; 
+  font-size: 12.5px !important;
+  color: var(--radix-text-2) !important; 
+  margin-bottom: 7px !important;
+  font-weight: 600 !important;
+}
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 13px 14px !important;
+  border: 1px solid var(--radix-line-2) !important;
+  border-radius: 12px !important; /* Arredondamento V3 */
+  font-size: 14.5px !important;
+  font-family: 'Inter', sans-serif !important;
+  background: var(--radix-bg-2) !important;
+  color: var(--radix-text) !important;
+  transition: border .15s, box-shadow .15s !important;
+  margin-bottom: 0 !important;
+}
+.form-group input::placeholder, 
+.form-group textarea::placeholder { color: var(--radix-text-muted); }
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  outline: none !important;
+  border-color: var(--radix-cyan) !important;
+  box-shadow: 0 0 0 4px rgba(34,211,238,0.15) !important;
+}
+
+/* ===================================================================
+   2. DESIGN SYSTEM: BOTÕES UNIFICADOS (Padrão V3)
+   =================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px; /* Tamanho e respiro confortáveis */
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  font-family: 'Inter', sans-serif !important;
+  cursor: pointer;
+  border: 1px solid transparent !important;
+  transition: transform .1s, filter .15s, box-shadow .15s !important;
+  background: var(--radix-grad-brand) !important;
+  color: #0e1a36 !important;
+  box-shadow: 0 8px 24px -10px rgba(34,211,238,.45) !important;
+}
+.btn:hover { 
+  filter: brightness(1.08); 
+  transform: translateY(-2px); 
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Variantes de Botões */
+.btn-secondary {
+  background: var(--radix-surface-2) !important;
+  color: var(--radix-text) !important;
+  border: 1px solid var(--radix-line-2) !important;
+  box-shadow: none !important;
+}
+.btn-secondary:hover { 
+  background: var(--radix-surface-3) !important; 
+  border-color: var(--radix-cyan) !important;
+}
+
+.btn-danger { 
+  background: var(--radix-grad-coral) !important; 
+  color: #fff !important; 
+  box-shadow: 0 8px 24px -10px rgba(255,122,92,.45) !important;
+}
+
+.btn-success { 
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important; 
+  color: #052e16 !important; 
+  box-shadow: 0 8px 24px -10px rgba(52,211,153,.45) !important;
+}
+
+/* ===================================================================
+   3. DESIGN SYSTEM: MODAIS (Telas flutuantes)
+   =================================================================== */
+.modal-overlay { 
+  background: rgba(8, 14, 30, 0.75) !important; 
+  backdrop-filter: blur(5px); /* Efeito moderno de desfoque no fundo */
+  -webkit-backdrop-filter: blur(5px);
+}
+.modal {
+  background: var(--radix-surface) !important;
+  border: 1px solid var(--radix-line) !important;
+  border-radius: 18px !important; /* Mais arredondado */
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+  padding: 32px 36px !important;
+}
+.modal h2, .modal h3 { 
+  color: var(--radix-text) !important; 
+  letter-spacing: -0.5px;
+  margin-top: 0;
+}
+.modal-acoes { 
+  border-top: 1px solid var(--radix-line) !important; 
+  padding-top: 20px !important;
+  margin-top: 24px !important;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ===================================================================
+   4. DESIGN SYSTEM: TABELAS E BOTÕES DE AÇÃO
+   =================================================================== */
+.v3-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--radix-surface);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--radix-line);
+  font-size: 13.5px;
+}
+.v3-table th {
+  background: var(--radix-surface-2);
+  color: var(--radix-cyan);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11.5px;
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--radix-line);
+}
+.v3-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--radix-line);
+  color: var(--radix-text-2);
+  vertical-align: middle;
+}
+.v3-table tbody tr:hover { background: rgba(34,211,238,0.04); }
+.v3-table tr:last-child td { border-bottom: none; }
+
+/* Novo botão quadrado só para ícones */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--radix-line-2);
+  background: var(--radix-surface-2);
+  color: var(--radix-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.btn-icon:hover {
+  background: var(--radix-surface-3);
+  border-color: var(--radix-cyan);
+  color: var(--radix-cyan);
+  transform: translateY(-2px);
+}
+/* Cores ao passar o mouse */
+.btn-icon.success:hover { border-color: var(--radix-success); color: var(--radix-success); }
+.btn-icon.danger:hover { border-color: var(--radix-coral); color: var(--radix-coral); }
+
 </style>
 </head>
 <body>
@@ -3644,7 +3819,7 @@ function formatarEnunciado(texto) {
   // PROTEÇÃO MOEDA: "R$" é dinheiro, não delimitador de fórmula. Esconde o
   // cifrão de moeda ANTES do KaTeX (senão dois "R$" viram um span de fórmula
   // e embaralham o texto entre eles). Restaurado após a extração de fórmulas.
-  s = s.replace(/R\$/g, ' RCASH ');
+  s = s.replace(/R\$/g, ' RCASH ');
   // $$...$$ (display)
   s = s.replace(/\$\$([^$]+?)\$\$/g, (m, tex) => _stashKatex(tex.trim(), true) || m);
   // $...$ (inline) — evita capturar moeda "$ 100" exigindo que o conteúdo tenha letra ou comando \
@@ -3654,7 +3829,7 @@ function formatarEnunciado(texto) {
     return _stashKatex(t, false) || m;
   });
   // restaura o cifrão de moeda como texto normal (KaTeX já não o vê mais)
-  s = s.replace(/ RCASH /g, 'R$');
+  s = s.replace(/ RCASH /g, 'R$');
 
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
 
@@ -6816,65 +6991,39 @@ async function salvarQuestao(idEdicao, modo) {
   }
 }
 
-
 function renderGerenciarQuestoes() {
   state.view = 'gerenciar';
   const main = document.getElementById('main-content');
   main.innerHTML = `
-    <style>
-      .gb-wrap{max-width:1100px;margin:0 auto;}
-      .gb-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px;}
-      .gb-head h2{margin:0;}
-      .gb-actions{display:flex;gap:8px;flex-wrap:wrap;}
-      .gb-actions .btn{padding:9px 14px;font-size:13px;}
-      .gb-card{background:var(--radix-surface-2);border:1px solid var(--radix-line);border-radius:14px;padding:14px 16px;margin-bottom:16px;}
-      .gb-filtros{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
-      .gb-filtros select{min-width:240px;padding:10px 12px;border-radius:10px;background:var(--radix-surface);color:var(--radix-text);border:1px solid var(--radix-line-2);}
-      .gb-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--radix-surface-2);border:1px solid var(--radix-line);border-radius:12px;padding:10px 14px;margin-bottom:12px;}
-      .gb-toolbar .gb-stat{font-size:13px;color:var(--radix-text-2);}
-      .gb-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--radix-text-2);background:var(--radix-surface);padding:6px 10px;border-radius:999px;border:1px solid var(--radix-line-2);cursor:pointer;}
-      .gb-chk input{accent-color:var(--radix-cyan);}
-      .gb-spacer{flex:1;}
-      .gb-sel{font-size:13px;color:var(--radix-text-2);}
-      .gb-tablewrap{border:1px solid var(--radix-line);border-radius:14px;overflow:hidden;background:var(--radix-surface);}
-      table.gb-table{width:100%;border-collapse:collapse;font-size:13px;}
-      table.gb-table th{position:sticky;top:0;background:var(--radix-surface-3);color:var(--radix-text);text-align:left;padding:11px 12px;font-weight:600;border-bottom:1px solid var(--radix-line-2);}
-      table.gb-table td{padding:10px 12px;border-bottom:1px solid var(--radix-line);color:var(--radix-text-2);vertical-align:middle;}
-      table.gb-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
-      table.gb-table tbody tr:hover{background:rgba(34,211,238,0.06);}
-      table.gb-table tr:last-child td{border-bottom:none;}
-      .gb-enun{color:var(--radix-text);max-width:420px;}
-      .gb-pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;}
-      .gb-pill-ok{background:rgba(34,211,238,0.16);color:var(--radix-cyan);}
-      .gb-pill-no{background:rgba(245,158,11,0.16);color:#f59e0b;}
-      .gb-acoes{display:flex;gap:6px;white-space:nowrap;}
-      .gb-acoes .btn{padding:6px 10px;font-size:12px;}
-      .gb-cb{width:16px;height:16px;accent-color:var(--radix-cyan);cursor:pointer;}
-    </style>
-    <div class="gb-wrap">
-      <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Banco</div>
-      <div class="gb-head">
-        <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>Gerenciar Banco</h2>
-        <div class="gb-actions">
-          <button class="btn" onclick="abrirCadastroQuestao()">+ Nova questão</button>
-          <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
-          <button class="btn btn-secondary" onclick="renderRevisarImportacoes()">Fila de revisão</button>
-          <button class="btn btn-danger" onclick="limparBancoQuestoes()">Limpar banco</button>
-        </div>
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Banco</div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 24px;">
+      <h2 class="section-title" style="margin:0;">
+        <span class="section-title-accent"></span>
+        <span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+        Gerenciar Banco
+      </h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" onclick="abrirCadastroQuestao()">+ Nova questão</button>
+        <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
+        <button class="btn btn-secondary" onclick="renderRevisarImportacoes()">Fila de revisão</button>
+        <button class="btn btn-danger" onclick="limparBancoQuestoes()">Limpar banco</button>
       </div>
-      <div class="gb-filtros">
-        <label style="font-size:13px;color:var(--radix-text-muted);">Tema:</label>
-        <select id="ger-tema" onchange="filtrarGer()">
-          <option value="">Todos os temas</option>
-          ${MODULOS.map(mod => `
-            <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
-              ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
-            </optgroup>
-          `).join('')}
-        </select>
-      </div>
-      <div id="ger-lista"></div>
     </div>
+
+    <div class="form-group" style="max-width: 320px;">
+      <label>Filtrar por Tema:</label>
+      <select id="ger-tema" onchange="filtrarGer()">
+        <option value="">Todos os temas</option>
+        ${MODULOS.map(mod => `
+          <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
+            ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
+          </optgroup>
+        `).join('')}
+      </select>
+    </div>
+
+    <div id="ger-lista"></div>
   `;
   filtrarGer();
 }
@@ -6896,12 +7045,9 @@ function diagnosticarQuestao(q) {
   if (q.correta == null || q.correta < 0 || (Array.isArray(q.alternativas) && q.correta >= q.alternativas.length)) {
     probs.push('Gabarito inválido');
   }
-  // Resolução é OPCIONAL (Ajuste 3): ausência NÃO é defeito — não marca a questão.
-  // Imagem Markdown apontando para caminho local (que não existe no servidor)
   const allText = (q.enunciado || '') + ' ' + (q.explicacao || '') + ' ' + (q.alternativas || []).join(' ');
   const imgsAusentes = (allText.match(/!\[[^\]]*\]\((?!https?:|data:)[^)]+\)/g) || []).length;
   if (imgsAusentes > 0) probs.push(imgsAusentes + ' imagem' + (imgsAusentes>1?'ns':'') + ' ausente' + (imgsAusentes>1?'s':''));
-  // Tabela markdown corrompida: presença de separadores Pandoc OU sequência de 4+ pipes
   const temTabelaQuebrada = /\+[-=]{3,}|\|\s*\|\s*\||(?:\|[^|\n]{0,20}){4,}\|/.test(allText);
   if (temTabelaQuebrada) probs.push('Tabela corrompida (precisa reformular)');
   return probs;
@@ -6932,54 +7078,84 @@ function filtrarGer() {
   let qs = state.questoes.slice();
   if (t) qs = qs.filter(q => q.tema === t);
   qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q), _res: temResolucao(q) }));
+  
   const totalProb = qs.filter(q => q._probs.length > 0).length;
   const totalSemRes = qs.filter(q => !q._res).length;
   if (soProb) qs = qs.filter(q => q._probs.length > 0);
   if (soSemRes) qs = qs.filter(q => !q._res);
+  
   const cont = document.getElementById('ger-lista');
+
   cont.innerHTML = `
-    <div class="gb-toolbar">
-      <span class="gb-stat">📝 <strong>${totalSemRes}</strong> sem resolução · <strong>${totalProb}</strong> c/ problema · ${qs.length} exibida(s)</span>
-      <label class="gb-chk"><input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"> só sem resolução</label>
-      <label class="gb-chk"><input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"> só com problemas</label>
-      <span class="gb-spacer"></span>
-      <span class="gb-sel"><strong id="ger-sel-count">${state._gerSel.size}</strong> selecionada(s)</span>
-      <button class="btn btn-secondary" style="padding:7px 12px;font-size:12px;" onclick="limparGerSel()">Limpar seleção</button>
-      <button class="btn" style="padding:7px 12px;font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução nas selecionadas</button>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--radix-surface-2); border:1px solid var(--radix-line); border-radius:12px; padding:12px 16px; margin-bottom:16px;">
+      <span style="font-size:13px; color:var(--radix-text-2);">📝 <strong>${totalSemRes}</strong> sem resolução · <strong>${totalProb}</strong> c/ problema · ${qs.length} exibida(s)</span>
+
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--radix-text-2);cursor:pointer;margin-left:12px;">
+        <input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"> Só sem resolução
+      </label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--radix-text-2);cursor:pointer;">
+        <input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"> Só com problemas
+      </label>
+
+      <span style="flex:1;"></span>
+
+      <span style="font-size:13px; color:var(--radix-text-2);"><strong id="ger-sel-count">${state._gerSel.size}</strong> selecionada(s)</span>
+      <button class="btn btn-secondary" style="padding:8px 14px; font-size:12px;" onclick="limparGerSel()">Limpar seleção</button>
+      <button class="btn" style="padding:8px 14px; font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução em lote</button>
     </div>
-    <p id="ger-lote-msg" style="font-size:13px;min-height:18px;margin:4px 0 12px;"></p>
-    <div class="gb-tablewrap">
-      <table class="gb-table">
-        <thead><tr>
-          <th style="width:36px;text-align:center;"><input type="checkbox" class="gb-cb" title="Selecionar todas (visíveis)" onchange="toggleGerSelAll(this.checked)"></th>
-          <th style="width:40px;text-align:center;">⚠</th><th style="width:160px;">Tema</th><th>Enunciado</th>
-          <th style="width:90px;text-align:center;">Resolução</th><th style="width:80px;">Dif.</th><th style="width:230px;">Ações</th>
-        </tr></thead>
+
+    <p id="ger-lote-msg" style="font-size:13px; min-height:18px; margin-bottom:12px; color:var(--radix-text-muted);"></p>
+
+    <div style="overflow-x: auto;">
+      <table class="v3-table">
+        <thead>
+          <tr>
+            <th style="width:40px;text-align:center;"><input type="checkbox" style="cursor:pointer;" title="Selecionar todas visíveis" onchange="toggleGerSelAll(this.checked)"></th>
+            <th style="width:40px;text-align:center;">⚠</th>
+            <th style="width:200px;">Tema</th>
+            <th>Enunciado</th>
+            <th style="text-align:center; width:100px;">Resolução</th>
+            <th style="width:80px;">Dificuldade</th>
+            <th style="text-align:right; width:140px;">Ações</th>
+          </tr>
+        </thead>
         <tbody>
-          ${qs.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--radix-text-muted);">Nenhuma questão com esses filtros.</td></tr>' : ''}
+          ${qs.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--radix-text-muted);">Nenhuma questão encontrada com esses filtros.</td></tr>' : ''}
           ${qs.map(q => {
             const tema = TEMAS.find(x => x.id === q.tema);
             const probs = q._probs;
+            
             const statusCell = probs.length > 0
-              ? `<span class="diag-badge" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
-              : '<span class="diag-ok" title="OK">✓</span>';
+              ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:rgba(255,122,92,0.15);color:var(--radix-coral);border-radius:50%;font-size:13px;font-weight:700;cursor:help;" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
+              : '<span style="color:var(--radix-success);opacity:0.5;font-size:14px;" title="OK">✓</span>';
+            
             const resCell = q._res
-              ? '<span class="gb-pill gb-pill-ok">✓ tem</span>'
-              : '<span class="gb-pill gb-pill-no">sem</span>';
+              ? '<span style="background:rgba(34,211,238,0.15);color:var(--radix-cyan);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;">✓ Tem</span>'
+              : '<span style="background:var(--radix-bg-2);color:var(--radix-text-muted);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;">Sem</span>';
+            
             const sel = state._gerSel.has(q.id) ? 'checked' : '';
+            
             return `
-              <tr class="${probs.length > 0 ? 'tr-problemas' : ''}">
-                <td style="text-align:center;"><input type="checkbox" class="ger-cb gb-cb" value="${q.id}" ${sel} onchange="toggleGerSel(${q.id}, this.checked)"></td>
+              <tr style="${probs.length > 0 ? 'background: rgba(255,122,92,0.04);' : ''}">
+                <td style="text-align:center;"><input type="checkbox" class="ger-cb" style="cursor:pointer;" value="${q.id}" ${sel} onchange="toggleGerSel(${q.id}, this.checked)"></td>
                 <td style="text-align:center;">${statusCell}</td>
                 <td><span class="tag tag-tema">${tema ? tema.nome : '—'}</span></td>
-                <td class="gb-enun">${q.enunciado.substring(0, 110)}${q.enunciado.length > 110 ? '…' : ''}</td>
+                <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${q.enunciado.replace(/"/g,'&quot;')}">${q.enunciado}</td>
                 <td style="text-align:center;">${resCell}</td>
-                <td>${q.dificuldade}</td>
-                <td><div class="gb-acoes">
-                  <button class="btn btn-secondary" onclick="abrirCadastroQuestao(${q.id})">Editar</button>
-                  <button class="btn btn-secondary" onclick="abrirResolucaoIA(${q.id})">✨ Resol.</button>
-                  <button class="btn btn-danger" onclick="excluirQuestao(${q.id})">Excluir</button>
-                </div></td>
+                <td style="text-transform:capitalize;">${q.dificuldade || '—'}</td>
+                <td style="text-align:right; white-space:nowrap;">
+                  <div style="display:flex;gap:6px;justify-content:flex-end;">
+                    <button class="btn-icon" title="Editar Questão" onclick="abrirCadastroQuestao(${q.id})">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                    </button>
+                    <button class="btn-icon" title="Gerar Resolução com IA" onclick="abrirResolucaoIA(${q.id})">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M21 5c0 1.66-4 3-9 3S3 6.66 3 5c0-1.66 4-3 9-3s9 1.34 9 3z"/></svg>
+                    </button>
+                    <button class="btn-icon danger" title="Excluir" onclick="excluirQuestao(${q.id})">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </td>
               </tr>
             `;
           }).join('')}
@@ -8013,71 +8189,96 @@ async function renderGerenciarAlunos() {
 
 function renderListaAlunos(perfis, statusAtual) {
   return `
-    <table>
-      <thead>
-        <tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Perfil</th><th>Cadastro</th><th>Último acesso</th><th style="text-align:right;">Ações</th></tr>
-      </thead>
-      <tbody>
-        ${perfis.map(p => {
-          const d = new Date(p.criado_em);
-          const dataFmt = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-          const isProf = p.perfil === 'professor';
-          const telFmt = p.telefone
-            ? p.telefone.replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3')
-            : '—';
-          const waLink = p.telefone
-            ? `<a href="https://wa.me/55${p.telefone.replace(/\D/g,'')}" target="_blank" style="color:#25D366;text-decoration:none;font-weight:600;" title="Abrir conversa no WhatsApp">${telFmt}</a>`
-            : '<span style="color:var(--radix-gray-light);">—</span>';
-          // Último acesso
-          let ultAcessoHtml = '<span style="color:var(--radix-text-muted);font-size:12px;">Nunca</span>';
-          if (p.ultimo_acesso) {
-            const dUlt = new Date(p.ultimo_acesso);
-            const diffMs = Date.now() - dUlt.getTime();
-            const diffMin = Math.floor(diffMs / 60000);
-            const diffH = Math.floor(diffMin / 60);
-            const diffD = Math.floor(diffH / 24);
-            let label, cor;
-            if (diffMin < 5) { label = 'Online agora'; cor = 'var(--radix-success)'; }
-            else if (diffMin < 60) { label = `há ${diffMin} min`; cor = 'var(--radix-success)'; }
-            else if (diffH < 24) { label = `há ${diffH}h`; cor = 'var(--radix-cyan)'; }
-            else if (diffD < 7) { label = `há ${diffD}d`; cor = 'var(--radix-text-2)'; }
-            else if (diffD < 30) { label = `há ${diffD}d`; cor = 'var(--radix-warning)'; }
-            else { label = dUlt.toLocaleDateString('pt-BR'); cor = 'var(--radix-coral)'; }
-            ultAcessoHtml = `<span style="color:${cor};font-size:12px;font-weight:600;">${label}</span>`;
-          }
-          return `
-            <tr>
-              <td>
-                <div style="display:flex;align-items:center;gap:10px;">
-                  ${avatarHTML(p, 32)}
-                  <strong>${p.nome}</strong>
-                </div>
-              </td>
-              <td style="font-size:12px;color:var(--radix-gray-light);">${p.email}</td>
-              <td style="font-size:12px;">${waLink}</td>
-              <td>${isProf ? '👨‍🏫 Professor' : '🎓 Aluno'}</td>
-              <td style="font-size:12px;color:var(--radix-gray-light);">${dataFmt}</td>
-              <td>${ultAcessoHtml}</td>
-              <td style="text-align:right;white-space:nowrap;">
-                ${isProf ? '<span style="color:var(--radix-gray-light);font-size:12px;">—</span>' : `
-                  <button class="btn btn-secondary" style="padding:0;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;" title="Editar" aria-label="Editar" onclick="abrirEditarAluno('${p.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>
-                  ${statusAtual === 'pendente' ? `
-                    <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Aprovar</button>
-                    <button class="btn btn-danger" style="padding:0;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;" title="Bloquear" aria-label="Bloquear" onclick="mudarStatusAluno('${p.id}','bloqueado')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
-                  ` : statusAtual === 'aprovado' ? `
-                    <button class="btn btn-secondary" style="padding:0;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;" title="Reenviar senha" aria-label="Reenviar senha" onclick="reenviarSenhaAluno('${p.email}','${p.nome.replace(/'/g, '\\\'')}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 8.15-8.15a2.83 2.83 0 0 1 4 4l-1 1-2-2-2 2-2-2-2 2-2-2-1.15 1.15"/></svg></button>
-                    <button class="btn btn-danger" style="padding:0;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;" title="Bloquear" aria-label="Bloquear" onclick="mudarStatusAluno('${p.id}','bloqueado')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
-                  ` : `
-                    <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" onclick="mudarStatusAluno('${p.id}','aprovado')">✅ Reativar</button>
+    <div style="overflow-x: auto; margin-bottom: 24px;">
+      <table class="v3-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>WhatsApp</th>
+            <th>Perfil</th>
+            <th>Cadastro</th>
+            <th>Último acesso</th>
+            <th style="text-align:right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${perfis.map(p => {
+            const d = new Date(p.criado_em);
+            const dataFmt = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const isProf = p.perfil === 'professor';
+            const telFmt = p.telefone ? p.telefone.replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3') : '—';
+            const waLink = p.telefone
+              ? `<a href="https://wa.me/55${p.telefone.replace(/\D/g,'')}" target="_blank" style="color:var(--radix-success);text-decoration:none;font-weight:600;">${telFmt}</a>`
+              : '<span style="color:var(--radix-gray-light);">—</span>';
+
+            let ultAcessoHtml = '<span style="color:var(--radix-text-muted);font-size:12px;">Nunca</span>';
+            if (p.ultimo_acesso) {
+              const dUlt = new Date(p.ultimo_acesso);
+              const diffMs = Date.now() - dUlt.getTime();
+              const diffMin = Math.floor(diffMs / 60000);
+              const diffH = Math.floor(diffMin / 60);
+              const diffD = Math.floor(diffH / 24);
+              let label, cor;
+              if (diffMin < 5) { label = 'Online agora'; cor = 'var(--radix-success)'; }
+              else if (diffMin < 60) { label = `há ${diffMin} min`; cor = 'var(--radix-success)'; }
+              else if (diffH < 24) { label = `há ${diffH}h`; cor = 'var(--radix-cyan)'; }
+              else if (diffD < 7) { label = `há ${diffD}d`; cor = 'var(--radix-text-2)'; }
+              else if (diffD < 30) { label = `há ${diffD}d`; cor = 'var(--radix-warning)'; }
+              else { label = dUlt.toLocaleDateString('pt-BR'); cor = 'var(--radix-coral)'; }
+              ultAcessoHtml = `<span style="color:${cor};font-size:12px;font-weight:600;">${label}</span>`;
+            }
+
+            return `
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;color:var(--radix-text);">
+                    ${avatarHTML(p, 32)}
+                    <strong>${p.nome}</strong>
+                  </div>
+                </td>
+                <td>${p.email}</td>
+                <td>${waLink}</td>
+                <td>${isProf ? 'Professor' : 'Aluno'}</td>
+                <td><span style="color:var(--radix-text-muted);">${dataFmt}</span></td>
+                <td>${ultAcessoHtml}</td>
+                <td style="text-align:right;white-space:nowrap;">
+                  ${isProf ? '<span style="color:var(--radix-text-muted);">—</span>' : `
+                    <div style="display:flex;gap:6px;justify-content:flex-end;">
+                      <button class="btn-icon" title="Editar Aluno" onclick="abrirEditarAluno('${p.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                      </button>
+
+                      ${statusAtual === 'pendente' || statusAtual === 'bloqueado' ? `
+                        <button class="btn-icon success" title="Aprovar / Reativar" onclick="mudarStatusAluno('${p.id}','aprovado')">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                      ` : ''}
+
+                      ${statusAtual === 'aprovado' ? `
+                        <button class="btn-icon" title="Reenviar Senha" onclick="reenviarSenhaAluno('${p.email}','${p.nome.replace(/'/g, '\\\'')}')">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </button>
+                      ` : ''}
+
+                      ${statusAtual === 'aprovado' || statusAtual === 'pendente' ? `
+                        <button class="btn-icon danger" title="Bloquear" onclick="mudarStatusAluno('${p.id}','bloqueado')">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        </button>
+                      ` : ''}
+
+                      <button class="btn-icon danger" title="Excluir" onclick="excluirAluno('${p.id}','${p.nome.replace(/'/g, '\\\'')}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
                   `}
-                  <button class="btn btn-danger" style="padding:0;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;background:#7F1D1D;" title="Excluir" aria-label="Excluir" onclick="excluirAluno('${p.id}','${p.nome.replace(/'/g, '\\\'')}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></button>
-                `}
-              </td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    </table>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
