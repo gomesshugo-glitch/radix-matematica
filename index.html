@@ -6873,29 +6873,54 @@ function diagnosticarQuestao(q) {
   return probs;
 }
 
+function temResolucao(q) { return ((q && q.explicacao) || '').trim().length > 0; }
+function _gerSelInit() { if (!state._gerSel) state._gerSel = new Set(); return state._gerSel; }
+function toggleGerSel(id, ch) {
+  const s = _gerSelInit();
+  if (ch) s.add(id); else s.delete(id);
+  const c = document.getElementById('ger-sel-count'); if (c) c.textContent = s.size;
+}
+function toggleGerSelAll(ch) {
+  const s = _gerSelInit();
+  document.querySelectorAll('.ger-cb').forEach(cb => {
+    cb.checked = ch; const id = Number(cb.value);
+    if (ch) s.add(id); else s.delete(id);
+  });
+  const c = document.getElementById('ger-sel-count'); if (c) c.textContent = s.size;
+}
+function limparGerSel() { state._gerSel = new Set(); filtrarGer(); }
+
 function filtrarGer() {
+  _gerSelInit();
   const t = document.getElementById('ger-tema').value;
   const soProb = document.getElementById('ger-so-problemas')?.checked;
+  const soSemRes = document.getElementById('ger-so-semres')?.checked;
   let qs = state.questoes.slice();
   if (t) qs = qs.filter(q => q.tema === t);
-  // Pre-computa diagnóstico
-  qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q) }));
+  qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q), _res: temResolucao(q) }));
   const totalProb = qs.filter(q => q._probs.length > 0).length;
+  const totalSemRes = qs.filter(q => !q._res).length;
   if (soProb) qs = qs.filter(q => q._probs.length > 0);
+  if (soSemRes) qs = qs.filter(q => !q._res);
   const cont = document.getElementById('ger-lista');
   cont.innerHTML = `
-    ${totalProb > 0 ? `
-      <div class="diag-alerta">
-        <span class="diag-icon">⚠️</span>
-        <span><strong>${totalProb}</strong> ${totalProb === 1 ? 'questão precisa' : 'questões precisam'} de revisão (alternativas faltando, enunciado curto, etc.)</span>
-        <label class="diag-toggle">
-          <input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()">
-          <span>mostrar só com problemas</span>
-        </label>
-      </div>
-    ` : ''}
+    <div class="diag-alerta" style="flex-wrap:wrap;gap:10px;">
+      <span class="diag-icon">📝</span>
+      <span><strong>${totalSemRes}</strong> sem resolução · <strong>${totalProb}</strong> c/ problema</span>
+      <label class="diag-toggle"><input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"><span>só sem resolução</span></label>
+      <label class="diag-toggle"><input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"><span>só com problemas</span></label>
+      <span style="flex:1;"></span>
+      <span><strong id="ger-sel-count">${state._gerSel.size}</strong> selecionada(s)</span>
+      <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="limparGerSel()">Limpar seleção</button>
+      <button class="btn" style="padding:6px 10px;font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução nas selecionadas</button>
+    </div>
+    <p id="ger-lote-msg" style="font-size:13px;min-height:18px;margin:4px 0;"></p>
     <table>
-      <thead><tr><th style="width:40px;">⚠</th><th>Tema</th><th>Enunciado</th><th>Dif.</th><th>Ações</th></tr></thead>
+      <thead><tr>
+        <th style="width:32px;"><input type="checkbox" title="Selecionar todas (visíveis)" onchange="toggleGerSelAll(this.checked)"></th>
+        <th style="width:34px;">⚠</th><th>Tema</th><th>Enunciado</th>
+        <th style="width:80px;">Resol.</th><th>Dif.</th><th>Ações</th>
+      </tr></thead>
       <tbody>
         ${qs.map(q => {
           const tema = TEMAS.find(x => x.id === q.tema);
@@ -6903,16 +6928,22 @@ function filtrarGer() {
           const statusCell = probs.length > 0
             ? `<span class="diag-badge" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
             : '<span class="diag-ok" title="OK">✓</span>';
+          const resCell = q._res
+            ? '<span class="diag-ok" title="Tem resolução">✓ tem</span>'
+            : '<span class="diag-badge" title="Sem resolução">— não</span>';
+          const sel = state._gerSel.has(q.id) ? 'checked' : '';
           return `
             <tr class="${probs.length > 0 ? 'tr-problemas' : ''}">
+              <td><input type="checkbox" class="ger-cb" value="${q.id}" ${sel} onchange="toggleGerSel(${q.id}, this.checked)"></td>
               <td>${statusCell}</td>
               <td><span class="tag tag-tema">${tema ? tema.nome : '—'}</span></td>
-              <td>${q.enunciado.substring(0, 90)}${q.enunciado.length > 90 ? '...' : ''}</td>
+              <td>${q.enunciado.substring(0, 80)}${q.enunciado.length > 80 ? '...' : ''}</td>
+              <td>${resCell}</td>
               <td>${q.dificuldade}</td>
-              <td>
-                <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="abrirCadastroQuestao(${q.id})">Editar</button>
-                <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="abrirResolucaoIA(${q.id})">✨ Resolução IA</button>
-                <button class="btn btn-danger" style="padding:6px 10px;font-size:12px;" onclick="excluirQuestao(${q.id})">Excluir</button>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-secondary" style="padding:6px 9px;font-size:12px;" onclick="abrirCadastroQuestao(${q.id})">Editar</button>
+                <button class="btn btn-secondary" style="padding:6px 9px;font-size:12px;" onclick="abrirResolucaoIA(${q.id})">✨ Resol.</button>
+                <button class="btn btn-danger" style="padding:6px 9px;font-size:12px;" onclick="excluirQuestao(${q.id})">Excluir</button>
               </td>
             </tr>
           `;
@@ -6920,6 +6951,58 @@ function filtrarGer() {
       </tbody>
     </table>
   `;
+}
+
+// Geração em LOTE: gera + salva a resolução das selecionadas (rascunho editável).
+async function gerarResolucaoLote() {
+  _gerSelInit();
+  const ids = [...state._gerSel];
+  if (!ids.length) { alert('Selecione ao menos uma questão (caixinhas à esquerda).'); return; }
+  const custo = (ids.length * 0.02).toFixed(2);
+  if (!confirm(
+      `Gerar resolução com IA para ${ids.length} questão(ões)?\n\n` +
+      `Custo estimado ≈ US$ ${custo} (~US$ 0,02 cada).\n` +
+      `O texto é salvo automaticamente; você pode revisar/editar depois pelo botão ✨ Resol.\n\nContinuar?`)) return;
+  const msg = document.getElementById('ger-lote-msg');
+  const setM = (t,c)=>{ if(msg){msg.textContent=t;msg.style.color=c||'var(--radix-text-muted)';} };
+  let okN = 0; const erros = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const q = (state.questoes || []).find(x => x.id === id);
+    setM(`Gerando ${i + 1}/${ids.length} (questão #${id})…`);
+    if (!q) { erros.push('#' + id + ': não encontrada'); continue; }
+    try {
+      const alternativas = (q.alternativas || []).map((a, j) => ({
+        letra: String.fromCharCode(65 + j),
+        texto: String(a).replace(/^[A-E]\)\s*/, '').trim()
+      }));
+      const figuraPend = /!\[[^\]]*\]\(PENDENTE\)/.test(q.enunciado || '');
+      const payload = {
+        numero: null, tema: q.tema || '', nivel_enem: '',
+        enunciado: q.enunciado || '', alternativas,
+        gabarito: (q.correta != null && q.correta >= 0) ? String.fromCharCode(65 + q.correta) : '',
+        possui_figura: !!(q.imagens && q.imagens.length) || !!q.alternativasImg || figuraPend,
+        figura_pendente: figuraPend,
+        imagens: Array.isArray(q.imagens) ? q.imagens : []
+      };
+      const { data, error } = await sb.functions.invoke('gerar-resolucao', { body: payload });
+      if (error) throw error;
+      const texto = (data && (data.resolucao || data.texto)) || '';
+      if (!texto) throw new Error('IA não retornou texto');
+      const { error: e2 } = await sb.rpc('fn_set_resolucao',
+        { p_questao_id: id, p_tipo: 'comentada', p_texto: texto, p_video_url: null });
+      if (e2) throw e2;
+      okN++;
+    } catch (e) {
+      erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+    }
+  }
+  const frescas = await carregarQuestoesDoBanco();
+  if (frescas) state.questoes = frescas;
+  state._gerSel = new Set();
+  filtrarGer();
+  alert(`Concluído.\n\nGeradas e salvas: ${okN}\nFalhas: ${erros.length}` +
+        (erros.length ? ('\n\n' + erros.slice(0, 12).join('\n')) : ''));
 }
 
 function editarQuestao(id) { abrirCadastroQuestao(id); }
