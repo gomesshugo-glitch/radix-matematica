@@ -6663,7 +6663,8 @@ function abrirCadastroQuestao(idEdicao) {
   const editando = idEdicao ? state.questoes.find(q => q.id === idEdicao) : null;
   const main = document.getElementById('main-content');
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / ${editando ? 'Editar' : 'Cadastrar'} Questão</div>
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderGerenciarQuestoes()">Gerenciar Banco</a> / ${editando ? 'Editar' : 'Cadastrar'} Questão</div>
+    <button class="btn btn-secondary" style="margin-bottom:14px;" onclick="renderGerenciarQuestoes()">← Voltar ao banco</button>
     <h2 class="section-title"><span class="section-title-accent"></span>${editando ? '<span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></span>Editar' : '<span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>Cadastrar'} Questão</h2>
     <div class="config-box">
       <div class="form-group">
@@ -6820,27 +6821,60 @@ function renderGerenciarQuestoes() {
   state.view = 'gerenciar';
   const main = document.getElementById('main-content');
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Banco</div>
-    <h2 class="section-title has-actions">
-      <span><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>Gerenciar Banco</span>
-      <span style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
-        <button class="btn btn-secondary" onclick="renderRevisarImportacoes()">Fila de revisão</button>
-        <button class="btn btn-danger" onclick="limparBancoQuestoes()">Limpar banco</button>
-        <button class="btn" onclick="abrirCadastroQuestao()">+ Nova Questão</button>
-      </span>
-    </h2>
-    <div class="filtros">
-      <select id="ger-tema" onchange="filtrarGer()">
-        <option value="">Todos os temas</option>
-        ${MODULOS.map(mod => `
-          <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
-            ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
-          </optgroup>
-        `).join('')}
-      </select>
+    <style>
+      .gb-wrap{max-width:1100px;margin:0 auto;}
+      .gb-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px;}
+      .gb-head h2{margin:0;}
+      .gb-actions{display:flex;gap:8px;flex-wrap:wrap;}
+      .gb-actions .btn{padding:9px 14px;font-size:13px;}
+      .gb-card{background:var(--radix-surface-2);border:1px solid var(--radix-line);border-radius:14px;padding:14px 16px;margin-bottom:16px;}
+      .gb-filtros{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+      .gb-filtros select{min-width:240px;padding:10px 12px;border-radius:10px;background:var(--radix-surface);color:var(--radix-text);border:1px solid var(--radix-line-2);}
+      .gb-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--radix-surface-2);border:1px solid var(--radix-line);border-radius:12px;padding:10px 14px;margin-bottom:12px;}
+      .gb-toolbar .gb-stat{font-size:13px;color:var(--radix-text-2);}
+      .gb-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--radix-text-2);background:var(--radix-surface);padding:6px 10px;border-radius:999px;border:1px solid var(--radix-line-2);cursor:pointer;}
+      .gb-chk input{accent-color:var(--radix-cyan);}
+      .gb-spacer{flex:1;}
+      .gb-sel{font-size:13px;color:var(--radix-text-2);}
+      .gb-tablewrap{border:1px solid var(--radix-line);border-radius:14px;overflow:hidden;background:var(--radix-surface);}
+      table.gb-table{width:100%;border-collapse:collapse;font-size:13px;}
+      table.gb-table th{position:sticky;top:0;background:var(--radix-surface-3);color:var(--radix-text);text-align:left;padding:11px 12px;font-weight:600;border-bottom:1px solid var(--radix-line-2);}
+      table.gb-table td{padding:10px 12px;border-bottom:1px solid var(--radix-line);color:var(--radix-text-2);vertical-align:middle;}
+      table.gb-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
+      table.gb-table tbody tr:hover{background:rgba(34,211,238,0.06);}
+      table.gb-table tr:last-child td{border-bottom:none;}
+      .gb-enun{color:var(--radix-text);max-width:420px;}
+      .gb-pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;}
+      .gb-pill-ok{background:rgba(34,211,238,0.16);color:var(--radix-cyan);}
+      .gb-pill-no{background:rgba(245,158,11,0.16);color:#f59e0b;}
+      .gb-acoes{display:flex;gap:6px;white-space:nowrap;}
+      .gb-acoes .btn{padding:6px 10px;font-size:12px;}
+      .gb-cb{width:16px;height:16px;accent-color:var(--radix-cyan);cursor:pointer;}
+    </style>
+    <div class="gb-wrap">
+      <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Banco</div>
+      <div class="gb-head">
+        <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>Gerenciar Banco</h2>
+        <div class="gb-actions">
+          <button class="btn" onclick="abrirCadastroQuestao()">+ Nova questão</button>
+          <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
+          <button class="btn btn-secondary" onclick="renderRevisarImportacoes()">Fila de revisão</button>
+          <button class="btn btn-danger" onclick="limparBancoQuestoes()">Limpar banco</button>
+        </div>
+      </div>
+      <div class="gb-filtros">
+        <label style="font-size:13px;color:var(--radix-text-muted);">Tema:</label>
+        <select id="ger-tema" onchange="filtrarGer()">
+          <option value="">Todos os temas</option>
+          ${MODULOS.map(mod => `
+            <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
+              ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
+            </optgroup>
+          `).join('')}
+        </select>
+      </div>
+      <div id="ger-lista"></div>
     </div>
-    <div id="ger-lista"></div>
   `;
   filtrarGer();
 }
@@ -6904,52 +6938,54 @@ function filtrarGer() {
   if (soSemRes) qs = qs.filter(q => !q._res);
   const cont = document.getElementById('ger-lista');
   cont.innerHTML = `
-    <div class="diag-alerta" style="flex-wrap:wrap;gap:10px;">
-      <span class="diag-icon">📝</span>
-      <span><strong>${totalSemRes}</strong> sem resolução · <strong>${totalProb}</strong> c/ problema</span>
-      <label class="diag-toggle"><input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"><span>só sem resolução</span></label>
-      <label class="diag-toggle"><input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"><span>só com problemas</span></label>
-      <span style="flex:1;"></span>
-      <span><strong id="ger-sel-count">${state._gerSel.size}</strong> selecionada(s)</span>
-      <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="limparGerSel()">Limpar seleção</button>
-      <button class="btn" style="padding:6px 10px;font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução nas selecionadas</button>
+    <div class="gb-toolbar">
+      <span class="gb-stat">📝 <strong>${totalSemRes}</strong> sem resolução · <strong>${totalProb}</strong> c/ problema · ${qs.length} exibida(s)</span>
+      <label class="gb-chk"><input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"> só sem resolução</label>
+      <label class="gb-chk"><input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"> só com problemas</label>
+      <span class="gb-spacer"></span>
+      <span class="gb-sel"><strong id="ger-sel-count">${state._gerSel.size}</strong> selecionada(s)</span>
+      <button class="btn btn-secondary" style="padding:7px 12px;font-size:12px;" onclick="limparGerSel()">Limpar seleção</button>
+      <button class="btn" style="padding:7px 12px;font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução nas selecionadas</button>
     </div>
-    <p id="ger-lote-msg" style="font-size:13px;min-height:18px;margin:4px 0;"></p>
-    <table>
-      <thead><tr>
-        <th style="width:32px;"><input type="checkbox" title="Selecionar todas (visíveis)" onchange="toggleGerSelAll(this.checked)"></th>
-        <th style="width:34px;">⚠</th><th>Tema</th><th>Enunciado</th>
-        <th style="width:80px;">Resol.</th><th>Dif.</th><th>Ações</th>
-      </tr></thead>
-      <tbody>
-        ${qs.map(q => {
-          const tema = TEMAS.find(x => x.id === q.tema);
-          const probs = q._probs;
-          const statusCell = probs.length > 0
-            ? `<span class="diag-badge" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
-            : '<span class="diag-ok" title="OK">✓</span>';
-          const resCell = q._res
-            ? '<span class="diag-ok" title="Tem resolução">✓ tem</span>'
-            : '<span class="diag-badge" title="Sem resolução">— não</span>';
-          const sel = state._gerSel.has(q.id) ? 'checked' : '';
-          return `
-            <tr class="${probs.length > 0 ? 'tr-problemas' : ''}">
-              <td><input type="checkbox" class="ger-cb" value="${q.id}" ${sel} onchange="toggleGerSel(${q.id}, this.checked)"></td>
-              <td>${statusCell}</td>
-              <td><span class="tag tag-tema">${tema ? tema.nome : '—'}</span></td>
-              <td>${q.enunciado.substring(0, 80)}${q.enunciado.length > 80 ? '...' : ''}</td>
-              <td>${resCell}</td>
-              <td>${q.dificuldade}</td>
-              <td style="white-space:nowrap;">
-                <button class="btn btn-secondary" style="padding:6px 9px;font-size:12px;" onclick="abrirCadastroQuestao(${q.id})">Editar</button>
-                <button class="btn btn-secondary" style="padding:6px 9px;font-size:12px;" onclick="abrirResolucaoIA(${q.id})">✨ Resol.</button>
-                <button class="btn btn-danger" style="padding:6px 9px;font-size:12px;" onclick="excluirQuestao(${q.id})">Excluir</button>
-              </td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    </table>
+    <p id="ger-lote-msg" style="font-size:13px;min-height:18px;margin:4px 0 12px;"></p>
+    <div class="gb-tablewrap">
+      <table class="gb-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center;"><input type="checkbox" class="gb-cb" title="Selecionar todas (visíveis)" onchange="toggleGerSelAll(this.checked)"></th>
+          <th style="width:40px;text-align:center;">⚠</th><th style="width:160px;">Tema</th><th>Enunciado</th>
+          <th style="width:90px;text-align:center;">Resolução</th><th style="width:80px;">Dif.</th><th style="width:230px;">Ações</th>
+        </tr></thead>
+        <tbody>
+          ${qs.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--radix-text-muted);">Nenhuma questão com esses filtros.</td></tr>' : ''}
+          ${qs.map(q => {
+            const tema = TEMAS.find(x => x.id === q.tema);
+            const probs = q._probs;
+            const statusCell = probs.length > 0
+              ? `<span class="diag-badge" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
+              : '<span class="diag-ok" title="OK">✓</span>';
+            const resCell = q._res
+              ? '<span class="gb-pill gb-pill-ok">✓ tem</span>'
+              : '<span class="gb-pill gb-pill-no">sem</span>';
+            const sel = state._gerSel.has(q.id) ? 'checked' : '';
+            return `
+              <tr class="${probs.length > 0 ? 'tr-problemas' : ''}">
+                <td style="text-align:center;"><input type="checkbox" class="ger-cb gb-cb" value="${q.id}" ${sel} onchange="toggleGerSel(${q.id}, this.checked)"></td>
+                <td style="text-align:center;">${statusCell}</td>
+                <td><span class="tag tag-tema">${tema ? tema.nome : '—'}</span></td>
+                <td class="gb-enun">${q.enunciado.substring(0, 110)}${q.enunciado.length > 110 ? '…' : ''}</td>
+                <td style="text-align:center;">${resCell}</td>
+                <td>${q.dificuldade}</td>
+                <td><div class="gb-acoes">
+                  <button class="btn btn-secondary" onclick="abrirCadastroQuestao(${q.id})">Editar</button>
+                  <button class="btn btn-secondary" onclick="abrirResolucaoIA(${q.id})">✨ Resol.</button>
+                  <button class="btn btn-danger" onclick="excluirQuestao(${q.id})">Excluir</button>
+                </div></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
