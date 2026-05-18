@@ -7011,16 +7011,26 @@ function renderGerenciarQuestoes() {
       </div>
     </div>
 
-    <div class="form-group" style="max-width: 320px;">
-      <label>Filtrar por Tema:</label>
-      <select id="ger-tema" onchange="filtrarGer()">
-        <option value="">Todos os temas</option>
-        ${MODULOS.map(mod => `
-          <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
-            ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
-          </optgroup>
-        `).join('')}
-      </select>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px;">
+      <div class="form-group" style="flex:1; min-width:220px; max-width:320px;">
+        <label>Filtrar por Tema:</label>
+        <select id="ger-tema" onchange="filtrarGer()">
+          <option value="">Todos os temas</option>
+          ${MODULOS.map(mod => `
+            <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
+              ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
+            </optgroup>
+          `).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1; min-width:220px; max-width:320px;">
+        <label>Filtrar por Prova:</label>
+        <select id="ger-prova" onchange="filtrarGer()">
+          <option value="">Todas as provas</option>
+          ${[...new Set((state.questoes||[]).map(q=>q.prova).filter(Boolean))].sort()
+              .map(pr => `<option value="${String(pr).replace(/"/g,'&quot;')}">${pr}</option>`).join('')}
+        </select>
+      </div>
     </div>
 
     <div id="ger-lista"></div>
@@ -7070,13 +7080,141 @@ function toggleGerSelAll(ch) {
 }
 function limparGerSel() { state._gerSel = new Set(); filtrarGer(); }
 
+// ===== Seleção múltipla na FILA DE REVISÃO (staging) =====
+function _revSelInit() { if (!state._revSel) state._revSel = new Set(); return state._revSel; }
+function toggleRevSel(id, ch) {
+  const s = _revSelInit();
+  if (ch) s.add(id); else s.delete(id);
+  const c = document.getElementById('rev-sel-count'); if (c) c.textContent = s.size;
+}
+function toggleRevSelAll(ch) {
+  const s = _revSelInit();
+  document.querySelectorAll('.rev-cb').forEach(cb => {
+    cb.checked = ch; const id = Number(cb.value);
+    if (ch) s.add(id); else s.delete(id);
+  });
+  const c = document.getElementById('rev-sel-count'); if (c) c.textContent = s.size;
+}
+function limparRevSel() {
+  state._revSel = new Set();
+  const cont = document.getElementById('rev-lista') || document;
+  cont.querySelectorAll('input.rev-cb').forEach(cb => { cb.checked = false; });
+  const head = cont.querySelector('table.v3-table thead input[type="checkbox"]');
+  if (head) head.checked = false;
+  const c = document.getElementById('rev-sel-count'); if (c) c.textContent = '0';
+}
+
+// Exclusão de item da FILA DE IMPORTAÇÃO (tabela questao_import / staging).
+// NÃO afeta questões já publicadas no banco (tabela questao).
+async function excluirImportItem(id) {
+  if (!confirm('Excluir DEFINITIVAMENTE o item #' + id + ' da fila de importação?\n\nIsso NÃO afeta questões já publicadas no banco.')) return;
+  try {
+    const { error } = await sb.from('questao_import').delete().eq('id', id);
+    if (error) throw error;
+    if (state._revSel) state._revSel.delete(id);
+    renderRevisarImportacoes();
+  } catch (e) {
+    console.error('Erro ao excluir item de import:', e);
+    alert('Erro ao excluir: ' + (e.message || JSON.stringify(e)) + '\n(Confira se está logado como professor — RLS.)');
+  }
+}
+
+// Exclusão em BLOCO dos itens selecionados na fila de importação.
+async function excluirImportSelecionados() {
+  _revSelInit();
+  const ids = [...state._revSel];
+  if (!ids.length) { alert('Selecione ao menos um item (caixinhas à esquerda).'); return; }
+  if (!confirm('Excluir DEFINITIVAMENTE ' + ids.length + ' item(ns) da fila de importação?\n\nAção irreversível. NÃO afeta questões já publicadas no banco.')) return;
+  try {
+    let apagados = 0;
+    for (let k = 0; k < ids.length; k += 100) {
+      const lote = ids.slice(k, k + 100);
+      const { error } = await sb.from('questao_import').delete().in('id', lote);
+      if (error) throw error;
+      apagados += lote.length;
+    }
+    state._revSel = new Set();
+    alert(apagados + ' item(ns) excluído(s) da fila.');
+    renderRevisarImportacoes();
+  } catch (e) {
+    console.error('Erro ao excluir em bloco:', e);
+    alert('Erro ao excluir: ' + (e.message || JSON.stringify(e)) + '\n(Confira se está logado como professor — RLS.)');
+  }
+}
+
+// Pré-visualização do item da fila EXATAMENTE como o aluno vê (só leitura).
+// Reaproveita formatarEnunciado() — mesma renderização de KaTeX/imagens/markdown.
+// fromForm=true: usa o conteúdo atual do modal de edição (rascunho IA + edições);
+// caso contrário usa o parsed salvo no staging.
+function previewQuestaoImport(id, fromForm) {
+  const r = (state._imp || []).find(x => x.id === id);
+  if (!r) { alert('Item não encontrado.'); return; }
+  let p;
+  try { p = fromForm ? radixPayloadDoModalRev(r.parsed || {}) : (r.parsed || {}); }
+  catch (e) { p = r.parsed || {}; }
+  const alts = Array.isArray(p.alternativas) ? p.alternativas : [];
+  const corrIdx = alts.findIndex(a => a && a.correta === true);
+  const tema = TEMAS.find(t => t.id === p.tema);
+  const difLabel = { facil:'Fácil', media:'Média', dificil:'Difícil' }[p.dificuldade] || (p.nivel_enem || '');
+  const imgs = (Array.isArray(p.imagens) ? p.imagens : [])
+    .map(im => (im && (im.storage_path || im.ref || im.url)) || '')
+    .filter(s => /^(https?:|data:)/.test(s));
+  const imgsHtml = imgs.map(s =>
+    `<div class="questao-img-wrap"><img class="questao-img" src="${s}" alt="figura da questão"></div>`).join('');
+  const altsHtml = alts.map((a, i) => `
+    <div class="alternativa ${i === corrIdx ? 'correta' : ''}" style="cursor:default;">
+      <div class="alternativa-letra">${(a && a.letra) || String.fromCharCode(65 + i)}</div>
+      <div>${formatarEnunciado(String((a && a.texto) || '').replace(/^[A-E]\)\s*/, ''))}</div>
+    </div>`).join('');
+  const resTxt = (p.resolucao && p.resolucao.texto) || '';
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharPreviewImport()">
+      <div class="modal" style="max-width:820px; max-height:90vh; overflow:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;">
+          <h2 style="margin:0;">Pré-visualização — como o aluno vê</h2>
+          <button class="btn-icon danger" title="Fechar" onclick="fecharPreviewImport()">✕</button>
+        </div>
+        <p style="font-size:12px;color:var(--radix-text-muted);margin:0 0 14px;">
+          Item #${r.id} · questão nº ${p.numero || '—'} · ${p.origem_prova || 'sem prova'}
+          ${fromForm ? ' · <strong>rascunho do editor (não salvo)</strong>' : ''} · somente leitura.
+        </p>
+        <div class="questao-card enem-style">
+          <div class="questao-header">
+            <div class="qno-wrap">
+              <div class="qno-badge">${String(p.numero || 0).padStart(2,'0')}</div>
+              <div class="qno-text"><small>QUESTÃO</small><b>${tema ? tema.nome : 'Banco de questões'}</b></div>
+            </div>
+            <div class="qmeta"><small>${difLabel}</small>${tema ? `<b>${tema.nome}</b>` : ''}</div>
+          </div>
+          <div class="questao-enunciado">${formatarEnunciado(p.enunciado || '')}</div>
+          ${imgsHtml}
+          <div class="alternativas">${altsHtml}</div>
+          <div class="explicacao" style="margin-top:16px;">
+            <strong>Gabarito:</strong> ${corrIdx >= 0 ? String.fromCharCode(65 + corrIdx) + ')' : (p.gabarito_oficial || '—')}<br>
+            <strong>Resolução:</strong> ${resTxt ? formatarEnunciado(resTxt)
+              : '<em style="color:var(--radix-text-muted);">— sem resolução cadastrada —</em>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-preview-imp">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+function fecharPreviewImport() {
+  const m = document.getElementById('modal-preview-imp');
+  if (m) m.remove();
+  if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
+}
+
 function filtrarGer() {
   _gerSelInit();
   const t = document.getElementById('ger-tema').value;
   const soProb = document.getElementById('ger-so-problemas')?.checked;
   const soSemRes = document.getElementById('ger-so-semres')?.checked;
+  const prova = document.getElementById('ger-prova')?.value || '';
   let qs = state.questoes.slice();
   if (t) qs = qs.filter(q => q.tema === t);
+  if (prova) qs = qs.filter(q => (q.prova || '') === prova);
   qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q), _res: temResolucao(q) }));
   
   const totalProb = qs.filter(q => q._probs.length > 0).length;
@@ -7215,6 +7353,71 @@ async function gerarResolucaoLote() {
   filtrarGer();
   alert(`Concluído.\n\nGeradas e salvas: ${okN}\nFalhas: ${erros.length}` +
         (erros.length ? ('\n\n' + erros.slice(0, 12).join('\n')) : ''));
+}
+
+// Geração em LOTE na FILA DE REVISÃO (staging questao_import): gera a resolução
+// e salva como RASCUNHO no próprio item de import (estado 'revisado'). NUNCA
+// publica nem aprova — o professor ainda revisa item a item antes de publicar.
+async function gerarResolucaoLoteRevisao() {
+  _revSelInit();
+  const ids = [...state._revSel];
+  if (!ids.length) { alert('Selecione ao menos um item (caixinhas à esquerda).'); return; }
+  const custo = (ids.length * 0.02).toFixed(2);
+  if (!confirm(
+      `Gerar resolução com IA para ${ids.length} item(ns) da fila?\n\n` +
+      `Custo estimado ≈ US$ ${custo} (~US$ 0,02 cada).\n` +
+      `A resolução é salva como RASCUNHO no item (não publica nada).\n\nContinuar?`)) return;
+  const msg = document.getElementById('rev-lote-msg');
+  const setM = (t,c)=>{ if(msg){msg.textContent=t;msg.style.color=c||'var(--radix-text-muted)';} };
+  let okN = 0; const erros = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const r = (state._imp || []).find(x => x.id === id);
+    setM(`Gerando ${i + 1}/${ids.length} (item #${id})…`);
+    if (!r) { erros.push('#' + id + ': não encontrado'); continue; }
+    const p = r.parsed || {};
+    try {
+      const altObjs = Array.isArray(p.alternativas) ? p.alternativas : [];
+      const alternativas = altObjs.map((a, j) => ({
+        letra: (a && a.letra) || String.fromCharCode(65 + j),
+        texto: ((a && a.texto) || '').trim()
+      }));
+      const gab = p.gabarito_oficial
+        || ((altObjs.find(a => a && a.correta === true) || {}).letra) || '';
+      const figuraPend = /!\[[^\]]*\]\(PENDENTE\)/.test(p.enunciado || '');
+      const payload = {
+        numero: p.numero || null, tema: p.tema || '', nivel_enem: p.nivel_enem || '',
+        enunciado: p.enunciado || '', alternativas, gabarito: gab,
+        possui_figura: p.possui_figura === true || figuraPend,
+        figura_pendente: figuraPend,
+        imagens: Array.isArray(p.imagens) ? p.imagens : []
+      };
+      const { data, error } = await sb.functions.invoke('gerar-resolucao', { body: payload });
+      if (error) throw error;
+      const texto = (data && (data.resolucao || data.texto)) || '';
+      if (!texto) throw new Error('IA não retornou texto');
+      const novoParsed = Object.assign({}, p, {
+        resolucao: { tipo: 'comentada', texto, origem: 'ia' }
+      });
+      const { criticos, warnings } = radixValidarPayload(novoParsed);
+      const errs = [
+        ...criticos.map(c => ({ severidade: 'critico', detalhe: c })),
+        ...warnings.map(w => ({ severidade: 'warning', detalhe: w }))
+      ];
+      const { error: e2 } = await sb.from('questao_import')
+        .update({ parsed: novoParsed, erros: errs,
+                  estado: criticos.length ? 'rejeitado' : 'revisado' })
+        .eq('id', id);
+      if (e2) throw e2;
+      okN++;
+    } catch (e) {
+      erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+    }
+  }
+  state._revSel = new Set();
+  alert(`Concluído.\n\nGeradas e salvas (rascunho): ${okN}\nFalhas: ${erros.length}` +
+        (erros.length ? ('\n\n' + erros.slice(0, 12).join('\n')) : ''));
+  renderRevisarImportacoes();
 }
 
 function editarQuestao(id) { abrirCadastroQuestao(id); }
@@ -7708,60 +7911,104 @@ function radixBadgeEstado(e) {
 
 async function renderRevisarImportacoes() {
   state.view = 'revisar-import';
+  _revSelInit();
   const main = document.getElementById('main-content');
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> /
       <a onclick="renderGerenciarQuestoes()">Gerenciar Banco</a> / Revisar Importações</div>
     <h2 class="section-title"><span class="section-title-accent"></span>Fila de Revisão</h2>
-    <div class="filtros">
-      <select id="rev-estado" onchange="renderRevisarImportacoes()">
-        <option value="">Todos os estados</option>
-        ${['validado','rejeitado','revisado','publicado'].map(e =>
-          `<option value="${e}" ${state._revEstado===e?'selected':''}>${e}</option>`).join('')}
-      </select>
-    </div>
     <div id="rev-lista">Carregando…</div>`;
-  const selEl = document.getElementById('rev-estado');
-  if (selEl && state._revEstado) selEl.value = state._revEstado;
 
-  let q = sb.from('questao_import').select('*').order('id', { ascending: false }).limit(500);
-  const { data, error } = await q;
+  const { data, error } = await sb.from('questao_import')
+    .select('*').order('id', { ascending: false }).limit(500);
   const cont = document.getElementById('rev-lista');
   if (error) { cont.innerHTML = `<p style="color:var(--radix-red)">Erro: ${error.message} (RLS?)</p>`; return; }
   state._imp = data || [];
-  const filtro = (document.getElementById('rev-estado') || {}).value || '';
-  state._revEstado = filtro;
-  const linhas = state._imp.filter(r => !filtro || r.estado === filtro);
-  if (!linhas.length) { cont.innerHTML = '<p>Nenhum item.</p>'; return; }
+
+  const provas = [...new Set(state._imp
+    .map(r => (r.parsed && r.parsed.origem_prova) || '').filter(Boolean))].sort();
+  const fEstado = state._revEstado || '';
+  const fProva  = state._revProva || '';
+  const linhas = state._imp.filter(r =>
+       (!fEstado || r.estado === fEstado)
+    && (!fProva  || ((r.parsed && r.parsed.origem_prova) || '') === fProva));
+
   cont.innerHTML = `
-    <table>
-      <thead><tr><th>#</th><th>Estado</th><th>Tema</th><th>Nível</th>
-        <th>Enunciado</th><th>Problemas</th><th>Ações</th></tr></thead>
-      <tbody>
-      ${linhas.map(r => {
-        const p = r.parsed || {};
-        const errs = (r.erros || []);
-        const crit = errs.filter(e => e.severidade === 'critico');
-        const warn = errs.filter(e => e.severidade === 'warning');
-        const podePub = crit.length === 0 && r.estado !== 'publicado';
-        return `<tr>
-          <td>${r.id}</td>
-          <td>${radixBadgeEstado(r.estado)}</td>
-          <td>${p.tema || '—'}</td>
-          <td>${p.nivel_enem || '—'}</td>
-          <td>${(p.enunciado || '').substring(0, 70)}${(p.enunciado||'').length>70?'…':''}</td>
-          <td style="font-size:11px;">
-            ${crit.length?`<span style="color:var(--radix-red)">⛔ ${crit.map(e=>e.detalhe).join('; ')}</span><br>`:''}
-            ${warn.length?`<span style="color:#b26a00">⚠ ${warn.map(e=>e.detalhe).join('; ')}</span>`:''}
-            ${!crit.length&&!warn.length?'✓':''}
-          </td>
-          <td style="white-space:nowrap;">
-            ${r.estado!=='publicado'?`<button class="btn btn-secondary" style="padding:5px 9px;font-size:12px;" onclick="abrirRevisarItem(${r.id})">Editar</button>`:''}
-            ${podePub?`<button class="btn btn-success" style="padding:5px 9px;font-size:12px;" onclick="publicarImportItem(${r.id})">Publicar</button>`:''}
-          </td></tr>`;
-      }).join('')}
-      </tbody>
-    </table>`;
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
+      <div class="form-group" style="flex:1; min-width:200px; max-width:280px; margin:0;">
+        <label>Filtrar por Estado:</label>
+        <select id="rev-estado" onchange="state._revEstado=this.value; renderRevisarImportacoes();">
+          <option value="">Todos os estados</option>
+          ${['validado','rejeitado','revisado','publicado'].map(e =>
+            `<option value="${e}" ${fEstado===e?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1; min-width:200px; max-width:340px; margin:0;">
+        <label>Filtrar por Prova:</label>
+        <select id="rev-prova" onchange="state._revProva=this.value; renderRevisarImportacoes();">
+          <option value="">Todas as provas</option>
+          ${provas.map(pr => `<option value="${String(pr).replace(/"/g,'&quot;')}" ${fProva===pr?'selected':''}>${pr}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--radix-surface-2); border:1px solid var(--radix-line); border-radius:12px; padding:12px 16px; margin-bottom:16px;">
+      <span style="font-size:13px; color:var(--radix-text-2);">${linhas.length} item(ns) exibido(s)</span>
+      <span style="flex:1;"></span>
+      <span style="font-size:13px; color:var(--radix-text-2);"><strong id="rev-sel-count">${state._revSel.size}</strong> selecionado(s)</span>
+      <button class="btn btn-secondary" style="padding:8px 14px; font-size:12px;" onclick="limparRevSel()">Limpar seleção</button>
+      <button class="btn" style="padding:8px 14px; font-size:12px;" onclick="gerarResolucaoLoteRevisao()">✨ Gerar resolução em lote</button>
+      <button class="btn btn-danger" style="padding:8px 14px; font-size:12px;" onclick="excluirImportSelecionados()">🗑 Excluir selecionados</button>
+    </div>
+
+    <p id="rev-lote-msg" style="font-size:13px; min-height:18px; margin-bottom:12px; color:var(--radix-text-muted);"></p>
+
+    ${!linhas.length ? '<p>Nenhum item.</p>' : `
+    <div style="overflow-x:auto;">
+      <table class="v3-table">
+        <thead>
+          <tr>
+            <th style="width:40px;text-align:center;"><input type="checkbox" style="cursor:pointer;" title="Selecionar todos visíveis" onchange="toggleRevSelAll(this.checked)"></th>
+            <th style="width:50px;">#</th>
+            <th style="width:90px;">Estado</th>
+            <th style="width:160px;">Prova</th>
+            <th style="width:140px;">Tema</th>
+            <th>Enunciado</th>
+            <th>Problemas</th>
+            <th style="text-align:right; width:300px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${linhas.map(r => {
+            const p = r.parsed || {};
+            const errs = (r.erros || []);
+            const crit = errs.filter(e => e.severidade === 'critico');
+            const warn = errs.filter(e => e.severidade === 'warning');
+            const podePub = crit.length === 0 && r.estado !== 'publicado';
+            const sel = state._revSel.has(r.id) ? 'checked' : '';
+            return `<tr>
+              <td style="text-align:center;"><input type="checkbox" class="rev-cb" style="cursor:pointer;" value="${r.id}" ${sel} onchange="toggleRevSel(${r.id}, this.checked)"></td>
+              <td>${r.id}</td>
+              <td>${radixBadgeEstado(r.estado)}</td>
+              <td style="font-size:12px;">${p.origem_prova || '—'}</td>
+              <td>${p.tema || '—'}</td>
+              <td style="max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${(p.enunciado||'').replace(/"/g,'&quot;')}">${(p.enunciado || '').substring(0, 70)}${(p.enunciado||'').length>70?'…':''}</td>
+              <td style="font-size:11px;">
+                ${crit.length?`<span style="color:var(--radix-red)">⛔ ${crit.map(e=>e.detalhe).join('; ')}</span><br>`:''}
+                ${warn.length?`<span style="color:#b26a00">⚠ ${warn.map(e=>e.detalhe).join('; ')}</span>`:''}
+                ${!crit.length&&!warn.length?'✓':''}
+              </td>
+              <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-secondary" style="padding:5px 9px;font-size:12px;" title="Pré-visualizar como o aluno vê" onclick="previewQuestaoImport(${r.id})">👁 Ver</button>
+                ${r.estado!=='publicado'?`<button class="btn btn-secondary" style="padding:5px 9px;font-size:12px;" onclick="abrirRevisarItem(${r.id})">Editar</button>`:''}
+                ${podePub?`<button class="btn btn-success" style="padding:5px 9px;font-size:12px;" onclick="publicarImportItem(${r.id})">Publicar</button>`:''}
+                <button class="btn btn-danger" style="padding:5px 9px;font-size:12px;" title="Excluir este item da fila" onclick="excluirImportItem(${r.id})">🗑</button>
+              </td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`}
+  `;
 }
 
 function abrirRevisarItem(id) {
@@ -7810,6 +8057,7 @@ function abrirRevisarItem(id) {
         <p id="rv-msg" style="font-size:13px;min-height:18px;"></p>
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalRev()">Cancelar</button>
+          <button class="btn btn-secondary" type="button" title="Ver como o aluno vê (com suas edições atuais)" onclick="previewQuestaoImport(${r.id}, true)">👁 Pré-visualizar</button>
           <button class="btn" onclick="salvarRevisaoItem(${r.id},false)">Salvar revisão</button>
           <button class="btn btn-success" onclick="salvarRevisaoItem(${r.id},true)">Salvar e publicar</button>
         </div>
