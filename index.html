@@ -10158,15 +10158,14 @@ function fazerMiniSimulado(temaId) {
 
 // ========== INIT ==========
 (async function init() {
-  // Verifica se já há sessão ativa do Supabase
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await iniciarSessao();
-  }
-  // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
+  // 1) Detecta logo se a URL é de recuperação de senha (link do e-mail).
+  //    Se for, NÃO entramos no app — abrimos o modal de definir nova senha.
+  const ehRecovery = /[?#&]type=recovery(\b|&|$)/.test(window.location.href);
+
+  // 2) Registra o listener ANTES do getSession() — para não perder o evento
+  //    PASSWORD_RECOVERY que o Supabase emite durante a detecção na URL.
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'PASSWORD_RECOVERY') {
-      // Aluno chegou via link do e-mail de recuperação — abrir a tela de nova senha
       abrirModalNovaSenha();
       return;
     }
@@ -10176,5 +10175,21 @@ function fazerMiniSimulado(temaId) {
       document.getElementById('view-login').classList.remove('hidden');
     }
   });
+
+  // 3) Resolve a sessão (o Supabase também emite PASSWORD_RECOVERY aqui,
+  //    se a URL trouxer o token de recuperação).
+  const { data: { session } } = await sb.auth.getSession();
+
+  // 4) URL de recuperação → forçar modal, NÃO logar no app (mesmo que haja
+  //    sessão recovery ativa, ela só serve p/ updateUser senha).
+  if (ehRecovery) {
+    abrirModalNovaSenha();
+    return;
+  }
+
+  // 5) Fluxo normal: se já tem sessão, entrar.
+  if (session) {
+    await iniciarSessao();
+  }
 })();
 </script>
