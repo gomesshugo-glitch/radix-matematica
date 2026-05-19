@@ -4231,9 +4231,76 @@ async function esqueciSenha() {
     setMsg('Digite seu e-mail acima primeiro.', 'var(--radix-red)');
     return;
   }
-  const { error } = await sb.auth.resetPasswordForEmail(email);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
   if (error) setMsg('Erro: ' + error.message, 'var(--radix-red)');
   else setMsg('Link de recuperação enviado para seu e-mail.', 'green');
+}
+
+// ===== Recuperação de senha — modal "Definir nova senha" =====
+// Disparado pelo evento `PASSWORD_RECOVERY` do Supabase quando o aluno
+// clica no link do e-mail e volta para o app.
+function abrirModalNovaSenha() {
+  // Garante que o app não fica visível durante a recuperação
+  const vApp = document.getElementById('view-app');
+  const vLogin = document.getElementById('view-login');
+  if (vApp) vApp.classList.add('hidden');
+  if (vLogin) vLogin.classList.remove('hidden');
+  if (document.getElementById('modal-nova-senha')) return; // não duplica
+  const html = `
+    <div class="modal-overlay" style="z-index:9999;">
+      <div class="modal" style="max-width:420px;">
+        <h2>Defina sua nova senha</h2>
+        <p style="font-size:13px;color:var(--radix-text-muted);margin-bottom:10px;">
+          Você clicou no link de recuperação enviado por e-mail. Crie uma nova senha (mínimo 6 caracteres).
+        </p>
+        <div class="form-group">
+          <label>Nova senha</label>
+          <input type="password" id="nsenha-1" autocomplete="new-password" minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Confirmar nova senha</label>
+          <input type="password" id="nsenha-2" autocomplete="new-password" minlength="6">
+        </div>
+        <p id="nsenha-msg" style="font-size:13px;min-height:18px;color:var(--radix-red);"></p>
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="cancelarNovaSenha()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarNovaSenha()">Salvar nova senha</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', '<div id="modal-nova-senha">' + html + '</div>');
+  document.body.classList.add('modal-open');
+  setTimeout(() => { const i = document.getElementById('nsenha-1'); if (i) i.focus(); }, 60);
+}
+function fecharModalNovaSenha() {
+  const m = document.getElementById('modal-nova-senha');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+async function cancelarNovaSenha() {
+  // Encerra a sessão de recuperação e volta para o login limpo
+  try { await sb.auth.signOut(); } catch (e) {}
+  fecharModalNovaSenha();
+}
+async function salvarNovaSenha() {
+  const msg = document.getElementById('nsenha-msg');
+  const setM = (t) => { if (msg) msg.textContent = t || ''; };
+  const s1 = (document.getElementById('nsenha-1').value || '');
+  const s2 = (document.getElementById('nsenha-2').value || '');
+  if (!s1 || s1.length < 6) { setM('A senha precisa ter no mínimo 6 caracteres.'); return; }
+  if (s1 !== s2) { setM('As duas senhas não conferem.'); return; }
+  setM('Salvando…');
+  try {
+    const { error } = await sb.auth.updateUser({ password: s1 });
+    if (error) throw error;
+    fecharModalNovaSenha();
+    try { await sb.auth.signOut(); } catch (e) {}
+    alert('✅ Senha atualizada com sucesso. Faça login com a nova senha.');
+  } catch (e) {
+    setM('Erro: ' + (e.message || JSON.stringify(e)));
+  }
 }
 
 async function iniciarSessao() {
@@ -4829,7 +4896,9 @@ function atualizarHeaderAvatar() {
 
 async function solicitarTrocaSenha(email) {
   if (!confirm(`Enviar link de troca de senha para ${email}?`)) return;
-  const { error } = await sb.auth.resetPasswordForEmail(email);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
   if (error) { alert('Erro: ' + error.message); return; }
   alert(`✅ E-mail enviado para ${email}. Verifique sua caixa de entrada (e a pasta de SPAM).`);
 }
@@ -8746,7 +8815,9 @@ async function salvarEditarAluno(alunoId) {
 
 async function reenviarSenhaAluno(email, nome) {
   if (!confirm(`Enviar e-mail de redefinição de senha para ${nome} (${email})?`)) return;
-  const { error } = await sb.auth.resetPasswordForEmail(email);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
   if (error) {
     alert('Erro: ' + error.message);
     return;
@@ -10094,6 +10165,11 @@ function fazerMiniSimulado(temaId) {
   }
   // Escuta mudanças de auth (refresh de token, logout em outra aba, etc.)
   sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // Aluno chegou via link do e-mail de recuperação — abrir a tela de nova senha
+      abrirModalNovaSenha();
+      return;
+    }
     if (event === 'SIGNED_OUT') {
       state.usuario = null;
       document.getElementById('view-app').classList.add('hidden');
