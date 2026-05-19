@@ -5648,10 +5648,25 @@ async function finalizarConferenciaGabarito() {
 // ========== GERAR PDF DAS QUESTÕES (Estilo ENEM) ==========
 
 function baixarQuestoesFiltradasPDF() {
-  // Pega o que está visível no filtro atual
+  // 1) Se há questões SELECIONADAS ("+ Adicionar à lista"), prioriza-as.
+  const sel = (state.questoesSelecionadas || [])
+    .map(id => state.questoes.find(q => q.id === id))
+    .filter(Boolean);
+  if (sel.length > 0) {
+    const soSelecionadas = confirm(
+      `Você tem ${sel.length} questão(ões) selecionada(s).\n\n` +
+      `OK = baixar PDF só das SELECIONADAS.\n` +
+      `Cancelar = baixar TODAS as questões do filtro atual.`);
+    if (soSelecionadas) {
+      gerarPDFQuestoes(sel, 'Minha Lista de Estudos', true /* gabarito */);
+      return;
+    }
+  }
+  // 2) Sem seleção (ou usuário escolheu "todas"): exporta o filtro atual.
   const filtroEl = document.getElementById('filtro-tema');
   const tema = filtroEl ? filtroEl.value : state.temaAtual;
-  const dif = document.getElementById('filtro-dif').value;
+  const difEl = document.getElementById('filtro-dif');
+  const dif = difEl ? difEl.value : '';
   let questoes = state.questoes.slice();
   if (tema) questoes = questoes.filter(q => q.tema === tema);
   if (dif) questoes = questoes.filter(q => q.dificuldade === dif);
@@ -5683,13 +5698,13 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
   const nomeAluno = (perfil?.nome || state.usuario.nome).toUpperCase();
 
   const FRASES = [
-    'O sucesso e a soma de pequenos esforcos repetidos dia apos dia.',
-    'Acredite em voce. Sua dedicacao hoje constroi o seu futuro.',
-    'Cada questao respondida e um passo a mais rumo a aprovacao.',
-    'Persistencia transforma esforco em conquista.',
-    'Confie no processo. Voce esta mais perto do que imagina.',
-    'Disciplina e a ponte entre seus sonhos e suas realizacoes.',
-    'Cada erro e uma aula. Cada acerto e uma vitoria.',
+    'O sucesso é a soma de pequenos esforços repetidos dia após dia.',
+    'Acredite em você. Sua dedicação hoje constrói o seu futuro.',
+    'Cada questão respondida é um passo a mais rumo à aprovação.',
+    'Persistência transforma esforço em conquista.',
+    'Confie no processo. Você está mais perto do que imagina.',
+    'Disciplina é a ponte entre seus sonhos e suas realizações.',
+    'Cada erro é uma aula. Cada acerto é uma vitória.',
     'Quem estuda raiz, colhe resultado.',
   ];
   const fraseMot = FRASES[Math.floor(Math.random() * FRASES.length)];
@@ -5886,86 +5901,80 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     let y = 0;
     const pages = [];
 
-    // ============ CAPA MINIMALISTA ============
+    // ============ CAPA — compacta e profissional ============
     const capa = pdfDoc.addPage([W, H]);
     pages.push(capa);
+    const centrar = (txt, fnt, sz) => (W - fnt.widthOfTextAtSize(txt, sz)) / 2;
 
-    // Logo composta: √ RADIX (esquerda, em preto) + tarja preta com "2026" (direita, em cinza)
-    // Tudo centralizado horizontalmente
-    const lblRadix = 'RADIX';
-    const wRadix = fontBold.widthOfTextAtSize(lblRadix, 36);
-    const lbl2026 = '2026';
-    const w2026 = fontBold.widthOfTextAtSize(lbl2026, 36);
-    const radSize = 36;
-    const radWidth = radSize * 0.95;
-    const gap = 12;
-    const tarjaPad = 14;
-    const tarjaW = w2026 + tarjaPad * 2;
-    const tarjaH = 50;
-    const totalLogoW = radWidth + 8 + wRadix + gap + tarjaW;
-    const startX = (W - totalLogoW) / 2;
-    const logoY = H - 130;
-    // Radical
-    drawRadical(capa, startX, logoY - 5, radSize, preto, 3);
-    // RADIX
-    capa.drawText(lblRadix, { x: startX + radWidth + 8, y: logoY, size: 36, font: fontBold, color: preto });
-    // Tarja preta com 2026
-    capa.drawRectangle({
-      x: startX + radWidth + 8 + wRadix + gap,
-      y: logoY - 6, width: tarjaW, height: tarjaH, color: preto
-    });
-    capa.drawText(lbl2026, {
-      x: startX + radWidth + 8 + wRadix + gap + tarjaPad,
-      y: logoY, size: 36, font: fontBold, color: rgb(0.6, 0.6, 0.6)
-    });
-    // Tagline centralizada
+    // --- Marca: √ RADIX 2026 (sem caixa preta) ---
+    const lblRadix = 'RADIX', lbl2026 = ' 2026';
+    const bSize = 34;
+    const wR = fontBold.widthOfTextAtSize(lblRadix, bSize);
+    const w2 = fontBold.widthOfTextAtSize(lbl2026, bSize);
+    const radSize = 30, radW = radSize * 0.95;
+    const totalW = radW + 10 + wR + w2;
+    let bx = (W - totalW) / 2;
+    let yC = H - 100;
+    drawRadical(capa, bx, yC - 4, radSize, preto, 2.6);
+    capa.drawText(lblRadix, { x: bx + radW + 10, y: yC, size: bSize, font: fontBold, color: preto });
+    capa.drawText(lbl2026, { x: bx + radW + 10 + wR, y: yC, size: bSize, font: fontBold, color: cinzaMedio });
+
+    // Tagline
+    yC -= 24;
     const tagline = '"Raiz que vira resultado"';
-    const wTagline = fontItalic.widthOfTextAtSize(tagline, 11);
-    capa.drawText(tagline, { x: (W - wTagline) / 2, y: H - 175, size: 11, font: fontItalic, color: cinzaMedio });
+    capa.drawText(tagline, { x: centrar(tagline, fontItalic, 10.5), y: yC, size: 10.5, font: fontItalic, color: cinzaMedio });
 
-    // Linha divisória sutil
-    capa.drawLine({ start: { x: ML + 80, y: H - 200 }, end: { x: W - MR - 80, y: H - 200 }, thickness: 0.5, color: cinzaClaro });
-
-    // Subtítulo centralizado
-    let yC = H - 250;
-    const subT = 'MATEMÁTICA E SUAS TECNOLOGIAS';
-    const wSubT = font.widthOfTextAtSize(subT, 10);
-    capa.drawText(subT, { x: (W - wSubT) / 2, y: yC, size: 10, font: font, color: cinzaMedio });
-    yC -= 32;
-    const tituloSan = sanit(tituloLista);
-    const tlW = fontBold.widthOfTextAtSize(tituloSan, 26);
-    capa.drawText(tituloSan, { x: (W - tlW) / 2, y: yC, size: 26, font: fontBold, color: preto });
+    // Régua de marca (largura total do conteúdo)
     yC -= 22;
-    const qLabel = questoes.length + ' questões';
-    const wQLabel = fontItalic.widthOfTextAtSize(qLabel, 11);
-    capa.drawText(qLabel, { x: (W - wQLabel) / 2, y: yC, size: 11, font: fontItalic, color: cinzaMedio });
+    capa.drawLine({ start: { x: ML, y: yC }, end: { x: W - MR, y: yC }, thickness: 0.6, color: cinzaClaro });
 
-    // Box de identificação simples
-    yC -= 70;
-    capa.drawLine({ start: { x: ML, y: yC + 8 }, end: { x: ML + 80, y: yC + 8 }, thickness: 0.8, color: preto });
-    capa.drawText('IDENTIFICAÇÃO', { x: ML, y: yC + 14, size: 8, font: fontBold, color: preto });
-    yC -= 14;
-    capa.drawText('Nome:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
-    capa.drawText(sanit(nomeAluno), { x: ML + 40, y: yC, size: 10, font: fontBold, color: preto });
-    yC -= 16;
-    capa.drawText('CPF:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
-    capa.drawText(cpfFmt, { x: ML + 40, y: yC, size: 10, font: font, color: preto });
-    yC -= 16;
-    capa.drawText('Data:', { x: ML, y: yC, size: 9, font: font, color: cinzaMedio });
-    const hoje = new Date().toLocaleDateString('pt-BR');
-    capa.drawText(hoje, { x: ML + 40, y: yC, size: 10, font: font, color: preto });
+    // Subtítulo
+    yC -= 30;
+    const subT = 'MATEMÁTICA E SUAS TECNOLOGIAS';
+    capa.drawText(subT, { x: centrar(subT, font, 9.5), y: yC, size: 9.5, font: font, color: cinzaMedio });
 
-    // Frase motivacional discreta
-    yC = 220;
-    capa.drawLine({ start: { x: W/2 - 30, y: yC + 30 }, end: { x: W/2 + 30, y: yC + 30 }, thickness: 0.3, color: cinzaClaro });
-    const fraseLinhas = quebrarTexto('"' + fraseMot + '"', fontItalic, 11, CW - 80);
-    fraseLinhas.forEach((l, i) => {
-      const w = fontItalic.widthOfTextAtSize(l, 11);
-      capa.drawText(l, { x: (W - w) / 2, y: yC - i * 16, size: 11, font: fontItalic, color: cinzaMedio });
+    // Título (quebra se for longo)
+    yC -= 34;
+    const tituloSan = sanit(tituloLista);
+    const tLines = quebrarTexto(tituloSan, fontBold, 24, CW);
+    tLines.forEach(l => {
+      capa.drawText(l, { x: centrar(l, fontBold, 24), y: yC, size: 24, font: fontBold, color: preto });
+      yC -= 30;
+    });
+    yC += 30;
+
+    // Contagem de questões
+    yC -= 26;
+    const qLabel = questoes.length + (questoes.length === 1 ? ' questão' : ' questões');
+    capa.drawText(qLabel, { x: centrar(qLabel, fontItalic, 11), y: yC, size: 11, font: fontItalic, color: cinzaMedio });
+
+    // Frase motivacional — logo abaixo do bloco principal (não no rodapé)
+    yC -= 30;
+    const fraseLinhas = quebrarTexto('"' + fraseMot + '"', fontItalic, 11, CW - 120);
+    fraseLinhas.forEach(l => {
+      capa.drawText(l, { x: centrar(l, fontItalic, 11), y: yC, size: 11, font: fontItalic, color: cinzaMedio });
+      yC -= 15;
     });
 
-    // Rodape
-    capa.drawText('app.radixmatematica.com.br', { x: W/2 - 60, y: 50, size: 8, font: font, color: cinzaMedio });
+    // Caixa de identificação discreta (com borda), centralizada
+    yC -= 26;
+    const boxW = 360, boxH = 96, boxX = (W - boxW) / 2, boxY = yC - boxH;
+    capa.drawRectangle({ x: boxX, y: boxY, width: boxW, height: boxH, borderColor: cinzaClaro, borderWidth: 1, color: rgb(1, 1, 1) });
+    let iy = yC - 24;
+    capa.drawText('IDENTIFICAÇÃO', { x: boxX + 20, y: iy, size: 8, font: fontBold, color: cinzaEscuro });
+    iy -= 22;
+    capa.drawText('Nome:', { x: boxX + 20, y: iy, size: 9, font: font, color: cinzaMedio });
+    capa.drawText(sanit(nomeAluno || ''), { x: boxX + 62, y: iy, size: 10, font: fontBold, color: preto });
+    iy -= 18;
+    capa.drawText('CPF:', { x: boxX + 20, y: iy, size: 9, font: font, color: cinzaMedio });
+    capa.drawText(cpfFmt || '', { x: boxX + 62, y: iy, size: 10, font: font, color: preto });
+    iy -= 18;
+    capa.drawText('Data:', { x: boxX + 20, y: iy, size: 9, font: font, color: cinzaMedio });
+    capa.drawText(new Date().toLocaleDateString('pt-BR'), { x: boxX + 62, y: iy, size: 10, font: font, color: preto });
+
+    // Rodapé discreto
+    const rod = 'app.radixmatematica.com.br';
+    capa.drawText(rod, { x: centrar(rod, font, 8), y: 42, size: 8, font: font, color: cinzaClaro });
 
     // ============ PÁGINAS DAS QUESTÕES ============
     function novaPagina() {
@@ -6238,7 +6247,7 @@ function abrirTema(temaId) {
       </div>
       <button class="btn btn-danger banco-pdf-btn" onclick="baixarQuestoesFiltradasPDF()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Baixar em PDF
+        Baixar PDF (selecionadas / filtro)
       </button>
     </div>
     <div id="lista-questoes"></div>
