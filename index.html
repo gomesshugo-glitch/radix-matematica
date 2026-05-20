@@ -10450,11 +10450,11 @@ async function renderGerenciarAlunos() {
       <div class="stat-card"><div class="label">Total</div><div class="value">${totalGeral}</div></div>
     </div>
 
-    <!-- Busca por nome/e-mail -->
+    <!-- Busca por nome, e-mail, WhatsApp ou CPF -->
     <div class="qbk-busca-wrap">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input type="text" id="aluno-busca" class="qbk-busca"
-             placeholder="Buscar por nome ou e-mail..."
+             placeholder="Buscar por nome, e-mail, WhatsApp ou CPF..."
              value="${(state._alunoBusca || '').replace(/"/g, '&quot;')}"
              oninput="agendarFiltrarAlunos()">
     </div>
@@ -10485,12 +10485,21 @@ function filtrarAlunos() {
   const perfis = state._alunoListaAtual || [];
   const termo = _normBusca(state._alunoBusca || '');
 
-  // Aplica busca em nome + email (case+acento insensitive, AND multipalavra)
+  // Busca em nome+email (case/acento insensitive) E em telefone+CPF (só dígitos).
+  // Cada token (AND) precisa casar em PELO MENOS UM dos dois corpos.
   const partes = termo ? termo.split(' ').filter(Boolean) : [];
   const passar = (p) => {
     if (!partes.length) return true;
-    const corpo = _normBusca((p.nome || '') + ' ' + (p.email || ''));
-    return partes.every(t => corpo.includes(t));
+    const corpoTxt = _normBusca((p.nome || '') + ' ' + (p.email || ''));
+    const corpoDig = String(p.telefone || '').replace(/\D/g, '') + ' ' +
+                     String(p.cpf || '').replace(/\D/g, '');
+    return partes.every(t => {
+      if (corpoTxt.includes(t)) return true;
+      // Se o token tem dígitos (ex.: "11987" ou "(11) 98"), tenta no corpo digital.
+      const tDig = t.replace(/\D/g, '');
+      if (tDig.length >= 3 && corpoDig.includes(tDig)) return true;
+      return false;
+    });
   };
   const filtrados = perfis.filter(passar);
 
@@ -10573,6 +10582,8 @@ function renderAlunoBatchBar() {
   const nPend = selecionados.filter(p => p.status === 'pendente').length;
   const nApr  = selecionados.filter(p => p.status === 'aprovado').length;
   const nBlo  = selecionados.filter(p => p.status === 'bloqueado').length;
+  // Quantos da seleção têm WhatsApp (pra habilitar o botão de envio)
+  const nWhats = selecionados.filter(p => p.perfil !== 'professor' && p.telefone).length;
 
   return `
     <div class="qbk-ger-toolbar" style="background: rgba(34,211,238,0.05); border-color: rgba(34,211,238,0.22); margin-top: 14px;">
@@ -10586,6 +10597,20 @@ function renderAlunoBatchBar() {
       </div>
       <div class="toolbar-acoes">
         <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="limparAlunoSel()">Limpar</button>
+
+        <!-- Comunicação / export -->
+        ${nWhats > 0 ? `
+          <button class="btn btn-success" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:5px;background:#25D366;border-color:#25D366;" onclick="notificarWhatsAlunosSelecionados()" title="Enviar mensagem via WhatsApp (Z-API)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp (${nWhats})
+          </button>
+        ` : ''}
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:5px;" onclick="exportarAlunosSelecionadosCSV()" title="Baixar CSV dos selecionados (abre no Excel)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV (${n})
+        </button>
+
+        <!-- Mudança de status -->
         ${(nPend + nBlo) > 0 ? `
           <button class="btn btn-success" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:5px;" onclick="aprovarAlunosSelecionados()" title="Aprovar pendentes / reativar bloqueados">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -10676,6 +10701,85 @@ async function reenviarSenhaAlunosSelecionados() {
     if (i < alvos.length - 1) await new Promise(r => setTimeout(r, 600));
   }
   alert(`${ok} e-mail${ok !== 1 ? 's' : ''} enviado${ok !== 1 ? 's' : ''}.${erros.length ? '\n\nFalhas:\n' + erros.slice(0, 8).join('\n') : ''}`);
+}
+
+// Abre o modal de WhatsApp já pré-filtrado pelos alunos selecionados.
+// Reusa toda a infra existente (Z-API, templates, histórico).
+function notificarWhatsAlunosSelecionados() {
+  const sel = _alunoSelInit();
+  const perfis = state._alunoListaAtual || [];
+  // Só alunos (não professor); o modal cuida de separar quem tem/não tem telefone
+  const alvos = perfis.filter(p => sel.has(p.id) && p.perfil !== 'professor');
+  if (!alvos.length) { alert('Selecione ao menos um aluno (professores são ignorados).'); return; }
+  const comTel = alvos.filter(a => a.telefone);
+  if (!comTel.length) {
+    alert('Nenhum dos alunos selecionados tem WhatsApp cadastrado.\n\nUse a busca por nome/CPF e adicione o WhatsApp deles antes de mandar.');
+    return;
+  }
+  const escopoLabel = `${comTel.length} aluno${comTel.length !== 1 ? 's' : ''} da seleção`;
+  abrirNotificarWhatsApp({ preFiltrado: alvos, escopoLabel });
+}
+
+// Exporta os alunos selecionados como CSV (Excel-friendly, UTF-8 com BOM).
+function exportarAlunosSelecionadosCSV() {
+  const sel = _alunoSelInit();
+  const perfis = state._alunoListaAtual || [];
+  const alvos = perfis.filter(p => sel.has(p.id));
+  if (!alvos.length) { alert('Selecione ao menos um aluno.'); return; }
+
+  // Escape de campo CSV — envolve aspas se necessário
+  const esc = (v) => {
+    if (v == null) return '';
+    const s = String(v);
+    if (/[",;\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const fmtTel = (t) => {
+    if (!t) return '';
+    const d = String(t).replace(/\D/g, '');
+    if (d.length === 11) return d.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    if (d.length === 10) return d.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
+    return t;
+  };
+  const fmtCpf = (c) => {
+    if (!c) return '';
+    const d = String(c).replace(/\D/g, '');
+    if (d.length === 11) return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    return c;
+  };
+  const fmtDate = (iso) => {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleString('pt-BR'); } catch (e) { return String(iso); }
+  };
+  const statusLabel = (s) => ({ pendente: 'Pendente', aprovado: 'Aprovado', bloqueado: 'Bloqueado' }[s] || s || '');
+
+  const header = ['Nome', 'E-mail', 'WhatsApp', 'CPF', 'Perfil', 'Status', 'Cadastro', 'Último acesso'];
+  const linhas = alvos.map(p => [
+    p.nome || '',
+    p.email || '',
+    fmtTel(p.telefone),
+    fmtCpf(p.cpf),
+    p.perfil === 'professor' ? 'Professor' : 'Aluno',
+    statusLabel(p.status),
+    fmtDate(p.criado_em),
+    fmtDate(p.ultimo_acesso)
+  ]);
+
+  // Excel-BR usa ';' como separador por default (locale pt-BR), CSV padrão usa ','.
+  // Vamos com ';' pra abrir limpo no Excel sem etapa manual.
+  const csv = [header, ...linhas].map(linha => linha.map(esc).join(';')).join('\r\n');
+
+  // BOM UTF-8 — sem ele o Excel quebra acentos
+  const BOM = '﻿';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '_');
+  a.download = `alunos_radix_${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
 }
 
 async function excluirAlunosSelecionados() {
@@ -11900,10 +12004,22 @@ async function reativarSemana(n) {
 
 // ========== NOTIFICAR ALUNOS VIA WHATSAPP ==========
 
-async function abrirNotificarWhatsApp() {
-  const { data: alunos } = await sb.from('perfis').select('*').eq('perfil','aluno').eq('status','aprovado');
-  const comTel = (alunos || []).filter(a => a.telefone);
-  const semTel = (alunos || []).filter(a => !a.telefone);
+// Abre o modal de notificação via WhatsApp.
+// Sem argumento: pega TODOS os alunos aprovados (comportamento original).
+// Com `opts.preFiltrado = [perfis]`: usa apenas os perfis passados (vindo
+// da seleção em massa do Gerenciar Alunos, por exemplo).
+async function abrirNotificarWhatsApp(opts) {
+  let comTel, semTel, escopoLabel;
+  if (opts && Array.isArray(opts.preFiltrado)) {
+    comTel = opts.preFiltrado.filter(a => a.telefone);
+    semTel = opts.preFiltrado.filter(a => !a.telefone);
+    escopoLabel = opts.escopoLabel || 'alunos selecionados';
+  } else {
+    const { data: alunos } = await sb.from('perfis').select('*').eq('perfil','aluno').eq('status','aprovado');
+    comTel = (alunos || []).filter(a => a.telefone);
+    semTel = (alunos || []).filter(a => !a.telefone);
+    escopoLabel = 'todos os aprovados';
+  }
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalWhats()">
       <div class="modal whats-modal">
@@ -11914,7 +12030,7 @@ async function abrirNotificarWhatsApp() {
           <div>
             <h2 style="margin:0;font-size:20px;">Notificar alunos via WhatsApp</h2>
             <div style="font-size:12.5px;color:var(--radix-text-muted);margin-top:4px;">
-              Envio automático pela Z-API
+              Envio automático pela Z-API · escopo: <b>${escopoLabel}</b>
             </div>
           </div>
         </div>
