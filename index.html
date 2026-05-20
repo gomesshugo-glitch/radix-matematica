@@ -5549,10 +5549,13 @@ function limparMinhaLista() {
   renderMontarLista();
 }
 
-function baixarMinhaListaPDF() {
+async function baixarMinhaListaPDF() {
   const qs = state.questoesSelecionadas.map(id => state.questoes.find(q => q.id === id)).filter(Boolean);
   if (qs.length === 0) { alert('Sua lista está vazia.'); return; }
-  gerarPDFQuestoes(qs, 'Minha Lista de Estudos', true /* includeGabaritoEmpty */);
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  const nome = await pedirNomeLista('Minha Lista de Estudos — ' + dataHoje);
+  if (nome === null) return; // usuário cancelou
+  gerarPDFQuestoes(qs, nome, true /* includeGabaritoEmpty */);
 }
 
 // ========== CONFERIR GABARITO ==========
@@ -5716,7 +5719,97 @@ async function finalizarConferenciaGabarito() {
 
 // ========== GERAR PDF DAS QUESTÕES (Estilo ENEM) ==========
 
-function baixarQuestoesFiltradasPDF() {
+// ----- Helpers compartilhados: busca por texto + nome da lista -----
+
+// Normaliza texto para busca: lowercase + sem acentos + espaços colapsados.
+function _normBusca(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Verifica se uma questão "casa" com o termo (busca em enunciado + alternativas).
+// Termo deve vir já normalizado. Suporta várias palavras (AND).
+function questaoCasaBusca(q, termoNorm) {
+  if (!termoNorm) return true;
+  const partes = termoNorm.split(' ').filter(Boolean);
+  if (!partes.length) return true;
+  const corpo = _normBusca(
+    String(q.enunciado || '').replace(/<[^>]+>/g, ' ') + ' ' +
+    (Array.isArray(q.alternativas) ? q.alternativas.join(' ') : '')
+  );
+  return partes.every(p => corpo.includes(p));
+}
+
+// Sanitiza nome para usar como nome de arquivo (Windows + cross-platform).
+// Preserva acentos e espaços, só remove caracteres proibidos.
+function _safeFileName(s, fallback) {
+  let out = String(s == null ? '' : s).trim();
+  if (!out) return fallback || 'lista';
+  out = out.replace(/[\\\/:*?"<>|]/g, ''); // chars proibidos no Windows
+  out = out.replace(/\s+/g, ' ').trim();
+  if (out.length > 80) out = out.substring(0, 80).trim();
+  return out || (fallback || 'lista');
+}
+
+// Modal "Dê um nome à sua lista". Resolve para string (nome) ou null (cancelar).
+function pedirNomeLista(sugestao, opcoes) {
+  return new Promise(resolve => {
+    const sug = sugestao || ('Lista de Exercícios — ' + new Date().toLocaleDateString('pt-BR'));
+    const subtitulo = (opcoes && opcoes.subtitulo) ||
+      'Esse nome vai aparecer na capa do PDF e no nome do arquivo. Você pode deixar como está ou personalizar.';
+    const id = 'modal-nome-lista';
+    // remove qualquer modal anterior pendente
+    const old = document.getElementById(id); if (old) old.remove();
+    const sugEsc = sug.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const html = `
+      <div class="modal-overlay" id="${id}">
+        <div class="modal" style="max-width:480px;">
+          <h2 style="margin:0 0 8px;">Dê um nome à sua lista</h2>
+          <p style="margin:0 0 14px; font-size:13px; color:var(--radix-text-muted, #777);">${subtitulo}</p>
+          <div class="form-group">
+            <label for="${id}-input">Nome da lista</label>
+            <input type="text" id="${id}-input" value="${sugEsc}" style="width:100%;" maxlength="80">
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
+            <button class="btn btn-secondary" id="${id}-cancel">Cancelar</button>
+            <button class="btn" id="${id}-ok">Continuar →</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.body.classList.add('modal-open');
+    const cleanup = () => {
+      const m = document.getElementById(id); if (m) m.remove();
+      if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
+    };
+    const ok = () => {
+      const inp = document.getElementById(id + '-input');
+      const val = ((inp && inp.value) || '').trim() || sug;
+      cleanup(); resolve(val);
+    };
+    const cancel = () => { cleanup(); resolve(null); };
+    document.getElementById(id + '-ok').addEventListener('click', ok);
+    document.getElementById(id + '-cancel').addEventListener('click', cancel);
+    document.getElementById(id).addEventListener('click', (e) => { if (e.target.id === id) cancel(); });
+    setTimeout(() => {
+      const inp = document.getElementById(id + '-input');
+      if (inp) {
+        inp.focus(); inp.select();
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); ok(); }
+          else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        });
+      }
+    }, 50);
+  });
+}
+
+async function baixarQuestoesFiltradasPDF() {
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+
   // 1) Se há questões SELECIONADAS ("+ Adicionar à lista"), prioriza-as.
   const sel = (state.questoesSelecionadas || [])
     .map(id => state.questoes.find(q => q.id === id))
@@ -5727,7 +5820,9 @@ function baixarQuestoesFiltradasPDF() {
       `OK = baixar PDF só das SELECIONADAS.\n` +
       `Cancelar = baixar TODAS as questões do filtro atual.`);
     if (soSelecionadas) {
-      gerarPDFQuestoes(sel, 'Minha Lista de Estudos', true /* gabarito */);
+      const nomeSel = await pedirNomeLista('Minha Lista de Estudos — ' + dataHoje);
+      if (nomeSel === null) return;
+      gerarPDFQuestoes(sel, nomeSel, true /* gabarito */);
       return;
     }
   }
@@ -5736,9 +5831,12 @@ function baixarQuestoesFiltradasPDF() {
   const tema = filtroEl ? filtroEl.value : state.temaAtual;
   const difEl = document.getElementById('filtro-dif');
   const dif = difEl ? difEl.value : '';
+  const buscaEl = document.getElementById('filtro-busca');
+  const termo = _normBusca(buscaEl ? buscaEl.value : '');
   let questoes = state.questoes.slice();
   if (tema) questoes = questoes.filter(q => q.tema === tema);
   if (dif) questoes = questoes.filter(q => q.dificuldade === dif);
+  if (termo) questoes = questoes.filter(q => questaoCasaBusca(q, termo));
 
   if (questoes.length === 0) {
     alert('Não há questões com esse filtro.');
@@ -5746,8 +5844,10 @@ function baixarQuestoesFiltradasPDF() {
   }
 
   const t = tema ? TEMAS.find(x => x.id === tema)?.nome : 'Todos os temas';
-  const titulo = `${t}${dif ? ' · ' + dif.charAt(0).toUpperCase()+dif.slice(1) : ''}`;
-  gerarPDFQuestoes(questoes, titulo);
+  const tituloSugerido = `${t}${dif ? ' · ' + dif.charAt(0).toUpperCase()+dif.slice(1) : ''} — ${dataHoje}`;
+  const nome = await pedirNomeLista(tituloSugerido);
+  if (nome === null) return;
+  gerarPDFQuestoes(questoes, nome);
 }
 
 async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
@@ -6252,8 +6352,9 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const safeName = tituloLista.replace(/[^a-zA-Z0-9_-]+/g, '_').substring(0, 40);
-    a.download = 'Radix_' + safeName + '_' + nomeAluno.replace(/\s+/g, '_') + '.pdf';
+    // Preserva acentos e espaços; só remove os caracteres proibidos pelo Windows.
+    const safeName = _safeFileName(tituloLista, 'Lista');
+    a.download = safeName + '.pdf';
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
@@ -6314,6 +6415,11 @@ function abrirTema(temaId) {
           <option value="dificil">Difícil</option>
         </select>
       </div>
+      <div class="filtro-field" style="flex:1; min-width:240px;">
+        <label>Buscar no texto da questão</label>
+        <input type="text" id="filtro-busca" placeholder="Ex.: probabilidade, função, triângulo…"
+               oninput="agendarFiltrarQuestoes()" style="width:100%;">
+      </div>
       <button class="btn btn-danger banco-pdf-btn" onclick="baixarQuestoesFiltradasPDF()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Baixar PDF (selecionadas / filtro)
@@ -6324,17 +6430,30 @@ function abrirTema(temaId) {
   filtrarQuestoes();
 }
 
+// Debounce leve para não re-renderizar a cada tecla quando o aluno digita rápido.
+let _filtroQDebounce = null;
+function agendarFiltrarQuestoes() {
+  if (_filtroQDebounce) clearTimeout(_filtroQDebounce);
+  _filtroQDebounce = setTimeout(() => { _filtroQDebounce = null; filtrarQuestoes(); }, 180);
+}
+
 function filtrarQuestoes() {
   const filtroEl = document.getElementById('filtro-tema');
   const tema = filtroEl ? filtroEl.value : state.temaAtual;
   const dif = document.getElementById('filtro-dif').value;
+  const buscaEl = document.getElementById('filtro-busca');
+  const termo = _normBusca(buscaEl ? buscaEl.value : '');
   let questoes = state.questoes.slice();
   if (tema) questoes = questoes.filter(q => q.tema === tema);
   if (dif) questoes = questoes.filter(q => q.dificuldade === dif);
+  if (termo) questoes = questoes.filter(q => questaoCasaBusca(q, termo));
 
   const container = document.getElementById('lista-questoes');
   if (questoes.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:var(--radix-gray-light);padding:32px;">Nenhuma questão encontrada.</p>';
+    const msg = termo
+      ? `Nenhuma questão contém o texto <strong>"${(buscaEl.value||'').replace(/[<>&]/g,'')}"</strong>. Tente outras palavras ou limpe a busca.`
+      : 'Nenhuma questão encontrada.';
+    container.innerHTML = `<p style="text-align:center;color:var(--radix-gray-light);padding:32px;">${msg}</p>`;
     return;
   }
   container.innerHTML = questoes.map((q, idx) => renderQuestao(q, idx + 1, false)).join('');
@@ -7219,6 +7338,11 @@ function renderGerenciarQuestoes() {
               .map(pr => `<option value="${String(pr).replace(/"/g,'&quot;')}">${pr}</option>`).join('')}
         </select>
       </div>
+      <div class="form-group" style="flex:1.4; min-width:240px;">
+        <label>Buscar no texto da questão:</label>
+        <input type="text" id="ger-busca" placeholder="Ex.: probabilidade, função, triângulo…"
+               oninput="agendarFiltrarGer()">
+      </div>
     </div>
 
     <div id="ger-lista"></div>
@@ -7394,15 +7518,25 @@ function fecharPreviewImport() {
   if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
 }
 
+// Debounce leve para a busca por texto no Gerenciar Banco.
+let _gerDebounce = null;
+function agendarFiltrarGer() {
+  if (_gerDebounce) clearTimeout(_gerDebounce);
+  _gerDebounce = setTimeout(() => { _gerDebounce = null; filtrarGer(); }, 180);
+}
+
 function filtrarGer() {
   _gerSelInit();
   const t = document.getElementById('ger-tema').value;
   const soProb = document.getElementById('ger-so-problemas')?.checked;
   const soSemRes = document.getElementById('ger-so-semres')?.checked;
   const prova = document.getElementById('ger-prova')?.value || '';
+  const buscaEl = document.getElementById('ger-busca');
+  const termo = _normBusca(buscaEl ? buscaEl.value : '');
   let qs = state.questoes.slice();
   if (t) qs = qs.filter(q => q.tema === t);
   if (prova) qs = qs.filter(q => (q.prova || '') === prova);
+  if (termo) qs = qs.filter(q => questaoCasaBusca(q, termo));
   qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q), _res: temResolucao(q) }));
   
   const totalProb = qs.filter(q => q._probs.length > 0).length;
