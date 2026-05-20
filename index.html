@@ -10159,8 +10159,13 @@ function fazerMiniSimulado(temaId) {
 // ========== INIT ==========
 (async function init() {
   // 1) Detecta logo se a URL é de recuperação de senha (link do e-mail).
-  //    Se for, NÃO entramos no app — abrimos o modal de definir nova senha.
-  const ehRecovery = /[?#&]type=recovery(\b|&|$)/.test(window.location.href);
+  //    Suporta os 2 formatos do Supabase: legado (#type=recovery / #access_token)
+  //    e PKCE (?code=...). Se for, NÃO entramos no app — abrimos o modal.
+  const _hrefURL = window.location.href;
+  const ehRecovery =
+    /[?#&]type=recovery(\b|&|$)/.test(_hrefURL) ||      // legado
+    /[?&]code=[A-Za-z0-9_\-\.]{8,}/.test(_hrefURL) ||   // PKCE: ?code=...
+    /#access_token=/.test(_hrefURL);                     // legado fallback
 
   // 2) Registra o listener ANTES do getSession() — para não perder o evento
   //    PASSWORD_RECOVERY que o Supabase emite durante a detecção na URL.
