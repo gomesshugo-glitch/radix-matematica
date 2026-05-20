@@ -10257,6 +10257,10 @@ async function gerarResolucaoIA(id) {
 function radixPayloadDoModalRev(base) {
   const corr = parseInt(document.getElementById('rv-corr').value);
   const res = document.getElementById('rv-res').value.trim();
+  // Preserva imagem_path vindo do staging (alternativas-imagem). Os inputs do
+  // modal só editam texto/correta; o caminho da imagem não tem campo na UI,
+  // então tem que carregar do base — senão a publicação apaga as alts-imagem.
+  const baseAlts = Array.isArray(base && base.alternativas) ? base.alternativas : [];
   return Object.assign({}, base, {
     tema: document.getElementById('rv-tema').value,
     nivel_enem: document.getElementById('rv-nivel').value,
@@ -10264,7 +10268,7 @@ function radixPayloadDoModalRev(base) {
     alternativas: [0,1,2,3,4].map(i => ({
       letra: String.fromCharCode(65 + i),
       texto: sanitizarTextoQuestao(document.getElementById('rv-alt-'+i).value).trim(),
-      imagem_path: null,
+      imagem_path: (baseAlts[i] && baseAlts[i].imagem_path) || null,
       correta: i === corr
     })),
     resolucao: res ? { tipo: 'comentada', texto: res,
