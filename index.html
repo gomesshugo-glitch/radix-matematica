@@ -3478,6 +3478,336 @@
 .btn-icon.success:hover { border-color: var(--radix-success); color: var(--radix-success); }
 .btn-icon.danger:hover { border-color: var(--radix-coral); color: var(--radix-coral); }
 
+/* ===== Componentes do redesign da tela de questões (aluno) ===== */
+
+/* Bloco de filtros agrupados */
+.qbk-filtros-bloco {
+  background: var(--radix-surface-2, #fff);
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.qbk-filtros-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--radix-text-muted, #6b7280);
+  margin-bottom: 8px;
+}
+
+/* Chips de filtro (módulos, dificuldade, prova) */
+.qbk-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.qbk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--radix-line, #e5e7eb);
+  background: var(--radix-surface-2, #fff);
+  color: var(--radix-text-2, #374151);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.qbk-chip:hover {
+  border-color: var(--radix-cyan, #22d3ee);
+  color: var(--radix-cyan, #0891b2);
+}
+.qbk-chip.active {
+  background: var(--radix-cyan, #22d3ee);
+  border-color: var(--radix-cyan, #22d3ee);
+  color: #fff;
+  font-weight: 600;
+}
+.qbk-chip-count {
+  font-size: 11px;
+  opacity: 0.75;
+  font-weight: 400;
+}
+.qbk-chip.active .qbk-chip-count { opacity: 0.85; }
+
+/* Barra superior persistente: contador + atalho lista */
+.qbk-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(34,211,238,0.02));
+  border: 1px solid rgba(34,211,238,0.18);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+.qbk-topbar-info b {
+  color: var(--radix-text, #111);
+  font-size: 15px;
+}
+.qbk-topbar-info span {
+  color: var(--radix-text-muted, #6b7280);
+  font-size: 13px;
+  margin-left: 6px;
+}
+
+/* Barra de busca */
+.qbk-busca-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+.qbk-busca-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--radix-text-muted, #9ca3af);
+  pointer-events: none;
+}
+.qbk-busca {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 12px;
+  background: var(--radix-surface-2, #fff);
+  font-size: 14px;
+  color: var(--radix-text, #111);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.qbk-busca:focus {
+  outline: none;
+  border-color: var(--radix-cyan, #22d3ee);
+  box-shadow: 0 0 0 3px rgba(34,211,238,0.15);
+}
+
+/* Card-linha de questão */
+.qbk-card {
+  background: var(--radix-surface-2, #fff);
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.qbk-card:hover {
+  border-color: rgba(34,211,238,0.45);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+}
+.qbk-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.qbk-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--radix-text-muted, #6b7280);
+  flex-wrap: wrap;
+}
+.qbk-card-meta b {
+  color: var(--radix-text, #111);
+  font-weight: 700;
+  font-size: 13px;
+}
+.qbk-card-meta .qbk-sep { color: var(--radix-line-2, #d1d5db); }
+.qbk-card-dif {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.qbk-card-dif.facil   { background: rgba(34,197,94,0.12); color: #15803d; }
+.qbk-card-dif.media   { background: rgba(245,158,11,0.12); color: #b45309; }
+.qbk-card-dif.dificil { background: rgba(239,68,68,0.12); color: #b91c1c; }
+.qbk-card-preview {
+  color: var(--radix-text-2, #374151);
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 4px 0 10px;
+}
+.qbk-card-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+.qbk-ver-mais {
+  background: transparent;
+  border: none;
+  color: var(--radix-cyan, #0891b2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.qbk-ver-mais:hover { text-decoration: underline; text-underline-offset: 3px; }
+.qbk-ver-mais svg {
+  transition: transform 0.2s;
+}
+.qbk-ver-mais.aberto svg { transform: rotate(180deg); }
+.qbk-card-expanded {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--radix-line, #e5e7eb);
+}
+
+/* Estilos das alternativas/enunciado dentro do card expandido —
+   usam as MESMAS variáveis CSS do app pra funcionar em light E dark mode
+   (sem isso, o .alternativa global é escopado em .questao-card e não pega aqui) */
+.qbk-card-expanded .questao-enunciado,
+.qbk-card-expanded .enunciado {
+  color: var(--radix-text, #111) !important;
+  font-size: 15px !important;
+  line-height: 1.65 !important;
+  margin-bottom: 14px !important;
+}
+.qbk-card-expanded .questao-enunciado p { margin: 0 0 12px !important; color: var(--radix-text, #111) !important; }
+.qbk-card-expanded .alternativas {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+.qbk-card-expanded .alternativa {
+  background: var(--radix-bg-2, #f7f9fc) !important;
+  border: 1px solid var(--radix-line, #e5e7eb) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  color: var(--radix-text, #111) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.qbk-card-expanded .alternativa > div:last-child {
+  color: var(--radix-text, #111) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+.qbk-card-expanded .alternativa:hover:not(.correta):not(.errada):not(.selecionada) {
+  border-color: var(--radix-cyan, #22d3ee) !important;
+  background: var(--radix-surface-2, #fff) !important;
+}
+.qbk-card-expanded .alternativa-letra {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  border: 1.5px solid var(--radix-line-2, #d1d5db) !important;
+  background: var(--radix-bg, #fff) !important;
+  color: var(--radix-text, #111) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.qbk-card-expanded .alternativa.selecionada {
+  border-color: var(--radix-cyan, #22d3ee) !important;
+  background: rgba(34,211,238,0.10) !important;
+}
+.qbk-card-expanded .alternativa.selecionada .alternativa-letra {
+  background: var(--radix-cyan, #22d3ee) !important;
+  border-color: var(--radix-cyan, #22d3ee) !important;
+  color: #0e1a36 !important;
+}
+.qbk-card-expanded .alternativa.correta {
+  border-color: var(--radix-success, #10b981) !important;
+  background: rgba(52,211,153,0.12) !important;
+}
+.qbk-card-expanded .alternativa.correta .alternativa-letra {
+  background: var(--radix-success, #10b981) !important;
+  border-color: var(--radix-success, #10b981) !important;
+  color: #0e1a36 !important;
+}
+.qbk-card-expanded .alternativa.errada {
+  border-color: var(--radix-coral, #ff7a5c) !important;
+  background: rgba(255,122,92,0.12) !important;
+}
+.qbk-card-expanded .alternativa.errada .alternativa-letra {
+  background: var(--radix-coral, #ff7a5c) !important;
+  border-color: var(--radix-coral, #ff7a5c) !important;
+  color: #fff !important;
+}
+.qbk-card-expanded .explicacao {
+  background: var(--radix-bg-2, #f7f9fc) !important;
+  border: 1px solid var(--radix-line, #e5e7eb) !important;
+  border-left: 4px solid var(--radix-cyan, #22d3ee) !important;
+  color: var(--radix-text, #111) !important;
+  padding: 14px 16px !important;
+  border-radius: 10px !important;
+  margin-top: 12px !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* Tornar o header/preview do card clicáveis (toggle de expansão) */
+.qbk-card-head, .qbk-card-preview {
+  cursor: pointer;
+  user-select: none;
+}
+.qbk-card-head:hover .qbk-card-meta b,
+.qbk-card-preview:hover {
+  color: var(--radix-cyan, #0891b2);
+  transition: color 0.15s;
+}
+
+/* Paginação */
+.qbk-pag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.qbk-pag button {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--radix-line, #e5e7eb);
+  background: var(--radix-surface-2, #fff);
+  color: var(--radix-text-2, #374151);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0 10px;
+}
+.qbk-pag button:hover:not(:disabled) {
+  border-color: var(--radix-cyan, #22d3ee);
+  color: var(--radix-cyan, #0891b2);
+}
+.qbk-pag button.active {
+  background: var(--radix-cyan, #22d3ee);
+  border-color: var(--radix-cyan, #22d3ee);
+  color: #fff;
+}
+.qbk-pag button:disabled { opacity: 0.4; cursor: not-allowed; }
+.qbk-pag-info {
+  font-size: 12px;
+  color: var(--radix-text-muted, #6b7280);
+  margin: 0 8px;
+}
+
 </style>
 </head>
 <body>
@@ -6738,63 +7068,125 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
 function abrirTema(temaId) {
   state.view = 'tema';
   state.temaAtual = temaId;
-  const tema = temaId ? TEMAS.find(t => t.id === temaId) : { nome: 'Todas as Questões' };
+  // Reseta estado de UI da tela (página, expansão, filtros locais)
+  state._paginaQuestoes = 0;
+  state._expandidoQuestoes = new Set();
+  state._difAtual = '';
+  // Se chegou via um tema específico, deduz o módulo dele; senão mostra todos
+  if (temaId) {
+    const modulo = MODULOS.find(m => (m.temas || []).includes(temaId));
+    state._modAtual = modulo ? modulo.id : null;
+  } else {
+    state._modAtual = null;
+  }
 
+  renderTelaQuestoes();
+}
+
+// Renderiza a tela inteira de questões (separado de abrirTema pra permitir
+// re-render parcial sem perder estado quando trocam módulo/dificuldade/etc.)
+function renderTelaQuestoes() {
   const main = document.getElementById('main-content');
-  const ehTodas = !temaId;
-  const totalQuestoesTema = ehTodas
-    ? state.questoes.length
-    : state.questoes.filter(q => q.tema === temaId).length;
+  const modAtual = state._modAtual;
+  const difAtual = state._difAtual || '';
+  const naLista = (state.questoesSelecionadas || []).length;
+  const totalGeral = (state.questoes || []).length;
+
+  // Conta quantas questões cada módulo tem (pra mostrar badge nas chips)
+  const cntPorMod = {};
+  MODULOS.forEach(m => { cntPorMod[m.id] = 0; });
+  (state.questoes || []).forEach(q => {
+    const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
+    if (mod) cntPorMod[mod.id]++;
+  });
+
+  // Conta por dificuldade considerando módulo atual
+  const cntPorDif = { facil: 0, media: 0, dificil: 0 };
+  (state.questoes || []).forEach(q => {
+    if (modAtual) {
+      const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
+      if (!mod || mod.id !== modAtual) return;
+    }
+    if (q.dificuldade && cntPorDif[q.dificuldade] != null) cntPorDif[q.dificuldade]++;
+  });
 
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / ${tema.nome}</div>
-    <div class="banco-header">
-      <div class="banco-title-wrap">
-        <span class="banco-ico">
-          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18 L8 18 L13 27 L19 6 L30 6"/></svg>
-        </span>
-        <div>
-          <h2 class="banco-title">${tema.nome}</h2>
-          <div class="banco-sub">${totalQuestoesTema} ${totalQuestoesTema === 1 ? 'questão disponível' : 'questões disponíveis'}</div>
-        </div>
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Banco de Questões</div>
+
+    <h2 class="section-title">
+      <span class="section-title-accent"></span>
+      <span class="st-ico"><svg width="18" height="18" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18 L8 18 L13 27 L19 6 L30 6"/></svg></span>
+      Banco de Questões
+    </h2>
+    <p style="color:var(--radix-gray-light);font-size:13px;margin-top:-6px;margin-bottom:14px;">
+      Escolha questões pra montar sua lista de estudos. ${totalGeral} ${totalGeral === 1 ? 'questão disponível' : 'questões disponíveis'} no total.
+    </p>
+
+    <!-- Topbar persistente: contador da lista + atalho -->
+    <div class="qbk-topbar">
+      <div class="qbk-topbar-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--radix-cyan,#0891b2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        <b>${naLista}</b><span>${naLista === 1 ? 'questão na sua lista atual' : 'questões na sua lista atual'}</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        ${naLista > 0 ? `<button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="renderMontarLista()">Ver minha lista →</button>` : ''}
+        <button class="btn btn-danger" style="padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;" onclick="baixarQuestoesFiltradasPDF()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar PDF
+        </button>
       </div>
     </div>
-    <div class="filtros banco-filtros">
-      ${!temaId ? `
-        <div class="filtro-field">
-          <label>Tema</label>
-          <select id="filtro-tema" onchange="filtrarQuestoes()">
-            <option value="">Todos os temas</option>
-            ${MODULOS.map(mod => `
-              <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
-                ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
-              </optgroup>
-            `).join('')}
-          </select>
-        </div>
-      ` : ''}
-      <div class="filtro-field">
-        <label>Dificuldade</label>
-        <select id="filtro-dif" onchange="filtrarQuestoes()">
-          <option value="">Todas as dificuldades</option>
-          <option value="facil">Fácil</option>
-          <option value="media">Média</option>
-          <option value="dificil">Difícil</option>
-        </select>
+
+    <!-- Filtro: módulo (chips) -->
+    <div class="qbk-filtros-bloco">
+      <div class="qbk-filtros-label">Escolha um módulo</div>
+      <div class="qbk-chips">
+        <button class="qbk-chip ${modAtual == null ? 'active' : ''}" onclick="selecionarModulo(null)">
+          Todos <span class="qbk-chip-count">(${totalGeral})</span>
+        </button>
+        ${MODULOS.map(mod => `
+          <button class="qbk-chip ${modAtual === mod.id ? 'active' : ''}" onclick="selecionarModulo('${mod.id}')">
+            ${mod.nome} <span class="qbk-chip-count">(${cntPorMod[mod.id] || 0})</span>
+          </button>
+        `).join('')}
       </div>
-      <div class="filtro-field" style="flex:1; min-width:240px;">
-        <label>Buscar no texto da questão</label>
-        <input type="text" id="filtro-busca" placeholder="Ex.: probabilidade, função, triângulo…"
-               oninput="agendarFiltrarQuestoes()" style="width:100%;">
-      </div>
-      <button class="btn btn-danger banco-pdf-btn" onclick="baixarQuestoesFiltradasPDF()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Baixar PDF
-      </button>
     </div>
+
+    <!-- Filtro: dificuldade (chips) -->
+    <div class="qbk-filtros-bloco">
+      <div class="qbk-filtros-label">Dificuldade</div>
+      <div class="qbk-chips">
+        <button class="qbk-chip ${!difAtual ? 'active' : ''}" onclick="selecionarDificuldade('')">Todas</button>
+        <button class="qbk-chip ${difAtual === 'facil' ? 'active' : ''}" onclick="selecionarDificuldade('facil')">Fácil <span class="qbk-chip-count">(${cntPorDif.facil})</span></button>
+        <button class="qbk-chip ${difAtual === 'media' ? 'active' : ''}" onclick="selecionarDificuldade('media')">Média <span class="qbk-chip-count">(${cntPorDif.media})</span></button>
+        <button class="qbk-chip ${difAtual === 'dificil' ? 'active' : ''}" onclick="selecionarDificuldade('dificil')">Difícil <span class="qbk-chip-count">(${cntPorDif.dificil})</span></button>
+      </div>
+    </div>
+
+    <!-- Busca -->
+    <div class="qbk-busca-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="filtro-busca" class="qbk-busca"
+             placeholder="Buscar no texto da questão ou alternativas…"
+             oninput="agendarFiltrarQuestoes()">
+    </div>
+
     <div id="lista-questoes"></div>
   `;
   filtrarQuestoes();
+}
+
+// Handlers das chips
+function selecionarModulo(modId) {
+  state._modAtual = modId || null;
+  state._paginaQuestoes = 0;
+  state._expandidoQuestoes = new Set();
+  renderTelaQuestoes();
+}
+function selecionarDificuldade(dif) {
+  state._difAtual = dif || '';
+  state._paginaQuestoes = 0;
+  renderTelaQuestoes();
 }
 
 // Debounce leve para não re-renderizar a cada tecla quando o aluno digita rápido.
@@ -6804,26 +7196,224 @@ function agendarFiltrarQuestoes() {
   _filtroQDebounce = setTimeout(() => { _filtroQDebounce = null; filtrarQuestoes(); }, 180);
 }
 
+const QBK_POR_PAGINA = 20;
+
 function filtrarQuestoes() {
-  const filtroEl = document.getElementById('filtro-tema');
-  const tema = filtroEl ? filtroEl.value : state.temaAtual;
-  const dif = document.getElementById('filtro-dif').value;
   const buscaEl = document.getElementById('filtro-busca');
   const termo = _normBusca(buscaEl ? buscaEl.value : '');
-  let questoes = state.questoes.slice();
-  if (tema) questoes = questoes.filter(q => q.tema === tema);
-  if (dif) questoes = questoes.filter(q => q.dificuldade === dif);
+  const modAtual = state._modAtual;
+  const difAtual = state._difAtual || '';
+
+  let questoes = (state.questoes || []).slice();
+  // Módulo
+  if (modAtual) {
+    const mod = MODULOS.find(m => m.id === modAtual);
+    const temasDoMod = mod ? new Set(mod.temas || []) : new Set();
+    questoes = questoes.filter(q => temasDoMod.has(q.tema));
+  }
+  // Dificuldade
+  if (difAtual) questoes = questoes.filter(q => q.dificuldade === difAtual);
+  // Busca por texto
   if (termo) questoes = questoes.filter(q => questaoCasaBusca(q, termo));
 
   const container = document.getElementById('lista-questoes');
+  if (!container) return;
+
   if (questoes.length === 0) {
     const msg = termo
       ? `Nenhuma questão contém o texto <strong>"${(buscaEl.value||'').replace(/[<>&]/g,'')}"</strong>. Tente outras palavras ou limpe a busca.`
-      : 'Nenhuma questão encontrada.';
-    container.innerHTML = `<p style="text-align:center;color:var(--radix-gray-light);padding:32px;">${msg}</p>`;
+      : 'Nenhuma questão com esses filtros. Tente afrouxar (escolher "Todos" ou outra dificuldade).';
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 24px;background:white;border-radius:14px;border:1px dashed var(--radix-line, #e5e7eb);color:var(--radix-text-muted, #6b7280);">
+        <div style="font-size:40px;margin-bottom:8px;">🔍</div>
+        <p style="margin:0;">${msg}</p>
+      </div>`;
     return;
   }
-  container.innerHTML = questoes.map((q, idx) => renderQuestao(q, idx + 1, false)).join('');
+
+  // Paginação
+  const totalPag = Math.ceil(questoes.length / QBK_POR_PAGINA);
+  if (state._paginaQuestoes == null || state._paginaQuestoes >= totalPag) state._paginaQuestoes = 0;
+  const ini = state._paginaQuestoes * QBK_POR_PAGINA;
+  const fim = Math.min(ini + QBK_POR_PAGINA, questoes.length);
+  const pagina = questoes.slice(ini, fim);
+
+  // Cabeçalho do resultado
+  const infoHtml = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:0 4px;">
+      <div style="font-size:13px;color:var(--radix-text-muted, #6b7280);">
+        Mostrando <b style="color:var(--radix-text,#111);">${ini + 1}–${fim}</b> de <b style="color:var(--radix-text,#111);">${questoes.length}</b> ${questoes.length === 1 ? 'questão' : 'questões'}
+      </div>
+    </div>`;
+
+  // Cards
+  const cardsHtml = pagina.map((q, idx) => renderQuestaoCardLinha(q, ini + idx + 1)).join('');
+
+  // Paginação (rodapé)
+  const pagHtml = totalPag > 1 ? renderPaginacaoQuestoes(totalPag) : '';
+
+  container.innerHTML = infoHtml + cardsHtml + pagHtml;
+}
+
+// Renderiza UM card-linha de questão (preview + expansão inline)
+function renderQuestaoCardLinha(q, numero) {
+  const tema = TEMAS.find(t => t.id === q.tema);
+  const dif = q.dificuldade || '';
+  const difLabel = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[dif] || '';
+  const sel = (state.questoesSelecionadas || []).includes(q.id);
+  const expandido = state._expandidoQuestoes && state._expandidoQuestoes.has(q.id);
+
+  // Preview do enunciado: tira markdown de imagem e HTML, mostra primeiros ~220 chars
+  const enunPreview = String(q.enunciado || '')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const previewCurto = enunPreview.length > 220 ? enunPreview.substring(0, 220) + '…' : enunPreview;
+
+  // Conteúdo expandido (reusa o motor de render do app: KaTeX, imagens, alternativas)
+  const expandedHtml = expandido ? `
+    <div class="qbk-card-expanded">
+      ${renderQuestaoCompleta(q)}
+    </div>
+  ` : '';
+
+  const numStr = String(numero).padStart(2, '0');
+  const provaTxt = q.prova ? ` <span class="qbk-sep">·</span> ${String(q.prova).replace(/[<>&]/g,'')}` : '';
+  const idAttr = `qbk-${q.id}`;
+
+  // Clicar em QUALQUER parte do header ou da prévia → toggle expansão.
+  // (Cards já têm cursor:pointer + hover via CSS na .qbk-card-head/.qbk-card-preview)
+  return `
+    <div class="qbk-card" id="${idAttr}">
+      <div class="qbk-card-head" onclick="toggleVerCompleta(${q.id})" title="${expandido ? 'Clique para esconder' : 'Clique para ver completa'}">
+        <div class="qbk-card-meta">
+          <b>Q${numStr}</b>
+          <span class="qbk-sep">·</span>
+          <span>${tema ? tema.nome : 'Sem tema'}</span>
+          ${provaTxt}
+        </div>
+        ${difLabel ? `<span class="qbk-card-dif ${dif}">${difLabel}</span>` : ''}
+      </div>
+      <div class="qbk-card-preview" onclick="toggleVerCompleta(${q.id})" title="${expandido ? 'Clique para esconder' : 'Clique para ver completa'}">${previewCurto}</div>
+      <div class="qbk-card-acoes">
+        <button class="qbk-ver-mais ${expandido ? 'aberto' : ''}" onclick="event.stopPropagation();toggleVerCompleta(${q.id})">
+          ${expandido ? 'Esconder questão' : 'Ver questão completa'}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="btn ${sel ? 'btn-success' : 'btn-secondary'}" data-lista-btn="${q.id}"
+                style="padding:8px 14px;font-size:13px;"
+                onclick="event.stopPropagation();toggleQuestaoLista(${q.id});atualizarBotaoLista(${q.id});">
+          ${sel ? '✓ Já está na sua lista' : '+ Adicionar à lista'}
+        </button>
+      </div>
+      ${expandedHtml}
+    </div>`;
+}
+
+// Render do conteúdo expandido (enunciado completo + imagens + alternativas + ação de responder)
+function renderQuestaoCompleta(q) {
+  const imgsHtml = (q.imagens || []).map(src =>
+    `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura da questão"></div>`
+  ).join('');
+
+  let altsHtml;
+  if (q.alternativasImg && q.alternativasImg.length) {
+    altsHtml = q.alternativasImg.map((src, i) => `
+      <div class="alternativa alt-img" onclick="responderQuestao(${q.id}, ${i})">
+        <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
+        <img class="alt-img-content" src="${src}" alt="alternativa ${String.fromCharCode(65 + i)}">
+      </div>`).join('');
+  } else {
+    altsHtml = (q.alternativas || []).map((alt, i) => `
+      <div class="alternativa" onclick="responderQuestao(${q.id}, ${i})">
+        <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
+        <div>${formatarEnunciado(String(alt).replace(/^[A-E]\)\s*/, ''))}</div>
+      </div>`).join('');
+  }
+
+  return `
+    <div class="questao-enunciado" style="margin-bottom:12px;">${formatarEnunciado(q.enunciado)}</div>
+    ${imgsHtml}
+    <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">${altsHtml}</div>
+    <div id="explicacao-${q.id}"></div>
+  `;
+}
+
+// Helpers de interação
+function toggleVerCompleta(qid) {
+  if (!state._expandidoQuestoes) state._expandidoQuestoes = new Set();
+  if (state._expandidoQuestoes.has(qid)) state._expandidoQuestoes.delete(qid);
+  else state._expandidoQuestoes.add(qid);
+  filtrarQuestoes();
+  // Re-renderiza KaTeX no novo conteúdo expandido
+  setTimeout(() => {
+    if (window.renderMathInElement) {
+      const el = document.getElementById('qbk-' + qid);
+      if (el) window.renderMathInElement(el, { delimiters: [{left:'$',right:'$',display:false}], throwOnError:false });
+    }
+  }, 30);
+}
+
+function atualizarBotaoLista(qid) {
+  // Atualiza só o card desse ID + o badge global (sem re-render da lista toda).
+  const sel = (state.questoesSelecionadas || []).includes(qid);
+  const btn = document.querySelector(`[data-lista-btn="${qid}"]`);
+  if (btn) {
+    btn.innerHTML = sel ? '✓ Já está na sua lista' : '+ Adicionar à lista';
+    btn.classList.toggle('btn-success', sel);
+    btn.classList.toggle('btn-secondary', !sel);
+  }
+  // Atualiza o contador da topbar (re-render parcial)
+  const topInfo = document.querySelector('.qbk-topbar .qbk-topbar-info');
+  if (topInfo) {
+    const n = (state.questoesSelecionadas || []).length;
+    topInfo.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--radix-cyan,#0891b2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <b>${n}</b><span>${n === 1 ? 'questão na sua lista atual' : 'questões na sua lista atual'}</span>`;
+  }
+}
+
+function renderPaginacaoQuestoes(totalPag) {
+  const cur = state._paginaQuestoes || 0;
+  // Janela de páginas mostrada: até 7 (com elipse nas pontas se precisar)
+  const max = 7;
+  let inicio = Math.max(0, cur - Math.floor(max / 2));
+  let fim = Math.min(totalPag, inicio + max);
+  if (fim - inicio < max) inicio = Math.max(0, fim - max);
+
+  let html = '<div class="qbk-pag">';
+  html += `<button onclick="mudarPaginaQuestoes(-1)" ${cur === 0 ? 'disabled' : ''}>‹ Anterior</button>`;
+  if (inicio > 0) {
+    html += `<button onclick="irParaPaginaQuestoes(0)">1</button>`;
+    if (inicio > 1) html += `<span class="qbk-pag-info">…</span>`;
+  }
+  for (let i = inicio; i < fim; i++) {
+    html += `<button class="${i === cur ? 'active' : ''}" onclick="irParaPaginaQuestoes(${i})">${i + 1}</button>`;
+  }
+  if (fim < totalPag) {
+    if (fim < totalPag - 1) html += `<span class="qbk-pag-info">…</span>`;
+    html += `<button onclick="irParaPaginaQuestoes(${totalPag - 1})">${totalPag}</button>`;
+  }
+  html += `<button onclick="mudarPaginaQuestoes(1)" ${cur >= totalPag - 1 ? 'disabled' : ''}>Próxima ›</button>`;
+  html += '</div>';
+  return html;
+}
+
+function mudarPaginaQuestoes(delta) {
+  state._paginaQuestoes = Math.max(0, (state._paginaQuestoes || 0) + delta);
+  state._expandidoQuestoes = new Set();
+  filtrarQuestoes();
+  // Rola pro topo da lista pra ficar claro que mudou de página
+  const c = document.getElementById('lista-questoes');
+  if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function irParaPaginaQuestoes(idx) {
+  state._paginaQuestoes = idx;
+  state._expandidoQuestoes = new Set();
+  filtrarQuestoes();
+  const c = document.getElementById('lista-questoes');
+  if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderQuestao(q, numero, modoSimulado) {
