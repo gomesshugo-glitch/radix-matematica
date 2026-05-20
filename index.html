@@ -4326,10 +4326,21 @@ async function iniciarSessao() {
   state.usuario = {
     nome: meuPerfil.nome, perfil: meuPerfil.perfil,
     email: meuPerfil.email, id: user.id,
-    foto_base64: meuPerfil.foto_base64
+    foto_base64: meuPerfil.foto_base64,
+    telefone: meuPerfil.telefone
   };
   // Marca timestamp de último acesso (não bloqueante)
   sb.rpc('marcar_meu_acesso').then(()=>{}, ()=>{});
+  // Se for aluno e não tiver WhatsApp válido (10 ou 11 dígitos), bloqueia
+  // até preencher. Tem que rodar ANTES da foto porque o telefone também
+  // é exigido pelo back-end (constraint chk_aluno_telefone).
+  if (meuPerfil.perfil === 'aluno') {
+    const telDigitos = String(meuPerfil.telefone || '').replace(/\D/g, '').length;
+    if (telDigitos !== 10 && telDigitos !== 11) {
+      mostrarTelaTelefoneObrigatorio();
+      return;
+    }
+  }
   // Se for aluno e não tiver foto, bloquear acesso até subir
   if (meuPerfil.perfil === 'aluno' && !meuPerfil.foto_base64) {
     mostrarTelaUploadFotoObrigatorio();
@@ -4440,6 +4451,86 @@ async function exigirFotoPerfilSeNecessario() {
   }
   mostrarTelaUploadFotoObrigatorio();
   return true;
+}
+
+// Tela bloqueadora: aluno sem WhatsApp cadastrado precisa preencher
+// antes de acessar o app. Espelha o padrão visual do upload-de-foto.
+function mostrarTelaTelefoneObrigatorio() {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.add('hidden');
+  const v = document.getElementById('view-status');
+  v.classList.remove('hidden');
+  v.innerHTML = `
+    <div class="status-screen">
+      <div class="status-card status-card-wide">
+        <div class="status-ico status-ico-cyan">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h2 class="status-titulo">Complete seu cadastro</h2>
+        <p class="status-msg">
+          Olá, <strong>${state.usuario.nome}</strong>. Para usar a plataforma,
+          precisamos do seu <strong>WhatsApp com DDD</strong>. Ele é usado para
+          enviar avisos importantes do curso (cronograma, materiais, gabaritos).
+        </p>
+
+        <div class="mk-field" style="margin:8px 0 6px;">
+          <label style="display:block;margin-bottom:6px;font-weight:600;font-size:13px;">WhatsApp (com DDD)</label>
+          <input type="tel" id="tel-obrigatorio-input"
+                 placeholder="(11) 98765-4321"
+                 autocomplete="tel" maxlength="16"
+                 oninput="mascararTelefone(this);_telObrigErr('')"
+                 style="width:100%;padding:12px 14px;border:1px solid var(--radix-line-2);border-radius:8px;font-size:15px;">
+        </div>
+        <p id="tel-obrigatorio-erro" style="color:var(--radix-coral);font-size:12.5px;min-height:18px;margin:4px 0 12px;"></p>
+
+        <button class="btn btn-success" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;" onclick="salvarTelefoneObrigatorio()">
+          Salvar e continuar
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+
+        <p style="font-size:11.5px;color:var(--radix-text-muted);margin-top:18px;">
+          Seus dados são usados apenas pelo professor para te contatar — nunca compartilhados.
+        </p>
+
+        <button style="margin-top:18px;background:transparent;color:var(--radix-text-muted);border:none;cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
+      </div>
+    </div>
+  `;
+  // Foca o input para entrada rápida
+  setTimeout(() => { const i = document.getElementById('tel-obrigatorio-input'); if (i) i.focus(); }, 50);
+}
+
+function _telObrigErr(msg) {
+  const el = document.getElementById('tel-obrigatorio-erro');
+  if (el) el.textContent = msg || '';
+}
+
+async function salvarTelefoneObrigatorio() {
+  const inp = document.getElementById('tel-obrigatorio-input');
+  const tel = telefoneLimpo(inp ? inp.value : '');
+  if (tel.length !== 10 && tel.length !== 11) {
+    _telObrigErr('Informe um WhatsApp válido com DDD (10 ou 11 dígitos).');
+    return;
+  }
+  const btn = inp?.parentElement?.parentElement?.querySelector('button.btn-success');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+  try {
+    const { error } = await sb.from('perfis').update({ telefone: tel }).eq('id', state.usuario.id);
+    if (error) throw error;
+    state.usuario.telefone = tel;
+    // Re-entra no fluxo: foto pode ainda estar pendente
+    if (state.usuario.perfil === 'aluno' && !state.usuario.foto_base64) {
+      mostrarTelaUploadFotoObrigatorio();
+      return;
+    }
+    document.getElementById('view-status').classList.add('hidden');
+    await carregarDados();
+    mostrarApp();
+  } catch (e) {
+    console.error('Erro ao salvar telefone:', e);
+    _telObrigErr('Erro ao salvar: ' + (e?.message || e));
+    if (btn) { btn.disabled = false; btn.textContent = 'Salvar e continuar'; }
+  }
 }
 
 function mostrarTelaUploadFotoObrigatorio() {
