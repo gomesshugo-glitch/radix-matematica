@@ -3770,6 +3770,297 @@
   transition: color 0.15s;
 }
 
+/* ===== Seção "Registro de estudo" do modal de semana ===== */
+#grupo-estudo .estudo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+#grupo-estudo .estudo-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--radix-text, #111);
+  letter-spacing: 0.02em;
+}
+#grupo-estudo .estudo-et {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--radix-bg-2, #f7f9fc);
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 8px;
+}
+#grupo-estudo .estudo-et label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--radix-text-2, #374151);
+  margin: 0;
+}
+#grupo-estudo .estudo-et input {
+  width: 90px;
+  padding: 7px 10px;
+  border: 1px solid var(--radix-line-2, #d1d5db);
+  border-radius: 6px;
+  background: var(--radix-surface-2, #fff);
+  color: var(--radix-text, #111);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+#grupo-estudo .estudo-et input:focus {
+  outline: none;
+  border-color: var(--radix-cyan, #22d3ee);
+  box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
+}
+#grupo-estudo .estudo-et .estudo-et-hint {
+  font-size: 11px;
+  color: var(--radix-text-muted, #6b7280);
+  margin-left: auto;
+}
+
+#grupo-estudo .estudo-grid {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px;
+  gap: 6px 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+#grupo-estudo .estudo-grid .colhead {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--radix-text-muted, #6b7280);
+  text-align: center;
+  padding-bottom: 2px;
+}
+#grupo-estudo .estudo-grid .colhead.lbl { text-align: left; }
+#grupo-estudo .estudo-grid .rowlabel {
+  font-size: 13px;
+  color: var(--radix-text-2, #374151);
+  padding: 4px 0;
+}
+#grupo-estudo .estudo-grid .rowlabel b {
+  color: var(--radix-text, #111);
+  font-weight: 700;
+  margin-right: 6px;
+}
+#grupo-estudo .estudo-grid input {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--radix-line-2, #d1d5db);
+  border-radius: 6px;
+  background: var(--radix-surface-2, #fff);
+  color: var(--radix-text, #111);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+#grupo-estudo .estudo-grid input:focus {
+  outline: none;
+  border-color: var(--radix-cyan, #22d3ee);
+  box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
+}
+#grupo-estudo .estudo-grid input.invalid {
+  border-color: #ef4444;
+  background: rgba(239,68,68,0.06);
+}
+
+#grupo-estudo .estudo-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--radix-line, #e5e7eb);
+}
+#grupo-estudo .estudo-foot .foot-label {
+  font-size: 12px;
+  color: var(--radix-text-muted, #6b7280);
+}
+.estudo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+.estudo-badge.empty {
+  background: var(--radix-bg-2, #f3f4f6);
+  color: var(--radix-text-muted, #6b7280);
+  border-color: var(--radix-line, #e5e7eb);
+}
+.estudo-badge.ok {
+  background: rgba(34,197,94,0.14);
+  color: #15803d;
+  border-color: rgba(34,197,94,0.35);
+}
+.estudo-badge.low {
+  background: rgba(239,68,68,0.12);
+  color: #b91c1c;
+  border-color: rgba(239,68,68,0.35);
+}
+
+/* ===== Cards de gráfico do dashboard (alinhados ao visual do .qbk-card) ===== */
+.dash-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 720px) { .dash-charts-grid { grid-template-columns: 1fr; } }
+
+/* Override do .dash-card original (que tem bg:white hardcoded) só dentro do grid */
+.dash-charts-grid .dash-card {
+  background: var(--radix-surface-2, #fff) !important;
+  border: 1px solid var(--radix-line, #e5e7eb) !important;
+  border-radius: 12px !important;
+  padding: 16px 18px !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+.dash-charts-grid .dash-card:hover {
+  border-color: rgba(34,211,238,0.45) !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04) !important;
+}
+.dash-charts-grid .dash-card h3 {
+  margin: 0 0 12px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--radix-text, #111) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  letter-spacing: 0.01em !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+.dash-charts-grid .dash-card h3 svg { color: var(--radix-cyan, #0891b2); }
+.dash-charts-grid .dash-card .chart-wrap {
+  position: relative;
+  height: 240px;
+}
+.dash-charts-grid .dash-card .chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  color: var(--radix-text-muted, #6b7280);
+  font-size: 13px;
+  text-align: center;
+  padding: 0 16px;
+  gap: 4px;
+}
+
+/* ===== Variantes do professor (.qbk-card no Gerenciar Banco) ===== */
+
+/* Checkbox alinhado à esquerda no card */
+.qbk-card.qbk-ger { padding-left: 14px; }
+.qbk-card.qbk-ger .qbk-ger-cb {
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: var(--radix-cyan, #22d3ee);
+  width: 16px; height: 16px;
+}
+.qbk-card.qbk-ger.selecionada {
+  background: rgba(34,211,238,0.06) !important;
+  border-color: rgba(34,211,238,0.45) !important;
+}
+
+/* Ícone de status (⚠ ou ✓) na linha do meta */
+.qbk-status-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+.qbk-status-ico.warn {
+  background: rgba(255,122,92,0.18);
+  color: var(--radix-coral, #ff7a5c);
+}
+.qbk-status-ico.ok {
+  background: rgba(34,197,94,0.14);
+  color: #15803d;
+}
+
+/* Pílula de resolução (Tem / Sem) */
+.qbk-res-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.qbk-res-pill.tem {
+  background: rgba(34,211,238,0.14);
+  color: var(--radix-cyan, #0891b2);
+  border-color: rgba(34,211,238,0.30);
+}
+.qbk-res-pill.sem {
+  background: rgba(127,127,127,0.10);
+  color: var(--radix-text-muted, #6b7280);
+  border-color: var(--radix-line, #e5e7eb);
+}
+
+/* Barra superior de batch / contadores (sticky-feeling) */
+.qbk-ger-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--radix-surface-2, #fff);
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.qbk-ger-toolbar .toolbar-info {
+  font-size: 13px;
+  color: var(--radix-text-2, #374151);
+}
+.qbk-ger-toolbar .toolbar-info b { color: var(--radix-text, #111); font-weight: 700; }
+.qbk-ger-toolbar .toolbar-acoes {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.qbk-ger-toolbar label.cb-inline {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--radix-text-2, #374151);
+  cursor: pointer; user-select: none;
+}
+.qbk-ger-toolbar label.cb-inline input {
+  accent-color: var(--radix-cyan, #22d3ee);
+  cursor: pointer;
+}
+
+/* Container de ações inline do card no professor (esquerda: ver completa, direita: ícones) */
+.qbk-card .qbk-ger-acoes-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* Paginação */
 .qbk-pag {
   display: flex;
@@ -5628,7 +5919,234 @@ function renderDashboardAluno() {
         </div>
       </div>
     </div>
+
+    <!-- Gráficos do dashboard: evolução de simulados + progresso por módulo -->
+    <div class="dash-charts-grid">
+      <div class="dash-card">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+          Evolução dos simulados
+        </h3>
+        <div class="chart-wrap"><canvas id="chart-sim-evolucao"></canvas></div>
+        <div id="chart-sim-empty" class="chart-empty" style="display:none;">
+          Nenhum simulado realizado ainda.<br>
+          <small style="opacity:0.7;">Faça um simulado pra ver sua evolução aparecer aqui.</small>
+        </div>
+      </div>
+      <div class="dash-card">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          Progresso por módulo
+        </h3>
+        <div class="chart-wrap"><canvas id="chart-modulo"></canvas></div>
+        <div id="chart-mod-empty" class="chart-empty" style="display:none;">
+          Responda algumas questões pra ver seu progresso por módulo.
+        </div>
+      </div>
+    </div>
   `;
+
+  // Renderiza os gráficos depois do DOM commit
+  setTimeout(() => {
+    renderChartSimulados();
+    renderChartProgressoModulo();
+  }, 0);
+}
+
+// ====== Gráficos do dashboard do aluno (Chart.js) ======
+
+// Lê as cores do tema atual (light/dark) das CSS vars no :root.
+// Fallback p/ valores neutros caso a var não exista.
+function _coresTema() {
+  const cs = getComputedStyle(document.documentElement);
+  const _g = (name, fb) => {
+    const v = (cs.getPropertyValue(name) || '').trim();
+    return v || fb;
+  };
+  return {
+    text:  _g('--radix-text', '#111'),
+    muted: _g('--radix-text-muted', '#6b7280'),
+    cyan:  _g('--radix-cyan', '#22d3ee'),
+    grid:  'rgba(127,127,127,0.18)' // funciona em ambos os temas
+  };
+}
+
+// Plugin de linha pontilhada de referência (70%) — funciona p/ eixo X ou Y.
+function _refLinePlugin(axis, value, color) {
+  return {
+    id: 'refLine_' + axis + '_' + value,
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!scales[axis]) return;
+      const pos = scales[axis].getPixelForValue(value);
+      if (!Number.isFinite(pos)) return;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      if (axis === 'y') {
+        ctx.moveTo(chartArea.left, pos);
+        ctx.lineTo(chartArea.right, pos);
+      } else {
+        ctx.moveTo(pos, chartArea.top);
+        ctx.lineTo(pos, chartArea.bottom);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+}
+
+function renderChartSimulados() {
+  const el = document.getElementById('chart-sim-evolucao');
+  const empty = document.getElementById('chart-sim-empty');
+  if (!el) return;
+  // Destrói instância prévia se existir
+  const existing = (typeof Chart !== 'undefined') && Chart.getChart ? Chart.getChart(el) : null;
+  if (existing) existing.destroy();
+
+  const sims = ((state && state.historicoSimulados) || [])
+    .slice()
+    .filter(s => s && s.data && s.percentual != null)
+    .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+  if (sims.length === 0) {
+    el.style.display = 'none';
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+  el.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  const labels = sims.map(s => new Date(s.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+  const data = sims.map(s => Math.round(Number(s.percentual) || 0));
+  const cores = _coresTema();
+
+  new Chart(el, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '% acerto',
+        data,
+        borderColor: cores.cyan,
+        backgroundColor: 'rgba(34,211,238,0.14)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: cores.cyan,
+        pointBorderColor: cores.text,
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: (ctx) => ctx.parsed.y + '%' }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true, max: 100,
+          ticks: { color: cores.muted, callback: v => v + '%', font: { family: "'Inter', system-ui, sans-serif", size: 11 } },
+          grid: { color: cores.grid }
+        },
+        x: {
+          ticks: { color: cores.muted, font: { family: "'Inter', system-ui, sans-serif", size: 11 } },
+          grid: { color: cores.grid }
+        }
+      }
+    },
+    plugins: [_refLinePlugin('y', 70, '#fbbf24')]
+  });
+}
+
+function renderChartProgressoModulo() {
+  const el = document.getElementById('chart-modulo');
+  const empty = document.getElementById('chart-mod-empty');
+  if (!el) return;
+  const existing = (typeof Chart !== 'undefined') && Chart.getChart ? Chart.getChart(el) : null;
+  if (existing) existing.destroy();
+
+  const labels = ['M1 Aritmética', 'M2 Geometria', 'M3 Funções/Progressões', 'M4 Estatística/Matrizes'];
+  const modIds = ['m1', 'm2', 'm3', 'm4'];
+  const respostas = (state && state.respostasAluno) || [];
+
+  // Calcula % de acerto por módulo cruzando r.tema com MODULOS[i].temas.
+  // Retorna null se o módulo não tiver dados (não aparece como barra de 0%).
+  const data = modIds.map(mid => {
+    const mod = MODULOS.find(m => m.id === mid);
+    if (!mod) return null;
+    const temasSet = new Set(mod.temas || []);
+    const resp = respostas.filter(r => temasSet.has(r.tema));
+    if (resp.length === 0) return null;
+    const acertos = resp.filter(r => r.correto).length;
+    return Math.round((acertos / resp.length) * 100);
+  });
+
+  const temAlgum = data.some(v => v !== null);
+  if (!temAlgum) {
+    el.style.display = 'none';
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+  el.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  const cores = _coresTema();
+  // Cor por barra: cyan padrão; cinza translúcido se null (não há dados)
+  const bgColors = data.map(v => v == null ? 'rgba(127,127,127,0.12)' : 'rgba(34,211,238,0.55)');
+  const borderColors = data.map(v => v == null ? 'rgba(127,127,127,0.25)' : cores.cyan);
+
+  new Chart(el, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '% acerto',
+        data: data.map(v => v == null ? 0 : v),
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1.5,
+        borderRadius: 4,
+        // Guarda os valores reais (null/N) pra usar no tooltip
+        _real: data
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const real = ctx.dataset._real ? ctx.dataset._real[ctx.dataIndex] : ctx.parsed.x;
+              return real == null ? 'sem respostas ainda' : (real + '% de acerto');
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true, max: 100,
+          ticks: { color: cores.muted, callback: v => v + '%', font: { family: "'Inter', system-ui, sans-serif", size: 11 } },
+          grid: { color: cores.grid }
+        },
+        y: {
+          ticks: { color: cores.muted, font: { family: "'Inter', system-ui, sans-serif", size: 11 } },
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [_refLinePlugin('x', 70, '#fbbf24')]
+  });
 }
 
 function relativeTime(date) {
@@ -8257,16 +8775,53 @@ async function salvarQuestao(idEdicao, modo) {
 
 function renderGerenciarQuestoes() {
   state.view = 'gerenciar';
+  // Reseta UI local (paginação, expansão). Mantém filtros se já existirem.
+  state._gerPagina = 0;
+  state._gerExpandido = new Set();
+  if (state._gerMod === undefined) state._gerMod = null;
+  if (state._gerProva === undefined) state._gerProva = '';
+  if (state._gerBuscaTermo === undefined) state._gerBuscaTermo = '';
+  if (state._gerSoProb === undefined) state._gerSoProb = false;
+  if (state._gerSoSemRes === undefined) state._gerSoSemRes = false;
+  renderTelaGerenciar();
+}
+
+// Re-renderiza a tela inteira do Gerenciar Banco (chips, busca, lista).
+// Separado pra permitir trocar módulo/prova sem perder a busca digitada.
+function renderTelaGerenciar() {
   const main = document.getElementById('main-content');
+  const provas = [...new Set((state.questoes || []).map(q => q.prova).filter(Boolean))].sort();
+  const modAtual = state._gerMod;
+  const provaAtual = state._gerProva || '';
+  const totalGeral = (state.questoes || []).length;
+
+  // Contagens por módulo e por prova
+  const cntPorMod = {};
+  MODULOS.forEach(m => { cntPorMod[m.id] = 0; });
+  (state.questoes || []).forEach(q => {
+    const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
+    if (mod) cntPorMod[mod.id]++;
+  });
+  const cntPorProva = {};
+  provas.forEach(p => { cntPorProva[p] = 0; });
+  (state.questoes || []).forEach(q => {
+    if (q.prova && cntPorProva[q.prova] != null) cntPorProva[q.prova]++;
+  });
+
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Banco</div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 24px;">
-      <h2 class="section-title" style="margin:0;">
-        <span class="section-title-accent"></span>
-        <span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
-        Gerenciar Banco
-      </h2>
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
+      <div>
+        <h2 class="section-title" style="margin:0;">
+          <span class="section-title-accent"></span>
+          <span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+          Gerenciar Banco
+        </h2>
+        <p style="margin:6px 0 0 22px; font-size:13px; color:var(--radix-text-muted, #6b7280);">
+          ${totalGeral} ${totalGeral === 1 ? 'questão cadastrada' : 'questões cadastradas'}
+        </p>
+      </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn" onclick="abrirCadastroQuestao()">+ Nova questão</button>
         <button class="btn btn-secondary" onclick="abrirImportarQuestoes()">Importar JSON</button>
@@ -8275,36 +8830,69 @@ function renderGerenciarQuestoes() {
       </div>
     </div>
 
-    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px;">
-      <div class="form-group" style="flex:1; min-width:220px; max-width:320px;">
-        <label>Filtrar por Tema:</label>
-        <select id="ger-tema" onchange="filtrarGer()">
-          <option value="">Todos os temas</option>
-          ${MODULOS.map(mod => `
-            <optgroup label="Módulo ${mod.numero} — ${mod.nome}">
-              ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}">${t.nome}</option>`; }).join('')}
-            </optgroup>
-          `).join('')}
-        </select>
+    ${provas.length > 0 ? `
+    <div class="qbk-filtros-bloco">
+      <div class="qbk-filtros-label">Filtrar por prova</div>
+      <div class="qbk-chips">
+        <button class="qbk-chip ${!provaAtual ? 'active' : ''}" onclick="selecionarProvaGer('')">
+          Todas <span class="qbk-chip-count">(${totalGeral})</span>
+        </button>
+        ${provas.map(pr => {
+          const provaEsc = String(pr).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          const provaTxt = String(pr).replace(/[<>&]/g, '');
+          return `
+          <button class="qbk-chip ${provaAtual === pr ? 'active' : ''}" onclick="selecionarProvaGer('${provaEsc}')">
+            ${provaTxt} <span class="qbk-chip-count">(${cntPorProva[pr] || 0})</span>
+          </button>`;
+        }).join('')}
       </div>
-      <div class="form-group" style="flex:1; min-width:220px; max-width:320px;">
-        <label>Filtrar por Prova:</label>
-        <select id="ger-prova" onchange="filtrarGer()">
-          <option value="">Todas as provas</option>
-          ${[...new Set((state.questoes||[]).map(q=>q.prova).filter(Boolean))].sort()
-              .map(pr => `<option value="${String(pr).replace(/"/g,'&quot;')}">${pr}</option>`).join('')}
-        </select>
+    </div>
+    ` : ''}
+
+    <div class="qbk-filtros-bloco">
+      <div class="qbk-filtros-label">Filtrar por módulo</div>
+      <div class="qbk-chips">
+        <button class="qbk-chip ${modAtual == null ? 'active' : ''}" onclick="selecionarModuloGer(null)">
+          Todos <span class="qbk-chip-count">(${totalGeral})</span>
+        </button>
+        ${MODULOS.map(mod => `
+          <button class="qbk-chip ${modAtual === mod.id ? 'active' : ''}" onclick="selecionarModuloGer('${mod.id}')">
+            ${mod.nome} <span class="qbk-chip-count">(${cntPorMod[mod.id] || 0})</span>
+          </button>
+        `).join('')}
       </div>
-      <div class="form-group" style="flex:1.4; min-width:240px;">
-        <label>Buscar no texto da questão:</label>
-        <input type="text" id="ger-busca" placeholder="Ex.: probabilidade, função, triângulo…"
-               oninput="agendarFiltrarGer()">
-      </div>
+    </div>
+
+    <div class="qbk-busca-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="ger-busca" class="qbk-busca"
+             placeholder="Buscar no texto da questão ou alternativas…"
+             value="${(state._gerBuscaTermo || '').replace(/"/g, '&quot;')}"
+             oninput="agendarFiltrarGer()">
     </div>
 
     <div id="ger-lista"></div>
   `;
   filtrarGer();
+}
+
+// Handlers das chips do Gerenciar Banco
+function selecionarProvaGer(prova) {
+  // Salva o termo de busca atual antes de re-renderizar
+  const buscaEl = document.getElementById('ger-busca');
+  if (buscaEl) state._gerBuscaTermo = buscaEl.value;
+  state._gerProva = prova || '';
+  state._gerPagina = 0;
+  state._gerExpandido = new Set();
+  renderTelaGerenciar();
+}
+function selecionarModuloGer(modId) {
+  const buscaEl = document.getElementById('ger-busca');
+  if (buscaEl) state._gerBuscaTermo = buscaEl.value;
+  state._gerMod = modId || null;
+  state._gerPagina = 0;
+  state._gerExpandido = new Set();
+  renderTelaGerenciar();
 }
 
 // Diagnóstico de quesões: retorna array de problemas encontrados
@@ -8479,107 +9067,264 @@ function fecharPreviewImport() {
 let _gerDebounce = null;
 function agendarFiltrarGer() {
   if (_gerDebounce) clearTimeout(_gerDebounce);
-  _gerDebounce = setTimeout(() => { _gerDebounce = null; filtrarGer(); }, 180);
+  _gerDebounce = setTimeout(() => {
+    _gerDebounce = null;
+    const buscaEl = document.getElementById('ger-busca');
+    if (buscaEl) state._gerBuscaTermo = buscaEl.value;
+    filtrarGer();
+  }, 180);
 }
+
+const GER_POR_PAGINA = 20;
 
 function filtrarGer() {
   _gerSelInit();
-  const t = document.getElementById('ger-tema').value;
-  const soProb = document.getElementById('ger-so-problemas')?.checked;
-  const soSemRes = document.getElementById('ger-so-semres')?.checked;
-  const prova = document.getElementById('ger-prova')?.value || '';
-  const buscaEl = document.getElementById('ger-busca');
-  const termo = _normBusca(buscaEl ? buscaEl.value : '');
-  let qs = state.questoes.slice();
-  if (t) qs = qs.filter(q => q.tema === t);
-  if (prova) qs = qs.filter(q => (q.prova || '') === prova);
-  if (termo) qs = qs.filter(q => questaoCasaBusca(q, termo));
+  // Os checkboxes "só sem res" / "só com problemas" são re-renderizados a cada
+  // filtrarGer(), então persistimos o estado em state._gerSoProb/SemRes.
+  const cbProb = document.getElementById('ger-so-problemas');
+  const cbSem  = document.getElementById('ger-so-semres');
+  if (cbProb) state._gerSoProb = cbProb.checked;
+  if (cbSem)  state._gerSoSemRes = cbSem.checked;
+  const soProb    = !!state._gerSoProb;
+  const soSemRes  = !!state._gerSoSemRes;
+
+  const modAtual   = state._gerMod;
+  const provaAtual = state._gerProva || '';
+  const buscaEl    = document.getElementById('ger-busca');
+  const termoRaw   = buscaEl ? buscaEl.value : (state._gerBuscaTermo || '');
+  const termo      = _normBusca(termoRaw);
+
+  let qs = (state.questoes || []).slice();
+  if (modAtual) {
+    const mod = MODULOS.find(m => m.id === modAtual);
+    const temasSet = new Set(mod ? (mod.temas || []) : []);
+    qs = qs.filter(q => temasSet.has(q.tema));
+  }
+  if (provaAtual) qs = qs.filter(q => (q.prova || '') === provaAtual);
+  if (termo)      qs = qs.filter(q => questaoCasaBusca(q, termo));
   qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q), _res: temResolucao(q) }));
-  
-  const totalProb = qs.filter(q => q._probs.length > 0).length;
+
+  const totalProb   = qs.filter(q => q._probs.length > 0).length;
   const totalSemRes = qs.filter(q => !q._res).length;
-  if (soProb) qs = qs.filter(q => q._probs.length > 0);
+  if (soProb)   qs = qs.filter(q => q._probs.length > 0);
   if (soSemRes) qs = qs.filter(q => !q._res);
-  
+
   const cont = document.getElementById('ger-lista');
+  if (!cont) return;
+
+  // Paginação
+  const totalPag = Math.ceil(qs.length / GER_POR_PAGINA);
+  if (state._gerPagina == null || (totalPag > 0 && state._gerPagina >= totalPag)) state._gerPagina = 0;
+  const ini = (state._gerPagina || 0) * GER_POR_PAGINA;
+  const fim = Math.min(ini + GER_POR_PAGINA, qs.length);
+  const pagina = qs.slice(ini, fim);
 
   cont.innerHTML = `
-    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--radix-surface-2); border:1px solid var(--radix-line); border-radius:12px; padding:12px 16px; margin-bottom:16px;">
-      <span style="font-size:13px; color:var(--radix-text-2);">📝 <strong>${totalSemRes}</strong> sem resolução · <strong>${totalProb}</strong> c/ problema · ${qs.length} exibida(s)</span>
-
-      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--radix-text-2);cursor:pointer;margin-left:12px;">
-        <input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"> Só sem resolução
-      </label>
-      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--radix-text-2);cursor:pointer;">
-        <input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"> Só com problemas
-      </label>
-
-      <span style="flex:1;"></span>
-
-      <span style="font-size:13px; color:var(--radix-text-2);"><strong id="ger-sel-count">${state._gerSel.size}</strong> selecionada(s)</span>
-      <button class="btn btn-secondary" style="padding:8px 14px; font-size:12px;" onclick="limparGerSel()">Limpar seleção</button>
-      <button class="btn" style="padding:8px 14px; font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução em lote</button>
+    <!-- Barra superior: contadores + toggles -->
+    <div class="qbk-ger-toolbar">
+      <div class="toolbar-info">
+        📝 <b>${totalSemRes}</b> sem resolução · <b>${totalProb}</b> c/ problema · <b>${qs.length}</b> exibida${qs.length !== 1 ? 's' : ''}
+      </div>
+      <div class="toolbar-acoes">
+        <label class="cb-inline">
+          <input type="checkbox" id="ger-so-semres" ${soSemRes ? 'checked' : ''} onchange="filtrarGer()"> só sem resolução
+        </label>
+        <label class="cb-inline">
+          <input type="checkbox" id="ger-so-problemas" ${soProb ? 'checked' : ''} onchange="filtrarGer()"> só com problemas
+        </label>
+      </div>
     </div>
 
-    <p id="ger-lote-msg" style="font-size:13px; min-height:18px; margin-bottom:12px; color:var(--radix-text-muted);"></p>
-
-    <div style="overflow-x: auto;">
-      <table class="v3-table">
-        <thead>
-          <tr>
-            <th style="width:40px;text-align:center;"><input type="checkbox" style="cursor:pointer;" title="Selecionar todas visíveis" onchange="toggleGerSelAll(this.checked)"></th>
-            <th style="width:40px;text-align:center;">⚠</th>
-            <th style="width:200px;">Tema</th>
-            <th>Enunciado</th>
-            <th style="text-align:center; width:100px;">Resolução</th>
-            <th style="width:80px;">Dificuldade</th>
-            <th style="text-align:right; width:140px;">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${qs.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--radix-text-muted);">Nenhuma questão encontrada com esses filtros.</td></tr>' : ''}
-          ${qs.map(q => {
-            const tema = TEMAS.find(x => x.id === q.tema);
-            const probs = q._probs;
-            
-            const statusCell = probs.length > 0
-              ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:rgba(255,122,92,0.15);color:var(--radix-coral);border-radius:50%;font-size:13px;font-weight:700;cursor:help;" title="${probs.join(' · ').replace(/"/g,'&quot;')}">⚠</span>`
-              : '<span style="color:var(--radix-success);opacity:0.5;font-size:14px;" title="OK">✓</span>';
-            
-            const resCell = q._res
-              ? '<span style="background:rgba(34,211,238,0.15);color:var(--radix-cyan);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;">✓ Tem</span>'
-              : '<span style="background:var(--radix-bg-2);color:var(--radix-text-muted);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;">Sem</span>';
-            
-            const sel = state._gerSel.has(q.id) ? 'checked' : '';
-            
-            return `
-              <tr style="${probs.length > 0 ? 'background: rgba(255,122,92,0.04);' : ''}">
-                <td style="text-align:center;"><input type="checkbox" class="ger-cb" style="cursor:pointer;" value="${q.id}" ${sel} onchange="toggleGerSel(${q.id}, this.checked)"></td>
-                <td style="text-align:center;">${statusCell}</td>
-                <td><span class="tag tag-tema">${tema ? tema.nome : '—'}</span></td>
-                <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${q.enunciado.replace(/"/g,'&quot;')}">${q.enunciado}</td>
-                <td style="text-align:center;">${resCell}</td>
-                <td style="text-transform:capitalize;">${q.dificuldade || '—'}</td>
-                <td style="text-align:right; white-space:nowrap;">
-                  <div style="display:flex;gap:6px;justify-content:flex-end;">
-                    <button class="btn-icon" title="Editar Questão" onclick="abrirCadastroQuestao(${q.id})">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-                    </button>
-                    <button class="btn-icon" title="Gerar Resolução com IA" onclick="abrirResolucaoIA(${q.id})">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M21 5c0 1.66-4 3-9 3S3 6.66 3 5c0-1.66 4-3 9-3s9 1.34 9 3z"/></svg>
-                    </button>
-                    <button class="btn-icon danger" title="Excluir" onclick="excluirQuestao(${q.id})">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
+    <!-- Barra de seleção em batch -->
+    <div class="qbk-ger-toolbar" style="background: rgba(34,211,238,0.05); border-color: rgba(34,211,238,0.22);">
+      <label class="cb-inline">
+        <input type="checkbox" id="ger-cb-todas" onchange="toggleGerSelAll(this.checked)"> Selecionar todas da página
+      </label>
+      <div class="toolbar-acoes">
+        <span class="toolbar-info"><b id="ger-sel-count">${state._gerSel.size}</b> selecionada${state._gerSel.size !== 1 ? 's' : ''}</span>
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="limparGerSel()">Limpar</button>
+        <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="gerarResolucaoLote()">✨ Gerar resolução em lote</button>
+      </div>
     </div>
+
+    <p id="ger-lote-msg" style="font-size:13px; min-height:18px; margin: 6px 4px 12px; color:var(--radix-text-muted, #6b7280);"></p>
+
+    ${qs.length === 0 ? `
+      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface-2, #fff);border-radius:14px;border:1px dashed var(--radix-line, #e5e7eb);color:var(--radix-text-muted, #6b7280);">
+        <div style="font-size:40px;margin-bottom:8px;">🔍</div>
+        <p style="margin:0;">Nenhuma questão encontrada com esses filtros.</p>
+      </div>
+    ` : `
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin: 6px 4px 12px;">
+        <div style="font-size:13px;color:var(--radix-text-muted, #6b7280);">
+          Mostrando <b style="color:var(--radix-text,#111);">${ini + 1}–${fim}</b> de <b style="color:var(--radix-text,#111);">${qs.length}</b> ${qs.length === 1 ? 'questão' : 'questões'}
+        </div>
+      </div>
+      ${pagina.map((q, idx) => renderGerCardLinha(q, ini + idx + 1)).join('')}
+      ${totalPag > 1 ? renderPaginacaoGer(totalPag) : ''}
+    `}
   `;
+}
+
+// Renderiza UM card-linha do professor (mesmo visual do aluno + variantes ger)
+function renderGerCardLinha(q, numero) {
+  const tema = TEMAS.find(t => t.id === q.tema);
+  const dif = q.dificuldade || '';
+  const difLabel = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[dif] || '';
+  const sel = state._gerSel.has(q.id);
+  const expandido = state._gerExpandido && state._gerExpandido.has(q.id);
+  const probs = q._probs || [];
+  const temRes = q._res;
+
+  const enunPreview = String(q.enunciado || '')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const previewCurto = enunPreview.length > 220 ? enunPreview.substring(0, 220) + '…' : enunPreview;
+
+  const expandedHtml = expandido ? `
+    <div class="qbk-card-expanded">
+      ${renderQuestaoCompletaGer(q)}
+    </div>
+  ` : '';
+
+  const numStr = String(numero).padStart(2, '0');
+  const provaTxt = q.prova ? ` <span class="qbk-sep">·</span> ${String(q.prova).replace(/[<>&]/g, '')}` : '';
+  const probsTitle = probs.join(' · ').replace(/"/g, '&quot;');
+  const statusIco = probs.length > 0
+    ? `<span class="qbk-status-ico warn" title="${probsTitle}">⚠</span>`
+    : '<span class="qbk-status-ico ok" title="Sem problemas detectados">✓</span>';
+
+  return `
+    <div class="qbk-card qbk-ger ${sel ? 'selecionada' : ''}" id="ger-${q.id}">
+      <div class="qbk-card-head">
+        <div class="qbk-card-meta" style="flex:1;min-width:0;">
+          <input type="checkbox" class="ger-cb qbk-ger-cb" value="${q.id}" ${sel ? 'checked' : ''}
+                 onclick="event.stopPropagation()"
+                 onchange="toggleGerSel(${q.id}, this.checked); document.getElementById('ger-${q.id}').classList.toggle('selecionada', this.checked);">
+          ${statusIco}
+          <b>Q${numStr}</b>
+          <span class="qbk-sep">·</span>
+          <span>${tema ? tema.nome : 'Sem tema'}</span>
+          ${provaTxt}
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:8px;flex-shrink:0;">
+          ${temRes ? '<span class="qbk-res-pill tem">✓ Tem</span>' : '<span class="qbk-res-pill sem">Sem</span>'}
+          ${difLabel ? `<span class="qbk-card-dif ${dif}">${difLabel}</span>` : ''}
+        </div>
+      </div>
+      ${expandido ? '' : `<div class="qbk-card-preview" onclick="toggleVerCompletaGer(${q.id})" title="Clique para ver completa">${previewCurto}</div>`}
+      <div class="qbk-card-acoes">
+        <button class="qbk-ver-mais ${expandido ? 'aberto' : ''}" onclick="event.stopPropagation();toggleVerCompletaGer(${q.id})">
+          ${expandido ? 'Esconder questão' : 'Ver questão completa'}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="qbk-ger-acoes-icons">
+          <button class="btn-icon" title="Editar questão" onclick="event.stopPropagation();abrirCadastroQuestao(${q.id})">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+          </button>
+          <button class="btn-icon" title="Gerar resolução com IA" onclick="event.stopPropagation();abrirResolucaoIA(${q.id})">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </button>
+          <button class="btn-icon danger" title="Excluir" onclick="event.stopPropagation();excluirQuestao(${q.id})">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+      ${expandedHtml}
+    </div>`;
+}
+
+// Conteúdo expandido (read-only — não responde, só mostra alternativas com a correta destacada)
+function renderQuestaoCompletaGer(q) {
+  const imgsHtml = (q.imagens || []).map(src =>
+    `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura da questão"></div>`
+  ).join('');
+
+  let altsHtml;
+  if (q.alternativasImg && q.alternativasImg.length) {
+    altsHtml = q.alternativasImg.map((src, i) => `
+      <div class="alternativa alt-img ${i === q.correta ? 'correta' : ''}" style="cursor:default;">
+        <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
+        <img class="alt-img-content" src="${src}" alt="alternativa ${String.fromCharCode(65 + i)}">
+      </div>`).join('');
+  } else {
+    altsHtml = (q.alternativas || []).map((alt, i) => `
+      <div class="alternativa ${i === q.correta ? 'correta' : ''}" style="cursor:default;">
+        <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
+        <div>${formatarEnunciado(String(alt).replace(/^[A-E]\)\s*/, ''))}</div>
+      </div>`).join('');
+  }
+
+  const gabLetra = (q.correta != null && q.correta >= 0) ? String.fromCharCode(65 + q.correta) : '—';
+  const resHtml = q.explicacao ? `
+    <div class="explicacao" style="margin-top:12px;">
+      <strong>Resolução:</strong><br>
+      ${formatarEnunciado(q.explicacao)}
+    </div>` : '';
+
+  return `
+    <div class="questao-enunciado" style="margin-bottom:12px;">${formatarEnunciado(q.enunciado)}</div>
+    ${imgsHtml}
+    <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
+    <div style="margin-top:10px;font-size:12px;color:var(--radix-text-muted, #6b7280);">
+      Gabarito oficial: <b style="color:var(--radix-success, #15803d);">${gabLetra})</b>
+    </div>
+    ${resHtml}`;
+}
+
+function toggleVerCompletaGer(qid) {
+  if (!state._gerExpandido) state._gerExpandido = new Set();
+  if (state._gerExpandido.has(qid)) state._gerExpandido.delete(qid);
+  else state._gerExpandido.add(qid);
+  filtrarGer();
+  setTimeout(() => {
+    if (window.renderMathInElement) {
+      const el = document.getElementById('ger-' + qid);
+      if (el) window.renderMathInElement(el, { delimiters: [{left:'$',right:'$',display:false}], throwOnError:false });
+    }
+  }, 30);
+}
+
+function renderPaginacaoGer(totalPag) {
+  const cur = state._gerPagina || 0;
+  const max = 7;
+  let inicio = Math.max(0, cur - Math.floor(max / 2));
+  let fim = Math.min(totalPag, inicio + max);
+  if (fim - inicio < max) inicio = Math.max(0, fim - max);
+
+  let html = '<div class="qbk-pag">';
+  html += `<button onclick="mudarPaginaGer(-1)" ${cur === 0 ? 'disabled' : ''}>‹ Anterior</button>`;
+  if (inicio > 0) {
+    html += `<button onclick="irParaPaginaGer(0)">1</button>`;
+    if (inicio > 1) html += `<span class="qbk-pag-info">…</span>`;
+  }
+  for (let i = inicio; i < fim; i++) {
+    html += `<button class="${i === cur ? 'active' : ''}" onclick="irParaPaginaGer(${i})">${i + 1}</button>`;
+  }
+  if (fim < totalPag) {
+    if (fim < totalPag - 1) html += `<span class="qbk-pag-info">…</span>`;
+    html += `<button onclick="irParaPaginaGer(${totalPag - 1})">${totalPag}</button>`;
+  }
+  html += `<button onclick="mudarPaginaGer(1)" ${cur >= totalPag - 1 ? 'disabled' : ''}>Próxima ›</button>`;
+  html += '</div>';
+  return html;
+}
+
+function mudarPaginaGer(delta) {
+  state._gerPagina = Math.max(0, (state._gerPagina || 0) + delta);
+  state._gerExpandido = new Set();
+  filtrarGer();
+  const c = document.getElementById('ger-lista');
+  if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function irParaPaginaGer(idx) {
+  state._gerPagina = idx;
+  state._gerExpandido = new Set();
+  filtrarGer();
+  const c = document.getElementById('ger-lista');
+  if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Geração em LOTE: gera + salva a resolução das selecionadas (rascunho editável).
@@ -11030,7 +11775,16 @@ async function carregarProgressoCronograma() {
     state.progressoCronograma[p.semana_numero] = {
       status: p.status,
       tecnicas: p.tecnicas || [],
-      nota_pessoal: p.nota_pessoal || ''
+      nota_pessoal: p.nota_pessoal || '',
+      // Métricas quantitativas (podem ser null se a coluna ainda não foi criada
+      // OU se a linha legada tinha só status/tecnicas/nota — tratamos como 0)
+      et_horas:    p.et_horas    != null ? Number(p.et_horas)    : 0,
+      qa_feitas:   p.qa_feitas   != null ? Number(p.qa_feitas)   : 0,
+      qa_acertos:  p.qa_acertos  != null ? Number(p.qa_acertos)  : 0,
+      qc_feitas:   p.qc_feitas   != null ? Number(p.qc_feitas)   : 0,
+      qc_acertos:  p.qc_acertos  != null ? Number(p.qc_acertos)  : 0,
+      qap_feitas:  p.qap_feitas  != null ? Number(p.qap_feitas)  : 0,
+      qap_acertos: p.qap_acertos != null ? Number(p.qap_acertos) : 0
     };
   });
 }
@@ -11143,6 +11897,14 @@ function abrirEditorSemana(n) {
   if (!s || s.tipo === 'recesso') return;
   state.semanaEditando = n;
   const prog = state.progressoCronograma[n] || { status: 'nao_iniciado', tecnicas: [], nota_pessoal: '' };
+  // Valores quantitativos (default 0/null se a semana for nova)
+  const et    = prog.et_horas    != null ? prog.et_horas    : '';
+  const qaF   = prog.qa_feitas   != null ? prog.qa_feitas   : '';
+  const qaA   = prog.qa_acertos  != null ? prog.qa_acertos  : '';
+  const qcF   = prog.qc_feitas   != null ? prog.qc_feitas   : '';
+  const qcA   = prog.qc_acertos  != null ? prog.qc_acertos  : '';
+  const qapF  = prog.qap_feitas  != null ? prog.qap_feitas  : '';
+  const qapA  = prog.qap_acertos != null ? prog.qap_acertos : '';
   const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
 
   const html = `
@@ -11174,6 +11936,41 @@ function abrirEditorSemana(n) {
           </div>
         </div>
 
+        <div class="form-group" id="grupo-estudo" style="${prog.status==='nao_iniciado'?'display:none;':''}">
+          <div class="estudo-head">
+            <label class="estudo-titulo" style="margin:0;">📊 Registro de estudo</label>
+          </div>
+
+          <div class="estudo-et">
+            <label for="sem-et">ET (horas)</label>
+            <input type="number" id="sem-et" step="0.5" min="0" placeholder="0" value="${et}" oninput="atualizarPctEstudo()">
+            <span class="estudo-et-hint">Tempo total estudado nesta semana</span>
+          </div>
+
+          <div class="estudo-grid">
+            <div class="colhead lbl">Categoria</div>
+            <div class="colhead">Feitas</div>
+            <div class="colhead">Acertos</div>
+
+            <div class="rowlabel"><b>QA</b> Aprendizagem</div>
+            <input type="number" id="sem-qaF"  min="0" step="1" placeholder="0" value="${qaF}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qaA"  min="0" step="1" placeholder="0" value="${qaA}"  oninput="atualizarPctEstudo()">
+
+            <div class="rowlabel"><b>QC</b> Consolidação</div>
+            <input type="number" id="sem-qcF"  min="0" step="1" placeholder="0" value="${qcF}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qcA"  min="0" step="1" placeholder="0" value="${qcA}"  oninput="atualizarPctEstudo()">
+
+            <div class="rowlabel"><b>QAp</b> Aprofundamento</div>
+            <input type="number" id="sem-qapF" min="0" step="1" placeholder="0" value="${qapF}" oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qapA" min="0" step="1" placeholder="0" value="${qapA}" oninput="atualizarPctEstudo()">
+          </div>
+
+          <div class="estudo-foot">
+            <span class="foot-label">% geral (acertos ÷ feitas)</span>
+            <span id="sem-pct-badge" class="estudo-badge empty">— %</span>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Notas pessoais (opcional)</label>
           <textarea id="semana-nota" rows="3" placeholder="Dúvidas, observações, o que revisar...">${prog.nota_pessoal || ''}</textarea>
@@ -11195,12 +11992,57 @@ function abrirEditorSemana(n) {
   `;
   document.body.insertAdjacentHTML('beforeend', `<div id="modal-semana">${html}</div>`);
   document.body.classList.add('modal-open');
-  // Mostra/esconde tecnicas conforme muda status
+  // Mostra/esconde tecnicas E registro de estudo conforme muda status
   document.querySelectorAll('[name="status-radio"]').forEach(r => {
     r.addEventListener('change', () => {
-      document.getElementById('grupo-tecnicas').style.display = r.value === 'nao_iniciado' ? 'none' : 'block';
+      const show = r.value !== 'nao_iniciado';
+      const gt = document.getElementById('grupo-tecnicas');
+      const ge = document.getElementById('grupo-estudo');
+      if (gt) gt.style.display = show ? 'block' : 'none';
+      if (ge) ge.style.display = show ? 'block' : 'none';
     });
   });
+  // Calcula o badge inicial de % geral (com base nos valores pré-preenchidos)
+  atualizarPctEstudo();
+}
+
+// Calcula % geral = sum(acertos) / sum(feitas) * 100
+// Verde ≥ 70%, vermelho < 70%, cinza se sem dados.
+// Também valida visualmente: input.invalid se acertos > feitas em uma categoria.
+function atualizarPctEstudo() {
+  const _v = id => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const n = parseInt(el.value, 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  };
+  const qaF = _v('sem-qaF'),   qaA = _v('sem-qaA');
+  const qcF = _v('sem-qcF'),   qcA = _v('sem-qcA');
+  const qapF = _v('sem-qapF'), qapA = _v('sem-qapA');
+
+  // Marca visualmente as caixas inválidas (acertos > feitas)
+  const _mark = (idF, idA) => {
+    const elF = document.getElementById(idF), elA = document.getElementById(idA);
+    if (!elF || !elA) return;
+    const f = parseInt(elF.value, 10) || 0, a = parseInt(elA.value, 10) || 0;
+    elA.classList.toggle('invalid', a > f);
+  };
+  _mark('sem-qaF',  'sem-qaA');
+  _mark('sem-qcF',  'sem-qcA');
+  _mark('sem-qapF', 'sem-qapA');
+
+  const totFeitas  = qaF + qcF + qapF;
+  const totAcertos = Math.min(qaA, qaF) + Math.min(qcA, qcF) + Math.min(qapA, qapF);
+  const badge = document.getElementById('sem-pct-badge');
+  if (!badge) return;
+  if (totFeitas === 0) {
+    badge.className = 'estudo-badge empty';
+    badge.textContent = '— %';
+    return;
+  }
+  const pct = Math.round((totAcertos / totFeitas) * 100);
+  badge.className = 'estudo-badge ' + (pct >= 70 ? 'ok' : 'low');
+  badge.textContent = pct + '%  ·  ' + totAcertos + '/' + totFeitas;
 }
 
 function fecharModalSemana() {
@@ -11218,16 +12060,66 @@ async function salvarSemana() {
   const tecnicas = [...document.querySelectorAll('#grupo-tecnicas input[type=checkbox]:checked')].map(c => c.value);
   const nota = document.getElementById('semana-nota').value.trim();
 
-  state.progressoCronograma[n] = { status, tecnicas, nota_pessoal: nota };
+  // Lê métricas quantitativas — só fazem sentido se status != 'nao_iniciado'
+  const _intVal = id => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const v = parseInt(el.value, 10);
+    return Number.isFinite(v) && v >= 0 ? v : 0;
+  };
+  const _floatVal = id => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const v = parseFloat(el.value);
+    return Number.isFinite(v) && v >= 0 ? v : 0;
+  };
+  const zerar = (status === 'nao_iniciado');
+  const et_horas    = zerar ? 0 : _floatVal('sem-et');
+  let qa_feitas    = zerar ? 0 : _intVal('sem-qaF');
+  let qa_acertos   = zerar ? 0 : _intVal('sem-qaA');
+  let qc_feitas    = zerar ? 0 : _intVal('sem-qcF');
+  let qc_acertos   = zerar ? 0 : _intVal('sem-qcA');
+  let qap_feitas   = zerar ? 0 : _intVal('sem-qapF');
+  let qap_acertos  = zerar ? 0 : _intVal('sem-qapA');
+
+  // Sanidade local antes de mandar: acertos não pode passar de feitas
+  // (o CHECK no banco também trava, mas evita ida-volta no servidor).
+  if (qa_acertos  > qa_feitas)  qa_acertos  = qa_feitas;
+  if (qc_acertos  > qc_feitas)  qc_acertos  = qc_feitas;
+  if (qap_acertos > qap_feitas) qap_acertos = qap_feitas;
+
+  state.progressoCronograma[n] = {
+    status, tecnicas, nota_pessoal: nota,
+    et_horas, qa_feitas, qa_acertos,
+    qc_feitas, qc_acertos, qap_feitas, qap_acertos
+  };
 
   const { error } = await sb.from('progresso_semanas').upsert({
     aluno_id: state.usuario.id,
     semana_numero: n,
     status, tecnicas, nota_pessoal: nota,
+    et_horas, qa_feitas, qa_acertos,
+    qc_feitas, qc_acertos, qap_feitas, qap_acertos,
     atualizado_em: new Date().toISOString()
   }, { onConflict: 'aluno_id,semana_numero' });
 
-  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+  if (error) {
+    // Se as colunas novas ainda não existem no banco (SQL não rodou),
+    // tenta de novo só com os campos antigos pra não bloquear o salvamento.
+    if (/column|coluna/i.test(error.message || '')) {
+      const { error: e2 } = await sb.from('progresso_semanas').upsert({
+        aluno_id: state.usuario.id,
+        semana_numero: n,
+        status, tecnicas, nota_pessoal: nota,
+        atualizado_em: new Date().toISOString()
+      }, { onConflict: 'aluno_id,semana_numero' });
+      if (e2) { alert('Erro ao salvar: ' + e2.message); return; }
+      console.warn('[salvarSemana] Métricas quantitativas não persistiram — falta rodar SQL_metricas_semana.sql no Supabase.');
+    } else {
+      alert('Erro ao salvar: ' + error.message);
+      return;
+    }
+  }
   fecharModalSemana();
   renderCronograma();
 }
