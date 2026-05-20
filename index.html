@@ -7295,7 +7295,7 @@ function renderQuestaoCardLinha(q, numero) {
         </div>
         ${difLabel ? `<span class="qbk-card-dif ${dif}">${difLabel}</span>` : ''}
       </div>
-      <div class="qbk-card-preview" onclick="toggleVerCompleta(${q.id})" title="${expandido ? 'Clique para esconder' : 'Clique para ver completa'}">${previewCurto}</div>
+      ${expandido ? '' : `<div class="qbk-card-preview" onclick="toggleVerCompleta(${q.id})" title="Clique para ver completa">${previewCurto}</div>`}
       <div class="qbk-card-acoes">
         <button class="qbk-ver-mais ${expandido ? 'aberto' : ''}" onclick="event.stopPropagation();toggleVerCompleta(${q.id})">
           ${expandido ? 'Esconder questão' : 'Ver questão completa'}
