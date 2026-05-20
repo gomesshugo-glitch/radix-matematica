@@ -5527,9 +5527,15 @@ async function salvarFotoObrigatoria() {
   if (!_fotoTemp) { alert('Escolha uma foto primeiro.'); return; }
   const btn = document.getElementById('btn-salvar-foto');
   btn.disabled = true; btn.textContent = 'Salvando...';
+  // PRESERVA o telefone atual: a CHECK constraint chk_aluno_telefone re-valida
+  // a linha inteira em qualquer UPDATE de perfis. Se passarmos null aqui, o
+  // RPC apaga o telefone que o aluno já tinha cadastrado e o save da foto
+  // falha com "violates check constraint chk_aluno_telefone". Quando essa
+  // tela aparece, iniciarSessao() já garantiu que state.usuario.telefone
+  // tem 10/11 dígitos válidos, então é seguro reenviar.
   const { error } = await sb.rpc('atualizar_meu_perfil', {
     novo_nome: state.usuario.nome,
-    novo_telefone: null,
+    novo_telefone: state.usuario.telefone || null,
     nova_foto: _fotoTemp
   });
   if (error) {
@@ -5682,7 +5688,15 @@ async function salvarMeuPerfil() {
   const whats = document.getElementById('meu-whats').value.replace(/\D/g, '');
 
   if (!nome || nome.length < 2) { alert('Informe seu nome completo.'); return; }
-  if (whats && (whats.length < 10 || whats.length > 11)) {
+  // Aluno NÃO pode apagar o WhatsApp: a CHECK constraint chk_aluno_telefone
+  // exige 10–11 dígitos em qualquer linha de aluno. Se o aluno limpar o campo,
+  // o RPC manda telefone=NULL e o UPDATE quebra. Professor pode ficar sem.
+  if (state.usuario.perfil === 'aluno') {
+    if (!whats || whats.length < 10 || whats.length > 11) {
+      alert('Como aluno, é obrigatório manter um WhatsApp válido com DDD (10 ou 11 dígitos).');
+      return;
+    }
+  } else if (whats && (whats.length < 10 || whats.length > 11)) {
     alert('WhatsApp inválido (10 ou 11 dígitos com DDD).');
     return;
   }
@@ -9130,11 +9144,20 @@ function previewQuestaoImport(id, fromForm) {
     .filter(s => /^(https?:|data:)/.test(s));
   const imgsHtml = imgs.map(s =>
     `<div class="questao-img-wrap"><img class="questao-img" src="${s}" alt="figura da questão"></div>`).join('');
-  const altsHtml = alts.map((a, i) => `
-    <div class="alternativa ${i === corrIdx ? 'correta' : ''}" style="cursor:default;">
-      <div class="alternativa-letra">${(a && a.letra) || String.fromCharCode(65 + i)}</div>
-      <div>${formatarEnunciado(String((a && a.texto) || '').replace(/^[A-E]\)\s*/, ''))}</div>
-    </div>`).join('');
+  const altsHtml = alts.map((a, i) => {
+    const letra = (a && a.letra) || String.fromCharCode(65 + i);
+    const corr = (i === corrIdx) ? 'correta' : '';
+    const img = a && a.imagem_path;
+    // Se a alternativa for visual (imagem_path), renderiza a imagem. Senão, o texto.
+    const conteudo = img
+      ? `<img src="${img}" alt="alternativa ${letra}" style="max-width:280px;max-height:140px;display:block;border-radius:6px;">`
+      : formatarEnunciado(String((a && a.texto) || '').replace(/^[A-E]\)\s*/, ''));
+    return `
+      <div class="alternativa ${corr}" style="cursor:default;">
+        <div class="alternativa-letra">${letra}</div>
+        <div>${conteudo}</div>
+      </div>`;
+  }).join('');
   const resTxt = (p.resolucao && p.resolucao.texto) || '';
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharPreviewImport()">
