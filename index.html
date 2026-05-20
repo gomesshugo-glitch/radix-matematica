@@ -10429,28 +10429,101 @@ async function renderGerenciarAlunos() {
     return;
   }
 
-  const pendentes = perfis.filter(p => p.status === 'pendente');
-  const aprovados = perfis.filter(p => p.status === 'aprovado');
-  const bloqueados = perfis.filter(p => p.status === 'bloqueado');
+  // Cacheia em memória pra não refetchar a cada busca/seleção
+  state._alunoListaAtual = perfis;
+  if (state._alunoSel === undefined) state._alunoSel = new Set();
+  if (state._alunoBusca === undefined) state._alunoBusca = '';
+
+  const totalGeral = perfis.length;
+  const pendentesT  = perfis.filter(p => p.status === 'pendente').length;
+  const aprovadosT  = perfis.filter(p => p.status === 'aprovado').length;
+  const bloqueadosT = perfis.filter(p => p.status === 'bloqueado').length;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Alunos</div>
     <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico warn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Gerenciar Alunos</h2>
 
     <div class="stats-grid">
-      <div class="stat-card"><div class="label">Pendentes</div><div class="value" style="color:#E65100;">${pendentes.length}</div></div>
-      <div class="stat-card"><div class="label">Aprovados</div><div class="value" style="color:#16A34A;">${aprovados.length}</div></div>
-      <div class="stat-card"><div class="label">Bloqueados</div><div class="value" style="color:var(--radix-red);">${bloqueados.length}</div></div>
-      <div class="stat-card"><div class="label">Total</div><div class="value">${perfis.length}</div></div>
+      <div class="stat-card"><div class="label">Pendentes</div><div class="value" style="color:#E65100;">${pendentesT}</div></div>
+      <div class="stat-card"><div class="label">Aprovados</div><div class="value" style="color:#16A34A;">${aprovadosT}</div></div>
+      <div class="stat-card"><div class="label">Bloqueados</div><div class="value" style="color:var(--radix-red);">${bloqueadosT}</div></div>
+      <div class="stat-card"><div class="label">Total</div><div class="value">${totalGeral}</div></div>
     </div>
+
+    <!-- Busca por nome/e-mail -->
+    <div class="qbk-busca-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="aluno-busca" class="qbk-busca"
+             placeholder="Buscar por nome ou e-mail..."
+             value="${(state._alunoBusca || '').replace(/"/g, '&quot;')}"
+             oninput="agendarFiltrarAlunos()">
+    </div>
+
+    <!-- Batch toolbar (preenchida dinamicamente por filtrarAlunos) -->
+    <div id="aluno-batch-bar"></div>
+
+    <!-- Container das tabelas -->
+    <div id="aluno-tabelas"></div>
+  `;
+
+  filtrarAlunos();
+}
+
+// Debounce p/ a busca de alunos
+let _alunoBuscaDebounce = null;
+function agendarFiltrarAlunos() {
+  if (_alunoBuscaDebounce) clearTimeout(_alunoBuscaDebounce);
+  _alunoBuscaDebounce = setTimeout(() => {
+    _alunoBuscaDebounce = null;
+    const inp = document.getElementById('aluno-busca');
+    if (inp) state._alunoBusca = inp.value;
+    filtrarAlunos();
+  }, 180);
+}
+
+function filtrarAlunos() {
+  const perfis = state._alunoListaAtual || [];
+  const termo = _normBusca(state._alunoBusca || '');
+
+  // Aplica busca em nome + email (case+acento insensitive, AND multipalavra)
+  const partes = termo ? termo.split(' ').filter(Boolean) : [];
+  const passar = (p) => {
+    if (!partes.length) return true;
+    const corpo = _normBusca((p.nome || '') + ' ' + (p.email || ''));
+    return partes.every(t => corpo.includes(t));
+  };
+  const filtrados = perfis.filter(passar);
+
+  const pendentes  = filtrados.filter(p => p.status === 'pendente');
+  const aprovados  = filtrados.filter(p => p.status === 'aprovado');
+  const bloqueados = filtrados.filter(p => p.status === 'bloqueado');
+
+  // Atualiza batch toolbar
+  const batchEl = document.getElementById('aluno-batch-bar');
+  if (batchEl) batchEl.innerHTML = renderAlunoBatchBar();
+
+  // Atualiza tabelas
+  const tabEl = document.getElementById('aluno-tabelas');
+  if (!tabEl) return;
+  tabEl.innerHTML = `
+    ${termo ? `
+      <p style="font-size:13px;color:var(--radix-text-muted,#6b7280);margin:6px 4px 14px;">
+        ${filtrados.length} resultado${filtrados.length !== 1 ? 's' : ''} para <b style="color:var(--radix-text,#111);">"${(state._alunoBusca || '').replace(/[<>&]/g,'')}"</b>
+        ${filtrados.length === 0 ? '· tente outras palavras ou limpe a busca' : ''}
+      </p>
+    ` : ''}
 
     ${pendentes.length > 0 ? `
       <h3 class="section-title"><span class="section-title-accent"></span>⏳ Pendentes de aprovação (${pendentes.length})</h3>
       ${renderListaAlunos(pendentes, 'pendente')}
     ` : ''}
 
-    <h3 class="section-title"><span class="section-title-accent"></span>✅ Aprovados (${aprovados.length})</h3>
-    ${aprovados.length === 0 ? '<p style="color:var(--radix-gray-light);">Nenhum aluno aprovado ainda.</p>' : renderListaAlunos(aprovados, 'aprovado')}
+    ${(termo ? aprovados.length > 0 : true) ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>✅ Aprovados (${aprovados.length})</h3>
+      ${aprovados.length === 0
+        ? `<p style="color:var(--radix-gray-light);">${termo ? 'Nenhum aprovado com esse termo.' : 'Nenhum aluno aprovado ainda.'}</p>`
+        : renderListaAlunos(aprovados, 'aprovado')}
+    ` : ''}
 
     ${bloqueados.length > 0 ? `
       <h3 class="section-title"><span class="section-title-accent"></span>🚫 Bloqueados (${bloqueados.length})</h3>
@@ -10459,12 +10532,198 @@ async function renderGerenciarAlunos() {
   `;
 }
 
+// ===== Multi-seleção de alunos =====
+function _alunoSelInit() { if (!state._alunoSel) state._alunoSel = new Set(); return state._alunoSel; }
+
+function toggleAlunoSel(id, ch) {
+  const s = _alunoSelInit();
+  if (ch) s.add(id); else s.delete(id);
+  // Re-renderiza só a batch bar (não as tabelas — mantém scroll/foco)
+  const batchEl = document.getElementById('aluno-batch-bar');
+  if (batchEl) batchEl.innerHTML = renderAlunoBatchBar();
+}
+
+function toggleAlunoSelAllGrupo(ch, statusGrupo) {
+  const s = _alunoSelInit();
+  document.querySelectorAll(`.aluno-cb[data-grupo="${statusGrupo}"]`).forEach(cb => {
+    cb.checked = ch;
+    const id = cb.value;
+    if (ch) s.add(id); else s.delete(id);
+  });
+  const batchEl = document.getElementById('aluno-batch-bar');
+  if (batchEl) batchEl.innerHTML = renderAlunoBatchBar();
+}
+
+function limparAlunoSel() {
+  state._alunoSel = new Set();
+  document.querySelectorAll('.aluno-cb').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.aluno-cb-todos').forEach(cb => cb.checked = false);
+  const batchEl = document.getElementById('aluno-batch-bar');
+  if (batchEl) batchEl.innerHTML = renderAlunoBatchBar();
+}
+
+function renderAlunoBatchBar() {
+  const sel = _alunoSelInit();
+  const n = sel.size;
+  if (n === 0) return '';
+
+  // Quebra a seleção por status atual pra mostrar quais ações fazem sentido
+  const perfis = state._alunoListaAtual || [];
+  const selecionados = perfis.filter(p => sel.has(p.id));
+  const nPend = selecionados.filter(p => p.status === 'pendente').length;
+  const nApr  = selecionados.filter(p => p.status === 'aprovado').length;
+  const nBlo  = selecionados.filter(p => p.status === 'bloqueado').length;
+
+  return `
+    <div class="qbk-ger-toolbar" style="background: rgba(34,211,238,0.05); border-color: rgba(34,211,238,0.22); margin-top: 14px;">
+      <div class="toolbar-info">
+        <b>${n}</b> aluno${n !== 1 ? 's' : ''} selecionado${n !== 1 ? 's' : ''}
+        ${(nPend || nApr || nBlo) ? `<span style="color:var(--radix-text-muted,#6b7280);">  ·  ${[
+          nPend ? `${nPend} pend.` : '',
+          nApr ? `${nApr} apr.` : '',
+          nBlo ? `${nBlo} bloq.` : ''
+        ].filter(Boolean).join(' · ')}</span>` : ''}
+      </div>
+      <div class="toolbar-acoes">
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="limparAlunoSel()">Limpar</button>
+        ${(nPend + nBlo) > 0 ? `
+          <button class="btn btn-success" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:5px;" onclick="aprovarAlunosSelecionados()" title="Aprovar pendentes / reativar bloqueados">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Aprovar (${nPend + nBlo})
+          </button>
+        ` : ''}
+        ${nApr > 0 ? `
+          <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:5px;" onclick="reenviarSenhaAlunosSelecionados()" title="Enviar link de redefinição de senha">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Reenviar senha (${nApr})
+          </button>
+        ` : ''}
+        ${(nApr + nPend) > 0 ? `
+          <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;color:#DC2626;border-color:#DC2626;display:inline-flex;align-items:center;gap:5px;" onclick="bloquearAlunosSelecionados()" title="Bloquear acesso">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            Bloquear (${nApr + nPend})
+          </button>
+        ` : ''}
+        <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:5px;" onclick="excluirAlunosSelecionados()" title="Exclusão permanente">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Excluir (${n})
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ===== Ações em LOTE =====
+
+async function aprovarAlunosSelecionados() {
+  const sel = _alunoSelInit();
+  const ids = [...sel];
+  if (!ids.length) return;
+  const perfis = state._alunoListaAtual || [];
+  // Só aprova pendentes e bloqueados (aprovados já estão OK; professor é ignorado)
+  const alvos = perfis.filter(p => sel.has(p.id) && p.perfil !== 'professor' && (p.status === 'pendente' || p.status === 'bloqueado'));
+  if (!alvos.length) { alert('Nenhum aluno na seleção precisa de aprovação.'); return; }
+  if (!confirm(`Aprovar ${alvos.length} aluno${alvos.length !== 1 ? 's' : ''}?\n\nIsso libera o acesso à plataforma para eles.`)) return;
+
+  let ok = 0; const erros = [];
+  for (const p of alvos) {
+    const { error } = await sb.from('perfis').update({ status: 'aprovado' }).eq('id', p.id);
+    if (error) erros.push(p.nome + ': ' + error.message);
+    else ok++;
+  }
+  state._alunoSel = new Set();
+  alert(`${ok} aprovado${ok !== 1 ? 's' : ''}.${erros.length ? '\n\nFalhas:\n' + erros.slice(0, 8).join('\n') : ''}`);
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
+}
+
+async function bloquearAlunosSelecionados() {
+  const sel = _alunoSelInit();
+  const perfis = state._alunoListaAtual || [];
+  const alvos = perfis.filter(p => sel.has(p.id) && p.perfil !== 'professor' && p.status !== 'bloqueado');
+  if (!alvos.length) { alert('Nenhum aluno da seleção pode ser bloqueado.'); return; }
+  if (!confirm(`Bloquear o acesso de ${alvos.length} aluno${alvos.length !== 1 ? 's' : ''}?\n\nEles não conseguirão mais entrar até serem reativados.`)) return;
+
+  let ok = 0; const erros = [];
+  for (const p of alvos) {
+    const { error } = await sb.from('perfis').update({ status: 'bloqueado' }).eq('id', p.id);
+    if (error) erros.push(p.nome + ': ' + error.message);
+    else ok++;
+  }
+  state._alunoSel = new Set();
+  alert(`${ok} bloqueado${ok !== 1 ? 's' : ''}.${erros.length ? '\n\nFalhas:\n' + erros.slice(0, 8).join('\n') : ''}`);
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
+}
+
+async function reenviarSenhaAlunosSelecionados() {
+  const sel = _alunoSelInit();
+  const perfis = state._alunoListaAtual || [];
+  // Só faz sentido pra alunos aprovados
+  const alvos = perfis.filter(p => sel.has(p.id) && p.perfil !== 'professor' && p.status === 'aprovado' && p.email);
+  if (!alvos.length) { alert('Selecione alunos aprovados (com e-mail) pra reenviar senha.'); return; }
+  if (!confirm(`Enviar link de redefinição de senha para ${alvos.length} aluno${alvos.length !== 1 ? 's' : ''}?\n\nCada um vai receber um e-mail com o link.`)) return;
+
+  let ok = 0; const erros = [];
+  for (let i = 0; i < alvos.length; i++) {
+    const p = alvos[i];
+    const { error } = await sb.auth.resetPasswordForEmail(p.email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    if (error) erros.push(p.nome + ': ' + error.message);
+    else ok++;
+    // Pequeno delay entre envios pra evitar rate-limit do provider de e-mail
+    if (i < alvos.length - 1) await new Promise(r => setTimeout(r, 600));
+  }
+  alert(`${ok} e-mail${ok !== 1 ? 's' : ''} enviado${ok !== 1 ? 's' : ''}.${erros.length ? '\n\nFalhas:\n' + erros.slice(0, 8).join('\n') : ''}`);
+}
+
+async function excluirAlunosSelecionados() {
+  const sel = _alunoSelInit();
+  const perfis = state._alunoListaAtual || [];
+  const alvos = perfis.filter(p => sel.has(p.id) && p.perfil !== 'professor');
+  if (!alvos.length) { alert('Nenhum aluno na seleção pode ser excluído.'); return; }
+
+  const c1 = confirm(
+    `⚠️ EXCLUSÃO PERMANENTE\n\n` +
+    `Você vai EXCLUIR ${alvos.length} aluno${alvos.length !== 1 ? 's' : ''}:\n` +
+    alvos.slice(0, 10).map(p => '• ' + p.nome).join('\n') +
+    (alvos.length > 10 ? `\n• ... e mais ${alvos.length - 10}` : '') +
+    `\n\nIsso APAGA:\n• As contas (não poderão mais logar)\n• Todas as respostas, simulados e progresso\n• Todos os downloads\n\nNÃO pode ser desfeito. Tem certeza?`
+  );
+  if (!c1) return;
+  const c2 = prompt(`Pra confirmar a exclusão de ${alvos.length} aluno${alvos.length !== 1 ? 's' : ''}, digite EXCLUIR em maiúsculas:`);
+  if (c2 !== 'EXCLUIR') { alert('Exclusão cancelada.'); return; }
+
+  let ok = 0; const erros = [];
+  for (const p of alvos) {
+    const { error } = await sb.rpc('excluir_aluno', { aluno_id: p.id });
+    if (error) erros.push(p.nome + ': ' + error.message);
+    else ok++;
+  }
+  state._alunoSel = new Set();
+  alert(`${ok} aluno${ok !== 1 ? 's' : ''} excluído${ok !== 1 ? 's' : ''}.${erros.length ? '\n\nFalhas:\n' + erros.slice(0, 8).join('\n') : ''}`);
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
+}
+
 function renderListaAlunos(perfis, statusAtual) {
+  _alunoSelInit();
+  // Quantos dos perfis (não-professor) deste grupo já estão selecionados — pra
+  // marcar o checkbox "todos" no header.
+  const selecionaveis = perfis.filter(p => p.perfil !== 'professor');
+  const todosSel = selecionaveis.length > 0 && selecionaveis.every(p => state._alunoSel.has(p.id));
   return `
     <div style="overflow-x: auto; margin-bottom: 24px;">
       <table class="v3-table">
         <thead>
           <tr>
+            <th style="width:40px;text-align:center;">
+              <input type="checkbox" class="aluno-cb-todos" style="cursor:pointer;accent-color:var(--radix-cyan,#22d3ee);"
+                     ${todosSel ? 'checked' : ''}
+                     title="Selecionar todos deste grupo"
+                     onchange="toggleAlunoSelAllGrupo(this.checked, '${statusAtual}')">
+            </th>
             <th>Nome</th>
             <th>E-mail</th>
             <th>WhatsApp</th>
@@ -10501,8 +10760,17 @@ function renderListaAlunos(perfis, statusAtual) {
               ultAcessoHtml = `<span style="color:${cor};font-size:12px;font-weight:600;">${label}</span>`;
             }
 
+            const selRow = state._alunoSel.has(p.id);
             return `
-              <tr>
+              <tr style="${selRow ? 'background: rgba(34,211,238,0.06);' : ''}">
+                <td style="text-align:center;">
+                  ${isProf ? '<span style="color:var(--radix-text-muted);font-size:12px;">—</span>' : `
+                    <input type="checkbox" class="aluno-cb" data-grupo="${statusAtual}"
+                           value="${p.id}" ${selRow ? 'checked' : ''}
+                           style="cursor:pointer;accent-color:var(--radix-cyan,#22d3ee);"
+                           onchange="toggleAlunoSel('${p.id}', this.checked)">
+                  `}
+                </td>
                 <td>
                   <div style="display:flex;align-items:center;gap:10px;color:var(--radix-text);">
                     ${avatarHTML(p, 32)}
