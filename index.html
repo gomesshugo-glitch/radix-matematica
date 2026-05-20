@@ -4064,6 +4064,7 @@ async function carregarDados() {
 async function carregarDadosAluno() {
   await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais()]);
   carregarListaLocal();
+  carregarListasSalvas();
 
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
   const { data: resp } = await sb.from('respostas')
@@ -5194,8 +5195,8 @@ function renderDashboardAluno() {
           </div>
           <div class="dash-atalho" onclick="renderMontarLista()" style="position:relative;">
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17l-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <span>Minha lista</span>
-            <small>Questões salvas</small>
+            <span>Minhas listas</span>
+            <small>Listas salvas + em construção</small>
             <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:var(--radix-coral);"></span>
           </div>
           <div class="dash-atalho" onclick="renderHistoricoSimulados()">
@@ -5429,6 +5430,46 @@ function salvarListaLocal() {
   localStorage.setItem('radix_lista_' + state.usuario.id, JSON.stringify(state.questoesSelecionadas));
 }
 
+// ===== ARQUIVO DE LISTAS SALVAS (várias listas com nome) =====
+// Cada lista é um snapshot {id, nome, questaoIds, criadaEm, ultimoDownloadEm}
+// Persistido em localStorage `radix_listas_<userId>`.
+
+function carregarListasSalvas() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('radix_listas_' + state.usuario.id) || '[]');
+    state.listasSalvas = Array.isArray(arr) ? arr : [];
+  } catch (e) { state.listasSalvas = []; }
+}
+
+function salvarListasSalvasLocal() {
+  localStorage.setItem('radix_listas_' + state.usuario.id, JSON.stringify(state.listasSalvas || []));
+}
+
+// Salva uma nova lista (ou atualiza existente que tenha o mesmo nome).
+// Retorna a entrada salva.
+function salvarListaComoArquivo(nome, questaoIds) {
+  if (!nome || !Array.isArray(questaoIds) || questaoIds.length === 0) return null;
+  if (!Array.isArray(state.listasSalvas)) state.listasSalvas = [];
+  const agora = new Date().toISOString();
+  const existente = state.listasSalvas.find(l => l.nome === nome);
+  if (existente) {
+    existente.questaoIds = questaoIds.slice();
+    existente.ultimoDownloadEm = agora;
+    salvarListasSalvasLocal();
+    return existente;
+  }
+  const nova = {
+    id: Date.now(),
+    nome: nome,
+    questaoIds: questaoIds.slice(),
+    criadaEm: agora,
+    ultimoDownloadEm: agora
+  };
+  state.listasSalvas.unshift(nova);
+  salvarListasSalvasLocal();
+  return nova;
+}
+
 function toggleQuestaoLista(qid) {
   const idx = state.questoesSelecionadas.indexOf(qid);
   if (idx >= 0) state.questoesSelecionadas.splice(idx, 1);
@@ -5458,75 +5499,131 @@ function renderMontarLista() {
   state.view = 'montar-lista';
   const main = document.getElementById('main-content');
 
-  // Filtrar questoes existentes
+  // Lista em construção (seleção atual)
   const minhasQ = state.questoesSelecionadas
     .map(id => state.questoes.find(q => q.id === id))
     .filter(Boolean);
 
-  // Agrupar por modulo
   const porMod = {};
   MODULOS.forEach(m => porMod[m.id] = []);
   minhasQ.forEach(q => {
-    const tema = TEMAS.find(t => t.id === q.tema);
     const modId = MODULOS.find(m => m.temas.includes(q.tema))?.id;
     if (modId && porMod[modId]) porMod[modId].push(q);
   });
 
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minha Lista</div>
-    <h2 class="section-title">
-      <span><span class="section-title-accent"></span><span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></span>Minha Lista de Questões</span>
-      ${minhasQ.length > 0 ? `<span style="display:flex;gap:8px;">
-        <button class="btn" style="background:#DC2626;" onclick="baixarMinhaListaPDF()">📥 Baixar PDF para impressão</button>
-        <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito()">✏️ Conferir gabarito</button>
-        <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:#DC2626;border-color:#DC2626;">🗑️ Limpar lista</button>
-      </span>` : ''}
-    </h2>
+  // Listas salvas (várias com nome)
+  const listas = Array.isArray(state.listasSalvas) ? state.listasSalvas.slice() : [];
+  // Ordena pelas mais recentes (último download)
+  listas.sort((a, b) => String(b.ultimoDownloadEm || b.criadaEm || '').localeCompare(String(a.ultimoDownloadEm || a.criadaEm || '')));
 
-    ${minhasQ.length === 0 ? `
-      <div style="text-align:center;padding:48px;background:white;border-radius:14px;border:1px solid var(--radix-border);">
-        <div style="font-size:56px;margin-bottom:10px;">📋</div>
-        <h3 style="color:var(--radix-gray);margin:0 0 8px;">Sua lista está vazia</h3>
-        <p style="color:var(--radix-gray-light);max-width:480px;margin:0 auto 16px;">Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar. Depois você pode gerar um PDF para imprimir e estudar offline.</p>
-        <button class="btn" onclick="abrirTema('')">🎯 Navegar pelo banco de questões</button>
-      </div>
-    ` : `
-      <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
-        ${minhasQ.length} ${minhasQ.length === 1 ? 'questão selecionada' : 'questões selecionadas'} · Você pode reordenar, remover ou gerar o PDF para impressão
-      </p>
-      ${MODULOS.map(mod => {
-        const qs = porMod[mod.id];
-        if (!qs || qs.length === 0) return '';
-        return `
-          <div class="lista-mod-bloco">
-            <div class="lista-mod-header" style="--mod-cor:${mod.cor};">
-              <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
-              <span class="dash-pill">${qs.length} questão${qs.length !== 1 ? 'ões' : ''}</span>
-            </div>
-            <div class="lista-questoes">
-              ${qs.map((q, i) => {
-                const tema = TEMAS.find(t => t.id === q.tema);
-                const idxGlobal = state.questoesSelecionadas.indexOf(q.id);
-                return `
-                  <div class="lista-item">
-                    <div class="lista-num">${state.questoesSelecionadas.indexOf(q.id) + 1}</div>
-                    <div class="lista-conteudo">
-                      <div class="lista-tema">${tema ? tema.nome : '—'}</div>
-                      <div class="lista-enun">${q.enunciado.substring(0, 200).replace(/<[^>]+>/g,'')}${q.enunciado.length > 200 ? '...' : ''}</div>
-                    </div>
-                    <div class="lista-acoes">
-                      <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, -1)" title="Subir">↑</button>
-                      <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, 1)" title="Descer">↓</button>
-                      <button class="btn-mini-icon" style="color:#DC2626;" onclick="toggleQuestaoLista(${q.id});renderMontarLista();" title="Remover">✕</button>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        `;
-      }).join('')}
-    `}
+  // ----- Seção 1: cards das listas salvas -----
+  const cardsListasHtml = listas.length === 0
+    ? `<div style="text-align:center;padding:32px;background:white;border-radius:14px;border:1px dashed var(--radix-border);color:var(--radix-gray-light);">
+         <div style="font-size:40px;margin-bottom:6px;">📚</div>
+         <p style="margin:0;font-size:14px;">Você ainda não tem listas salvas.<br>
+           <span style="font-size:12px;">Monte uma seleção abaixo e clique em <strong>"Baixar PDF"</strong> — a lista vira um arquivo aqui automaticamente.</span>
+         </p>
+       </div>`
+    : `<div class="listas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+        ${listas.map(l => {
+          const n = (l.questaoIds || []).length;
+          const dataStr = l.ultimoDownloadEm
+            ? new Date(l.ultimoDownloadEm).toLocaleDateString('pt-BR')
+            : (l.criadaEm ? new Date(l.criadaEm).toLocaleDateString('pt-BR') : '—');
+          const nomeEsc = String(l.nome || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          return `
+            <div class="lista-card" onclick="abrirListaSalva(${l.id})"
+                 style="background:white;border:1px solid var(--radix-border);border-radius:14px;padding:16px;cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column;gap:8px;"
+                 onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)';"
+                 onmouseout="this.style.transform='';this.style.boxShadow='';">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(20,184,166,0.12);display:flex;align-items:center;justify-content:center;color:var(--radix-teal,#0d9488);font-weight:700;">📄</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:700;color:var(--radix-text,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${nomeEsc}">${nomeEsc}</div>
+                  <div style="font-size:12px;color:var(--radix-gray-light);">${n} questão${n!==1?'ões':''} · ${dataStr}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+                <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="event.stopPropagation();abrirListaSalva(${l.id})">Abrir →</button>
+                <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="event.stopPropagation();baixarListaSalvaPDF(${l.id})" title="Baixar PDF dessa lista">📥</button>
+                <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;color:#DC2626;border-color:#DC2626;" onclick="event.stopPropagation();excluirListaSalva(${l.id})" title="Excluir lista">🗑</button>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+
+  // ----- Seção 2: lista em construção -----
+  const construcaoHtml = minhasQ.length === 0
+    ? `<div style="text-align:center;padding:32px;background:white;border-radius:14px;border:1px solid var(--radix-border);">
+         <div style="font-size:48px;margin-bottom:6px;">🛒</div>
+         <h3 style="color:var(--radix-gray);margin:0 0 6px;font-size:16px;">Nenhuma questão selecionada no momento</h3>
+         <p style="color:var(--radix-gray-light);max-width:520px;margin:0 auto 14px;font-size:13px;">
+           Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar.
+         </p>
+         <button class="btn" onclick="abrirTema('')">🎯 Navegar pelo banco de questões</button>
+       </div>`
+    : `
+       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+         <p style="color:var(--radix-gray-light);font-size:13px;margin:0;">
+           ${minhasQ.length} ${minhasQ.length === 1 ? 'questão selecionada' : 'questões selecionadas'} · Ao baixar o PDF, esta seleção vira uma <strong>lista salva</strong> com o nome que você escolher.
+         </p>
+         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+           <button class="btn" style="background:#DC2626;" onclick="baixarMinhaListaPDF()">📥 Baixar PDF e salvar lista</button>
+           <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito()">✏️ Conferir gabarito</button>
+           <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:#DC2626;border-color:#DC2626;">🗑️ Limpar seleção</button>
+         </div>
+       </div>
+       ${MODULOS.map(mod => {
+         const qs = porMod[mod.id];
+         if (!qs || qs.length === 0) return '';
+         return `
+           <div class="lista-mod-bloco">
+             <div class="lista-mod-header" style="--mod-cor:${mod.cor};">
+               <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
+               <span class="dash-pill">${qs.length} questão${qs.length !== 1 ? 'ões' : ''}</span>
+             </div>
+             <div class="lista-questoes">
+               ${qs.map(q => {
+                 const tema = TEMAS.find(t => t.id === q.tema);
+                 return `
+                   <div class="lista-item">
+                     <div class="lista-num">${state.questoesSelecionadas.indexOf(q.id) + 1}</div>
+                     <div class="lista-conteudo">
+                       <div class="lista-tema">${tema ? tema.nome : '—'}</div>
+                       <div class="lista-enun">${q.enunciado.substring(0, 200).replace(/<[^>]+>/g,'')}${q.enunciado.length > 200 ? '...' : ''}</div>
+                     </div>
+                     <div class="lista-acoes">
+                       <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, -1)" title="Subir">↑</button>
+                       <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, 1)" title="Descer">↓</button>
+                       <button class="btn-mini-icon" style="color:#DC2626;" onclick="toggleQuestaoLista(${q.id});renderMontarLista();" title="Remover">✕</button>
+                     </div>
+                   </div>`;
+               }).join('')}
+             </div>
+           </div>`;
+       }).join('')}`;
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minhas Listas</div>
+
+    <h2 class="section-title">
+      <span class="section-title-accent"></span>
+      <span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></span>
+      Minhas Listas
+    </h2>
+    <p style="color:var(--radix-gray-light);font-size:13px;margin-top:-6px;margin-bottom:18px;">
+      Suas listas salvas ficam aqui. Clique em uma para abrir, conferir o gabarito ou baixar o PDF de novo.
+    </p>
+
+    ${cardsListasHtml}
+
+    <h3 class="section-title" style="margin-top:32px;">
+      <span class="section-title-accent"></span>
+      <span class="st-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
+      Lista em construção
+    </h3>
+
+    ${construcaoHtml}
   `;
 }
 
@@ -5555,16 +5652,177 @@ async function baixarMinhaListaPDF() {
   const dataHoje = new Date().toLocaleDateString('pt-BR');
   const nome = await pedirNomeLista('Minha Lista de Estudos — ' + dataHoje);
   if (nome === null) return; // usuário cancelou
-  gerarPDFQuestoes(qs, nome, true /* includeGabaritoEmpty */);
+
+  // Auto-salva como arquivo (snapshot dos IDs atuais)
+  salvarListaComoArquivo(nome, state.questoesSelecionadas.slice());
+
+  await gerarPDFQuestoes(qs, nome, true /* includeGabaritoEmpty */);
+
+  // Pergunta se deseja limpar a seleção atual após salvar/baixar
+  setTimeout(() => {
+    if (confirm(
+      'Lista "' + nome + '" salva em Minhas Listas e PDF baixado!\n\n' +
+      'Deseja LIMPAR a seleção atual para começar uma nova lista?\n\n' +
+      '(As questões continuam disponíveis em Minhas Listas. Cancelar = manter a seleção atual.)'
+    )) {
+      state.questoesSelecionadas = [];
+      salvarListaLocal();
+      atualizarBadgeLista();
+      if (state.view === 'montar-lista') renderMontarLista();
+    }
+  }, 400);
+}
+
+// ===== TELA DE UMA LISTA SALVA (clicada nos cards de "Minhas Listas") =====
+
+function _acharListaSalva(id) {
+  if (!Array.isArray(state.listasSalvas)) return null;
+  return state.listasSalvas.find(l => l.id === Number(id)) || null;
+}
+
+function abrirListaSalva(id) {
+  const lista = _acharListaSalva(id);
+  if (!lista) { alert('Lista não encontrada.'); return; }
+  state.view = 'lista-salva';
+  state._listaSalvaAtualId = lista.id;
+  renderListaSalva(lista);
+}
+
+function renderListaSalva(lista) {
+  const main = document.getElementById('main-content');
+  const qs = (lista.questaoIds || []).map(qid => state.questoes.find(q => q.id === qid)).filter(Boolean);
+  const faltando = (lista.questaoIds || []).length - qs.length;
+
+  // Agrupa por módulo (mesma estética da lista em construção)
+  const porMod = {};
+  MODULOS.forEach(m => porMod[m.id] = []);
+  qs.forEach(q => {
+    const modId = MODULOS.find(m => m.temas.includes(q.tema))?.id;
+    if (modId && porMod[modId]) porMod[modId].push(q);
+  });
+
+  const dataStr = lista.ultimoDownloadEm
+    ? new Date(lista.ultimoDownloadEm).toLocaleDateString('pt-BR')
+    : (lista.criadaEm ? new Date(lista.criadaEm).toLocaleDateString('pt-BR') : '—');
+  const nomeEsc = String(lista.nome || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  main.innerHTML = `
+    <div class="breadcrumb">
+      <a onclick="renderHome()">← Início</a> /
+      <a onclick="renderMontarLista()">Minhas Listas</a> /
+      ${nomeEsc}
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
+      <h2 class="section-title" style="margin:0;">
+        <span class="section-title-accent"></span>
+        <span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+        ${nomeEsc}
+      </h2>
+    </div>
+    <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
+      ${qs.length} questão${qs.length !== 1 ? 'ões' : ''} · Salva em ${dataStr}${faltando > 0 ? ` · <span style="color:#DC2626;">⚠ ${faltando} questão(ões) não está(ão) mais no banco</span>` : ''}
+    </p>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+      <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito((${JSON.stringify(lista.questaoIds)}).map(id => state.questoes.find(q => q.id === id)).filter(Boolean), { tipo:'lista_salva', id:${lista.id} })">✏️ Conferir gabarito</button>
+      <button class="btn" style="background:#DC2626;" onclick="baixarListaSalvaPDF(${lista.id})">📥 Baixar PDF de novo</button>
+      <button class="btn btn-secondary" onclick="renomearListaSalva(${lista.id})">✏ Renomear</button>
+      <button class="btn btn-secondary" style="color:#DC2626;border-color:#DC2626;" onclick="excluirListaSalva(${lista.id})">🗑 Excluir lista</button>
+    </div>
+
+    ${qs.length === 0 ? `
+      <div style="text-align:center;padding:32px;background:white;border-radius:14px;border:1px solid var(--radix-border);color:var(--radix-gray-light);">
+        Nenhuma das questões dessa lista está mais disponível no banco.
+      </div>
+    ` : MODULOS.map(mod => {
+        const arr = porMod[mod.id];
+        if (!arr || arr.length === 0) return '';
+        return `
+          <div class="lista-mod-bloco">
+            <div class="lista-mod-header" style="--mod-cor:${mod.cor};">
+              <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
+              <span class="dash-pill">${arr.length} questão${arr.length !== 1 ? 'ões' : ''}</span>
+            </div>
+            <div class="lista-questoes">
+              ${arr.map(q => {
+                const tema = TEMAS.find(t => t.id === q.tema);
+                const ordem = (lista.questaoIds || []).indexOf(q.id) + 1;
+                return `
+                  <div class="lista-item">
+                    <div class="lista-num">${ordem}</div>
+                    <div class="lista-conteudo">
+                      <div class="lista-tema">${tema ? tema.nome : '—'}</div>
+                      <div class="lista-enun">${q.enunciado.substring(0, 200).replace(/<[^>]+>/g,'')}${q.enunciado.length > 200 ? '...' : ''}</div>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      }).join('')
+    }
+  `;
+}
+
+async function baixarListaSalvaPDF(id) {
+  const lista = _acharListaSalva(id);
+  if (!lista) { alert('Lista não encontrada.'); return; }
+  const qs = (lista.questaoIds || []).map(qid => state.questoes.find(q => q.id === qid)).filter(Boolean);
+  if (qs.length === 0) { alert('Esta lista não tem mais questões disponíveis no banco.'); return; }
+  // Atualiza o "último download"
+  lista.ultimoDownloadEm = new Date().toISOString();
+  salvarListasSalvasLocal();
+  await gerarPDFQuestoes(qs, lista.nome, true /* includeGabaritoEmpty */);
+}
+
+function renomearListaSalva(id) {
+  const lista = _acharListaSalva(id);
+  if (!lista) return;
+  const novo = prompt('Novo nome para a lista:', lista.nome);
+  if (novo == null) return; // cancelou
+  const limpo = String(novo).trim();
+  if (!limpo) { alert('Nome não pode ser vazio.'); return; }
+  // Se já existir OUTRA lista com esse nome, alerta
+  const conflito = state.listasSalvas.find(l => l.nome === limpo && l.id !== lista.id);
+  if (conflito) { alert('Já existe outra lista com esse nome. Escolha outro.'); return; }
+  lista.nome = limpo;
+  salvarListasSalvasLocal();
+  if (state.view === 'lista-salva' && state._listaSalvaAtualId === lista.id) {
+    renderListaSalva(lista);
+  } else {
+    renderMontarLista();
+  }
+}
+
+function excluirListaSalva(id) {
+  const lista = _acharListaSalva(id);
+  if (!lista) return;
+  if (!confirm('Excluir a lista "' + lista.nome + '"?\n\n' +
+    'Isso só apaga a lista salva — as questões continuam no banco e suas respostas não são perdidas.')) return;
+  state.listasSalvas = state.listasSalvas.filter(l => l.id !== lista.id);
+  salvarListasSalvasLocal();
+  // Se estávamos vendo essa lista, volta pra Minhas Listas
+  if (state.view === 'lista-salva' && state._listaSalvaAtualId === lista.id) {
+    state._listaSalvaAtualId = null;
+    renderMontarLista();
+  } else if (state.view === 'montar-lista') {
+    renderMontarLista();
+  }
 }
 
 // ========== CONFERIR GABARITO ==========
 let _confAtual = {};
 
-function iniciarConferenciaGabarito() {
-  const qs = state.questoesSelecionadas.map(id => state.questoes.find(q => q.id === id)).filter(Boolean);
+// Aceita um array opcional de questões; se omitido, usa a seleção em construção.
+// O segundo argumento opcional (origem) configura o "voltar" da tela de conferência:
+//   { tipo: 'lista_salva', id: <listaId> } → volta para renderListaSalva(id)
+//   omitido / null                          → volta para renderMontarLista() (padrão antigo)
+function iniciarConferenciaGabarito(qsParam, origem) {
+  const qs = Array.isArray(qsParam) && qsParam.length > 0
+    ? qsParam
+    : state.questoesSelecionadas.map(id => state.questoes.find(q => q.id === id)).filter(Boolean);
   if (qs.length === 0) { alert('Lista vazia.'); return; }
-  _confAtual = { qs, respostas: {}, idx: 0 };
+  _confAtual = { qs, respostas: {}, idx: 0, origem: origem || null };
   renderConferirGabarito();
 }
 
@@ -5574,8 +5832,14 @@ function renderConferirGabarito() {
   const { qs, respostas } = _confAtual;
   const allRespondidas = qs.every(q => respostas[q.id] !== undefined);
 
+  const origem = _confAtual.origem;
+  const voltarAcao = (origem && origem.tipo === 'lista_salva')
+    ? `abrirListaSalva(${origem.id})`
+    : `renderMontarLista()`;
+  const voltarLabel = (origem && origem.tipo === 'lista_salva') ? '← Lista salva' : '← Minhas Listas';
+
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderMontarLista()">← Minha Lista</a> / Conferir Gabarito</div>
+    <div class="breadcrumb"><a onclick="${voltarAcao}">${voltarLabel}</a> / Conferir Gabarito</div>
     <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></span>Marque suas respostas</h2>
     <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:16px;">
       Marque abaixo a letra que você escolheu em cada questão (a mesma que você marcou no PDF impresso). Ao final, clique em <strong>Conferir resultado</strong> para ver acertos, erros e resolução de cada uma.
@@ -5651,8 +5915,13 @@ async function finalizarConferenciaGabarito() {
   // Tela de resultado
   state.view = 'resultado-conferencia';
   const main = document.getElementById('main-content');
+  const origem = _confAtual.origem;
+  const voltarAcao = (origem && origem.tipo === 'lista_salva')
+    ? `abrirListaSalva(${origem.id})`
+    : `renderMontarLista()`;
+  const voltarLabel = (origem && origem.tipo === 'lista_salva') ? '← Lista salva' : '← Minhas Listas';
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderMontarLista()">← Minha Lista</a> / Resultado</div>
+    <div class="breadcrumb"><a onclick="${voltarAcao}">${voltarLabel}</a> / Resultado</div>
     <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>Resultado da Lista</h2>
 
     <div class="resultado-box">
@@ -5663,7 +5932,7 @@ async function finalizarConferenciaGabarito() {
 
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;">
       <button class="btn" onclick="renderHome()">Voltar ao Início</button>
-      <button class="btn btn-secondary" onclick="renderMontarLista()">Voltar à Lista</button>
+      <button class="btn btn-secondary" onclick="${voltarAcao}">${voltarLabel.replace('← ','Voltar à ')}</button>
     </div>
 
     <h3 class="section-title"><span class="section-title-accent"></span>Revisão das questões</h3>
@@ -5822,7 +6091,19 @@ async function baixarQuestoesFiltradasPDF() {
     if (soSelecionadas) {
       const nomeSel = await pedirNomeLista('Minha Lista de Estudos — ' + dataHoje);
       if (nomeSel === null) return;
-      gerarPDFQuestoes(sel, nomeSel, true /* gabarito */);
+      salvarListaComoArquivo(nomeSel, state.questoesSelecionadas.slice());
+      await gerarPDFQuestoes(sel, nomeSel, true /* gabarito */);
+      setTimeout(() => {
+        if (confirm(
+          'Lista "' + nomeSel + '" salva em Minhas Listas e PDF baixado!\n\n' +
+          'Deseja LIMPAR a seleção atual para começar uma nova lista?\n\n' +
+          '(As questões continuam disponíveis em Minhas Listas.)'
+        )) {
+          state.questoesSelecionadas = [];
+          salvarListaLocal();
+          atualizarBadgeLista();
+        }
+      }, 400);
       return;
     }
   }
@@ -5847,7 +6128,9 @@ async function baixarQuestoesFiltradasPDF() {
   const tituloSugerido = `${t}${dif ? ' · ' + dif.charAt(0).toUpperCase()+dif.slice(1) : ''} — ${dataHoje}`;
   const nome = await pedirNomeLista(tituloSugerido);
   if (nome === null) return;
-  gerarPDFQuestoes(questoes, nome);
+  // Salva como arquivo (mesmo sendo um filtro arbitrário — o aluno escolheu o nome)
+  salvarListaComoArquivo(nome, questoes.map(q => q.id));
+  await gerarPDFQuestoes(questoes, nome);
 }
 
 async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
