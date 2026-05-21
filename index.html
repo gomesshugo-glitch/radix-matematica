@@ -763,33 +763,34 @@
   .mat-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 18px;
   }
   .mat-stat-card {
     background: var(--radix-surface);
     border: 1px solid var(--radix-line);
-    border-radius: 14px;
-    padding: 16px 20px;
-    display: flex; align-items: center; gap: 14px;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px -16px rgba(0,0,0,0.45);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px -10px rgba(0,0,0,0.30);
   }
   .mat-stat-ico {
-    width: 44px; height: 44px;
-    border-radius: 11px;
+    width: 34px; height: 34px;
+    border-radius: 9px;
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
+  .mat-stat-ico svg { width: 16px; height: 16px; }
   .mat-stat-card.is-aula .mat-stat-ico { background: rgba(255,122,92,0.18); color: var(--radix-coral); }
   .mat-stat-card.is-pdf  .mat-stat-ico { background: rgba(251,191,36,0.18); color: var(--radix-warning); }
   .mat-stat-card.is-link .mat-stat-ico { background: rgba(34,211,238,0.18); color: var(--radix-cyan); }
   .mat-stat-num {
-    font-size: 26px; font-weight: 800; letter-spacing: -0.6px;
+    font-size: 20px; font-weight: 800; letter-spacing: -0.4px;
     color: var(--radix-text); line-height: 1;
   }
   .mat-stat-label {
-    font-size: 12px; color: var(--radix-text-muted);
-    margin-top: 4px; font-weight: 600;
+    font-size: 11px; color: var(--radix-text-muted);
+    margin-top: 3px; font-weight: 600;
     text-transform: lowercase;
   }
 
@@ -2504,12 +2505,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
     overflow: hidden;
   }
   .mat-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .mat-thumb-pdf { background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%); color: #C62828; }
-  .mat-thumb-link { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); color: #1565C0; }
   .mat-thumb-yt { background: #000; }
   .mat-play {
     position: absolute;
@@ -2518,18 +2516,309 @@
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 56px;
     text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     background: rgba(0,0,0,0.18);
     transition: background 0.15s;
   }
+  .mat-play svg { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)); }
   .card-material:hover .mat-play { background: rgba(0,0,0,0.4); }
   .mat-info { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
   .mat-titulo { font-weight: 600; font-size: 15px; color: var(--radix-gray); line-height: 1.3; }
   .mat-desc { font-size: 12px; color: var(--radix-gray-light); line-height: 1.4; }
   .mat-meta { display: flex; gap: 4px; flex-wrap: wrap; }
   .mat-acoes { margin-top: auto; padding-top: 6px; }
-  .mat-acoes .btn { width: 100%; }
+  .mat-acoes .btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+  /* ===== Variante COMPACT — PDF e link (sem thumb 16:9) ===== */
+  .card-material.mat-compact {
+    grid-column: 1 / -1;      /* ocupa toda a largura do grid */
+    display: grid;
+    grid-template-columns: 5px 44px 1fr auto;
+    gap: 14px;
+    padding: 14px 16px;
+    align-items: center;
+    overflow: hidden;
+  }
+  .card-material.mat-compact .mat-compact-stripe {
+    width: 5px;
+    align-self: stretch;
+    border-radius: 3px;
+    background: var(--mat-cor, var(--radix-cyan));
+  }
+  .card-material.mat-compact .mat-compact-ico {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--mat-cor-bg, rgba(34,211,238,0.12));
+    color: var(--mat-cor, var(--radix-cyan));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-material.mat-compact .mat-info {
+    padding: 0;
+    gap: 4px;
+  }
+  .card-material.mat-compact .mat-titulo { font-size: 14px; }
+  .card-material.mat-compact .mat-desc { font-size: 12px; }
+  .card-material.mat-compact .mat-meta { margin-top: 2px; }
+  .card-material.mat-compact .mat-acoes {
+    margin-top: 0; padding-top: 0;
+    align-self: center;
+  }
+  .card-material.mat-compact .mat-acoes .btn {
+    width: auto;
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .card-material.mat-compact.mat-tipo-pdf {
+    --mat-cor: #f59e0b;
+    --mat-cor-bg: rgba(245,158,11,0.14);
+  }
+  .card-material.mat-compact.mat-tipo-link {
+    --mat-cor: #22d3ee;
+    --mat-cor-bg: rgba(34,211,238,0.14);
+  }
+  @media (max-width: 640px) {
+    .card-material.mat-compact {
+      grid-template-columns: 5px 36px 1fr;
+      gap: 10px;
+    }
+    .card-material.mat-compact .mat-compact-ico { width: 36px; height: 36px; }
+    .card-material.mat-compact .mat-acoes {
+      grid-column: 2 / -1;
+      margin-top: 8px;
+    }
+    .card-material.mat-compact .mat-acoes .btn { width: 100%; }
+  }
+
+  /* ============================================================
+     Layout "Khan-like" da tela de Vídeo-aulas:
+     blocos de módulo accordion + lista compacta de materiais.
+     ============================================================ */
+
+  /* Bloco do MÓDULO (accordion) */
+  .vmod-bloco {
+    background: var(--radix-surface, #fff);
+    border: 1px solid var(--radix-line, #e5e7eb);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .vmod-bloco.is-open { border-color: rgba(34,211,238,0.35); }
+
+  .vmod-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+    background: linear-gradient(135deg, rgba(34,211,238,0.04), rgba(34,211,238,0.00));
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .vmod-header:hover { background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(34,211,238,0.02)); }
+  .vmod-bloco.is-open .vmod-header { border-bottom-color: var(--radix-line, #e5e7eb); }
+  .vmod-numero {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: var(--mod-cor, var(--radix-cyan, #22d3ee));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px -4px var(--mod-cor, rgba(34,211,238,0.5));
+  }
+  .vmod-info { flex: 1; min-width: 0; }
+  .vmod-titulo {
+    font-size: 15px; font-weight: 700;
+    color: var(--radix-text, #111);
+    line-height: 1.3;
+    margin: 0;
+  }
+  .vmod-sub {
+    font-size: 12px; color: var(--radix-text-muted, #6b7280);
+    margin-top: 2px;
+  }
+  .vmod-progresso {
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .vmod-prog-bar {
+    width: 110px; height: 6px;
+    background: var(--radix-bg-2, #f3f4f6);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .vmod-prog-bar > i {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, #22d3ee, #14b8a6);
+    border-radius: 999px;
+    transition: width 0.3s;
+  }
+  .vmod-prog-pct {
+    font-size: 12px; font-weight: 700;
+    color: var(--radix-text, #111);
+    min-width: 38px; text-align: right;
+  }
+  .vmod-chevron {
+    width: 20px; height: 20px;
+    color: var(--radix-text-muted, #6b7280);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+  .vmod-bloco.is-open .vmod-chevron { transform: rotate(180deg); }
+
+  .vmod-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 18px;
+  }
+  .vmod-bloco.is-open .vmod-body {
+    /* max-height grande pra acomodar varias semanas; nao usar "none" porque mata animacao */
+    max-height: 4000px;
+    padding: 14px 18px 16px;
+  }
+
+  /* Subsection de SEMANA dentro do módulo */
+  .vsem-secao { margin-bottom: 14px; }
+  .vsem-secao:last-child { margin-bottom: 0; }
+  .vsem-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0 8px;
+    border-bottom: 1px dashed var(--radix-line, #e5e7eb);
+    margin-bottom: 6px;
+  }
+  .vsem-num {
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--radix-bg-2, #f3f4f6);
+    color: var(--radix-text-2, #374151);
+    flex-shrink: 0;
+  }
+  .vsem-tit {
+    font-size: 13px; font-weight: 600;
+    color: var(--radix-text, #111);
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .vsem-prog {
+    font-size: 11px; font-weight: 700;
+    color: var(--radix-text-muted, #6b7280);
+    flex-shrink: 0;
+  }
+  .vsem-prog.is-completo { color: #15803d; }
+
+  /* Linha de MATERIAL (Khan-like row) */
+  .mrow {
+    display: grid;
+    grid-template-columns: 28px 36px 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 4px;
+    border-radius: 8px;
+    transition: background 0.12s;
+  }
+  .mrow:hover { background: var(--radix-bg-2, #f7f9fc); }
+  .mrow.is-concluido .mrow-titulo {
+    color: var(--radix-text-muted, #6b7280);
+  }
+
+  /* Check circle clicável */
+  .mrow-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--radix-line-2, #d1d5db);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .mrow-check:hover { border-color: var(--radix-cyan, #22d3ee); transform: scale(1.08); }
+  .mrow-check svg { width: 12px; height: 12px; opacity: 0; transition: opacity 0.15s; color: #fff; }
+  .mrow.is-concluido .mrow-check {
+    background: #22c55e;
+    border-color: #22c55e;
+  }
+  .mrow.is-concluido .mrow-check svg { opacity: 1; }
+  .mrow.is-concluido .mrow-check:hover {
+    background: #16a34a;
+    border-color: #16a34a;
+  }
+
+  /* Ícone do tipo */
+  .mrow-tipo {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .mrow-tipo.tipo-video { background: rgba(255,122,92,0.12); color: var(--radix-coral, #ff7a5c); }
+  .mrow-tipo.tipo-pdf   { background: rgba(245,158,11,0.14); color: #b45309; }
+  .mrow-tipo.tipo-link  { background: rgba(34,211,238,0.14); color: #0891b2; }
+
+  /* Info (título + descrição opcional) */
+  .mrow-info { min-width: 0; }
+  .mrow-titulo {
+    font-size: 14px; font-weight: 600;
+    color: var(--radix-text, #111);
+    line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mrow-desc {
+    font-size: 12px;
+    color: var(--radix-text-muted, #6b7280);
+    margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Meta (duração, páginas...) */
+  .mrow-meta {
+    font-size: 11.5px;
+    color: var(--radix-text-muted, #6b7280);
+    font-weight: 600;
+    flex-shrink: 0;
+    padding: 0 8px;
+  }
+
+  /* Ação (botão à direita) */
+  .mrow-acao .btn-icon-mat {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--radix-line-2, #d1d5db);
+    background: var(--radix-surface, #fff);
+    color: var(--radix-text-muted, #6b7280);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    padding: 0;
+  }
+  .mrow-acao .btn-icon-mat:hover {
+    border-color: var(--radix-cyan, #22d3ee);
+    color: var(--radix-cyan, #22d3ee);
+    background: rgba(34,211,238,0.06);
+  }
+  .mrow-acao .btn-icon-mat svg { width: 16px; height: 16px; }
+
+  /* Mobile: colapsa meta e usa só ícone */
+  @media (max-width: 640px) {
+    .mrow {
+      grid-template-columns: 22px 32px 1fr auto;
+      gap: 8px;
+    }
+    .mrow-meta { display: none; }
+    .mrow-titulo { white-space: normal; }
+    .vmod-prog-bar { width: 70px; }
+    .vmod-numero { width: 32px; height: 32px; font-size: 13px; }
+    .vmod-header { padding: 12px; gap: 10px; }
+  }
 
   /* ========= Player YouTube protegido ========= */
   .player-modal {
@@ -3564,6 +3853,47 @@
 /* Cores ao passar o mouse */
 .btn-icon.success:hover { border-color: var(--radix-success); color: var(--radix-success); }
 .btn-icon.danger:hover { border-color: var(--radix-coral); color: var(--radix-coral); }
+
+/* ===== Loading global: spinner central + barra de progresso no topo ===== */
+#radix-loading {
+  position: fixed; inset: 0;
+  background: rgba(8, 14, 30, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 99999;
+}
+#radix-loading.show { display: flex; }
+.radix-loading-card {
+  background: var(--radix-surface, #0f172a);
+  border: 1px solid var(--radix-line, rgba(255,255,255,0.08));
+  border-radius: 14px;
+  padding: 22px 28px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+  font: 600 14px/1.4 'Inter', system-ui, sans-serif;
+  color: var(--radix-text, #e2e8f0);
+  min-width: 180px;
+}
+.radix-spinner {
+  width: 22px; height: 22px;
+  border: 2.5px solid rgba(34,211,238,0.18);
+  border-top-color: var(--radix-cyan, #22d3ee);
+  border-radius: 50%;
+  animation: radix-spin 0.85s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes radix-spin { to { transform: rotate(360deg); } }
+#radix-topbar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, #22d3ee, #3b82f6);
+  width: 0; opacity: 0;
+  transition: width .3s ease, opacity .25s ease;
+  z-index: 100000;
+  pointer-events: none;
+}
+#radix-topbar.run { opacity: 1; }
 
 /* ===== Componentes do redesign da tela de questões (aluno) ===== */
 
@@ -4765,6 +5095,8 @@ async function carregarQuestoesDoBanco() {
 }
 
 async function carregarDados() {
+  radixShowLoading('Carregando seus dados…');
+  try {
   // Limpar caches antigos do localStorage (versões anteriores)
   localStorage.removeItem('radix_questoes');
   localStorage.removeItem('radix_questoes_enem25');
@@ -4792,10 +5124,13 @@ async function carregarDados() {
   } else {
     await carregarDadosAluno();
   }
+  } finally {
+    radixHideLoading();
+  }
 }
 
 async function carregarDadosAluno() {
-  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais()]);
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos()]);
   carregarListaLocal();
   carregarListasSalvas();
 
@@ -4903,6 +5238,43 @@ function telefoneLimpo(s) {
   return (s || '').replace(/\D/g, '');
 }
 
+// Converte erros do Supabase Auth (em inglês, técnicos) em mensagens
+// claras em PT-BR. Contexto = 'cadastro' | 'login' | 'recuperacao' — só
+// pra tunar o texto do rate-limit.
+function mensagemAmigavelErroAuth(err, contexto) {
+  const m = String((err && (err.message || err.code || err)) || '').toLowerCase();
+  // Rate limit do SMTP padrão do Supabase (free: poucos e-mails/hora por projeto)
+  if (m.includes('rate limit') || m.includes('rate-limit') || m.includes('email rate')
+      || m.includes('over_email_send_rate_limit') || m.includes('too many requests') || m.includes('429')) {
+    const acao = contexto === 'recuperacao'
+      ? 'enviar e-mails de recuperação'
+      : 'criar contas pelo e-mail';
+    return 'Estamos temporariamente com o limite de envio de e-mails atingido. '
+      + 'Aguarde alguns minutos e tente novamente — esse limite reseta automaticamente. '
+      + 'Se persistir, avise o professor (limite global do servidor para ' + acao + ').';
+  }
+  if (m.includes('user already registered') || m.includes('already registered')
+      || m.includes('already exists') || m.includes('email exists')
+      || m.includes('duplicate key')) {
+    return 'Esse e-mail já está cadastrado. Vá em "Já tem conta? Entrar" e use sua senha. '
+      + 'Esqueceu? Use "Esqueci minha senha".';
+  }
+  if (m.includes('invalid email') || m.includes('email_address_invalid')) {
+    return 'E-mail inválido. Confira se digitou certo (sem espaços, com @ e domínio).';
+  }
+  if (m.includes('weak password') || m.includes('password should be') || m.includes('password is too short')) {
+    return 'Senha muito fraca. Use no mínimo 6 caracteres.';
+  }
+  if (m.includes('signup is disabled') || m.includes('signup disabled')) {
+    return 'Cadastro temporariamente indisponível. Avise o professor.';
+  }
+  if (m.includes('network') || m.includes('failed to fetch') || m.includes('load failed')) {
+    return 'Sem conexão com o servidor. Verifique sua internet e tente de novo.';
+  }
+  // fallback: mostra mensagem original (em inglês) precedida de aviso amigável
+  return 'Não conseguimos concluir agora. Detalhe técnico: ' + (err?.message || err);
+}
+
 async function fazerCadastro() {
   const nome = document.getElementById('signup-nome').value.trim();
   const email = document.getElementById('signup-email').value.trim().toLowerCase();
@@ -4924,7 +5296,7 @@ async function fazerCadastro() {
     options: { data: { nome, telefone: whats, cpf } }
   });
   if (error) {
-    setMsg('Erro: ' + error.message, 'var(--radix-red)');
+    setMsg(mensagemAmigavelErroAuth(error, 'cadastro'), 'var(--radix-red)');
     return;
   }
   // Salvar telefone na perfis (caso o trigger não capture)
@@ -5037,7 +5409,61 @@ async function salvarNovaSenha() {
   }
 }
 
+// ===== Loading global (spinner + barra topo) =====
+// Sem dependência externa. Conta nível (depth) p/ aninhar chamadas sem
+// fechar antes da hora. Auto-hide após 30s como rede de segurança caso
+// um caller esqueça de chamar hide() (ex.: erro fora do try/finally).
+const _radixLoading = {
+  depth: 0, hideTimer: null, el: null, bar: null,
+  ensure() {
+    if (this.el) return;
+    document.body.insertAdjacentHTML('beforeend',
+      '<div id="radix-loading" aria-hidden="true" role="status">' +
+      '<div class="radix-loading-card"><div class="radix-spinner"></div>' +
+      '<span id="radix-loading-msg">Carregando…</span></div></div>' +
+      '<div id="radix-topbar"></div>');
+    this.el  = document.getElementById('radix-loading');
+    this.bar = document.getElementById('radix-topbar');
+  },
+  show(msg) {
+    this.ensure();
+    document.getElementById('radix-loading-msg').textContent = msg || 'Carregando…';
+    this.el.classList.add('show');
+    this.bar.classList.add('run');
+    this.bar.style.width = '70%';
+    this.depth++;
+    clearTimeout(this.hideTimer);
+    this.hideTimer = setTimeout(() => this.force(), 30000);
+  },
+  hide() {
+    this.depth = Math.max(0, this.depth - 1);
+    if (this.depth === 0) this.force();
+  },
+  force() {
+    if (!this.el) return;
+    clearTimeout(this.hideTimer);
+    this.depth = 0;
+    this.el.classList.remove('show');
+    this.bar.style.width = '100%';
+    setTimeout(() => {
+      if (this.bar) { this.bar.classList.remove('run'); this.bar.style.width = '0'; }
+    }, 220);
+  }
+};
+function radixShowLoading(msg) { _radixLoading.show(msg); }
+function radixHideLoading()    { _radixLoading.hide(); }
+// Para chamadas síncronas pesadas (render que trava): mostra spinner, cede
+// um frame ao navegador pintar, roda a função, esconde no finally.
+function radixDeferRender(msg, fn) {
+  radixShowLoading(msg);
+  setTimeout(() => { try { fn(); } finally { radixHideLoading(); } }, 16);
+}
+// Esconde tudo no F5/navegação (evita spinner preso se algo travar).
+window.addEventListener('beforeunload', () => _radixLoading.force());
+
 async function iniciarSessao() {
+  radixShowLoading('Entrando…');
+  try {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
 
@@ -5081,6 +5507,12 @@ async function iniciarSessao() {
   }
   await carregarDados();
   mostrarApp();
+  } catch (e) {
+    console.error('iniciarSessao falhou:', e);
+    if (typeof setMsg === 'function') setMsg('Erro ao entrar: ' + (e?.message || e), 'var(--radix-red)');
+  } finally {
+    radixHideLoading();
+  }
 }
 
 function mostrarTelaAguardandoAprovacao(perfil) {
@@ -7709,7 +8141,19 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
 }
 
 // ========== BANCO POR TEMA ==========
+let _radixRenderingTema = false;
 function abrirTema(temaId) {
+  // Defer com spinner: a tela do tema renderiza muitas questões com
+  // KaTeX/imagens e a UI trava no clique antes do navegador pintar.
+  if (!_radixRenderingTema) {
+    radixShowLoading('Carregando questões…');
+    _radixRenderingTema = true;
+    setTimeout(() => {
+      try { abrirTema(temaId); }
+      finally { _radixRenderingTema = false; radixHideLoading(); }
+    }, 16);
+    return;
+  }
   state.view = 'tema';
   state.temaAtual = temaId;
   // Reseta estado de UI da tela (página, expansão, filtros locais)
@@ -8899,7 +9343,20 @@ async function salvarQuestao(idEdicao, modo) {
   }
 }
 
+let _radixRenderingGer = false;
 function renderGerenciarQuestoes() {
+  // Tela pesada (chips + paginação + cards). Sem isso a UI trava no clique
+  // ANTES do navegador conseguir pintar o spinner. Esta guarda mostra
+  // o loading, cede um frame e só então roda o render real.
+  if (!_radixRenderingGer) {
+    radixShowLoading('Abrindo banco de questões…');
+    _radixRenderingGer = true;
+    setTimeout(() => {
+      try { renderGerenciarQuestoes(); }
+      finally { _radixRenderingGer = false; radixHideLoading(); }
+    }, 16);
+    return;
+  }
   state.view = 'gerenciar';
   // Reseta UI local (paginação, expansão). Mantém filtros se já existirem.
   state._gerPagina = 0;
@@ -11221,6 +11678,61 @@ async function carregarMateriais() {
   materiaisCache = data || [];
 }
 
+// ====== TRACKING DE MATERIAL CONCLUÍDO (por aluno) ======
+// Persiste no Supabase: tabela `material_concluido` (rodar SQL_material_concluido.sql).
+// state.materiaisConcluidos = Set<material_id>.
+// Falha silenciosa se a tabela não existir ainda — UI cai pra "tudo desmarcado".
+
+async function carregarMateriaisConcluidos() {
+  if (!state.usuario?.id) { state.materiaisConcluidos = new Set(); return; }
+  try {
+    const { data, error } = await sb.from('material_concluido')
+      .select('material_id')
+      .eq('aluno_id', state.usuario.id);
+    if (error) throw error;
+    state.materiaisConcluidos = new Set((data || []).map(r => r.material_id));
+  } catch (e) {
+    console.warn('[materiaisConcluidos] tabela ausente ou erro de RLS — caindo pra Set vazio:', e?.message || e);
+    state.materiaisConcluidos = new Set();
+  }
+}
+
+// Marca/desmarca um material. Atualiza state localmente E persiste no Supabase.
+// Retorna o novo estado (true = concluído, false = não concluído).
+async function toggleMaterialConcluido(matId) {
+  if (!state.usuario?.id) { alert('Faça login pra marcar como concluído.'); return; }
+  if (!state.materiaisConcluidos) state.materiaisConcluidos = new Set();
+  const id = Number(matId);
+  const ehNovoEstadoConcluido = !state.materiaisConcluidos.has(id);
+  // Atualiza otimisticamente o state (UI responde na hora)
+  if (ehNovoEstadoConcluido) state.materiaisConcluidos.add(id);
+  else                       state.materiaisConcluidos.delete(id);
+
+  try {
+    if (ehNovoEstadoConcluido) {
+      // INSERT — PK composta evita duplicata. Se já existir, o upsert ignora.
+      const { error } = await sb.from('material_concluido')
+        .upsert({ aluno_id: state.usuario.id, material_id: id },
+                { onConflict: 'aluno_id,material_id' });
+      if (error) throw error;
+    } else {
+      const { error } = await sb.from('material_concluido')
+        .delete()
+        .eq('aluno_id', state.usuario.id)
+        .eq('material_id', id);
+      if (error) throw error;
+    }
+    return ehNovoEstadoConcluido;
+  } catch (e) {
+    // Rollback do state local se a persistência falhou
+    if (ehNovoEstadoConcluido) state.materiaisConcluidos.delete(id);
+    else                       state.materiaisConcluidos.add(id);
+    console.error('[toggleMaterialConcluido] falhou:', e);
+    alert('Não consegui salvar essa marcação no servidor. Tente de novo em alguns segundos.\n\n(Se o problema persistir, peça pro professor verificar se rodou o SQL_material_concluido.sql no Supabase.)');
+    return !ehNovoEstadoConcluido;
+  }
+}
+
 function extrairYouTubeId(url) {
   // Aceita formatos: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/live/ID, youtube.com/embed/ID
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
@@ -11231,6 +11743,9 @@ async function renderVideoAulas() {
   state.view = 'videoaulas';
   await carregarMateriais();
   await carregarCronogramaCustom();
+  // Garante que materiaisConcluidos esteja carregado mesmo se o aluno
+  // entrou direto nessa tela após login (caso de fallback).
+  if (!state.materiaisConcluidos) await carregarMateriaisConcluidos();
   const main = document.getElementById('main-content');
 
   const visiveis = materiaisCache.filter(m => m.visivel);
@@ -11239,9 +11754,23 @@ async function renderVideoAulas() {
   const totAulas = visiveis.filter(m => m.tipo === 'aula_youtube').length;
   const totPDFs  = visiveis.filter(m => m.tipo === 'pdf').length;
   const totLinks = visiveis.filter(m => m.tipo === 'link_externo').length;
-
-  // Agrupar por modulo > semana
   const totMateriais = totAulas + totPDFs + totLinks;
+
+  // Inicializa estado de UI local
+  if (!(state._matAbertos instanceof Set)) state._matAbertos = new Set();
+  if (state._matFiltroTipo === undefined)  state._matFiltroTipo  = '';
+  if (state._matBusca === undefined)       state._matBusca       = '';
+  if (state.materiaisConcluidos == null)   state.materiaisConcluidos = new Set();
+
+  // Por padrão, abre o módulo da semana atual
+  if (state._matAbertos.size === 0) {
+    const semAtual = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+    if (semAtual && semAtual.moduloId) state._matAbertos.add(semAtual.moduloId);
+  }
+
+  // Calcula progresso geral
+  const totConcl = visiveis.filter(m => state.materiaisConcluidos.has(m.id)).length;
+  const pctGeral = totMateriais ? Math.round((totConcl / totMateriais) * 100) : 0;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Vídeo-aulas</div>
@@ -11252,28 +11781,28 @@ async function renderVideoAulas() {
         </span>
         <div>
           <h2 class="banco-title">Vídeo-aulas e Materiais</h2>
-          <div class="banco-sub">${totMateriais} ${totMateriais === 1 ? 'material disponível' : 'materiais disponíveis'}</div>
+          <div class="banco-sub">${totConcl} de ${totMateriais} ${totMateriais === 1 ? 'material concluído' : 'materiais concluídos'} (${pctGeral}%)</div>
         </div>
       </div>
     </div>
 
     <div class="mat-stats-grid">
       <div class="mat-stat-card is-aula">
-        <div class="mat-stat-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
+        <div class="mat-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
         <div>
           <div class="mat-stat-num">${totAulas}</div>
           <div class="mat-stat-label">${totAulas === 1 ? 'vídeo-aula' : 'vídeo-aulas'}</div>
         </div>
       </div>
       <div class="mat-stat-card is-pdf">
-        <div class="mat-stat-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+        <div class="mat-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
         <div>
           <div class="mat-stat-num">${totPDFs}</div>
           <div class="mat-stat-label">${totPDFs === 1 ? 'PDF' : 'PDFs'}</div>
         </div>
       </div>
       <div class="mat-stat-card is-link">
-        <div class="mat-stat-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+        <div class="mat-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
         <div>
           <div class="mat-stat-num">${totLinks}</div>
           <div class="mat-stat-label">${totLinks === 1 ? 'link' : 'links'}</div>
@@ -11281,150 +11810,245 @@ async function renderVideoAulas() {
       </div>
     </div>
 
-    <div class="filtros banco-filtros">
-      <div class="filtro-field">
-        <label>Tipo</label>
-        <select id="filtro-tipo" onchange="filtrarMateriais()">
-          <option value="">Todos os tipos</option>
-          <option value="aula_youtube">Apenas vídeo-aulas</option>
-          <option value="pdf">Apenas PDFs</option>
-          <option value="link_externo">Apenas links</option>
-        </select>
-      </div>
-      <div class="filtro-field" style="flex:2;max-width:none;">
-        <label>Buscar</label>
-        <div class="search-wrap">
-          <svg class="search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="filtro-busca" placeholder="Buscar por título ou descrição..." oninput="filtrarMateriais()">
-        </div>
+    <!-- Filtros: chips de tipo + busca -->
+    <div class="qbk-filtros-bloco">
+      <div class="qbk-chips">
+        <button class="qbk-chip ${!state._matFiltroTipo ? 'active' : ''}" onclick="selecionarTipoMaterial('')">
+          Todos <span class="qbk-chip-count">(${totMateriais})</span>
+        </button>
+        <button class="qbk-chip ${state._matFiltroTipo === 'aula_youtube' ? 'active' : ''}" onclick="selecionarTipoMaterial('aula_youtube')">
+          Vídeo-aulas <span class="qbk-chip-count">(${totAulas})</span>
+        </button>
+        <button class="qbk-chip ${state._matFiltroTipo === 'pdf' ? 'active' : ''}" onclick="selecionarTipoMaterial('pdf')">
+          PDFs <span class="qbk-chip-count">(${totPDFs})</span>
+        </button>
+        <button class="qbk-chip ${state._matFiltroTipo === 'link_externo' ? 'active' : ''}" onclick="selecionarTipoMaterial('link_externo')">
+          Links <span class="qbk-chip-count">(${totLinks})</span>
+        </button>
       </div>
     </div>
 
-    ${visiveis.length === 0 ? `
+    <div class="qbk-busca-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="filtro-busca" class="qbk-busca"
+             placeholder="Buscar por título ou descrição..."
+             value="${(state._matBusca || '').replace(/"/g, '&quot;')}"
+             oninput="agendarFiltrarMateriais()">
+    </div>
+
+    <div id="vmod-lista">${renderListaModulos()}</div>
+  `;
+}
+
+// Aplica filtro de tipo + busca por texto sobre os materiais visíveis.
+function filtrarMaterialQueQuer(m) {
+  const termo = _normBusca(state._matBusca || '');
+  if (state._matFiltroTipo && m.tipo !== state._matFiltroTipo) return false;
+  if (termo) {
+    const corpo = _normBusca((m.titulo || '') + ' ' + (m.descricao || ''));
+    return termo.split(' ').filter(Boolean).every(t => corpo.includes(t));
+  }
+  return true;
+}
+
+// Render dos blocos accordion de módulo (chamado tanto no render inicial
+// quanto após mudança de filtro/expansão — re-renderiza só a lista).
+function renderListaModulos() {
+  const visiveis = (materiaisCache || []).filter(m => m.visivel);
+  if (visiveis.length === 0) {
+    return `
       <div class="mat-empty">
         <div class="mat-empty-ico">
           <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
         </div>
         <h3>Nenhum material publicado ainda</h3>
         <p>Quando o professor publicar vídeo-aulas, PDFs ou links, eles aparecerão aqui.</p>
-      </div>
-    ` : MODULOS.map(mod => {
-      // Achar materiais desse modulo
-      const matsMod = visiveis.filter(m => m.modulo_id === mod.id || (m.semana_numero !== null && merged.find(s => s.n === m.semana_numero && s.moduloId === mod.id)));
-      if (matsMod.length === 0) return '';
-      const semanasDoMod = merged.filter(s => s.moduloId === mod.id);
-      return `
-        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
-          <div class="cron-modulo-header">
-            <div class="cron-modulo-numero">${mod.numero}</div>
-            <div class="cron-modulo-info">
-              <h3>${mod.nome}</h3>
-              <p>${matsMod.length} materiais</p>
+      </div>`;
+  }
+
+  const merged = getCronogramaMerged();
+  const filtrados = visiveis.filter(filtrarMaterialQueQuer);
+  if (filtrados.length === 0) {
+    const termo = state._matBusca || '';
+    return `
+      <div class="mat-empty">
+        <div class="mat-empty-ico">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <h3>Nenhum material encontrado</h3>
+        <p>${termo ? `Tente outras palavras ou limpe a busca.` : 'Tente trocar o filtro de tipo.'}</p>
+      </div>`;
+  }
+
+  return MODULOS.map(mod => {
+    // Materiais desse módulo (por modulo_id direto OU por semana pertencente ao mod)
+    const matsMod = filtrados.filter(m =>
+      m.modulo_id === mod.id ||
+      (m.semana_numero != null && merged.find(s => s.n === m.semana_numero && s.moduloId === mod.id))
+    );
+    if (matsMod.length === 0) return '';
+
+    // Progresso: concluídos / total
+    const totalMod = matsMod.length;
+    const conclMod = matsMod.filter(m => state.materiaisConcluidos.has(m.id)).length;
+    const pctMod = totalMod ? Math.round((conclMod / totalMod) * 100) : 0;
+    const aberto = state._matAbertos.has(mod.id);
+
+    // Semanas desse módulo que TÊM materiais filtrados
+    const semanasDoMod = merged.filter(s => s.moduloId === mod.id);
+    const semSemana = matsMod.filter(m => m.semana_numero == null);
+
+    return `
+      <div class="vmod-bloco ${aberto ? 'is-open' : ''}" data-mod="${mod.id}">
+        <div class="vmod-header" onclick="toggleModuloMat('${mod.id}')" style="--mod-cor:${mod.cor};">
+          <div class="vmod-numero">${mod.numero}</div>
+          <div class="vmod-info">
+            <p class="vmod-titulo">${mod.nome}</p>
+            <div class="vmod-sub">${totalMod} ${totalMod === 1 ? 'material' : 'materiais'} · ${conclMod} ${conclMod === 1 ? 'concluído' : 'concluídos'}</div>
+          </div>
+          <div class="vmod-progresso">
+            <div class="vmod-prog-bar"><i style="width:${pctMod}%;"></i></div>
+            <div class="vmod-prog-pct">${pctMod}%</div>
+          </div>
+          <svg class="vmod-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="vmod-body">
+          ${semanasDoMod.map(sem => {
+            const matsSem = matsMod
+              .filter(m => m.semana_numero === sem.n)
+              .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+            if (matsSem.length === 0) return '';
+            const conclSem = matsSem.filter(m => state.materiaisConcluidos.has(m.id)).length;
+            const completo = conclSem === matsSem.length;
+            return `
+              <div class="vsem-secao">
+                <div class="vsem-header">
+                  <span class="vsem-num">SEM ${String(sem.n).padStart(2, '0')}</span>
+                  <span class="vsem-tit">${sem.titulo}</span>
+                  <span class="vsem-prog ${completo ? 'is-completo' : ''}">${conclSem}/${matsSem.length}${completo ? ' ✓' : ''}</span>
+                </div>
+                ${matsSem.map(m => renderLinhaMaterial(m)).join('')}
+              </div>`;
+          }).join('')}
+
+          ${semSemana.length > 0 ? `
+            <div class="vsem-secao">
+              <div class="vsem-header">
+                <span class="vsem-num">GERAL</span>
+                <span class="vsem-tit">Materiais gerais do módulo</span>
+                <span class="vsem-prog">${semSemana.filter(m => state.materiaisConcluidos.has(m.id)).length}/${semSemana.length}</span>
+              </div>
+              ${semSemana.sort((a, b) => (a.ordem || 0) - (b.ordem || 0)).map(m => renderLinhaMaterial(m)).join('')}
             </div>
-          </div>
-          <div style="padding:14px;">
-            ${semanasDoMod.map(sem => {
-              const matsSem = visiveis
-                .filter(m => m.semana_numero === sem.n)
-                .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-              if (matsSem.length === 0) return '';
-              return `
-                <div class="mat-semana-secao">
-                  <h4 class="mat-semana-titulo">
-                    <span class="mat-semana-num">SEM ${String(sem.n).padStart(2, '0')}</span>
-                    <span>${sem.titulo}</span>
-                    <span class="mat-semana-data">${sem.data ? sem.data + '/2026' : ''}</span>
-                  </h4>
-                  <div class="materiais-grid">
-                    ${matsSem.map(m => cardMaterial(m)).join('')}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-
-            ${(() => {
-              const semSemana = visiveis.filter(m => m.modulo_id === mod.id && (m.semana_numero === null || m.semana_numero === undefined));
-              if (semSemana.length === 0) return '';
-              return `
-                <div class="mat-semana-secao">
-                  <h4 class="mat-semana-titulo" style="opacity:0.7;">📌 Materiais gerais do módulo</h4>
-                  <div class="materiais-grid">
-                    ${semSemana.map(m => cardMaterial(m)).join('')}
-                  </div>
-                </div>
-              `;
-            })()}
-          </div>
+          ` : ''}
         </div>
-      `;
-    }).join('')}
-
-    ${(() => {
-      const semMod = visiveis.filter(m => !m.modulo_id && (m.semana_numero === null || m.semana_numero === undefined));
-      if (semMod.length === 0) return '';
-      return `
-        <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;">
-          <div class="cron-modulo-header">
-            <div class="cron-modulo-numero">+</div>
-            <div class="cron-modulo-info"><h3>Materiais gerais</h3><p>Sem vínculo específico</p></div>
-          </div>
-          <div style="padding:14px;">
-            <div class="materiais-grid">${semMod.map(m => cardMaterial(m)).join('')}</div>
-          </div>
-        </div>
-      `;
-    })()}
-  `;
+      </div>
+    `;
+  }).join('') || `
+    <div class="mat-empty">
+      <p>Nenhum módulo com materiais nesta busca.</p>
+    </div>`;
 }
 
-function filtrarMateriais() {
-  const ft = document.getElementById('filtro-tipo').value;
-  const fb = document.getElementById('filtro-busca').value.toLowerCase();
-  document.querySelectorAll('.card-material').forEach(c => {
-    const okT = !ft || c.dataset.tipo === ft;
-    const titulo = c.querySelector('.mat-titulo')?.textContent.toLowerCase() || '';
-    const okB = !fb || titulo.includes(fb);
-    c.style.display = (okT && okB) ? '' : 'none';
-  });
-  document.querySelectorAll('.mat-semana-secao').forEach(s => {
-    const v = [...s.querySelectorAll('.card-material')].filter(c => c.style.display !== 'none');
-    s.style.display = v.length === 0 ? 'none' : '';
-  });
-}
+// Render de UMA linha de material (Khan-like row)
+function renderLinhaMaterial(m) {
+  const concl = state.materiaisConcluidos.has(m.id);
+  const isVideo = m.tipo === 'aula_youtube';
+  const isPdf   = m.tipo === 'pdf';
+  const isLink  = m.tipo === 'link_externo';
 
-function cardMaterial(m) {
-  const mod = MODULOS.find(x => x.id === m.modulo_id);
-  const tema = TEMAS.find(t => t.id === m.tema_id);
-  let icon = '🔗', tag = 'link';
-  let thumbHtml = `<div class="mat-thumb mat-thumb-link">🔗</div>`;
-  let actionHtml = `<button class="btn btn-secondary" onclick="window.open('${m.url}','_blank')">Abrir link</button>`;
-  
-  if (m.tipo === 'aula_youtube') {
-    icon = '🎬'; tag = 'aula';
-    const ytId = extrairYouTubeId(m.url);
-    thumbHtml = ytId ? `<div class="mat-thumb mat-thumb-yt"><img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg" alt=""><div class="mat-play">▶</div></div>` : `<div class="mat-thumb mat-thumb-yt">🎬</div>`;
-    actionHtml = `<button class="btn" onclick="abrirPlayerYouTube(${m.id})">▶ Assistir</button>`;
-  } else if (m.tipo === 'pdf') {
-    icon = '📄'; tag = 'pdf';
-    thumbHtml = `<div class="mat-thumb mat-thumb-pdf">📄</div>`;
-    actionHtml = `<button class="btn" onclick="baixarPDFComMarcaDagua(${m.id})">⬇ Baixar com sua identificação</button>`;
+  let tipoCls, tipoSvg, acaoFn, acaoSvg, acaoTitle, meta = '';
+  if (isVideo) {
+    tipoCls = 'tipo-video';
+    tipoSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+    acaoFn = `abrirPlayerYouTube(${m.id})`;
+    acaoSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+    acaoTitle = 'Assistir';
+    if (m.duracao_min) meta = `${m.duracao_min} min`;
+  } else if (isPdf) {
+    tipoCls = 'tipo-pdf';
+    tipoSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    acaoFn = `baixarPDFComMarcaDagua(${m.id})`;
+    acaoSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    acaoTitle = 'Baixar PDF';
+  } else {
+    tipoCls = 'tipo-link';
+    tipoSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+    const urlEsc = String(m.url || '').replace(/'/g, "\\'");
+    acaoFn = `window.open('${urlEsc}','_blank')`;
+    acaoSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+    acaoTitle = 'Abrir link';
   }
 
   return `
-    <div class="card-material" data-modulo="${m.modulo_id || ''}" data-tipo="${m.tipo}">
-      ${thumbHtml}
-      <div class="mat-info">
-        <div class="mat-titulo">${m.titulo}</div>
-        ${m.descricao ? `<div class="mat-desc">${m.descricao}</div>` : ''}
-        <div class="mat-meta">
-          ${mod ? `<span class="tag tag-tema">Módulo ${mod.numero}</span>` : ''}
-          ${tema ? `<span class="tag tag-tema">${tema.nome}</span>` : ''}
-          ${m.duracao_min ? `<span class="tag" style="background:#FFEBEE;color:#C62828;">${m.duracao_min} min</span>` : ''}
-        </div>
-        <div class="mat-acoes">${actionHtml}</div>
+    <div class="mrow ${concl ? 'is-concluido' : ''}" id="mrow-${m.id}">
+      <button class="mrow-check" onclick="event.stopPropagation();marcarMaterialConcluido(${m.id})" title="${concl ? 'Marcar como não concluído' : 'Marcar como concluído'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <div class="mrow-tipo ${tipoCls}">${tipoSvg}</div>
+      <div class="mrow-info">
+        <div class="mrow-titulo">${m.titulo}</div>
+        ${m.descricao ? `<div class="mrow-desc">${m.descricao}</div>` : ''}
       </div>
-    </div>
-  `;
+      <div class="mrow-meta">${meta}</div>
+      <div class="mrow-acao">
+        <button class="btn-icon-mat" onclick="event.stopPropagation();${acaoFn}" title="${acaoTitle}">${acaoSvg}</button>
+      </div>
+    </div>`;
+}
+
+// Handlers
+function toggleModuloMat(modId) {
+  if (!(state._matAbertos instanceof Set)) state._matAbertos = new Set();
+  if (state._matAbertos.has(modId)) state._matAbertos.delete(modId);
+  else                              state._matAbertos.add(modId);
+  // Re-render só da lista (preserva foco do input de busca)
+  const cont = document.getElementById('vmod-lista');
+  if (cont) cont.innerHTML = renderListaModulos();
+}
+
+function selecionarTipoMaterial(tipo) {
+  state._matFiltroTipo = tipo || '';
+  // Quando filtra, abre todos os módulos pra ver o resultado completo
+  if (tipo) {
+    state._matAbertos = new Set(MODULOS.map(m => m.id));
+  }
+  // Re-render completo (chips precisam mudar de active)
+  renderVideoAulas();
+}
+
+// Debounce na busca
+let _matBuscaDebounce = null;
+function agendarFiltrarMateriais() {
+  if (_matBuscaDebounce) clearTimeout(_matBuscaDebounce);
+  _matBuscaDebounce = setTimeout(() => {
+    _matBuscaDebounce = null;
+    const inp = document.getElementById('filtro-busca');
+    if (inp) state._matBusca = inp.value;
+    // Quando busca, abre todos pra resultados não sumirem em accordions fechados
+    if (state._matBusca) state._matAbertos = new Set(MODULOS.map(m => m.id));
+    const cont = document.getElementById('vmod-lista');
+    if (cont) cont.innerHTML = renderListaModulos();
+  }, 180);
+}
+
+// Marcar/desmarcar como concluído com feedback otimista
+async function marcarMaterialConcluido(matId) {
+  const linha = document.getElementById('mrow-' + matId);
+  const novoEstado = await toggleMaterialConcluido(matId);
+  // Atualiza visual da linha sem re-renderizar tudo
+  if (linha) linha.classList.toggle('is-concluido', !!novoEstado);
+  // Atualiza progresso do módulo dessa linha (re-render da lista)
+  const cont = document.getElementById('vmod-lista');
+  if (cont) cont.innerHTML = renderListaModulos();
+}
+
+// Stub legado (renderVideoAulas antigo chamava esse nome no oninput) — agora redireciona
+function filtrarMateriais() {
+  const inp = document.getElementById('filtro-busca');
+  if (inp) state._matBusca = inp.value;
+  const cont = document.getElementById('vmod-lista');
+  if (cont) cont.innerHTML = renderListaModulos();
 }
 
 // ===== Player de vídeo protegido (sem link clicável para o YouTube) =====
