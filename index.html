@@ -9361,7 +9361,7 @@ function renderGerenciarQuestoes() {
   // Reseta UI local (paginação, expansão). Mantém filtros se já existirem.
   state._gerPagina = 0;
   state._gerExpandido = new Set();
-  if (state._gerMod === undefined) state._gerMod = null;
+  if (state._gerTema === undefined) state._gerTema = '';
   if (state._gerProva === undefined) state._gerProva = '';
   if (state._gerBuscaTermo === undefined) state._gerBuscaTermo = '';
   if (state._gerSoProb === undefined) state._gerSoProb = false;
@@ -9374,16 +9374,14 @@ function renderGerenciarQuestoes() {
 function renderTelaGerenciar() {
   const main = document.getElementById('main-content');
   const provas = [...new Set((state.questoes || []).map(q => q.prova).filter(Boolean))].sort();
-  const modAtual = state._gerMod;
+  const temaAtual = state._gerTema || '';
   const provaAtual = state._gerProva || '';
   const totalGeral = (state.questoes || []).length;
 
-  // Contagens por módulo e por prova
-  const cntPorMod = {};
-  MODULOS.forEach(m => { cntPorMod[m.id] = 0; });
+  // Contagens por assunto (tema) e por prova
+  const cntPorTema = {};
   (state.questoes || []).forEach(q => {
-    const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
-    if (mod) cntPorMod[mod.id]++;
+    if (q.tema) cntPorTema[q.tema] = (cntPorTema[q.tema] || 0) + 1;
   });
   const cntPorProva = {};
   provas.forEach(p => { cntPorProva[p] = 0; });
@@ -9433,14 +9431,14 @@ function renderTelaGerenciar() {
     ` : ''}
 
     <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Filtrar por módulo</div>
+      <div class="qbk-filtros-label">Filtrar por assunto</div>
       <div class="qbk-chips">
-        <button class="qbk-chip ${modAtual == null ? 'active' : ''}" onclick="selecionarModuloGer(null)">
+        <button class="qbk-chip ${!temaAtual ? 'active' : ''}" onclick="selecionarTemaGer('')">
           Todos <span class="qbk-chip-count">(${totalGeral})</span>
         </button>
-        ${MODULOS.map(mod => `
-          <button class="qbk-chip ${modAtual === mod.id ? 'active' : ''}" onclick="selecionarModuloGer('${mod.id}')">
-            ${mod.nome} <span class="qbk-chip-count">(${cntPorMod[mod.id] || 0})</span>
+        ${TEMAS.filter(t => (cntPorTema[t.id] || 0) > 0).map(t => `
+          <button class="qbk-chip ${temaAtual === t.id ? 'active' : ''}" onclick="selecionarTemaGer('${t.id}')">
+            ${t.nome} <span class="qbk-chip-count">(${cntPorTema[t.id] || 0})</span>
           </button>
         `).join('')}
       </div>
@@ -9469,10 +9467,10 @@ function selecionarProvaGer(prova) {
   state._gerExpandido = new Set();
   renderTelaGerenciar();
 }
-function selecionarModuloGer(modId) {
+function selecionarTemaGer(temaId) {
   const buscaEl = document.getElementById('ger-busca');
   if (buscaEl) state._gerBuscaTermo = buscaEl.value;
-  state._gerMod = modId || null;
+  state._gerTema = temaId || '';
   state._gerPagina = 0;
   state._gerExpandido = new Set();
   renderTelaGerenciar();
@@ -9680,18 +9678,14 @@ function filtrarGer() {
   const soProb    = !!state._gerSoProb;
   const soSemRes  = !!state._gerSoSemRes;
 
-  const modAtual   = state._gerMod;
+  const temaAtual  = state._gerTema || '';
   const provaAtual = state._gerProva || '';
   const buscaEl    = document.getElementById('ger-busca');
   const termoRaw   = buscaEl ? buscaEl.value : (state._gerBuscaTermo || '');
   const termo      = _normBusca(termoRaw);
 
   let qs = (state.questoes || []).slice();
-  if (modAtual) {
-    const mod = MODULOS.find(m => m.id === modAtual);
-    const temasSet = new Set(mod ? (mod.temas || []) : []);
-    qs = qs.filter(q => temasSet.has(q.tema));
-  }
+  if (temaAtual)  qs = qs.filter(q => q.tema === temaAtual);
   if (provaAtual) qs = qs.filter(q => (q.prova || '') === provaAtual);
   if (termo)      qs = qs.filter(q => questaoCasaBusca(q, termo));
   qs = qs.map(q => ({ ...q, _probs: diagnosticarQuestao(q), _res: temResolucao(q) }));
