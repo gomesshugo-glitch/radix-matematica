@@ -9325,7 +9325,43 @@ async function salvarQuestao(idEdicao, modo) {
     if (idEdicao) {
       const { error } = await sb.rpc('fn_nova_versao_questao',
         { p_questao_id: idEdicao, p_payload: payload });
-      if (error) throw error;
+      if (error) {
+        // Edge case do schema: o constraint `questao_versao_hash_norm_key`
+        // falha quando enunciado/tema não mudaram entre versões — o
+        // hash_norm (= hash de tema|enunciado) bate com a versão anterior.
+        // Acontece tipicamente quando o professor edita SÓ a resolução
+        // (texto da IA, correção de gabarito, etc.). Nesses casos, caímos
+        // pro RPC dedicado `fn_set_resolucao`, que atualiza só a resolução
+        // sem criar versão nova (não toca em hash_norm).
+        const msg = String(error.message || '').toLowerCase();
+        const isDupHash = msg.includes('questao_versao_hash_norm')
+                       || (msg.includes('duplicate key') && msg.includes('questao_versao'));
+        const txtResolucao = (payload.resolucao && payload.resolucao.texto || '').trim();
+        if (isDupHash && txtResolucao) {
+          const { error: e2 } = await sb.rpc('fn_set_resolucao', {
+            p_questao_id: idEdicao,
+            p_tipo: payload.resolucao.tipo || 'comentada',
+            p_texto: txtResolucao,
+            p_video_url: (payload.resolucao && payload.resolucao.video_url) || null
+          });
+          if (e2) throw e2;
+          const frescas = await carregarQuestoesDoBanco();
+          if (frescas) state.questoes = frescas;
+          alert('Resolução atualizada com sucesso.\n\n' +
+                '(O enunciado, tema e alternativas não mudaram, então não foi ' +
+                'criada uma nova versão da questão — só o texto da resolução ' +
+                'foi sobrescrito. Pra criar uma versão nova de verdade, mude ' +
+                'também algo no enunciado, tema ou alternativas.)');
+          renderGerenciarQuestoes();
+          return;
+        }
+        if (isDupHash) {
+          throw new Error('Não dá pra criar uma nova versão: nada mudou no ' +
+            'enunciado/tema. Edite um desses campos OU edite a resolução pelo ' +
+            'botão ✨ Resol (na lista do Gerenciar Banco).');
+        }
+        throw error;
+      }
     } else {
       const { error } = await sb.rpc('fn_publicar_questao',
         { p_payload: payload, p_status: modo === 'rascunho' ? 'rascunho' : 'publicada' });
