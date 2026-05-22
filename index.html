@@ -9347,11 +9347,7 @@ async function salvarQuestao(idEdicao, modo) {
           if (e2) throw e2;
           const frescas = await carregarQuestoesDoBanco();
           if (frescas) state.questoes = frescas;
-          alert('Resolução atualizada com sucesso.\n\n' +
-                '(O enunciado, tema e alternativas não mudaram, então não foi ' +
-                'criada uma nova versão da questão — só o texto da resolução ' +
-                'foi sobrescrito. Pra criar uma versão nova de verdade, mude ' +
-                'também algo no enunciado, tema ou alternativas.)');
+          alert('Alteração salva.');
           renderGerenciarQuestoes();
           return;
         }
@@ -9447,36 +9443,28 @@ function renderTelaGerenciar() {
       </div>
     </div>
 
-    ${provas.length > 0 ? `
-    <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Filtrar por prova</div>
-      <div class="qbk-chips">
-        <button class="qbk-chip ${!provaAtual ? 'active' : ''}" onclick="selecionarProvaGer('')">
-          Todas <span class="qbk-chip-count">(${totalGeral})</span>
-        </button>
-        ${provas.map(pr => {
-          const provaEsc = String(pr).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-          const provaTxt = String(pr).replace(/[<>&]/g, '');
-          return `
-          <button class="qbk-chip ${provaAtual === pr ? 'active' : ''}" onclick="selecionarProvaGer('${provaEsc}')">
-            ${provaTxt} <span class="qbk-chip-count">(${cntPorProva[pr] || 0})</span>
-          </button>`;
-        }).join('')}
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+      ${provas.length > 0 ? `
+      <div class="form-group" style="flex:1; min-width:240px; max-width:380px; margin:0;">
+        <label>Filtrar por prova</label>
+        <select id="ger-prova" onchange="selecionarProvaGer(this.value)">
+          <option value="">Todas as provas (${totalGeral})</option>
+          ${provas.map(pr => {
+            const provaAttr = String(pr).replace(/"/g, '&quot;');
+            const provaTxt  = String(pr).replace(/[<>&]/g, '');
+            return `<option value="${provaAttr}" ${provaAtual===pr?'selected':''}>${provaTxt} (${cntPorProva[pr]||0})</option>`;
+          }).join('')}
+        </select>
       </div>
-    </div>
-    ` : ''}
-
-    <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Filtrar por assunto</div>
-      <div class="qbk-chips">
-        <button class="qbk-chip ${!temaAtual ? 'active' : ''}" onclick="selecionarTemaGer('')">
-          Todos <span class="qbk-chip-count">(${totalGeral})</span>
-        </button>
-        ${TEMAS.filter(t => (cntPorTema[t.id] || 0) > 0).map(t => `
-          <button class="qbk-chip ${temaAtual === t.id ? 'active' : ''}" onclick="selecionarTemaGer('${t.id}')">
-            ${t.nome} <span class="qbk-chip-count">(${cntPorTema[t.id] || 0})</span>
-          </button>
-        `).join('')}
+      ` : ''}
+      <div class="form-group" style="flex:1; min-width:240px; max-width:380px; margin:0;">
+        <label>Filtrar por conteúdo</label>
+        <select id="ger-tema" onchange="selecionarTemaGer(this.value)">
+          <option value="">Todos os conteúdos (${totalGeral})</option>
+          ${TEMAS.filter(t => (cntPorTema[t.id]||0) > 0).map(t =>
+            `<option value="${t.id}" ${temaAtual===t.id?'selected':''}>${t.nome} (${cntPorTema[t.id]||0})</option>`
+          ).join('')}
+        </select>
       </div>
     </div>
 
