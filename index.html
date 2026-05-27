@@ -10072,6 +10072,82 @@ async function gerarResolucaoLoteRevisao() {
   renderRevisarImportacoes();
 }
 
+// ===== PUBLICAÇÃO EM LOTE — reusa a mesma RPC fn_publicar_questao do botão verde por linha =====
+// Pula automaticamente: itens já publicados, itens com erros críticos.
+async function publicarImportSelecionados() {
+  _revSelInit();
+  const ids = [...state._revSel];
+  if (!ids.length) { alert('Selecione ao menos um item (caixinhas à esquerda).'); return; }
+
+  // Classifica em 3 grupos: publicáveis, já publicados, bloqueados (críticos)
+  const publicaveis = [];
+  const jaPub = [];
+  const bloqueados = [];
+  for (const id of ids) {
+    const r = (state._imp || []).find(x => x.id === id);
+    if (!r) { bloqueados.push({ id, motivo: 'não encontrado' }); continue; }
+    if (r.estado === 'publicado') { jaPub.push(id); continue; }
+    const payload = r.parsed || {};
+    const { criticos } = radixValidarPayload(payload);
+    if (criticos.length) { bloqueados.push({ id, motivo: criticos.join('; ') }); continue; }
+    publicaveis.push({ id, payload });
+  }
+
+  if (!publicaveis.length) {
+    alert(
+      `Nada a publicar.\n\n` +
+      (jaPub.length ? `• ${jaPub.length} já publicado(s)\n` : '') +
+      (bloqueados.length ? `• ${bloqueados.length} bloqueado(s) por erros críticos — abra cada um e corrija primeiro.` : '')
+    );
+    return;
+  }
+
+  const resumoPre =
+    `Publicar ${publicaveis.length} questão(ões) selecionada(s)?` +
+    (jaPub.length ? `\n\n${jaPub.length} já publicada(s) serão ignoradas.` : '') +
+    (bloqueados.length ? `\n${bloqueados.length} com erros críticos serão ignoradas.` : '') +
+    `\n\nA ação grava no banco principal (visível pros alunos). Não há desfazer em lote.`;
+  if (!confirm(resumoPre)) return;
+
+  const msg = document.getElementById('rev-lote-msg');
+  const setM = (t, c) => { if (msg) { msg.textContent = t; msg.style.color = c || 'var(--radix-text-muted)'; } };
+
+  let okN = 0; const erros = [];
+  for (let i = 0; i < publicaveis.length; i++) {
+    const { id, payload } = publicaveis[i];
+    setM(`Publicando ${i + 1}/${publicaveis.length} (item #${id})…`);
+    try {
+      const { error } = await sb.rpc('fn_publicar_questao',
+        { p_payload: payload, p_import_id: id, p_status: 'publicada' });
+      if (error) throw error;
+      okN++;
+    } catch (e) {
+      erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+    }
+    // Pequeno delay pra não martelar a RPC nem o Postgres
+    if (i < publicaveis.length - 1) await new Promise(r => setTimeout(r, 150));
+  }
+
+  // Recarrega o banco em memória pra refletir o que acabou de publicar
+  try {
+    const frescas = await carregarQuestoesDoBanco();
+    if (frescas) state.questoes = frescas;
+  } catch (e) { /* não bloqueia o resumo */ }
+
+  state._revSel = new Set();
+  setM(`Publicação em lote concluída: ${okN} ok, ${erros.length} falha(s).`,
+       erros.length ? 'var(--radix-red)' : 'var(--radix-success)');
+
+  alert(
+    `Publicação em lote concluída.\n\n` +
+    `✅ Publicadas: ${okN}\n` +
+    (jaPub.length ? `⏭ Ignoradas (já publicadas): ${jaPub.length}\n` : '') +
+    (bloqueados.length ? `⛔ Ignoradas (erros críticos): ${bloqueados.length}\n` : '') +
+    (erros.length ? `\nFalhas no envio:\n${erros.slice(0, 12).join('\n')}` : '')
+  );
+  renderRevisarImportacoes();
+}
+
 function editarQuestao(id) { abrirCadastroQuestao(id); }
 
 // ===== RESOLUÇÃO IA p/ questão JÁ PUBLICADA (atualiza só a resolução) =====
@@ -10610,6 +10686,7 @@ async function renderRevisarImportacoes() {
       <span style="font-size:13px; color:var(--radix-text-2);"><strong id="rev-sel-count">${state._revSel.size}</strong> selecionado(s)</span>
       <button class="btn btn-secondary" style="padding:8px 14px; font-size:12px;" onclick="limparRevSel()">Limpar seleção</button>
       <button class="btn" style="padding:8px 14px; font-size:12px;" onclick="gerarResolucaoLoteRevisao()">✨ Gerar resolução em lote</button>
+      <button class="btn btn-success" style="padding:8px 14px; font-size:12px;" onclick="publicarImportSelecionados()">✅ Publicar selecionadas</button>
       <button class="btn btn-danger" style="padding:8px 14px; font-size:12px;" onclick="excluirImportSelecionados()">🗑 Excluir selecionados</button>
     </div>
 
