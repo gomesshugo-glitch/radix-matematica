@@ -4774,6 +4774,26 @@ const TECNICAS_ESTUDO = [
   { id: 'questoes',   nome: 'Banco de questões' },
 ];
 
+// =========================================================
+// TURMAS DO CURSO (4 turmas fixas — slug curto no banco)
+// Pra trocar nome/dia/turno, editar aqui (não precisa migrar dados).
+// Os slugs (t01..t04) vivem em perfis.turma e na constraint do banco.
+// =========================================================
+const TURMAS = [
+  { id: 't01', nome: 'Turma 01 — Terça Manhã',   dia: 'Terça',   turno: 'Manhã', cor: '#22d3ee' },
+  { id: 't02', nome: 'Turma 02 — Terça Tarde',   dia: 'Terça',   turno: 'Tarde', cor: '#fbbf24' },
+  { id: 't03', nome: 'Turma 03 — Segunda Noite', dia: 'Segunda', turno: 'Noite', cor: '#a78bfa' },
+  { id: 't04', nome: 'Turma 04 — Quarta Tarde',  dia: 'Quarta',  turno: 'Tarde', cor: '#34d399' },
+];
+
+function turmaPorId(id) {
+  return TURMAS.find(t => t.id === id) || null;
+}
+function turmaLabel(id) {
+  const t = turmaPorId(id);
+  return t ? t.nome : '—';
+}
+
 // SVG inline por técnica — substitui os emojis (que renderizavam inconsistentes
 // em SO/navegadores diferentes). Cada SVG usa stroke=currentColor pra herdar
 // a cor do .tecnica-item (cinza → cyan no hover/selecionado).
@@ -5486,7 +5506,8 @@ async function iniciarSessao() {
     nome: meuPerfil.nome, perfil: meuPerfil.perfil,
     email: meuPerfil.email, id: user.id,
     foto_base64: meuPerfil.foto_base64,
-    telefone: meuPerfil.telefone
+    telefone: meuPerfil.telefone,
+    turma: meuPerfil.turma
   };
   // Marca timestamp de último acesso (não bloqueante)
   sb.rpc('marcar_meu_acesso').then(()=>{}, ()=>{});
@@ -5499,6 +5520,14 @@ async function iniciarSessao() {
       mostrarTelaTelefoneObrigatorio();
       return;
     }
+  }
+  // Se for aluno e não tiver turma escolhida (ou turma fora dos 4 slugs válidos),
+  // bloqueia até escolher. Tem que rodar ANTES da foto porque a turma também
+  // será exigida pelo back-end (constraint chk_aluno_turma) — quando o Bloco 3
+  // do SQL_turma_obrigatoria.sql for executado.
+  if (meuPerfil.perfil === 'aluno' && !turmaPorId(meuPerfil.turma)) {
+    mostrarTelaTurmaObrigatoria();
+    return;
   }
   // Se for aluno e não tiver foto, bloquear acesso até subir
   if (meuPerfil.perfil === 'aluno' && !meuPerfil.foto_base64) {
@@ -5683,7 +5712,12 @@ async function salvarTelefoneObrigatorio() {
     const { error } = await sb.from('perfis').update({ telefone: tel }).eq('id', state.usuario.id);
     if (error) throw error;
     state.usuario.telefone = tel;
-    // Re-entra no fluxo: foto pode ainda estar pendente
+    // Re-entra no fluxo: turma pode estar pendente
+    if (state.usuario.perfil === 'aluno' && !turmaPorId(state.usuario.turma)) {
+      mostrarTelaTurmaObrigatoria();
+      return;
+    }
+    // …ou foto
     if (state.usuario.perfil === 'aluno' && !state.usuario.foto_base64) {
       mostrarTelaUploadFotoObrigatorio();
       return;
@@ -5694,6 +5728,101 @@ async function salvarTelefoneObrigatorio() {
   } catch (e) {
     console.error('Erro ao salvar telefone:', e);
     _telObrigErr('Erro ao salvar: ' + (e?.message || e));
+    if (btn) { btn.disabled = false; btn.textContent = 'Salvar e continuar'; }
+  }
+}
+
+// Tela bloqueadora: aluno sem turma escolhida precisa selecionar uma das 4
+// turmas antes de acessar o app. Cai aqui na sequência: telefone → TURMA → foto.
+function mostrarTelaTurmaObrigatoria() {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.add('hidden');
+  const v = document.getElementById('view-status');
+  v.classList.remove('hidden');
+  v.innerHTML = `
+    <div class="status-screen">
+      <div class="status-card status-card-wide" style="max-width:560px;">
+        <div class="status-ico status-ico-cyan">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h2 class="status-titulo">Escolha sua turma</h2>
+        <p class="status-msg">
+          Olá, <strong>${state.usuario.nome}</strong>. Pra finalizar seu cadastro,
+          escolha em qual <strong>turma do curso</strong> você está matriculado.
+          Isso me ajuda a mandar avisos certos pra você (cronograma, materiais, aula extra).
+        </p>
+
+        <div id="turma-obrig-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 8px;">
+          ${TURMAS.map(t => `
+            <button type="button" class="turma-card" data-turma="${t.id}"
+                    onclick="_selecionarTurmaObrig('${t.id}')"
+                    style="text-align:left;padding:14px 14px;border:2px solid var(--radix-line-2,#e5e7eb);background:var(--radix-surface,#fff);border-radius:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:4px;">
+              <span style="font-weight:700;font-size:14px;color:var(--radix-text,#111);">${t.nome.split(' — ')[0]}</span>
+              <span style="font-size:12.5px;color:var(--radix-text-muted,#6b7280);">${t.dia} · ${t.turno}</span>
+            </button>
+          `).join('')}
+        </div>
+        <p id="turma-obrig-erro" style="color:var(--radix-coral);font-size:12.5px;min-height:18px;margin:4px 0 12px;"></p>
+
+        <button class="btn btn-success" id="turma-obrig-btn" disabled
+                style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;opacity:.5;"
+                onclick="salvarTurmaObrigatoria()">
+          Salvar e continuar
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+
+        <p style="font-size:11.5px;color:var(--radix-text-muted);margin-top:18px;">
+          Em caso de dúvida, fale com o professor antes de escolher — trocar depois é possível mas precisa de confirmação.
+        </p>
+
+        <button style="margin-top:14px;background:transparent;color:var(--radix-text-muted);border:none;cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
+      </div>
+    </div>
+  `;
+}
+
+// Marca o card selecionado e habilita o botão. Estado vive no DOM (data-turma do botão grande).
+function _selecionarTurmaObrig(turmaId) {
+  if (!turmaPorId(turmaId)) return;
+  document.querySelectorAll('#turma-obrig-grid .turma-card').forEach(el => {
+    const sel = el.dataset.turma === turmaId;
+    el.style.borderColor = sel ? 'var(--radix-cyan,#22d3ee)' : 'var(--radix-line-2,#e5e7eb)';
+    el.style.background  = sel ? 'rgba(34,211,238,0.08)' : 'var(--radix-surface,#fff)';
+  });
+  const btn = document.getElementById('turma-obrig-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.dataset.turmaEscolhida = turmaId;
+  }
+  const err = document.getElementById('turma-obrig-erro');
+  if (err) err.textContent = '';
+}
+
+async function salvarTurmaObrigatoria() {
+  const btn = document.getElementById('turma-obrig-btn');
+  const turmaId = btn ? btn.dataset.turmaEscolhida : null;
+  const err = document.getElementById('turma-obrig-erro');
+  if (!turmaPorId(turmaId)) {
+    if (err) err.textContent = 'Escolha uma das 4 turmas acima.';
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+  try {
+    const { error } = await sb.from('perfis').update({ turma: turmaId }).eq('id', state.usuario.id);
+    if (error) throw error;
+    state.usuario.turma = turmaId;
+    // Foto pode ainda estar pendente
+    if (state.usuario.perfil === 'aluno' && !state.usuario.foto_base64) {
+      mostrarTelaUploadFotoObrigatorio();
+      return;
+    }
+    document.getElementById('view-status').classList.add('hidden');
+    await carregarDados();
+    mostrarApp();
+  } catch (e) {
+    console.error('Erro ao salvar turma:', e);
+    if (err) err.textContent = 'Erro ao salvar: ' + (e?.message || e);
     if (btn) { btn.disabled = false; btn.textContent = 'Salvar e continuar'; }
   }
 }
@@ -6039,6 +6168,19 @@ async function abrirMeuPerfil() {
           <small style="color:var(--radix-gray-light);font-size:11px;">Mantém você notificado sobre novas aulas e materiais.</small>
         </div>
 
+        ${!isProf ? `
+          <div class="form-group">
+            <label>Turma do curso</label>
+            <select id="meu-turma" data-turma-atual="${p.turma || ''}" style="width:100%;padding:10px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:14px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);">
+              ${!p.turma ? '<option value="">— escolha sua turma —</option>' : ''}
+              ${TURMAS.map(t => `
+                <option value="${t.id}" ${p.turma === t.id ? 'selected' : ''}>${t.nome}</option>
+              `).join('')}
+            </select>
+            <small style="color:var(--radix-gray-light);font-size:11px;">Trocar de turma exige confirmação. Se não tem certeza, fale com o professor antes.</small>
+          </div>
+        ` : ''}
+
         <div class="form-group">
           <label>E-mail <span style="color:var(--radix-gray-light);font-size:11px;font-weight:400;">(não editável)</span></label>
           <input type="email" value="${p.email}" disabled style="background:#F3F4F6;color:var(--radix-gray-light);cursor:not-allowed;">
@@ -6133,6 +6275,36 @@ async function salvarMeuPerfil() {
     return;
   }
 
+  // Turma: só pra aluno. Se trocou, pedir confirmação explícita pra evitar
+  // troca acidental por clique no select. Validar contra a lista canônica.
+  let turmaNova = null;
+  if (state.usuario.perfil === 'aluno') {
+    const selTurma = document.getElementById('meu-turma');
+    if (selTurma) {
+      const escolhida = selTurma.value;
+      const atual = selTurma.dataset.turmaAtual || '';
+      if (!escolhida || !turmaPorId(escolhida)) {
+        alert('Escolha sua turma do curso (campo obrigatório).');
+        return;
+      }
+      if (escolhida !== atual) {
+        const labelAtual = atual ? turmaLabel(atual) : '(nenhuma)';
+        const labelNova  = turmaLabel(escolhida);
+        if (!confirm(
+          `Trocar de turma?\n\n` +
+          `Atual:  ${labelAtual}\n` +
+          `Nova:   ${labelNova}\n\n` +
+          `O professor vai te ver na nova turma a partir de agora. Confirma?`
+        )) {
+          // Reverter o select pra turma atual sem salvar
+          if (atual) selTurma.value = atual;
+          return;
+        }
+        turmaNova = escolhida;
+      }
+    }
+  }
+
   const params = {
     novo_nome: nome,
     novo_telefone: whats || null,
@@ -6141,6 +6313,17 @@ async function salvarMeuPerfil() {
 
   const { error } = await sb.rpc('atualizar_meu_perfil', params);
   if (error) { alert('Erro: ' + error.message); return; }
+
+  // UPDATE separado pra turma (RPC atual não conhece o campo turma).
+  // Faz só se houve troca real — evita escrita à toa.
+  if (turmaNova) {
+    const { error: eT } = await sb.from('perfis').update({ turma: turmaNova }).eq('id', state.usuario.id);
+    if (eT) {
+      alert('Perfil salvo, mas a troca de turma falhou: ' + eT.message);
+      return;
+    }
+    state.usuario.turma = turmaNova;
+  }
 
   // Atualizar local
   state.usuario.nome = nome;
@@ -11142,11 +11325,13 @@ async function renderGerenciarAlunos() {
   state._alunoListaAtual = perfis;
   if (state._alunoSel === undefined) state._alunoSel = new Set();
   if (state._alunoBusca === undefined) state._alunoBusca = '';
+  if (state._alunoTurmaFiltro === undefined) state._alunoTurmaFiltro = '';
 
   const totalGeral = perfis.length;
   const pendentesT  = perfis.filter(p => p.status === 'pendente').length;
   const aprovadosT  = perfis.filter(p => p.status === 'aprovado').length;
   const bloqueadosT = perfis.filter(p => p.status === 'bloqueado').length;
+  const semTurmaT   = perfis.filter(p => p.perfil === 'aluno' && !turmaPorId(p.turma)).length;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Alunos</div>
@@ -11159,14 +11344,25 @@ async function renderGerenciarAlunos() {
       <div class="stat-card"><div class="label">Total</div><div class="value">${totalGeral}</div></div>
     </div>
 
-    <!-- Busca por nome, e-mail, WhatsApp ou CPF -->
-    <div class="qbk-busca-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="aluno-busca" class="qbk-busca"
-             placeholder="Buscar por nome, e-mail, WhatsApp ou CPF..."
-             value="${(state._alunoBusca || '').replace(/"/g, '&quot;')}"
-             oninput="agendarFiltrarAlunos()">
+    <!-- Busca + filtro de turma -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+      <div class="qbk-busca-wrap" style="flex:1;min-width:240px;margin-bottom:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="aluno-busca" class="qbk-busca"
+               placeholder="Buscar por nome, e-mail, WhatsApp ou CPF..."
+               value="${(state._alunoBusca || '').replace(/"/g, '&quot;')}"
+               oninput="agendarFiltrarAlunos()">
+      </div>
+      <select id="aluno-turma-filtro" onchange="state._alunoTurmaFiltro=this.value;filtrarAlunos();"
+              style="padding:10px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:13px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);min-width:220px;">
+        <option value="" ${state._alunoTurmaFiltro === '' ? 'selected' : ''}>Todas as turmas</option>
+        ${TURMAS.map(t => `<option value="${t.id}" ${state._alunoTurmaFiltro === t.id ? 'selected' : ''}>${t.nome}</option>`).join('')}
+        <option value="__sem__" ${state._alunoTurmaFiltro === '__sem__' ? 'selected' : ''}>— Sem turma definida (${semTurmaT}) —</option>
+      </select>
     </div>
+
+    <!-- Botão de envio direcionado: aparece só quando uma turma específica está filtrada -->
+    <div id="aluno-turma-acao" style="margin-bottom:10px;"></div>
 
     <!-- Batch toolbar (preenchida dinamicamente por filtrarAlunos) -->
     <div id="aluno-batch-bar"></div>
@@ -11193,11 +11389,12 @@ function agendarFiltrarAlunos() {
 function filtrarAlunos() {
   const perfis = state._alunoListaAtual || [];
   const termo = _normBusca(state._alunoBusca || '');
+  const turmaFiltro = state._alunoTurmaFiltro || '';
 
   // Busca em nome+email (case/acento insensitive) E em telefone+CPF (só dígitos).
   // Cada token (AND) precisa casar em PELO MENOS UM dos dois corpos.
   const partes = termo ? termo.split(' ').filter(Boolean) : [];
-  const passar = (p) => {
+  const passarBusca = (p) => {
     if (!partes.length) return true;
     const corpoTxt = _normBusca((p.nome || '') + ' ' + (p.email || ''));
     const corpoDig = String(p.telefone || '').replace(/\D/g, '') + ' ' +
@@ -11210,7 +11407,13 @@ function filtrarAlunos() {
       return false;
     });
   };
-  const filtrados = perfis.filter(passar);
+  // Filtro de turma: '' = todas; 't01'..'t04' = turma específica; '__sem__' = sem turma
+  const passarTurma = (p) => {
+    if (!turmaFiltro) return true;
+    if (turmaFiltro === '__sem__') return p.perfil === 'aluno' && !turmaPorId(p.turma);
+    return p.turma === turmaFiltro;
+  };
+  const filtrados = perfis.filter(p => passarBusca(p) && passarTurma(p));
 
   const pendentes  = filtrados.filter(p => p.status === 'pendente');
   const aprovados  = filtrados.filter(p => p.status === 'aprovado');
@@ -11219,6 +11422,39 @@ function filtrarAlunos() {
   // Atualiza batch toolbar
   const batchEl = document.getElementById('aluno-batch-bar');
   if (batchEl) batchEl.innerHTML = renderAlunoBatchBar();
+
+  // Barra de ação direcionada (envio pra turma específica)
+  const acaoEl = document.getElementById('aluno-turma-acao');
+  if (acaoEl) {
+    const t = turmaPorId(turmaFiltro);
+    if (t) {
+      const aprovadosComWhats = aprovados.filter(p => p.perfil !== 'professor' && p.telefone).length;
+      acaoEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.25);border-radius:10px;padding:10px 14px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.cor};"></span>
+            <b style="font-size:13.5px;color:var(--radix-text,#111);">${t.nome}</b>
+            <span style="font-size:12px;color:var(--radix-text-muted,#6b7280);">· ${aprovados.length} aprovado${aprovados.length !== 1 ? 's' : ''} (${aprovadosComWhats} com WhatsApp)</span>
+          </div>
+          <span style="flex:1;"></span>
+          <button class="btn btn-success" style="background:#25D366;border-color:#25D366;padding:8px 14px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;"
+                  ${aprovadosComWhats === 0 ? 'disabled style="opacity:.5;cursor:not-allowed;"' : ''}
+                  onclick="notificarWhatsTurma('${t.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            Enviar WhatsApp pra ${t.nome.split(' — ')[0]}
+          </button>
+        </div>
+      `;
+    } else if (turmaFiltro === '__sem__') {
+      acaoEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--radix-text,#111);">
+          ⚠ <span><b>${filtrados.length}</b> aluno${filtrados.length !== 1 ? 's' : ''} ainda sem turma definida — serão obrigados a escolher no próximo login.</span>
+        </div>
+      `;
+    } else {
+      acaoEl.innerHTML = '';
+    }
+  }
 
   // Atualiza tabelas
   const tabEl = document.getElementById('aluno-tabelas');
@@ -11429,6 +11665,31 @@ function notificarWhatsAlunosSelecionados() {
   abrirNotificarWhatsApp({ preFiltrado: alvos, escopoLabel });
 }
 
+// Envio direcionado: abre o modal pré-filtrado pra TODOS os alunos aprovados
+// de uma turma específica. Chamada do botão verde que aparece em cima da
+// lista quando o filtro de turma está ativo.
+function notificarWhatsTurma(turmaId) {
+  const t = turmaPorId(turmaId);
+  if (!t) { alert('Turma inválida.'); return; }
+  const perfis = state._alunoListaAtual || [];
+  // Só aprovados, alunos (não professor), da turma específica
+  const alvos = perfis.filter(p =>
+    p.perfil === 'aluno' &&
+    p.status === 'aprovado' &&
+    p.turma === turmaId
+  );
+  if (!alvos.length) {
+    alert(`Nenhum aluno aprovado na ${t.nome}.`);
+    return;
+  }
+  const comTel = alvos.filter(a => a.telefone);
+  if (!comTel.length) {
+    alert(`Os ${alvos.length} aluno(s) da ${t.nome} estão sem WhatsApp cadastrado.\n\nPeça pra completarem o perfil antes.`);
+    return;
+  }
+  abrirNotificarWhatsApp({ preFiltrado: alvos, escopoLabel: t.nome });
+}
+
 // Envio individual: abre o modal de WhatsApp pré-filtrado para UM aluno só.
 // Chamada do botão verde na linha do Gerenciar Alunos.
 function notificarWhatsAluno(alunoId, nome, telefone) {
@@ -11475,13 +11736,14 @@ function exportarAlunosSelecionadosCSV() {
   };
   const statusLabel = (s) => ({ pendente: 'Pendente', aprovado: 'Aprovado', bloqueado: 'Bloqueado' }[s] || s || '');
 
-  const header = ['Nome', 'E-mail', 'WhatsApp', 'CPF', 'Perfil', 'Status', 'Cadastro', 'Último acesso'];
+  const header = ['Nome', 'E-mail', 'WhatsApp', 'CPF', 'Perfil', 'Turma', 'Status', 'Cadastro', 'Último acesso'];
   const linhas = alvos.map(p => [
     p.nome || '',
     p.email || '',
     fmtTel(p.telefone),
     fmtCpf(p.cpf),
     p.perfil === 'professor' ? 'Professor' : 'Aluno',
+    p.perfil === 'professor' ? '' : (turmaPorId(p.turma) ? turmaPorId(p.turma).nome : ''),
     statusLabel(p.status),
     fmtDate(p.criado_em),
     fmtDate(p.ultimo_acesso)
@@ -11553,6 +11815,7 @@ function renderListaAlunos(perfis, statusAtual) {
             <th>Nome</th>
             <th>E-mail</th>
             <th>WhatsApp</th>
+            <th>Turma</th>
             <th>Perfil</th>
             <th>Cadastro</th>
             <th>Último acesso</th>
@@ -11605,6 +11868,13 @@ function renderListaAlunos(perfis, statusAtual) {
                 </td>
                 <td>${p.email}</td>
                 <td>${waLink}</td>
+                <td>${(() => {
+                  if (isProf) return '<span style="color:var(--radix-text-muted);font-size:12px;">—</span>';
+                  const t = turmaPorId(p.turma);
+                  if (!t) return '<span style="background:rgba(251,191,36,0.15);color:#b26a00;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.03em;">SEM TURMA</span>';
+                  const curta = t.nome.split(' — ')[0];
+                  return `<span title="${t.nome.replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;gap:6px;background:${t.cor}22;color:var(--radix-text,#111);padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.cor};"></span>${curta}</span>`;
+                })()}</td>
                 <td>${isProf ? 'Professor' : 'Aluno'}</td>
                 <td><span style="color:var(--radix-text-muted);">${dataFmt}</span></td>
                 <td>${ultAcessoHtml}</td>
@@ -11708,6 +11978,16 @@ async function abrirEditarAluno(alunoId) {
           <input type="text" id="edit-cpf" value="${cpfFmt}" placeholder="000.000.000-00" maxlength="14" oninput="mascararCPF(this)">
         </div>
 
+        ${p.perfil !== 'professor' ? `
+          <div class="form-group">
+            <label>Turma</label>
+            <select id="edit-turma" style="width:100%;padding:10px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:14px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);">
+              <option value="" ${!p.turma ? 'selected' : ''}>— sem turma —</option>
+              ${TURMAS.map(t => `<option value="${t.id}" ${p.turma === t.id ? 'selected' : ''}>${t.nome}</option>`).join('')}
+            </select>
+          </div>
+        ` : ''}
+
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalEditarAluno()">Cancelar</button>
           <button class="btn btn-success" onclick="salvarEditarAluno('${alunoId}')">Salvar alterações</button>
@@ -11745,6 +12025,17 @@ async function salvarEditarAluno(alunoId) {
     telefone: whats || null,
     cpf: cpf || null
   };
+
+  // Turma (campo só existe se o aluno não for professor)
+  const selTurma = document.getElementById('edit-turma');
+  if (selTurma) {
+    const escolhida = selTurma.value || null;
+    if (escolhida && !turmaPorId(escolhida)) {
+      alert('Turma inválida.');
+      return;
+    }
+    payload.turma = escolhida;
+  }
 
   const { error } = await sb.from('perfis').update(payload).eq('id', alunoId);
   if (error) { alert('Erro ao salvar: ' + error.message); return; }
