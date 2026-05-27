@@ -11891,11 +11891,18 @@ function renderListaAlunos(perfis, statusAtual) {
   const selecionaveis = perfis.filter(p => p.perfil !== 'professor');
   const todosSel = selecionaveis.length > 0 && selecionaveis.every(p => state._alunoSel.has(p.id));
   return `
+    <style>
+      /* Tabela compacta — só pra Gerenciar Alunos. Não afeta outras telas. */
+      .v3-table-alunos { font-size: 12.5px; }
+      .v3-table-alunos th { padding: 10px 10px; font-size: 11px; }
+      .v3-table-alunos td { padding: 10px 10px; }
+      .v3-table-alunos .col-email { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
     <div style="overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch;">
-      <table class="v3-table" style="min-width: 1080px;">
+      <table class="v3-table v3-table-alunos">
         <thead>
           <tr>
-            <th style="width:40px;text-align:center;">
+            <th style="width:36px;text-align:center;padding-left:12px;padding-right:6px;">
               <input type="checkbox" class="aluno-cb-todos" style="cursor:pointer;accent-color:var(--radix-cyan,#22d3ee);"
                      ${todosSel ? 'checked' : ''}
                      title="Selecionar todos deste grupo"
@@ -11905,7 +11912,6 @@ function renderListaAlunos(perfis, statusAtual) {
             <th>E-mail</th>
             <th style="white-space:nowrap;">WhatsApp</th>
             <th style="text-align:center;">Turma</th>
-            <th>Perfil</th>
             <th style="white-space:nowrap;">Cadastro</th>
             <th style="white-space:nowrap;">Último acesso</th>
             <th style="text-align:right;white-space:nowrap;">Ações</th>
@@ -11914,7 +11920,11 @@ function renderListaAlunos(perfis, statusAtual) {
         <tbody>
           ${perfis.map(p => {
             const d = new Date(p.criado_em);
-            const dataFmt = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            // Compacto: "27/05/26 14:10" (sem espaço extra, ano com 2 dígitos)
+            const ddmm = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            const hhmm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const dataFmt = `${ddmm} ${hhmm}`;
+            const dataTitle = d.toLocaleDateString('pt-BR') + ' às ' + hhmm; // tooltip com ano completo
             const isProf = p.perfil === 'professor';
             const telFmt = p.telefone ? p.telefone.replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3') : '—';
             const waLink = p.telefone
@@ -11959,19 +11969,19 @@ function renderListaAlunos(perfis, statusAtual) {
                       ${avatarHTML(p, 32)}
                     </span>
                     <strong>${p.nome}</strong>
+                    ${isProf ? '<span title="Professor" style="background:rgba(34,211,238,0.18);color:var(--radix-cyan,#0891b2);padding:1px 6px;border-radius:4px;font-size:9.5px;font-weight:800;letter-spacing:.05em;">PROF</span>' : ''}
                   </div>
                 </td>
-                <td>${p.email}</td>
-                <td>${waLink}</td>
+                <td class="col-email" title="${p.email.replace(/"/g,'&quot;')}">${p.email}</td>
+                <td style="white-space:nowrap;">${waLink}</td>
                 <td style="white-space:nowrap;text-align:center;">${(() => {
                   if (isProf) return '<span style="color:var(--radix-text-muted);font-size:12px;">—</span>';
                   const t = turmaPorId(p.turma);
                   if (!t) return '<span title="Aluno ainda não escolheu turma" style="color:#b26a00;font-size:13px;font-weight:700;">—</span>';
                   return `<span title="${t.nome.replace(/"/g,'&quot;')} (${t.dia} · ${t.turno})" style="display:inline-flex;align-items:center;gap:5px;background:${t.cor}22;color:var(--radix-text,#111);padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:0.03em;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.cor};"></span>${t.id.toUpperCase()}</span>`;
                 })()}</td>
-                <td>${isProf ? 'Professor' : 'Aluno'}</td>
-                <td><span style="color:var(--radix-text-muted);">${dataFmt}</span></td>
-                <td>${ultAcessoHtml}</td>
+                <td style="white-space:nowrap;"><span title="${dataTitle}" style="color:var(--radix-text-muted);font-size:11.5px;">${dataFmt}</span></td>
+                <td style="white-space:nowrap;">${ultAcessoHtml}</td>
                 <td style="text-align:right;white-space:nowrap;">
                   ${isProf ? '<span style="color:var(--radix-text-muted);">—</span>' : `
                     <div style="display:flex;gap:6px;justify-content:flex-end;">
