@@ -11891,8 +11891,8 @@ function renderListaAlunos(perfis, statusAtual) {
   const selecionaveis = perfis.filter(p => p.perfil !== 'professor');
   const todosSel = selecionaveis.length > 0 && selecionaveis.every(p => state._alunoSel.has(p.id));
   return `
-    <div style="overflow-x: auto; margin-bottom: 24px;">
-      <table class="v3-table">
+    <div style="overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch;">
+      <table class="v3-table" style="min-width: 1080px;">
         <thead>
           <tr>
             <th style="width:40px;text-align:center;">
@@ -11903,12 +11903,12 @@ function renderListaAlunos(perfis, statusAtual) {
             </th>
             <th>Nome</th>
             <th>E-mail</th>
-            <th>WhatsApp</th>
-            <th>Turma</th>
+            <th style="white-space:nowrap;">WhatsApp</th>
+            <th style="text-align:center;">Turma</th>
             <th>Perfil</th>
-            <th>Cadastro</th>
-            <th>Último acesso</th>
-            <th style="text-align:right;">Ações</th>
+            <th style="white-space:nowrap;">Cadastro</th>
+            <th style="white-space:nowrap;">Último acesso</th>
+            <th style="text-align:right;white-space:nowrap;">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -11963,12 +11963,11 @@ function renderListaAlunos(perfis, statusAtual) {
                 </td>
                 <td>${p.email}</td>
                 <td>${waLink}</td>
-                <td>${(() => {
+                <td style="white-space:nowrap;text-align:center;">${(() => {
                   if (isProf) return '<span style="color:var(--radix-text-muted);font-size:12px;">—</span>';
                   const t = turmaPorId(p.turma);
-                  if (!t) return '<span style="background:rgba(251,191,36,0.15);color:#b26a00;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.03em;">SEM TURMA</span>';
-                  const curta = t.nome.split(' — ')[0];
-                  return `<span title="${t.nome.replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;gap:6px;background:${t.cor}22;color:var(--radix-text,#111);padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.cor};"></span>${curta}</span>`;
+                  if (!t) return '<span title="Aluno ainda não escolheu turma" style="color:#b26a00;font-size:13px;font-weight:700;">—</span>';
+                  return `<span title="${t.nome.replace(/"/g,'&quot;')} (${t.dia} · ${t.turno})" style="display:inline-flex;align-items:center;gap:5px;background:${t.cor}22;color:var(--radix-text,#111);padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:0.03em;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.cor};"></span>${t.id.toUpperCase()}</span>`;
                 })()}</td>
                 <td>${isProf ? 'Professor' : 'Aluno'}</td>
                 <td><span style="color:var(--radix-text-muted);">${dataFmt}</span></td>
