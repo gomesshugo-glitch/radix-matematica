@@ -5798,8 +5798,25 @@ async function salvarTelefoneObrigatorio() {
   const btn = inp?.parentElement?.parentElement?.querySelector('button.btn-success');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
   try {
-    const { error } = await sb.from('perfis').update({ telefone: tel }).eq('id', state.usuario.id);
+    // RPC SECURITY DEFINER (SQL_fix_salvar_telefone.sql) — mesma estratégia
+    // da fn_set_minha_turma. UPDATE direto era bloqueado silenciosamente pela
+    // RLS de UPDATE em perfis (retornava 0 rows sem erro), fazendo o aluno
+    // achar que salvou e depois bater erro chk_aluno_telefone ao salvar a turma.
+    const { error } = await sb.rpc('fn_set_meu_telefone', { p_telefone: tel });
     if (error) throw error;
+
+    // Confirma do banco que persistiu de verdade — defesa contra outros caminhos
+    // silenciosos (e contra a função não ter sido criada ainda no Supabase).
+    const { data: check } = await sb.from('perfis')
+      .select('telefone').eq('id', state.usuario.id).single();
+    const digitosNoBanco = String(check?.telefone || '').replace(/\D/g, '');
+    if (digitosNoBanco !== tel) {
+      throw new Error(
+        'O telefone não persistiu no banco. Provavelmente a função fn_set_meu_telefone ainda não foi criada no Supabase. ' +
+        'Avise o professor pra rodar SQL_fix_salvar_telefone.sql.'
+      );
+    }
+
     state.usuario.telefone = tel;
     // Re-entra no fluxo: turma pode estar pendente
     if (state.usuario.perfil === 'aluno' && !turmaPorId(state.usuario.turma)) {
