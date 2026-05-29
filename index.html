@@ -8447,25 +8447,53 @@ function abrirTema(temaId) {
   state._paginaQuestoes = 0;
   state._expandidoQuestoes = new Set();
   state._difAtual = '';
-  // Se chegou via um tema específico, deduz o módulo dele; senão mostra todos
+  state._provaAtual = '';
+  state._statusRespAtual = '';
+  state._semanaFiltro = '';
+  // Se chegou via um tema específico, deduz o módulo dele E fixa o sub-filtro de tema
   if (temaId) {
     const modulo = MODULOS.find(m => (m.temas || []).includes(temaId));
     state._modAtual = modulo ? modulo.id : null;
+    state._temaSubAtual = temaId;
   } else {
     state._modAtual = null;
+    state._temaSubAtual = '';
   }
 
   renderTelaQuestoes();
+}
+
+// Indexa respostas do aluno por questaoId pra calcular status (não feita / acertou / errou)
+// sem percorrer respostasAluno toda vez. Recalcula sob demanda em renderTelaQuestoes/filtrarQuestoes.
+function _idxRespostasPorQuestao() {
+  const idx = new Map();
+  (state.respostasAluno || []).forEach(r => {
+    if (!idx.has(r.questaoId)) idx.set(r.questaoId, { corretas: 0, total: 0 });
+    const x = idx.get(r.questaoId);
+    x.total++;
+    if (r.correto) x.corretas++;
+  });
+  return idx;
+}
+
+function _statusDaQuestao(q, idxResp) {
+  const x = idxResp.get(q.id);
+  if (!x || x.total === 0) return 'nao_feita';
+  return x.corretas > 0 ? 'acertei' : 'errei';
 }
 
 // Renderiza a tela inteira de questões (separado de abrirTema pra permitir
 // re-render parcial sem perder estado quando trocam módulo/dificuldade/etc.)
 function renderTelaQuestoes() {
   const main = document.getElementById('main-content');
-  const modAtual = state._modAtual;
-  const difAtual = state._difAtual || '';
-  const naLista = (state.questoesSelecionadas || []).length;
-  const totalGeral = (state.questoes || []).length;
+  const modAtual    = state._modAtual;
+  const difAtual    = state._difAtual || '';
+  const provaAtual  = state._provaAtual || '';
+  const temaSubAtual = state._temaSubAtual || '';
+  const statusAtual = state._statusRespAtual || '';
+  const naLista     = (state.questoesSelecionadas || []).length;
+  const totalGeral  = (state.questoes || []).length;
+  const idxResp     = _idxRespostasPorQuestao();
 
   // Conta quantas questões cada módulo tem (pra mostrar badge nas chips)
   const cntPorMod = {};
@@ -8484,6 +8512,49 @@ function renderTelaQuestoes() {
     }
     if (q.dificuldade && cntPorDif[q.dificuldade] != null) cntPorDif[q.dificuldade]++;
   });
+
+  // Temas do módulo atual (sub-chips). Só aparece quando módulo selecionado.
+  const modSel = modAtual ? MODULOS.find(m => m.id === modAtual) : null;
+  const temasDoMod = (modSel?.temas || []).map(tid => {
+    const t = TEMAS.find(x => x.id === tid);
+    if (!t) return null;
+    const cnt = (state.questoes || []).filter(q => q.tema === tid).length;
+    return { ...t, cnt };
+  }).filter(Boolean).filter(t => t.cnt > 0);
+
+  // Provas disponíveis (do banco). Conta considerando o módulo atual pra contagem fazer sentido.
+  const cntPorProva = new Map();
+  (state.questoes || []).forEach(q => {
+    if (!q.prova) return;
+    if (modAtual) {
+      const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
+      if (!mod || mod.id !== modAtual) return;
+    }
+    cntPorProva.set(q.prova, (cntPorProva.get(q.prova) || 0) + 1);
+  });
+  const provas = [...cntPorProva.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+
+  // Conta por status (não feita / acertei / errei) — escopo: módulo atual
+  const cntStatus = { nao_feita: 0, acertei: 0, errei: 0 };
+  (state.questoes || []).forEach(q => {
+    if (modAtual) {
+      const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
+      if (!mod || mod.id !== modAtual) return;
+    }
+    cntStatus[_statusDaQuestao(q, idxResp)]++;
+  });
+
+  // Semanas do curso disponíveis pra filtro (só as que têm temaId, ou seja, aula real).
+  // Conta também quantas questões cada semana tem (pelo tema).
+  const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+  const semanaAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  const semanasFiltraveis = cronoMerged
+    .filter(s => s.temaId && !s.cancelada)
+    .map(s => {
+      const cnt = (state.questoes || []).filter(q => q.tema === s.temaId).length;
+      return { ...s, _cnt: cnt };
+    });
+  const semanaFiltro = state._semanaFiltro || '';
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Banco de Questões</div>
@@ -8512,9 +8583,17 @@ function renderTelaQuestoes() {
       </div>
     </div>
 
+    <!-- Busca em destaque (acima dos filtros) -->
+    <div class="qbk-busca-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="filtro-busca" class="qbk-busca"
+             placeholder="Buscar no texto da questão ou alternativas…"
+             oninput="agendarFiltrarQuestoes()">
+    </div>
+
     <!-- Filtro: módulo (chips) -->
     <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Escolha um módulo</div>
+      <div class="qbk-filtros-label">Módulo</div>
       <div class="qbk-chips">
         <button class="qbk-chip ${modAtual == null ? 'active' : ''}" onclick="selecionarModulo(null)">
           Todos <span class="qbk-chip-count">(${totalGeral})</span>
@@ -8527,7 +8606,64 @@ function renderTelaQuestoes() {
       </div>
     </div>
 
-    <!-- Filtro: dificuldade (chips) -->
+    ${temasDoMod.length > 0 ? `
+      <!-- Filtro: tema (sub-chips, só com módulo selecionado) -->
+      <div class="qbk-filtros-bloco">
+        <div class="qbk-filtros-label">Tema</div>
+        <div class="qbk-chips">
+          <button class="qbk-chip ${!temaSubAtual ? 'active' : ''}" onclick="selecionarTemaSub('')">Todos do módulo</button>
+          ${temasDoMod.map(t => `
+            <button class="qbk-chip ${temaSubAtual === t.id ? 'active' : ''}" onclick="selecionarTemaSub('${t.id}')">
+              ${t.nome} <span class="qbk-chip-count">(${t.cnt})</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    ${semanasFiltraveis.length > 0 ? `
+      <!-- Filtro: semana do curso -->
+      <div class="qbk-filtros-bloco">
+        <div class="qbk-filtros-label">Semana do curso</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          ${semanaAtualObj && semanaAtualObj.temaId ? `
+            <button class="qbk-chip ${String(semanaFiltro) === String(semanaAtualObj.n) ? 'active' : ''}"
+                    onclick="selecionarSemanaFiltro(${semanaAtualObj.n})"
+                    title="Filtra pelas questões do tema da aula desta semana"
+                    style="display:inline-flex;align-items:center;gap:6px;">
+              📅 Esta semana <span style="opacity:0.75;font-size:11.5px;">(Sem ${String(semanaAtualObj.n).padStart(2,'0')} · ${(TEMAS.find(t=>t.id===semanaAtualObj.temaId)||{nome:''}).nome})</span>
+            </button>
+          ` : ''}
+          <select id="filtro-semana"
+                  onchange="selecionarSemanaFiltro(this.value)"
+                  style="padding:8px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:13px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);min-width:280px;cursor:pointer;">
+            <option value="" ${!semanaFiltro ? 'selected' : ''}>— Todas as semanas —</option>
+            ${semanasFiltraveis.map(s => {
+              const tema = TEMAS.find(t => t.id === s.temaId);
+              const labelTema = tema ? tema.nome : s.titulo;
+              return `<option value="${s.n}" ${String(semanaFiltro) === String(s.n) ? 'selected' : ''}>Sem ${String(s.n).padStart(2,'0')} · ${s.data || ''} · ${labelTema} (${s._cnt})</option>`;
+            }).join('')}
+          </select>
+        </div>
+      </div>
+    ` : ''}
+
+    ${provas.length > 1 ? `
+      <!-- Filtro: prova -->
+      <div class="qbk-filtros-bloco">
+        <div class="qbk-filtros-label">Prova</div>
+        <div class="qbk-chips">
+          <button class="qbk-chip ${!provaAtual ? 'active' : ''}" onclick="selecionarProva('')">Todas as provas</button>
+          ${provas.map(([nome, cnt]) => `
+            <button class="qbk-chip ${provaAtual === nome ? 'active' : ''}" onclick="selecionarProva('${String(nome).replace(/'/g,'\\\'')}')">
+              ${String(nome).replace(/[<>&]/g,'')} <span class="qbk-chip-count">(${cnt})</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Filtro: dificuldade -->
     <div class="qbk-filtros-bloco">
       <div class="qbk-filtros-label">Dificuldade</div>
       <div class="qbk-chips">
@@ -8538,13 +8674,25 @@ function renderTelaQuestoes() {
       </div>
     </div>
 
-    <!-- Busca -->
-    <div class="qbk-busca-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="filtro-busca" class="qbk-busca"
-             placeholder="Buscar no texto da questão ou alternativas…"
-             oninput="agendarFiltrarQuestoes()">
+    <!-- Filtro: status do aluno -->
+    <div class="qbk-filtros-bloco">
+      <div class="qbk-filtros-label">Como eu fui</div>
+      <div class="qbk-chips">
+        <button class="qbk-chip ${!statusAtual ? 'active' : ''}" onclick="selecionarStatusResp('')">Todas</button>
+        <button class="qbk-chip ${statusAtual === 'nao_feita' ? 'active' : ''}" onclick="selecionarStatusResp('nao_feita')" title="Questões que eu ainda não respondi">
+          ○ Não feita <span class="qbk-chip-count">(${cntStatus.nao_feita})</span>
+        </button>
+        <button class="qbk-chip ${statusAtual === 'acertei' ? 'active' : ''}" onclick="selecionarStatusResp('acertei')" title="Questões que eu já acertei pelo menos uma vez">
+          ✓ Acertei <span class="qbk-chip-count">(${cntStatus.acertei})</span>
+        </button>
+        <button class="qbk-chip ${statusAtual === 'errei' ? 'active' : ''}" onclick="selecionarStatusResp('errei')" title="Questões que eu respondi mas nunca acertei — bom pra refazer">
+          ✗ Errei <span class="qbk-chip-count">(${cntStatus.errei})</span>
+        </button>
+      </div>
     </div>
+
+    <!-- Indicador de filtros ativos (rendered dinamicamente em filtrarQuestoes) -->
+    <div id="qbk-filtros-ativos"></div>
 
     <div id="lista-questoes"></div>
   `;
@@ -8554,6 +8702,8 @@ function renderTelaQuestoes() {
 // Handlers das chips
 function selecionarModulo(modId) {
   state._modAtual = modId || null;
+  // Trocou de módulo: resetar sub-filtros que dependem dele (tema do módulo)
+  state._temaSubAtual = '';
   state._paginaQuestoes = 0;
   state._expandidoQuestoes = new Set();
   renderTelaQuestoes();
@@ -8561,6 +8711,113 @@ function selecionarModulo(modId) {
 function selecionarDificuldade(dif) {
   state._difAtual = dif || '';
   state._paginaQuestoes = 0;
+  renderTelaQuestoes();
+}
+function selecionarProva(prova) {
+  state._provaAtual = prova || '';
+  state._paginaQuestoes = 0;
+  renderTelaQuestoes();
+}
+function selecionarTemaSub(temaId) {
+  state._temaSubAtual = temaId || '';
+  state._paginaQuestoes = 0;
+  renderTelaQuestoes();
+}
+function selecionarStatusResp(status) {
+  state._statusRespAtual = status || '';
+  state._paginaQuestoes = 0;
+  renderTelaQuestoes();
+}
+function selecionarSemanaFiltro(n) {
+  // Aceita número ou string vazia
+  state._semanaFiltro = (n === '' || n == null) ? '' : String(n);
+  state._paginaQuestoes = 0;
+  renderTelaQuestoes();
+}
+// Renderiza pills clicáveis dos filtros atualmente ativos + botão "Limpar tudo".
+// Cada pill mostra o valor + X pra remover só aquele filtro.
+function _renderFiltrosAtivos() {
+  const cont = document.getElementById('qbk-filtros-ativos');
+  if (!cont) return;
+
+  const ativos = [];
+  if (state._modAtual) {
+    const mod = MODULOS.find(m => m.id === state._modAtual);
+    if (mod) ativos.push({ label: 'Módulo: ' + mod.nome, onClear: 'selecionarModulo(null)' });
+  }
+  if (state._temaSubAtual) {
+    const t = TEMAS.find(x => x.id === state._temaSubAtual);
+    if (t) ativos.push({ label: 'Tema: ' + t.nome, onClear: 'selecionarTemaSub(\'\')' });
+  }
+  if (state._semanaFiltro) {
+    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+    const sem = merged.find(s => String(s.n) === String(state._semanaFiltro));
+    if (sem) {
+      const tema = sem.temaId ? TEMAS.find(t => t.id === sem.temaId) : null;
+      const labelTema = tema ? tema.nome : (sem.titulo || '');
+      ativos.push({
+        label: `Semana ${String(sem.n).padStart(2,'0')}: ${labelTema}`,
+        onClear: 'selecionarSemanaFiltro(\'\')'
+      });
+    }
+  }
+  if (state._provaAtual) {
+    ativos.push({ label: 'Prova: ' + state._provaAtual, onClear: 'selecionarProva(\'\')' });
+  }
+  if (state._difAtual) {
+    const lab = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[state._difAtual] || state._difAtual;
+    ativos.push({ label: 'Dificuldade: ' + lab, onClear: 'selecionarDificuldade(\'\')' });
+  }
+  if (state._statusRespAtual) {
+    const lab = { nao_feita: '○ Não feita', acertei: '✓ Acertei', errei: '✗ Errei' }[state._statusRespAtual] || state._statusRespAtual;
+    ativos.push({ label: lab, onClear: 'selecionarStatusResp(\'\')' });
+  }
+  const buscaEl = document.getElementById('filtro-busca');
+  const buscaVal = buscaEl ? buscaEl.value.trim() : '';
+  if (buscaVal) {
+    ativos.push({
+      label: 'Busca: "' + buscaVal.replace(/[<>&"]/g,'') + '"',
+      onClear: '(function(){const e=document.getElementById(\'filtro-busca\');if(e){e.value=\'\';filtrarQuestoes();}})()'
+    });
+  }
+
+  if (ativos.length === 0) {
+    cont.innerHTML = '';
+    return;
+  }
+
+  cont.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 14px;padding:10px 14px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.22);border-radius:10px;">
+      <span style="font-size:12px;color:var(--radix-text-muted,#6b7280);font-weight:600;">${ativos.length} filtro${ativos.length !== 1 ? 's' : ''} ativo${ativos.length !== 1 ? 's' : ''}:</span>
+      ${ativos.map(a => `
+        <span style="display:inline-flex;align-items:center;gap:6px;background:var(--radix-surface,#fff);border:1px solid var(--radix-line-2,#e5e7eb);padding:3px 6px 3px 10px;border-radius:999px;font-size:12px;color:var(--radix-text,#111);">
+          ${a.label.replace(/[<>&]/g,c=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]))}
+          <button onclick="${a.onClear}" title="Remover este filtro" aria-label="Remover filtro"
+                  style="background:transparent;border:none;cursor:pointer;color:var(--radix-text-muted,#6b7280);padding:2px 4px;border-radius:50%;line-height:0;display:inline-flex;align-items:center;justify-content:center;"
+                  onmouseover="this.style.background='rgba(220,38,38,0.12)';this.style.color='#dc2626';"
+                  onmouseout="this.style.background='transparent';this.style.color='var(--radix-text-muted,#6b7280)';">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </span>
+      `).join('')}
+      <span style="flex:1;"></span>
+      <button onclick="limparTodosFiltros()" style="background:transparent;border:1px solid var(--radix-line-2,#e5e7eb);color:var(--radix-text-2,#374151);padding:5px 12px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600;">
+        Limpar tudo
+      </button>
+    </div>
+  `;
+}
+
+function limparTodosFiltros() {
+  state._modAtual = null;
+  state._difAtual = '';
+  state._provaAtual = '';
+  state._temaSubAtual = '';
+  state._statusRespAtual = '';
+  state._semanaFiltro = '';
+  state._paginaQuestoes = 0;
+  const buscaEl = document.getElementById('filtro-busca');
+  if (buscaEl) buscaEl.value = '';
   renderTelaQuestoes();
 }
 
@@ -8576,8 +8833,12 @@ const QBK_POR_PAGINA = 20;
 function filtrarQuestoes() {
   const buscaEl = document.getElementById('filtro-busca');
   const termo = _normBusca(buscaEl ? buscaEl.value : '');
-  const modAtual = state._modAtual;
-  const difAtual = state._difAtual || '';
+  const modAtual     = state._modAtual;
+  const difAtual     = state._difAtual || '';
+  const provaAtual   = state._provaAtual || '';
+  const temaSubAtual = state._temaSubAtual || '';
+  const statusAtual  = state._statusRespAtual || '';
+  const semanaFiltro = state._semanaFiltro || '';
 
   let questoes = (state.questoes || []).slice();
   // Módulo
@@ -8586,22 +8847,48 @@ function filtrarQuestoes() {
     const temasDoMod = mod ? new Set(mod.temas || []) : new Set();
     questoes = questoes.filter(q => temasDoMod.has(q.tema));
   }
+  // Filtro por semana do curso — mapeia semana → tema, e filtra pelo tema dela.
+  // Se a semana não existir ou não tiver temaId, resulta em zero (intencional).
+  if (semanaFiltro) {
+    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+    const sem = merged.find(s => String(s.n) === String(semanaFiltro));
+    const temaDaSemana = sem && sem.temaId;
+    if (temaDaSemana) {
+      questoes = questoes.filter(q => q.tema === temaDaSemana);
+    } else {
+      questoes = []; // semana sem tema (recesso/simulado) → nada
+    }
+  }
+  // Sub-filtro de tema (dentro do módulo)
+  if (temaSubAtual) questoes = questoes.filter(q => q.tema === temaSubAtual);
+  // Prova
+  if (provaAtual) questoes = questoes.filter(q => (q.prova || '') === provaAtual);
   // Dificuldade
   if (difAtual) questoes = questoes.filter(q => q.dificuldade === difAtual);
+  // Status do aluno (não feita / acertei / errei)
+  if (statusAtual) {
+    const idxResp = _idxRespostasPorQuestao();
+    questoes = questoes.filter(q => _statusDaQuestao(q, idxResp) === statusAtual);
+  }
   // Busca por texto
   if (termo) questoes = questoes.filter(q => questaoCasaBusca(q, termo));
+
+  // Renderiza o indicador de filtros ativos (pills removíveis + Limpar tudo)
+  _renderFiltrosAtivos();
 
   const container = document.getElementById('lista-questoes');
   if (!container) return;
 
   if (questoes.length === 0) {
+    const algumFiltroAtivo = !!(termo || modAtual || difAtual || provaAtual || temaSubAtual || statusAtual || semanaFiltro);
     const msg = termo
       ? `Nenhuma questão contém o texto <strong>"${(buscaEl.value||'').replace(/[<>&]/g,'')}"</strong>. Tente outras palavras ou limpe a busca.`
-      : 'Nenhuma questão com esses filtros. Tente afrouxar (escolher "Todos" ou outra dificuldade).';
+      : 'Nenhuma questão com esses filtros.';
     container.innerHTML = `
       <div style="text-align:center;padding:48px 24px;background:white;border-radius:14px;border:1px dashed var(--radix-line, #e5e7eb);color:var(--radix-text-muted, #6b7280);">
         <div style="font-size:40px;margin-bottom:8px;">🔍</div>
-        <p style="margin:0;">${msg}</p>
+        <p style="margin:0 0 14px;">${msg}</p>
+        ${algumFiltroAtivo ? `<button class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" onclick="limparTodosFiltros()">Limpar todos os filtros</button>` : ''}
       </div>`;
     return;
   }
