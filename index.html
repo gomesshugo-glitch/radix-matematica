@@ -12561,7 +12561,27 @@ async function toggleMaterialConcluido(matId) {
     if (ehNovoEstadoConcluido) state.materiaisConcluidos.delete(id);
     else                       state.materiaisConcluidos.add(id);
     console.error('[toggleMaterialConcluido] falhou:', e);
-    alert('Não consegui salvar essa marcação no servidor. Tente de novo em alguns segundos.\n\n(Se o problema persistir, peça pro professor verificar se rodou o SQL_material_concluido.sql no Supabase.)');
+
+    // Diagnóstico granular pelo código/mensagem do PostgREST/Supabase.
+    // Mostra ao aluno o que aconteceu DE VERDADE, em vez de mensagem genérica.
+    const code = (e && (e.code || e.status)) || '';
+    const msg  = (e && (e.message || e.error_description)) || String(e);
+    let amigavel;
+    if (code === '42P01' || /relation .* does not exist/i.test(msg)) {
+      amigavel = 'A tabela "material_concluido" ainda não existe no banco. Avise o professor (SQL_material_concluido.sql).';
+    } else if (code === '42501' || /row-level security|permission denied/i.test(msg)) {
+      amigavel = 'O servidor recusou a marcação (permissão/RLS). Avise o professor.';
+    } else if (code === '23505' || /duplicate key/i.test(msg)) {
+      amigavel = 'Essa marcação já estava registrada — recarregue a página pra ver o estado certo.';
+    } else if (code === '23503' || /violates foreign key/i.test(msg)) {
+      amigavel = 'O material referenciado não existe mais (id ' + id + '). Recarregue a página.';
+    } else if (/JWT|invalid token|not authenticated/i.test(msg)) {
+      amigavel = 'Sua sessão expirou. Faça login de novo.';
+    } else {
+      amigavel = 'Erro ao salvar (código ' + (code || 'desconhecido') + '): ' + msg;
+    }
+    alert('Não consegui salvar essa marcação.\n\n' + amigavel +
+          '\n\n[Detalhe técnico pra reportar ao professor]\n' + (code ? 'Código: ' + code + '\n' : '') + 'Mensagem: ' + msg);
     return !ehNovoEstadoConcluido;
   }
 }
