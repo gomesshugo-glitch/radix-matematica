@@ -12774,7 +12774,11 @@ async function renderGerenciarMateriais() {
                 <div class="gerencia-semana">
                   <div class="gerencia-semana-titulo">
                     <strong>Semana ${String(sem.n).padStart(2, '0')} · ${sem.data || '—'} · ${sem.titulo}</strong>
-                    <button class="btn-mini" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}')">+ adicionar à esta semana</button>
+                    <span style="display:inline-flex;gap:6px;flex-wrap:wrap;">
+                      <button class="btn-mini" title="Adicionar vídeo-aula nesta semana"   onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'aula_youtube')">🎬 + Vídeo</button>
+                      <button class="btn-mini" title="Adicionar PDF/apostila nesta semana" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'pdf')">📄 + PDF</button>
+                      <button class="btn-mini" title="Adicionar link externo nesta semana" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'link_externo')">🔗 + Link</button>
+                    </span>
                   </div>
                   <div class="gerencia-materiais-lista">
                     ${matsDestaSem.map((mat, idx) => {
@@ -12871,9 +12875,12 @@ async function renderGerenciarMateriais() {
   `;
 }
 
-function abrirNovoMaterialParaSemana(semanaNum, modId) {
-  // Abre o modal de novo material com semana e modulo pre-preenchidos
-  abrirModalMaterial(null, 'aula_youtube');
+function abrirNovoMaterialParaSemana(semanaNum, modId, tipo) {
+  // Abre o modal de novo material com semana, módulo e tipo pré-preenchidos.
+  // `tipo` é opcional pra retrocompatibilidade — default = vídeo-aula (comportamento antigo).
+  const tipoFinal = (tipo === 'aula_youtube' || tipo === 'pdf' || tipo === 'link_externo')
+    ? tipo : 'aula_youtube';
+  abrirModalMaterial(null, tipoFinal);
   setTimeout(() => {
     const modSel = document.getElementById('mat-mod');
     const semInp = document.getElementById('mat-sem');
@@ -13055,6 +13062,15 @@ async function salvarMaterial(matId, tipo) {
     }
     res = await sb.from('materiais').update(payload).eq('id', matId);
   } else {
+    // Novo material: entra no FIM da lista da sua semana/módulo.
+    // Hoje a coluna `ordem` é NULL/0 por default → cai no topo. Calculamos
+    // max(ordem) das peças vizinhas (mesma semana E módulo) e somamos 1.
+    const irmaos = (materiaisCache || []).filter(m =>
+      (m.semana_numero ?? null) === (semana_numero ?? null) &&
+      (m.modulo_id ?? null) === (modulo_id ?? null)
+    );
+    const maxOrdem = irmaos.reduce((mx, m) => Math.max(mx, m.ordem || 0), 0);
+    payload.ordem = maxOrdem + 1;
     res = await sb.from('materiais').insert(payload);
   }
   if (res.error) { alert('Erro: ' + res.error.message); return; }
