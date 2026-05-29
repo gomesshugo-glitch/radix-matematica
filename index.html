@@ -5898,8 +5898,22 @@ async function salvarTurmaObrigatoria() {
   }
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
   try {
-    const { error } = await sb.from('perfis').update({ turma: turmaId }).eq('id', state.usuario.id);
+    // RPC SECURITY DEFINER (SQL_fix_salvar_turma.sql). Bypassa RLS de UPDATE
+    // de perfis que estava bloqueando o campo `turma` silenciosamente.
+    const { error } = await sb.rpc('fn_set_minha_turma', { p_turma: turmaId });
     if (error) throw error;
+
+    // Confirma do banco que realmente persistiu — defesa contra qualquer
+    // outro caminho silencioso. Se vier NULL aqui, a RPC está faltando.
+    const { data: check } = await sb.from('perfis')
+      .select('turma').eq('id', state.usuario.id).single();
+    if (!check || check.turma !== turmaId) {
+      throw new Error(
+        'A turma não persistiu no banco. Provavelmente a função fn_set_minha_turma ainda não foi criada no Supabase. ' +
+        'Avise o professor pra rodar SQL_fix_salvar_turma.sql.'
+      );
+    }
+
     state.usuario.turma = turmaId;
     // Foto pode ainda estar pendente
     if (state.usuario.perfil === 'aluno' && !state.usuario.foto_base64) {
@@ -6403,12 +6417,13 @@ async function salvarMeuPerfil() {
   const { error } = await sb.rpc('atualizar_meu_perfil', params);
   if (error) { alert('Erro: ' + error.message); return; }
 
-  // UPDATE separado pra turma (RPC atual não conhece o campo turma).
-  // Faz só se houve troca real — evita escrita à toa.
+  // Troca de turma via RPC fn_set_minha_turma (SECURITY DEFINER).
+  // UPDATE direto era bloqueado silenciosamente pela RLS de UPDATE em perfis.
   if (turmaNova) {
-    const { error: eT } = await sb.from('perfis').update({ turma: turmaNova }).eq('id', state.usuario.id);
+    const { error: eT } = await sb.rpc('fn_set_minha_turma', { p_turma: turmaNova });
     if (eT) {
-      alert('Perfil salvo, mas a troca de turma falhou: ' + eT.message);
+      alert('Perfil salvo, mas a troca de turma falhou: ' + eT.message +
+            '\n\nVerifique se a função fn_set_minha_turma existe no Supabase.');
       return;
     }
     state.usuario.turma = turmaNova;
