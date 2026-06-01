@@ -10226,7 +10226,12 @@ function previewQuestaoImport(id, fromForm) {
   const alts = Array.isArray(p.alternativas) ? p.alternativas : [];
   const corrIdx = alts.findIndex(a => a && a.correta === true);
   const tema = TEMAS.find(t => t.id === p.tema);
-  const difLabel = { facil:'Fácil', media:'Média', dificil:'Difícil' }[p.dificuldade] || (p.nivel_enem || '');
+  // Prioriza nivel_enem (o que o professor cadastra) sobre dificuldade
+  // (legado, geralmente fica fixo em "media"). Antes mostrava sempre "Média".
+  const nivLabel = { basico:'Básico', intermediario:'Intermediário',
+                     avancado:'Avançado', elite:'Elite' }[p.nivel_enem] || '';
+  const difFallback = { facil:'Fácil', media:'Média', dificil:'Difícil' }[p.dificuldade] || '';
+  const difLabel = nivLabel || difFallback;
   const imgs = (Array.isArray(p.imagens) ? p.imagens : [])
     .map(im => (im && (im.storage_path || im.ref || im.url)) || '')
     .filter(s => /^(https?:|data:)/.test(s));
