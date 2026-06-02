@@ -4767,9 +4767,33 @@
   }
   .met-tabela tbody tr:last-child td { border-bottom: 0; }
   .met-tabela tbody tr:hover { background: var(--radix-bg-2, #f9fafb); }
-  .met-col-nome { min-width: 220px; }
+  .met-col-nome { min-width: 240px; }
+  .met-aluno-celula {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .met-aluno-info { min-width: 0; flex: 1; }
   .met-nome { font-weight: 700; color: var(--radix-text, #111); }
   .met-email { font-size: 11px; color: var(--radix-text-muted, #6b7280); margin-top: 1px; }
+  .met-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--radix-line, #e5e7eb);
+    background: var(--radix-bg-2, #f3f4f6);
+    cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .met-avatar:hover {
+    transform: scale(1.08);
+    border-color: var(--radix-cyan, #0891b2);
+  }
+  .met-avatar-fallback {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 15px;
+    cursor: default;
+    border: 2px solid rgba(255,255,255,0.6);
+  }
+  .met-avatar-fallback:hover { transform: none; border-color: rgba(255,255,255,0.6); }
   .met-turma-pill {
     display: inline-block; padding: 2px 8px; border-radius: 999px;
     background: rgba(34, 211, 238, 0.12); color: var(--radix-cyan, #0891b2);
@@ -12546,7 +12570,7 @@ async function renderMetricasAlunos() {
   let perfis = [], respostas = [], progressos = [];
   try {
     const [r1, r2, r3] = await Promise.all([
-      sb.from('perfis').select('id, nome, email, turma, perfil, status, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
+      sb.from('perfis').select('id, nome, email, turma, perfil, status, foto_base64, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
       sb.from('respostas').select('aluno_id, tema, correto, data_resposta, fonte'),
       sb.from('progresso_semanas').select('*')
     ]);
@@ -12622,6 +12646,7 @@ async function renderMetricasAlunos() {
 
     return {
       id: p.id, nome: p.nome || '(sem nome)', email: p.email || '',
+      foto: p.foto_base64 || '',
       turma: p.turma || '', turmaNome: (turmaPorId(p.turma) || {}).nome || '—',
       qTotal, qAcertos, taxa,
       semIniciadas, semConcluidas,
@@ -12780,11 +12805,22 @@ function _renderTabelaMetricas() {
             const revTxt = l.revPrevistas === 0 ? '—' : (l.revFeitas + '/' + l.revPrevistas);
             const semTxt = l.semIniciadas === 0 ? '—' : (l.semConcluidas + '+' + (l.semIniciadas - l.semConcluidas));
             const diasTxt = l.diasDesde == null ? '—' : (l.diasDesde === 0 ? 'Hoje' : l.diasDesde === 1 ? '1 dia' : l.diasDesde + ' dias');
+            // Avatar: foto se existir, senão inicial do nome com cor derivada do id
+            const nomeEsc = (l.nome || '').replace(/[<>&]/g,'');
+            const inicial = (l.nome || '?').trim().charAt(0).toUpperCase();
+            const avatarHtml = l.foto
+              ? `<img class="met-avatar" src="${l.foto}" alt="${nomeEsc}" onclick="abrirFotoAlunoMetricas('${l.id}', this.src)">`
+              : `<div class="met-avatar met-avatar-fallback" style="background:${_corAvatar(l.id)};">${inicial}</div>`;
             return `
               <tr>
                 <td class="met-col-nome">
-                  <div class="met-nome">${(l.nome || '').replace(/[<>&]/g,'')}</div>
-                  <div class="met-email">${(l.email || '').replace(/[<>&]/g,'')}</div>
+                  <div class="met-aluno-celula">
+                    ${avatarHtml}
+                    <div class="met-aluno-info">
+                      <div class="met-nome">${nomeEsc}</div>
+                      <div class="met-email">${(l.email || '').replace(/[<>&]/g,'')}</div>
+                    </div>
+                  </div>
                 </td>
                 <td><span class="met-turma-pill">${l.turmaNome}</span></td>
                 <td class="met-num"><b>${l.qTotal}</b></td>
@@ -12803,6 +12839,36 @@ function _renderTabelaMetricas() {
       Mostrando ${linhas.length} ${linhas.length === 1 ? 'aluno' : 'alunos'}. Coluna <b>Semanas</b>: concluídas + em estudo. <b>Revisões</b>: feitas / previstas (4 por semana iniciada).
     </p>
   `;
+}
+
+// Cor determinística pra avatar fallback baseada no id do aluno
+function _corAvatar(id) {
+  const cores = [
+    '#0891b2', '#a855f7', '#10b981', '#f59e0b', '#dc2626',
+    '#3b82f6', '#ec4899', '#14b8a6', '#f97316', '#6366f1'
+  ];
+  let h = 0;
+  const s = String(id || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return cores[Math.abs(h) % cores.length];
+}
+
+// Lightbox simples pra ampliar a foto ao clicar
+function abrirFotoAlunoMetricas(alunoId, src) {
+  // Pega o nome
+  const aluno = (state._metAlunos || []).find(l => l.id === alunoId);
+  const nome = aluno ? (aluno.nome || '') : '';
+  const id = 'modal-foto-met';
+  const old = document.getElementById(id); if (old) old.remove();
+  const html = `
+    <div class="modal-overlay" id="${id}" onclick="if(event.target===this)document.getElementById('${id}').remove()" style="z-index:9999;">
+      <div class="modal" style="max-width:420px;text-align:center;padding:18px;background:var(--radix-surface,#fff);">
+        <img src="${src}" alt="${nome.replace(/[<>&"]/g,'')}" style="max-width:100%;max-height:60vh;border-radius:12px;display:block;margin:0 auto 12px;">
+        <div style="font-weight:700;color:var(--radix-text,#111);font-size:15px;">${nome.replace(/[<>&]/g,'')}</div>
+        <button class="btn btn-secondary" onclick="document.getElementById('${id}').remove()" style="margin-top:12px;">Fechar</button>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 
 function exportarMetricasCSV() {
