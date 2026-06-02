@@ -4379,6 +4379,61 @@
 #grupo-estudo .ebb-card.ebb-a_fazer .ebb-card-status {
   background: rgba(168, 85, 247, 0.14); color: #7e22ce;
 }
+/* Estado FEITA — visual destacado pra dar sensação de "concluído" */
+#grupo-estudo .ebb-card.ebb-feita {
+  border-left-color: #10b981;
+  background: rgba(209, 250, 229, 0.40);
+  opacity: 0.85;
+}
+#grupo-estudo .ebb-card.ebb-feita .ebb-card-data {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: rgba(16, 185, 129, 0.5);
+  color: var(--radix-text-2, #374151);
+}
+#grupo-estudo .ebb-card.ebb-feita .ebb-card-status {
+  background: #10b981; color: #fff;
+}
+
+/* Checkbox customizado */
+#grupo-estudo .ebb-card-check {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#grupo-estudo .ebb-card-check input[type=checkbox] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0; height: 0;
+}
+#grupo-estudo .ebb-card-check-box {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--radix-line-2, #d1d5db);
+  background: var(--radix-surface, #fff);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s ease;
+  color: transparent;
+}
+#grupo-estudo .ebb-card-check-box svg {
+  width: 14px; height: 14px;
+}
+#grupo-estudo .ebb-card-check:hover .ebb-card-check-box {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+#grupo-estudo .ebb-card-check input:checked + .ebb-card-check-box {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+/* Estado de save em andamento */
+#grupo-estudo .ebb-card.ebb-saving {
+  opacity: 0.6;
+  pointer-events: none;
+}
 #grupo-estudo .estudo-grid {
   display: grid;
   grid-template-columns: 1fr 80px 80px;
@@ -14789,7 +14844,12 @@ async function carregarProgressoCronograma() {
       qap_casa_feitas:  p.qap_casa_feitas  != null ? Number(p.qap_casa_feitas)  : 0,
       qap_casa_acertos: p.qap_casa_acertos != null ? Number(p.qap_casa_acertos) : 0,
       // Curva de Ebbinghaus — data de início (null se SQL_data_inicio_estudo nao rodou)
-      data_inicio_estudo: p.data_inicio_estudo || null
+      data_inicio_estudo: p.data_inicio_estudo || null,
+      // Revisões marcadas como feitas (data em que foi marcada)
+      rev_1_feita_em: p.rev_1_feita_em || null,
+      rev_2_feita_em: p.rev_2_feita_em || null,
+      rev_3_feita_em: p.rev_3_feita_em || null,
+      rev_4_feita_em: p.rev_4_feita_em || null
     };
   });
 }
@@ -14930,7 +14990,11 @@ function renderSemanaCard(s) {
 // ============================================================================
 const EBBINGHAUS_DIAS = [1, 7, 16, 35];
 
-function calcularRevisoes(dataInicio) {
+// dataInicio: 'YYYY-MM-DD' ou Date — base do cálculo das revisões
+// feitas: objeto com as datas em que cada revisão foi marcada como feita
+//   { 1: '2026-06-02' ou null, 2: ..., 3: ..., 4: ... }
+//   Quando .feita = true na revisão, status passa a 'feita' (sobrescreve os outros)
+function calcularRevisoes(dataInicio, feitas) {
   if (!dataInicio) return [];
   // Normaliza pra Date (assumindo timezone local). Aceita 'YYYY-MM-DD' ou Date.
   let base;
@@ -14945,29 +15009,49 @@ function calcularRevisoes(dataInicio) {
   const hojeRaw = new Date();
   const hoje = new Date(hojeRaw.getFullYear(), hojeRaw.getMonth(), hojeRaw.getDate());
   const MS_DIA = 86400000;
+  const fdone = feitas || {};
 
   return EBBINGHAUS_DIAS.map((d, i) => {
+    const n = i + 1;
     const dt = new Date(base.getTime() + d * MS_DIA);
     const dataISO = dt.toISOString().slice(0, 10);
     const dataBR = String(dt.getDate()).padStart(2, '0') + '/' +
                    String(dt.getMonth() + 1).padStart(2, '0') + '/' +
                    dt.getFullYear();
     const diasFalta = Math.round((dt.getTime() - hoje.getTime()) / MS_DIA);
+    const feitaEm = fdone[n] || null;
     let status;
-    if (diasFalta < 0)       status = 'atrasada';
-    else if (diasFalta === 0) status = 'hoje';
-    else if (diasFalta <= 2)  status = 'em_breve';
-    else                      status = 'a_fazer';
-    return { n: i + 1, dias: d, data: dt, dataISO, dataBR, status, diasFalta };
+    if (feitaEm)                  status = 'feita';
+    else if (diasFalta < 0)       status = 'atrasada';
+    else if (diasFalta === 0)     status = 'hoje';
+    else if (diasFalta <= 2)      status = 'em_breve';
+    else                          status = 'a_fazer';
+    return { n, dias: d, data: dt, dataISO, dataBR, status, diasFalta, feitaEm };
   });
 }
 
 // Texto curto descritivo do status pra UI
 function _revStatusLabel(rev) {
+  if (rev.status === 'feita') {
+    if (!rev.feitaEm) return 'Feita';
+    const m = String(rev.feitaEm).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? ('Feita em ' + m[3] + '/' + m[2]) : 'Feita';
+  }
   if (rev.status === 'atrasada') return Math.abs(rev.diasFalta) === 1 ? '1 dia atrasada' : Math.abs(rev.diasFalta) + ' dias atrasada';
   if (rev.status === 'hoje')     return 'É hoje!';
   if (rev.diasFalta === 1)       return 'Amanhã';
   return 'Em ' + rev.diasFalta + ' dias';
+}
+
+// Atalho: monta o objeto de revisões feitas a partir de um progresso
+function _feitasDoProgresso(prog) {
+  if (!prog) return {};
+  return {
+    1: prog.rev_1_feita_em || null,
+    2: prog.rev_2_feita_em || null,
+    3: prog.rev_3_feita_em || null,
+    4: prog.rev_4_feita_em || null
+  };
 }
 
 function abrirEditorSemana(n) {
@@ -15183,13 +15267,18 @@ function atualizarRevisoesEbbinghaus() {
     cont.innerHTML = '<div class="ebb-vazio">Defina a data de início pra ver o plano de revisões.</div>';
     return;
   }
-  const revs = calcularRevisoes(val);
+  // Lê o estado das revisões já feitas do progresso atual
+  const n = state.semanaEditando;
+  const prog = (n != null) ? (state.progressoCronograma[n] || {}) : {};
+  const feitas = _feitasDoProgresso(prog);
+  const revs = calcularRevisoes(val, feitas);
   if (revs.length === 0) {
     cont.innerHTML = '<div class="ebb-vazio">Data invalida.</div>';
     return;
   }
   cont.innerHTML = revs.map(r => {
     const lbl = _revStatusLabel(r);
+    const checked = r.status === 'feita';
     return `
       <div class="ebb-card ebb-${r.status}">
         <div class="ebb-card-n">R${r.n}</div>
@@ -15198,8 +15287,55 @@ function atualizarRevisoesEbbinghaus() {
           <span class="ebb-card-data">${r.dataBR}</span>
         </div>
         <div class="ebb-card-status">${lbl}</div>
+        <label class="ebb-card-check" title="${checked ? 'Desmarcar revisão' : 'Marcar como feita'}">
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRevisaoFeita(${r.n}, this.checked, this)">
+          <span class="ebb-card-check-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+        </label>
       </div>`;
   }).join('');
+}
+
+// Marca/desmarca uma revisão como feita.
+// Save imediato no banco — não precisa apertar "Salvar" (UX de checkbox).
+async function toggleRevisaoFeita(revN, marcar, inputEl) {
+  const n = state.semanaEditando;
+  if (n == null) return;
+  // Atualiza state local primeiro (otimista)
+  if (!state.progressoCronograma[n]) state.progressoCronograma[n] = { status: 'em_estudo', tecnicas: [], nota_pessoal: '' };
+  const prog = state.progressoCronograma[n];
+  const campo = 'rev_' + revN + '_feita_em';
+  prog[campo] = marcar ? new Date().toISOString().slice(0, 10) : null;
+
+  // Visual de loading no card (desabilita o checkbox)
+  const card = inputEl && inputEl.closest('.ebb-card');
+  if (card) card.classList.add('ebb-saving');
+  if (inputEl) inputEl.disabled = true;
+
+  // Persiste no banco com fallback gracioso (se SQL nao rodou, ignora silenciosamente)
+  try {
+    const upd = { [campo]: prog[campo] };
+    const { error } = await sb.from('progresso_semanas').update(upd)
+      .eq('aluno_id', state.usuario.id)
+      .eq('semana_numero', n);
+    if (error) {
+      if (/column|coluna/i.test(error.message || '')) {
+        console.warn('[toggleRevisaoFeita] Colunas rev_*_feita_em nao existem — rodar SQL_revisoes_feitas.sql no Supabase.');
+      } else {
+        // Reverte state local em caso de erro
+        prog[campo] = marcar ? null : new Date().toISOString().slice(0, 10);
+        alert('Erro ao salvar revisao: ' + error.message);
+      }
+    }
+  } catch (e) {
+    console.warn('[toggleRevisaoFeita] Exceção:', e);
+  }
+
+  // Re-renderiza o painel pra atualizar o visual do card (cor, label de status)
+  if (card) card.classList.remove('ebb-saving');
+  if (inputEl) inputEl.disabled = false;
+  atualizarRevisoesEbbinghaus();
 }
 
 // Calcula % geral = sum(acertos) / sum(feitas) * 100
@@ -15324,12 +15460,21 @@ async function salvarSemana() {
   const qap_feitas = qap_sala_feitas + qap_casa_feitas;
   const qap_acertos = qap_sala_acertos + qap_casa_acertos;
 
+  // Preserva as datas de revisão feita (toggleRevisaoFeita salva em separado;
+  // este save não deve apagar essas marcações nem mexer no estado em sala/etc).
+  const progAnterior = state.progressoCronograma[n] || {};
+  const rev_1_feita_em = zerar ? null : (progAnterior.rev_1_feita_em || null);
+  const rev_2_feita_em = zerar ? null : (progAnterior.rev_2_feita_em || null);
+  const rev_3_feita_em = zerar ? null : (progAnterior.rev_3_feita_em || null);
+  const rev_4_feita_em = zerar ? null : (progAnterior.rev_4_feita_em || null);
+
   state.progressoCronograma[n] = {
     status, tecnicas, nota_pessoal: nota, et_horas,
     data_inicio_estudo,
     qa_feitas, qa_acertos, qc_feitas, qc_acertos, qap_feitas, qap_acertos,
     qa_sala_feitas, qa_sala_acertos, qc_sala_feitas, qc_sala_acertos, qap_sala_feitas, qap_sala_acertos,
-    qa_casa_feitas, qa_casa_acertos, qc_casa_feitas, qc_casa_acertos, qap_casa_feitas, qap_casa_acertos
+    qa_casa_feitas, qa_casa_acertos, qc_casa_feitas, qc_casa_acertos, qap_casa_feitas, qap_casa_acertos,
+    rev_1_feita_em, rev_2_feita_em, rev_3_feita_em, rev_4_feita_em
   };
 
   // Payload completo (com os 12 novos + os 6 derivados pra retrocompat)
@@ -15799,7 +15944,8 @@ async function gerarPDFProgresso(semanas, titulo) {
       }
     }
     if (dataBase) {
-      const revs = calcularRevisoes(dataBase);
+      const feitasPDF = _feitasDoProgresso(p);
+      const revs = calcularRevisoes(dataBase, feitasPDF);
       if (revs.length === 4) {
         const ebbBoxH = 60;
         if (y - ebbBoxH < MB + 20) novaPagina(nomeAluno);
@@ -15823,7 +15969,8 @@ async function gerarPDFProgresso(semanas, titulo) {
           const cardH = 32;
           // Cor de fundo por status
           let bg, fg, label;
-          if (r.status === 'atrasada')      { bg = rgb(0.98, 0.91, 0.91); fg = vermelho;            label = 'Atrasada'; }
+          if (r.status === 'feita')         { bg = rgb(0.88, 0.96, 0.92); fg = verde;                label = '✓ Feita';  }
+          else if (r.status === 'atrasada') { bg = rgb(0.98, 0.91, 0.91); fg = vermelho;            label = 'Atrasada'; }
           else if (r.status === 'hoje')     { bg = rgb(0.86, 0.96, 0.99); fg = cyan;                label = 'HOJE';     }
           else if (r.status === 'em_breve') { bg = rgb(0.99, 0.95, 0.83); fg = rgb(0.7, 0.45, 0);  label = 'Em breve'; }
           else                              { bg = rgb(0.95, 0.92, 0.99); fg = rgb(0.49, 0.13, 0.81); label = 'A fazer'; }
@@ -15832,8 +15979,10 @@ async function gerarPDFProgresso(semanas, titulo) {
           page.drawText('R' + r.n, { x: cx + 6, y: cy + cardH - 11, size: 8.5, font: fontBold, color: cinza2 });
           page.drawText('+' + r.dias + 'd', { x: cx + 6 + fontBold.widthOfTextAtSize('R' + r.n, 8.5) + 4, y: cy + cardH - 11, size: 7.5, font, color: cinza3 });
           // Label de status (topo direito)
-          const wLab = fontBold.widthOfTextAtSize(label, 7);
-          page.drawText(label, { x: cx + cardW - wLab - 6, y: cy + cardH - 11, size: 7, font: fontBold, color: fg });
+          // sanit() pra remover o '✓' que Helvetica WinAnsi não tem
+          const labelSan = sanit(label);
+          const wLab = fontBold.widthOfTextAtSize(labelSan, 7);
+          page.drawText(labelSan, { x: cx + cardW - wLab - 6, y: cy + cardH - 11, size: 7, font: fontBold, color: fg });
           // Data centralizada (parte de baixo)
           const wData = fontBold.widthOfTextAtSize(r.dataBR, 11);
           page.drawText(r.dataBR, { x: cx + (cardW - wData) / 2, y: cy + 8, size: 11, font: fontBold, color: cinza1 });
