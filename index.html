@@ -8113,17 +8113,282 @@ async function escolherPDF() {
 
 function escolherModoTeste() {
   fecharModalGerar();
-  // Fase 1: reusa o motor de conferência atual. O modo teste vai usar
-  // a UI inline existente (responderQuestao mostra explicação na hora).
-  // TODO Fase 2: UI dedicada com auto-avanço + cronômetro opcional.
-  state._modoEstudoLista = 'teste';
-  iniciarConferenciaGabarito();
+  iniciarEstudoDigital('teste');
 }
 
 function escolherModoProva() {
   fecharModalGerar();
-  state._modoEstudoLista = 'prova';
-  iniciarConferenciaGabarito();
+  iniciarEstudoDigital('prova');
+}
+
+// ============================================================================
+// ESTUDO DIGITAL — Modo Teste / Modo Prova
+//  Modo Teste: mostra gabarito + comentário imediatamente após responder cada Q
+//  Modo Prova: aluno responde tudo sem feedback, e só vê resultado no fim
+//
+// Reusa renderQuestaoCompleta() (enunciado + imagens + alternativas).
+// Modo Teste reusa responderQuestao() (que já mostra explicação inline).
+// Modo Prova usa _responderProva() (só guarda, não revela nada).
+// ============================================================================
+
+let _estudoAtual = null;
+
+function iniciarEstudoDigital(modo) {
+  const ids = (state.questoesSelecionadas || []).slice();
+  const qs = ids.map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
+  if (qs.length === 0) { alert('Sua lista está vazia.'); return; }
+  _estudoAtual = {
+    modo,                          // 'teste' | 'prova'
+    qs,
+    respostas: {},                 // { [qid]: idxAlt }
+    iniciadoEm: new Date().toISOString()
+  };
+  state.view = 'estudo-digital';
+  renderEstudoDigital();
+}
+
+function renderEstudoDigital() {
+  const main = document.getElementById('main-content');
+  if (!_estudoAtual) { renderHome(); return; }
+  const { modo, qs, respostas } = _estudoAtual;
+  const respN = Object.keys(respostas).length;
+  const total = qs.length;
+  const ehTeste = modo === 'teste';
+
+  const corAcento = ehTeste ? '#a855f7' : '#dc2626';
+  const corBgSuave = ehTeste ? 'rgba(168,85,247,.08)' : 'rgba(220,38,38,.06)';
+  const corBorda = ehTeste ? 'rgba(168,85,247,.3)' : 'rgba(220,38,38,.3)';
+  const tituloModo = ehTeste ? '🎯 Modo Teste' : '⏱ Modo Prova';
+  const subtituloModo = ehTeste
+    ? 'Veja o gabarito e o comentário logo após responder cada questão.'
+    : 'Responda tudo. O resultado só aparece no final.';
+
+  // Render de cada questão (enunciado + alts + container pra explicação)
+  // No modo prova: override do onclick das alts pra usar _responderProva
+  const questoesHtml = qs.map((q, idx) => {
+    const minhaResp = respostas[q.id];
+    const respondida = minhaResp !== undefined;
+    const tema = TEMAS.find(t => t.id === q.tema);
+
+    // Render das alternativas com handler conforme modo
+    const imgsHtml = (q.imagens || []).map(src =>
+      `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura da questão"></div>`
+    ).join('');
+
+    let altsHtml;
+    const handlerFn = ehTeste ? `responderQuestao(${q.id}, $IDX$)` : `_responderProva(${q.id}, $IDX$)`;
+    if (q.alternativasImg && q.alternativasImg.length) {
+      altsHtml = q.alternativasImg.map((src, i) => {
+        const sel = respondida && minhaResp === i ? 'selecionada' : '';
+        const click = respondida && ehTeste ? '' : `onclick="${handlerFn.replace('$IDX$', i)}"`;
+        return `
+          <div class="alternativa alt-img ${sel}" ${click}>
+            <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
+            <img class="alt-img-content" src="${src}" alt="alternativa ${String.fromCharCode(65 + i)}">
+          </div>`;
+      }).join('');
+    } else {
+      altsHtml = (q.alternativas || []).map((alt, i) => {
+        const sel = respondida && minhaResp === i ? 'selecionada' : '';
+        const click = respondida && ehTeste ? '' : `onclick="${handlerFn.replace('$IDX$', i)}"`;
+        return `
+          <div class="alternativa ${sel}" ${click}>
+            <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
+            <div>${formatarEnunciado(String(alt).replace(/^[A-E]\)\s*/, ''))}</div>
+          </div>`;
+      }).join('');
+    }
+
+    return `
+      <div class="estudo-q-card" id="estudo-q-${q.id}" style="background:white;border:1px solid var(--radix-border);border-radius:14px;padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--radix-line);">
+          <div style="background:${corBgSuave};color:${corAcento};font-weight:800;padding:6px 12px;border-radius:8px;font-size:13px;">
+            Q${String(idx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}
+          </div>
+          <div style="flex:1;color:var(--radix-text-muted);font-size:12.5px;">
+            ${tema ? tema.nome : '—'}${q.prova ? ' · ' + String(q.prova).replace(/[<>&]/g,'') : ''}
+          </div>
+          ${respondida ? `<span style="font-size:11px;color:var(--radix-text-muted);background:var(--radix-bg-2);padding:3px 8px;border-radius:999px;">Respondida</span>` : ''}
+        </div>
+        <div class="questao-enunciado" style="margin-bottom:14px;">${formatarEnunciado(q.enunciado)}</div>
+        ${imgsHtml}
+        <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">${altsHtml}</div>
+        <div id="explicacao-${q.id}"></div>
+      </div>`;
+  }).join('');
+
+  // Barra de status
+  const podeEncerrar = ehTeste ? true : (respN === total);
+  const btnEncerrarTxt = ehTeste
+    ? '✓ Finalizar estudo'
+    : (podeEncerrar ? '🎯 Encerrar e ver resultado' : `🔒 Responda todas (${respN}/${total})`);
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="_sairEstudoDigital()">← Banco de Questões</a> / ${tituloModo}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;padding:14px 16px;background:${corBgSuave};border:1px solid ${corBorda};border-radius:12px;">
+      <div>
+        <h2 style="margin:0;font-size:18px;color:${corAcento};">${tituloModo}</h2>
+        <p style="margin:4px 0 0;font-size:12.5px;color:var(--radix-text-muted);">${subtituloModo}</p>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11.5px;color:var(--radix-text-muted);">Progresso</div>
+        <div style="font-size:18px;font-weight:800;color:${corAcento};">${respN} / ${total}</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0;">
+      ${questoesHtml}
+    </div>
+
+    <div style="position:sticky;bottom:0;background:white;padding:14px;border-top:1px solid var(--radix-line);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;box-shadow:0 -4px 12px rgba(0,0,0,0.04);border-radius:12px 12px 0 0;">
+      <button class="btn btn-secondary" onclick="_sairEstudoDigital()">← Sair sem finalizar</button>
+      <button class="btn" ${podeEncerrar ? `style="background:${corAcento};"` : 'disabled style="opacity:.55;cursor:not-allowed;"'}
+              onclick="${podeEncerrar ? '_finalizarEstudoDigital()' : `alert('Responda todas as ${total} questões antes de ver o resultado.')`}">
+        ${btnEncerrarTxt}
+      </button>
+    </div>
+  `;
+
+  // Re-renderiza KaTeX (questões podem ter $...$ matemático)
+  setTimeout(() => {
+    if (window.renderMathInElement) {
+      window.renderMathInElement(main, {
+        delimiters: [{left:'$',right:'$',display:false}],
+        throwOnError: false
+      });
+    }
+  }, 40);
+}
+
+// Modo Prova: só registra a resposta, NÃO mostra feedback.
+// (No final, _finalizarEstudoDigital() abre o relatório.)
+function _responderProva(qid, idx) {
+  if (!_estudoAtual) return;
+  _estudoAtual.respostas[qid] = idx;
+  // Marca visualmente a alternativa selecionada (sem revelar correta/errada)
+  const alts = document.querySelectorAll(`#alts-${qid} .alternativa`);
+  alts.forEach((el, i) => {
+    el.classList.toggle('selecionada', i === idx);
+  });
+  // Atualiza só o contador (não re-render tudo, pra não perder scroll)
+  _atualizarProgressoEstudo();
+}
+
+function _atualizarProgressoEstudo() {
+  if (!_estudoAtual) return;
+  const respN = Object.keys(_estudoAtual.respostas).length;
+  const total = _estudoAtual.qs.length;
+  // Re-render somente se desbloqueou o botão "Encerrar"
+  if (_estudoAtual.modo === 'prova' && respN === total) {
+    renderEstudoDigital();
+    return;
+  }
+  // Atualiza só o número no header
+  const headers = document.querySelectorAll('h2');
+  // Simples: re-render quando muda 1 resp (barato, lista é pequena)
+  renderEstudoDigital();
+  // restaura o scroll pra última questão respondida
+}
+
+function _sairEstudoDigital() {
+  if (_estudoAtual && Object.keys(_estudoAtual.respostas).length > 0) {
+    // Confirma antes de jogar fora respostas
+    if (!confirm('Sair do estudo? Suas respostas até aqui não serão salvas.')) return;
+  }
+  _estudoAtual = null;
+  abrirTema('');
+}
+
+async function _finalizarEstudoDigital() {
+  if (!_estudoAtual) return;
+  const { modo, qs, respostas } = _estudoAtual;
+  // Calcula acertos
+  let acertos = 0;
+  const detalhes = qs.map(q => {
+    const minhaResp = respostas[q.id];
+    const correto = minhaResp === q.correta;
+    if (minhaResp !== undefined && correto) acertos++;
+    return { q, minhaResp, correto };
+  });
+  const respondidas = detalhes.filter(d => d.minhaResp !== undefined).length;
+  const total = qs.length;
+  const pct = respondidas > 0 ? Math.round(acertos / respondidas * 100) : 0;
+
+  // No Modo Prova: salvar respostas no banco (não foram salvas durante)
+  // No Modo Teste: já foram salvas pelo responderQuestao a cada clique
+  if (modo === 'prova' && respondidas > 0) {
+    const respostasParaSalvar = detalhes
+      .filter(d => d.minhaResp !== undefined)
+      .map(d => ({
+        aluno_id: state.usuario.id,
+        questao_id: d.q.id,
+        tema: d.q.tema,
+        resposta_marcada: d.minhaResp,
+        correto: d.correto,
+        fonte: 'estudo_prova'
+      }));
+    try {
+      await sb.from('respostas').insert(respostasParaSalvar);
+      // Atualiza cache local
+      detalhes.filter(d => d.minhaResp !== undefined).forEach(d => {
+        state.respostasAluno.push({
+          questaoId: d.q.id, tema: d.q.tema,
+          resposta: d.minhaResp, correto: d.correto,
+          data: new Date().toISOString(),
+          aluno: state.usuario.nome, fonte: 'estudo_prova'
+        });
+      });
+    } catch (e) { console.warn('Erro salvar respostas prova:', e); }
+  }
+
+  // Tela de resultado
+  state.view = 'resultado-estudo';
+  const main = document.getElementById('main-content');
+  const corAcento = modo === 'teste' ? '#a855f7' : '#dc2626';
+  const tituloModo = modo === 'teste' ? 'Modo Teste' : 'Modo Prova';
+
+  // Lista de cada questão com gabarito (especialmente útil em Modo Prova)
+  const detalhesHtml = detalhes.map((d, i) => {
+    const tema = TEMAS.find(t => t.id === d.q.tema);
+    const minhaLetra = d.minhaResp != null ? String.fromCharCode(65 + d.minhaResp) : '—';
+    const certaLetra = String.fromCharCode(65 + d.q.correta);
+    const corLinha = d.minhaResp == null ? '#9ca3af' : (d.correto ? '#10b981' : '#dc2626');
+    const ico = d.minhaResp == null ? '○' : (d.correto ? '✓' : '✗');
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--radix-line);font-size:13px;">
+        <div style="color:${corLinha};font-weight:800;font-size:16px;width:24px;text-align:center;">${ico}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;color:var(--radix-text);">Q${String(i+1).padStart(2,'0')} · ${tema ? tema.nome : '—'}</div>
+          <div style="color:var(--radix-text-muted);font-size:12px;">Sua: <b>${minhaLetra}</b> · Gabarito: <b style="color:#10b981;">${certaLetra}</b></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Resultado do ${tituloModo}</div>
+    <h2 class="section-title" style="margin-top:8px;">
+      <span class="section-title-accent"></span>
+      Resultado · ${tituloModo}
+    </h2>
+    <div class="resultado-box" style="border-left:4px solid ${corAcento};">
+      <div style="color:var(--radix-gray-light);">Você acertou</div>
+      <div class="nota">${acertos}/${total}</div>
+      <div class="nota-detalhe">${pct}% de aproveitamento${respondidas < total ? ` · ${total - respondidas} não respondida(s)` : ''}</div>
+    </div>
+
+    <div style="background:white;border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;">
+      <div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">
+        Detalhamento por questão
+      </div>
+      ${detalhesHtml}
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;">
+      <button class="btn" onclick="renderHome()">Voltar ao Início</button>
+      <button class="btn btn-secondary" onclick="abrirTema('')">📚 Voltar ao Banco</button>
+    </div>
+  `;
+  _estudoAtual = null;
 }
 
 async function baixarQuestoesFiltradasPDF() {
@@ -9063,11 +9328,41 @@ function removerDaCesta(qid) {
   atualizarBotaoLista(qid);
 }
 
+// Confirmação inline em 2 cliques (mais robusta que confirm() nativo)
+let _cestaLimparPendente = false;
+let _cestaLimparTimer = null;
 function limparCestaLateral() {
-  if ((state.questoesSelecionadas || []).length === 0) return;
-  if (!confirm('Limpar todas as questões da lista? Você não vai perder as respostas, só remover da lista.')) return;
+  if (!Array.isArray(state.questoesSelecionadas)) state.questoesSelecionadas = [];
+  if (state.questoesSelecionadas.length === 0) return;
+  // 1º clique: pede confirmação inline (troca o texto do botão)
+  if (!_cestaLimparPendente) {
+    _cestaLimparPendente = true;
+    const btns = document.querySelectorAll('#qbk-cesta .qbk-cesta-acoes .btn.btn-secondary');
+    btns.forEach(b => {
+      b.dataset._txtOrig = b.innerHTML;
+      b.innerHTML = '⚠ Clique de novo para confirmar';
+      b.style.background = '#fee2e2';
+      b.style.color = '#dc2626';
+      b.style.borderColor = '#dc2626';
+    });
+    clearTimeout(_cestaLimparTimer);
+    _cestaLimparTimer = setTimeout(() => {
+      _cestaLimparPendente = false;
+      const btns2 = document.querySelectorAll('#qbk-cesta .qbk-cesta-acoes .btn.btn-secondary');
+      btns2.forEach(b => {
+        if (b.dataset._txtOrig) b.innerHTML = b.dataset._txtOrig;
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+    }, 3000);
+    return;
+  }
+  // 2º clique (dentro de 3s): limpa de verdade
+  clearTimeout(_cestaLimparTimer);
+  _cestaLimparPendente = false;
   state.questoesSelecionadas = [];
-  salvarListaLocal();
+  try { salvarListaLocal(); } catch (e) { console.warn('Erro salvarListaLocal:', e); }
   atualizarBadgeLista();
   _refreshCestaLateral();
   // Atualiza os botões dos cards visíveis (volta pra "+ Adicionar")
