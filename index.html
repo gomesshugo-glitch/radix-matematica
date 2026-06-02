@@ -8176,7 +8176,9 @@ function renderEstudoDigital() {
     ).join('');
 
     let altsHtml;
-    const handlerFn = ehTeste ? `responderQuestao(${q.id}, $IDX$)` : `_responderProva(${q.id}, $IDX$)`;
+    // Modo Teste: usa wrapper que registra em _estudoAtual.respostas E mostra feedback inline
+    // Modo Prova: só registra, sem feedback
+    const handlerFn = ehTeste ? `_responderTeste(${q.id}, $IDX$)` : `_responderProva(${q.id}, $IDX$)`;
     if (q.alternativasImg && q.alternativasImg.length) {
       altsHtml = q.alternativasImg.map((src, i) => {
         const sel = respondida && minhaResp === i ? 'selecionada' : '';
@@ -8232,7 +8234,7 @@ function renderEstudoDigital() {
       </div>
       <div style="text-align:right;">
         <div style="font-size:11.5px;color:var(--radix-text-muted);">Progresso</div>
-        <div style="font-size:18px;font-weight:800;color:${corAcento};">${respN} / ${total}</div>
+        <div id="estudo-contador" style="font-size:18px;font-weight:800;color:${corAcento};">${respN} / ${total}</div>
       </div>
     </div>
 
@@ -8242,7 +8244,7 @@ function renderEstudoDigital() {
 
     <div style="position:sticky;bottom:0;background:white;padding:14px;border-top:1px solid var(--radix-line);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;box-shadow:0 -4px 12px rgba(0,0,0,0.04);border-radius:12px 12px 0 0;">
       <button class="btn btn-secondary" onclick="_sairEstudoDigital()">← Sair sem finalizar</button>
-      <button class="btn" ${podeEncerrar ? `style="background:${corAcento};"` : 'disabled style="opacity:.55;cursor:not-allowed;"'}
+      <button id="estudo-btn-encerrar" class="btn" ${podeEncerrar ? `style="background:${corAcento};"` : 'disabled style="opacity:.55;cursor:not-allowed;"'}
               onclick="${podeEncerrar ? '_finalizarEstudoDigital()' : `alert('Responda todas as ${total} questões antes de ver o resultado.')`}">
         ${btnEncerrarTxt}
       </button>
@@ -8258,6 +8260,18 @@ function renderEstudoDigital() {
       });
     }
   }, 40);
+}
+
+// Modo Teste: registra a resposta no _estudoAtual + chama o responderQuestao
+// padrão (que mostra o gabarito + explicação inline e salva no banco).
+function _responderTeste(qid, idx) {
+  if (!_estudoAtual) return;
+  // Se já respondeu, não permite trocar (responderQuestao já zera o onclick depois)
+  if (_estudoAtual.respostas[qid] !== undefined) return;
+  _estudoAtual.respostas[qid] = idx;
+  responderQuestao(qid, idx);
+  // Atualiza só o contador no header (sem re-render — preserva o feedback inline)
+  _atualizarContadorEstudoSemReRender();
 }
 
 // Modo Prova: só registra a resposta, NÃO mostra feedback.
@@ -8276,18 +8290,45 @@ function _responderProva(qid, idx) {
 
 function _atualizarProgressoEstudo() {
   if (!_estudoAtual) return;
+  // Atualiza só o contador e o botão de encerrar — SEM re-render, pra preservar
+  // a marcação visual e os feedbacks inline (no Modo Teste).
+  _atualizarContadorEstudoSemReRender();
+}
+
+// Atualiza só o número "respN / total" no header + o botão "Encerrar" no rodapé,
+// sem refazer o resto do DOM (assim o feedback inline do Modo Teste e o scroll ficam).
+function _atualizarContadorEstudoSemReRender() {
+  if (!_estudoAtual) return;
   const respN = Object.keys(_estudoAtual.respostas).length;
   const total = _estudoAtual.qs.length;
-  // Re-render somente se desbloqueou o botão "Encerrar"
-  if (_estudoAtual.modo === 'prova' && respN === total) {
-    renderEstudoDigital();
-    return;
+  const ehTeste = _estudoAtual.modo === 'teste';
+  const corAcento = ehTeste ? '#a855f7' : '#dc2626';
+
+  // Atualiza o "X / Y" — o header tem uma estrutura conhecida (último div com font-weight:800)
+  // Em vez de selectors frágeis, marco o contador com id próprio. Fallback: busca o número.
+  const contadorEl = document.getElementById('estudo-contador');
+  if (contadorEl) contadorEl.textContent = respN + ' / ' + total;
+
+  // Atualiza o botão "Encerrar" no rodapé (libera no Modo Prova quando atinge total)
+  const btnEnc = document.getElementById('estudo-btn-encerrar');
+  if (btnEnc) {
+    const podeEncerrar = ehTeste ? true : (respN === total);
+    if (podeEncerrar) {
+      btnEnc.disabled = false;
+      btnEnc.style.opacity = '';
+      btnEnc.style.cursor = '';
+      btnEnc.style.background = corAcento;
+      btnEnc.textContent = ehTeste ? '✓ Finalizar estudo' : '🎯 Encerrar e ver resultado';
+      btnEnc.onclick = _finalizarEstudoDigital;
+    } else {
+      btnEnc.disabled = true;
+      btnEnc.style.opacity = '.55';
+      btnEnc.style.cursor = 'not-allowed';
+      btnEnc.style.background = '';
+      btnEnc.textContent = `🔒 Responda todas (${respN}/${total})`;
+      btnEnc.onclick = () => alert(`Responda todas as ${total} questões antes de ver o resultado.`);
+    }
   }
-  // Atualiza só o número no header
-  const headers = document.querySelectorAll('h2');
-  // Simples: re-render quando muda 1 resp (barato, lista é pequena)
-  renderEstudoDigital();
-  // restaura o scroll pra última questão respondida
 }
 
 function _sairEstudoDigital() {
@@ -8348,18 +8389,39 @@ async function _finalizarEstudoDigital() {
   const tituloModo = modo === 'teste' ? 'Modo Teste' : 'Modo Prova';
 
   // Lista de cada questão com gabarito (especialmente útil em Modo Prova)
+  const difLabelMap = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' };
+  const difCorMap = {
+    facil:   { bg: 'rgba(16,185,129,.12)', fg: '#047857' },
+    media:   { bg: 'rgba(245,158,11,.14)', fg: '#b45309' },
+    dificil: { bg: 'rgba(220,38,38,.12)',  fg: '#b91c1c' }
+  };
   const detalhesHtml = detalhes.map((d, i) => {
     const tema = TEMAS.find(t => t.id === d.q.tema);
     const minhaLetra = d.minhaResp != null ? String.fromCharCode(65 + d.minhaResp) : '—';
     const certaLetra = String.fromCharCode(65 + d.q.correta);
     const corLinha = d.minhaResp == null ? '#9ca3af' : (d.correto ? '#10b981' : '#dc2626');
     const ico = d.minhaResp == null ? '○' : (d.correto ? '✓' : '✗');
+    const corMinha = d.minhaResp == null
+      ? '#9ca3af'
+      : (d.correto ? '#10b981' : '#dc2626');
+    // Chip de dificuldade
+    const dif = d.q.dificuldade;
+    const difLab = difLabelMap[dif];
+    const difCor = difCorMap[dif];
+    const difChip = (difLab && difCor)
+      ? `<span style="display:inline-block;background:${difCor.bg};color:${difCor.fg};font-weight:700;font-size:10.5px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;">${difLab}</span>`
+      : '';
+    const provaTxt = d.q.prova ? ` · ${String(d.q.prova).replace(/[<>&]/g,'')}` : '';
     return `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--radix-line);font-size:13px;">
         <div style="color:${corLinha};font-weight:800;font-size:16px;width:24px;text-align:center;">${ico}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;color:var(--radix-text);">Q${String(i+1).padStart(2,'0')} · ${tema ? tema.nome : '—'}</div>
-          <div style="color:var(--radix-text-muted);font-size:12px;">Sua: <b>${minhaLetra}</b> · Gabarito: <b style="color:#10b981;">${certaLetra}</b></div>
+          <div style="font-weight:700;color:var(--radix-text);">
+            Q${String(i+1).padStart(2,'0')} · ${tema ? tema.nome : '—'}${difChip}
+          </div>
+          <div style="color:var(--radix-text-muted);font-size:12px;">
+            Sua: <b style="color:${corMinha};">${minhaLetra}</b> · Gabarito: <b style="color:#10b981;">${certaLetra}</b>${provaTxt}
+          </div>
         </div>
       </div>`;
   }).join('');
