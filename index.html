@@ -4711,6 +4711,71 @@
   margin: 0 8px;
 }
 
+  /* ===== Tela "Métricas dos alunos" (professor) ===== */
+  .met-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  @media (max-width: 900px) { .met-kpis { grid-template-columns: repeat(2, 1fr); } }
+  .met-kpi {
+    background: var(--radix-surface, #fff);
+    border: 1px solid var(--radix-line, #e5e7eb);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .met-kpi-lab {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--radix-text-muted, #6b7280);
+    margin-bottom: 6px;
+  }
+  .met-kpi-val {
+    font-size: 26px; font-weight: 800; color: var(--radix-text, #111);
+    line-height: 1.05;
+  }
+  .met-kpi-sub {
+    margin-top: 4px; font-size: 11px; color: var(--radix-text-muted, #6b7280);
+  }
+  .met-tabela-wrap {
+    background: var(--radix-surface, #fff);
+    border: 1px solid var(--radix-line, #e5e7eb);
+    border-radius: 12px;
+    overflow-x: auto;
+  }
+  .met-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 760px;
+  }
+  .met-tabela thead th {
+    background: var(--radix-bg-2, #f3f4f6);
+    font-size: 11px; font-weight: 700; color: var(--radix-text-muted, #6b7280);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--radix-line, #e5e7eb);
+    white-space: nowrap;
+  }
+  .met-tabela .met-num { text-align: right; }
+  .met-tabela tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--radix-line, #e5e7eb);
+    color: var(--radix-text, #111);
+    vertical-align: middle;
+  }
+  .met-tabela tbody tr:last-child td { border-bottom: 0; }
+  .met-tabela tbody tr:hover { background: var(--radix-bg-2, #f9fafb); }
+  .met-col-nome { min-width: 220px; }
+  .met-nome { font-weight: 700; color: var(--radix-text, #111); }
+  .met-email { font-size: 11px; color: var(--radix-text-muted, #6b7280); margin-top: 1px; }
+  .met-turma-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: rgba(34, 211, 238, 0.12); color: var(--radix-cyan, #0891b2);
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+  }
+
   /* ===== Layout 3-colunas da tela de Banco de Questões (aluno) ===== */
   /* Sidebar à esquerda (árvore de temas) | Centro (lista) | Cesta à direita */
   .qbk-3col {
@@ -6896,6 +6961,10 @@ function renderHome() {
         <div class="quick-card" onclick="renderRelatorioProfessor()">
           <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
           <div><h3>Relatórios</h3><p>Ranking, evolução, top erradas</p></div>
+        </div>
+        <div class="quick-card" onclick="renderMetricasAlunos()">
+          <div class="icon icon-success"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
+          <div><h3>Métricas dos alunos</h3><p>Estudos, questões, revisões</p></div>
         </div>
         <div class="quick-card" onclick="renderEditarCronograma()">
           <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
@@ -12454,6 +12523,320 @@ async function limparBancoQuestoes() {
     console.error('Erro ao limpar banco:', e);
     alert('Erro ao apagar: ' + (e.message || JSON.stringify(e)) + ' — confira se você está logado como professor (RLS).');
   }
+}
+
+// ============================================================================
+// MÉTRICAS DOS ALUNOS (professor) — visão consolidada de estudo + questões + revisões
+// ============================================================================
+async function renderMetricasAlunos() {
+  state.view = 'metricas-alunos';
+  const main = document.getElementById('main-content');
+
+  // Loading inicial
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Métricas dos alunos</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>
+      <span class="st-ico success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+      Métricas dos alunos
+    </h2>
+    <div style="padding:32px;text-align:center;color:var(--radix-text-muted);">Carregando dados de todos os alunos...</div>
+  `;
+
+  // === Queries em paralelo (RLS deve permitir professor ler tudo) ===
+  let perfis = [], respostas = [], progressos = [];
+  try {
+    const [r1, r2, r3] = await Promise.all([
+      sb.from('perfis').select('id, nome, email, turma, perfil, status, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
+      sb.from('respostas').select('aluno_id, tema, correto, data_resposta, fonte'),
+      sb.from('progresso_semanas').select('*')
+    ]);
+    if (r1.error) throw new Error('Perfis: ' + r1.error.message);
+    perfis = r1.data || [];
+    respostas = r2.data || [];     // se erro de RLS, vira []
+    progressos = r3.data || [];
+    if (r2.error) console.warn('[metricas] erro respostas:', r2.error.message);
+    if (r3.error) console.warn('[metricas] erro progressos:', r3.error.message);
+  } catch (e) {
+    main.innerHTML += `<div style="padding:20px;color:#dc2626;">Erro: ${e.message}</div>`;
+    return;
+  }
+
+  // === Indexar pra calcular métricas por aluno ===
+  const respPorAluno = {};   // alunoId → [{tema, correto, data}, ...]
+  respostas.forEach(r => {
+    if (!respPorAluno[r.aluno_id]) respPorAluno[r.aluno_id] = [];
+    respPorAluno[r.aluno_id].push(r);
+  });
+  const progPorAluno = {};   // alunoId → [{semana_numero, status, ...}, ...]
+  progressos.forEach(p => {
+    if (!progPorAluno[p.aluno_id]) progPorAluno[p.aluno_id] = [];
+    progPorAluno[p.aluno_id].push(p);
+  });
+
+  // === Construir as métricas por aluno ===
+  const linhas = perfis.map(p => {
+    const resps = respPorAluno[p.id] || [];
+    const progs = progPorAluno[p.id] || [];
+
+    const qTotal   = resps.length;
+    const qAcertos = resps.filter(r => r.correto).length;
+    const taxa     = qTotal > 0 ? Math.round(qAcertos / qTotal * 100) : null;
+
+    // Semanas em estudo ou concluídas
+    const semIniciadas = progs.filter(x => x.status === 'em_estudo' || x.status === 'concluido').length;
+    const semConcluidas = progs.filter(x => x.status === 'concluido').length;
+
+    // ET total (horas)
+    const etTotal = progs.reduce((acc, x) => acc + Number(x.et_horas || 0), 0);
+
+    // Questões no registro de estudo (sala+casa, soma de todas as semanas)
+    const qEstudo  = progs.reduce((acc, x) =>
+      acc + Number(x.qa_feitas || 0) + Number(x.qc_feitas || 0) + Number(x.qap_feitas || 0), 0);
+    const qEstudoA = progs.reduce((acc, x) =>
+      acc + Number(x.qa_acertos || 0) + Number(x.qc_acertos || 0) + Number(x.qap_acertos || 0), 0);
+    const taxaEstudo = qEstudo > 0 ? Math.round(qEstudoA / qEstudo * 100) : null;
+
+    // Revisões feitas / total (cada semana iniciada tem 4 revisões previstas)
+    let revFeitas = 0;
+    progs.forEach(x => {
+      if (x.rev_1_feita_em) revFeitas++;
+      if (x.rev_2_feita_em) revFeitas++;
+      if (x.rev_3_feita_em) revFeitas++;
+      if (x.rev_4_feita_em) revFeitas++;
+    });
+    const revPrevistas = semIniciadas * 4;
+
+    // Última atividade: max(data de qualquer resposta, data de qualquer save)
+    let ultimaResp = null;
+    resps.forEach(r => {
+      if (r.data_resposta && (!ultimaResp || r.data_resposta > ultimaResp)) ultimaResp = r.data_resposta;
+    });
+    let ultimaSave = null;
+    progs.forEach(x => {
+      if (x.atualizado_em && (!ultimaSave || x.atualizado_em > ultimaSave)) ultimaSave = x.atualizado_em;
+    });
+    const ultima = [ultimaResp, ultimaSave].filter(Boolean).sort().pop() || null;
+    const ultimaBR = ultima ? new Date(ultima).toLocaleDateString('pt-BR') : '—';
+    // Dias desde a última atividade
+    const diasDesde = ultima ? Math.floor((Date.now() - new Date(ultima).getTime()) / 86400000) : null;
+
+    return {
+      id: p.id, nome: p.nome || '(sem nome)', email: p.email || '',
+      turma: p.turma || '', turmaNome: (turmaPorId(p.turma) || {}).nome || '—',
+      qTotal, qAcertos, taxa,
+      semIniciadas, semConcluidas,
+      etTotal,
+      qEstudo, qEstudoA, taxaEstudo,
+      revFeitas, revPrevistas,
+      ultima, ultimaBR, diasDesde
+    };
+  });
+
+  // Cacheia + inicializa filtros
+  state._metAlunos = linhas;
+  if (state._metBusca === undefined)       state._metBusca = '';
+  if (state._metTurma === undefined)       state._metTurma = '';
+  if (state._metOrdem === undefined)       state._metOrdem = 'qTotal_desc'; // mais ativos primeiro
+
+  // === KPIs globais ===
+  const totAlunos = linhas.length;
+  const totQ = linhas.reduce((a, l) => a + l.qTotal, 0);
+  const totA = linhas.reduce((a, l) => a + l.qAcertos, 0);
+  const totSem = linhas.reduce((a, l) => a + l.semIniciadas, 0);
+  const totRev = linhas.reduce((a, l) => a + l.revFeitas, 0);
+  const totET = linhas.reduce((a, l) => a + l.etTotal, 0);
+  const taxaGeral = totQ > 0 ? Math.round(totA / totQ * 100) : 0;
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Métricas dos alunos</div>
+    <h2 class="section-title"><span class="section-title-accent"></span>
+      <span class="st-ico success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+      Métricas dos alunos
+    </h2>
+    <p style="color:var(--radix-text-muted);font-size:13px;margin-top:-6px;margin-bottom:14px;">
+      Visão consolidada de estudo, questões respondidas e revisões de todos os alunos aprovados.
+    </p>
+
+    <!-- KPIs globais -->
+    <div class="met-kpis">
+      <div class="met-kpi"><div class="met-kpi-lab">Alunos aprovados</div><div class="met-kpi-val" style="color:var(--radix-cyan);">${totAlunos}</div></div>
+      <div class="met-kpi"><div class="met-kpi-lab">Questões respondidas</div><div class="met-kpi-val">${totQ}</div><div class="met-kpi-sub">${totA} acertos · ${taxaGeral}% geral</div></div>
+      <div class="met-kpi"><div class="met-kpi-lab">Semanas em estudo</div><div class="met-kpi-val">${totSem}</div></div>
+      <div class="met-kpi"><div class="met-kpi-lab">Revisões feitas</div><div class="met-kpi-val" style="color:#10b981;">${totRev}</div></div>
+      <div class="met-kpi"><div class="met-kpi-lab">Tempo total (h)</div><div class="met-kpi-val">${totET.toString().replace('.', ',')}</div></div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 10px;">
+      <div class="qbk-busca-wrap" style="flex:1;min-width:240px;margin-bottom:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="met-busca" class="qbk-busca" placeholder="Buscar aluno por nome ou e-mail..." value="${(state._metBusca || '').replace(/"/g, '&quot;')}" oninput="agendarFiltrarMetricas()">
+      </div>
+      <select id="met-turma-filtro" onchange="state._metTurma=this.value;_renderTabelaMetricas();"
+              style="padding:10px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:13px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);min-width:200px;">
+        <option value="" ${state._metTurma === '' ? 'selected' : ''}>Todas as turmas</option>
+        ${TURMAS.map(t => `<option value="${t.id}" ${state._metTurma === t.id ? 'selected' : ''}>${t.nome}</option>`).join('')}
+      </select>
+      <select id="met-ordem" onchange="state._metOrdem=this.value;_renderTabelaMetricas();"
+              style="padding:10px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:13px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);min-width:180px;">
+        <option value="qTotal_desc" ${state._metOrdem==='qTotal_desc'?'selected':''}>Mais questões 1º</option>
+        <option value="qTotal_asc"  ${state._metOrdem==='qTotal_asc'?'selected':''}>Menos questões 1º</option>
+        <option value="taxa_desc"   ${state._metOrdem==='taxa_desc'?'selected':''}>Maior % acerto 1º</option>
+        <option value="taxa_asc"    ${state._metOrdem==='taxa_asc'?'selected':''}>Menor % acerto 1º</option>
+        <option value="sem_desc"    ${state._metOrdem==='sem_desc'?'selected':''}>Mais semanas 1º</option>
+        <option value="rev_desc"    ${state._metOrdem==='rev_desc'?'selected':''}>Mais revisões 1º</option>
+        <option value="ultima_desc" ${state._metOrdem==='ultima_desc'?'selected':''}>Atividade recente 1º</option>
+        <option value="ultima_asc"  ${state._metOrdem==='ultima_asc'?'selected':''}>Atividade antiga 1º</option>
+        <option value="nome_asc"    ${state._metOrdem==='nome_asc'?'selected':''}>Nome A→Z</option>
+      </select>
+      <button class="btn btn-secondary" onclick="exportarMetricasCSV()" style="display:inline-flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+    </div>
+
+    <div id="met-tabela"></div>
+  `;
+
+  _renderTabelaMetricas();
+}
+
+// Debounce da busca
+let _metDebounce = null;
+function agendarFiltrarMetricas() {
+  if (_metDebounce) clearTimeout(_metDebounce);
+  _metDebounce = setTimeout(() => {
+    _metDebounce = null;
+    const inp = document.getElementById('met-busca');
+    if (inp) state._metBusca = inp.value;
+    _renderTabelaMetricas();
+  }, 180);
+}
+
+function _renderTabelaMetricas() {
+  const cont = document.getElementById('met-tabela');
+  if (!cont) return;
+  let linhas = (state._metAlunos || []).slice();
+
+  // Filtro busca
+  const termo = _normBusca(state._metBusca || '');
+  if (termo) {
+    const partes = termo.split(' ').filter(Boolean);
+    linhas = linhas.filter(l => {
+      const corpo = _normBusca(l.nome + ' ' + l.email);
+      return partes.every(t => corpo.includes(t));
+    });
+  }
+  // Filtro turma
+  if (state._metTurma) linhas = linhas.filter(l => l.turma === state._metTurma);
+
+  // Ordenação
+  const cmp = (a, b, asc) => asc ? (a - b) : (b - a);
+  const cmpStr = (a, b, asc) => asc ? a.localeCompare(b, 'pt-BR') : b.localeCompare(a, 'pt-BR');
+  const sort = state._metOrdem || 'qTotal_desc';
+  linhas.sort((a, b) => {
+    switch (sort) {
+      case 'qTotal_asc':  return cmp(a.qTotal, b.qTotal, true);
+      case 'qTotal_desc': return cmp(a.qTotal, b.qTotal, false);
+      case 'taxa_asc':    return cmp(a.taxa ?? -1, b.taxa ?? -1, true);
+      case 'taxa_desc':   return cmp(a.taxa ?? -1, b.taxa ?? -1, false);
+      case 'sem_desc':    return cmp(a.semIniciadas, b.semIniciadas, false);
+      case 'rev_desc':    return cmp(a.revFeitas, b.revFeitas, false);
+      case 'ultima_desc': return cmp((a.ultima || ''), (b.ultima || ''), false);
+      case 'ultima_asc':  return cmp((a.ultima || '9999'), (b.ultima || '9999'), true);
+      case 'nome_asc':    return cmpStr(a.nome, b.nome, true);
+      default:            return cmp(a.qTotal, b.qTotal, false);
+    }
+  });
+
+  if (linhas.length === 0) {
+    cont.innerHTML = '<div style="padding:24px;text-align:center;color:var(--radix-text-muted);">Nenhum aluno encontrado.</div>';
+    return;
+  }
+
+  const _pctCor = v => v == null ? 'var(--radix-text-muted)' : (v >= 70 ? '#10b981' : (v >= 50 ? '#f59e0b' : '#dc2626'));
+  const _diasCor = d => d == null ? 'var(--radix-text-muted)' : (d <= 2 ? '#10b981' : (d <= 7 ? '#f59e0b' : '#dc2626'));
+
+  cont.innerHTML = `
+    <div class="met-tabela-wrap">
+      <table class="met-tabela">
+        <thead>
+          <tr>
+            <th class="met-col-nome">Aluno</th>
+            <th>Turma</th>
+            <th class="met-num" title="Questões respondidas no banco">Q resp.</th>
+            <th class="met-num" title="% de acerto nas questões respondidas">% acerto</th>
+            <th class="met-num" title="Semanas marcadas como Em estudo ou Concluído">Semanas</th>
+            <th class="met-num" title="Horas registradas no campo ET">ET (h)</th>
+            <th class="met-num" title="Questões feitas no registro de estudo (sala+casa)">Q estudo</th>
+            <th class="met-num" title="Revisões marcadas como feitas / total previsto">Revisões</th>
+            <th class="met-num" title="Dias desde a última atividade">Última</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${linhas.map(l => {
+            const taxaTxt = l.taxa == null ? '—' : (l.taxa + '%');
+            const taxaEst = l.taxaEstudo == null ? '' : ` <small style="color:var(--radix-text-muted);">(${l.taxaEstudo}%)</small>`;
+            const revTxt = l.revPrevistas === 0 ? '—' : (l.revFeitas + '/' + l.revPrevistas);
+            const semTxt = l.semIniciadas === 0 ? '—' : (l.semConcluidas + '+' + (l.semIniciadas - l.semConcluidas));
+            const diasTxt = l.diasDesde == null ? '—' : (l.diasDesde === 0 ? 'Hoje' : l.diasDesde === 1 ? '1 dia' : l.diasDesde + ' dias');
+            return `
+              <tr>
+                <td class="met-col-nome">
+                  <div class="met-nome">${(l.nome || '').replace(/[<>&]/g,'')}</div>
+                  <div class="met-email">${(l.email || '').replace(/[<>&]/g,'')}</div>
+                </td>
+                <td><span class="met-turma-pill">${l.turmaNome}</span></td>
+                <td class="met-num"><b>${l.qTotal}</b></td>
+                <td class="met-num"><b style="color:${_pctCor(l.taxa)};">${taxaTxt}</b></td>
+                <td class="met-num" title="${l.semConcluidas} concluídas + ${l.semIniciadas - l.semConcluidas} em estudo">${semTxt}</td>
+                <td class="met-num">${l.etTotal.toString().replace('.', ',')}</td>
+                <td class="met-num">${l.qEstudo}${taxaEst}</td>
+                <td class="met-num"><b style="color:#10b981;">${revTxt}</b></td>
+                <td class="met-num" style="color:${_diasCor(l.diasDesde)};">${diasTxt}</td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:10px;font-size:11.5px;color:var(--radix-text-muted);">
+      Mostrando ${linhas.length} ${linhas.length === 1 ? 'aluno' : 'alunos'}. Coluna <b>Semanas</b>: concluídas + em estudo. <b>Revisões</b>: feitas / previstas (4 por semana iniciada).
+    </p>
+  `;
+}
+
+function exportarMetricasCSV() {
+  let linhas = (state._metAlunos || []).slice();
+  const termo = _normBusca(state._metBusca || '');
+  if (termo) {
+    const partes = termo.split(' ').filter(Boolean);
+    linhas = linhas.filter(l => partes.every(t => _normBusca(l.nome + ' ' + l.email).includes(t)));
+  }
+  if (state._metTurma) linhas = linhas.filter(l => l.turma === state._metTurma);
+
+  const esc = v => {
+    if (v == null) return '';
+    const s = String(v).replace(/"/g, '""');
+    return /[,;"\n]/.test(s) ? '"' + s + '"' : s;
+  };
+  const hdr = ['Nome','Email','Turma','Q resp.','Acertos','% acerto','Sem. concluidas','Sem. em estudo','ET (h)','Q estudo','Acertos estudo','% estudo','Revisoes feitas','Revisoes previstas','Ultima atividade'];
+  const body = linhas.map(l => [
+    l.nome, l.email, l.turmaNome,
+    l.qTotal, l.qAcertos, (l.taxa == null ? '' : l.taxa),
+    l.semConcluidas, (l.semIniciadas - l.semConcluidas),
+    l.etTotal.toString().replace('.', ','),
+    l.qEstudo, l.qEstudoA, (l.taxaEstudo == null ? '' : l.taxaEstudo),
+    l.revFeitas, l.revPrevistas,
+    l.ultima || ''
+  ].map(esc).join(';'));
+  const csv = '﻿' + hdr.join(';') + '\n' + body.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'metricas_alunos_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
 }
 
 function renderRelatorioProfessor() {
