@@ -4259,6 +4259,109 @@
   padding-bottom: 4px;
   border-bottom: 1px dashed var(--radix-line, #e5e7eb);
 }
+
+/* === Curva de Ebbinghaus === */
+#grupo-estudo .ebb-bloco {
+  margin: 14px 0 10px;
+  padding: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 10px;
+  background: rgba(168, 85, 247, 0.04);
+}
+#grupo-estudo .ebb-head {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; margin-bottom: 10px;
+  color: #7e22ce;
+}
+#grupo-estudo .ebb-head svg { color: #7e22ce; }
+#grupo-estudo .ebb-head label {
+  font-size: 12px; font-weight: 700; color: var(--radix-text-2, #374151); margin: 0;
+}
+#grupo-estudo .ebb-head input[type=date] {
+  padding: 6px 10px;
+  border: 1px solid var(--radix-line-2, #d1d5db);
+  border-radius: 6px;
+  background: var(--radix-surface, #fff);
+  color: var(--radix-text, #111);
+  font-size: 13px;
+  font-family: inherit;
+}
+#grupo-estudo .ebb-head input[type=date]:focus {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168,85,247,0.18);
+}
+#grupo-estudo .ebb-hint {
+  font-size: 11px; color: var(--radix-text-muted, #6b7280); flex: 1; min-width: 180px;
+}
+#grupo-estudo .ebb-vazio {
+  text-align: center; padding: 16px; font-size: 12px;
+  color: var(--radix-text-muted, #6b7280); font-style: italic;
+}
+#grupo-estudo .ebb-revisoes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  #grupo-estudo .ebb-revisoes-grid { grid-template-columns: repeat(2, 1fr); }
+}
+#grupo-estudo .ebb-card {
+  display: flex; flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--radix-line, #e5e7eb);
+  background: var(--radix-surface, #fff);
+  position: relative;
+}
+#grupo-estudo .ebb-card-n {
+  position: absolute; top: 6px; right: 8px;
+  font-size: 9.5px; font-weight: 800;
+  color: var(--radix-text-muted, #6b7280);
+  letter-spacing: 0.03em;
+}
+#grupo-estudo .ebb-card-corpo { display: flex; flex-direction: column; gap: 1px; }
+#grupo-estudo .ebb-card-dias {
+  font-size: 11px; color: var(--radix-text-muted, #6b7280); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+#grupo-estudo .ebb-card-data {
+  font-size: 14px; font-weight: 800; color: var(--radix-text, #111);
+}
+#grupo-estudo .ebb-card-status {
+  margin-top: 6px;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+  align-self: flex-start;
+  background: var(--radix-bg-2, #f3f4f6);
+  color: var(--radix-text-muted, #6b7280);
+}
+/* Variantes de status */
+#grupo-estudo .ebb-card.ebb-atrasada {
+  border-color: rgba(220, 38, 38, 0.45);
+  background: rgba(254, 226, 226, 0.4);
+}
+#grupo-estudo .ebb-card.ebb-atrasada .ebb-card-status {
+  background: #dc2626; color: #fff;
+}
+#grupo-estudo .ebb-card.ebb-hoje {
+  border-color: rgba(34, 211, 238, 0.6);
+  background: rgba(207, 250, 254, 0.5);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.18);
+}
+#grupo-estudo .ebb-card.ebb-hoje .ebb-card-status {
+  background: var(--radix-cyan, #0891b2); color: #fff;
+}
+#grupo-estudo .ebb-card.ebb-em_breve {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(254, 243, 199, 0.35);
+}
+#grupo-estudo .ebb-card.ebb-em_breve .ebb-card-status {
+  background: #f59e0b; color: #78350f;
+}
+#grupo-estudo .ebb-card.ebb-a_fazer .ebb-card-status {
+  background: rgba(168, 85, 247, 0.14); color: #7e22ce;
+}
 #grupo-estudo .estudo-grid {
   display: grid;
   grid-template-columns: 1fr 80px 80px;
@@ -14667,7 +14770,9 @@ async function carregarProgressoCronograma() {
       qc_casa_feitas:   p.qc_casa_feitas   != null ? Number(p.qc_casa_feitas)   : 0,
       qc_casa_acertos:  p.qc_casa_acertos  != null ? Number(p.qc_casa_acertos)  : 0,
       qap_casa_feitas:  p.qap_casa_feitas  != null ? Number(p.qap_casa_feitas)  : 0,
-      qap_casa_acertos: p.qap_casa_acertos != null ? Number(p.qap_casa_acertos) : 0
+      qap_casa_acertos: p.qap_casa_acertos != null ? Number(p.qap_casa_acertos) : 0,
+      // Curva de Ebbinghaus — data de início (null se SQL_data_inicio_estudo nao rodou)
+      data_inicio_estudo: p.data_inicio_estudo || null
     };
   });
 }
@@ -14796,6 +14901,58 @@ function renderSemanaCard(s) {
   `;
 }
 
+// ============================================================================
+// Curva do esquecimento de Ebbinghaus
+// ============================================================================
+// Intervalos clássicos pra fixação de longo prazo: 1d, 7d, 16d, 35d a partir
+// do início do estudo do assunto. Calcula as 4 datas e o "status" de cada
+// (atrasada / hoje / em N dias / a fazer).
+//
+// dataInicioISO: 'YYYY-MM-DD' ou Date. Se vazio/inválido, retorna [].
+// Retorna: [{ n, dias, data: Date, dataISO, dataBR, status, diasFalta }]
+// ============================================================================
+const EBBINGHAUS_DIAS = [1, 7, 16, 35];
+
+function calcularRevisoes(dataInicio) {
+  if (!dataInicio) return [];
+  // Normaliza pra Date (assumindo timezone local). Aceita 'YYYY-MM-DD' ou Date.
+  let base;
+  if (dataInicio instanceof Date) {
+    base = new Date(dataInicio.getFullYear(), dataInicio.getMonth(), dataInicio.getDate());
+  } else {
+    const m = String(dataInicio).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return [];
+    base = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  }
+  // Hoje (sem hora, pra comparar só dia)
+  const hojeRaw = new Date();
+  const hoje = new Date(hojeRaw.getFullYear(), hojeRaw.getMonth(), hojeRaw.getDate());
+  const MS_DIA = 86400000;
+
+  return EBBINGHAUS_DIAS.map((d, i) => {
+    const dt = new Date(base.getTime() + d * MS_DIA);
+    const dataISO = dt.toISOString().slice(0, 10);
+    const dataBR = String(dt.getDate()).padStart(2, '0') + '/' +
+                   String(dt.getMonth() + 1).padStart(2, '0') + '/' +
+                   dt.getFullYear();
+    const diasFalta = Math.round((dt.getTime() - hoje.getTime()) / MS_DIA);
+    let status;
+    if (diasFalta < 0)       status = 'atrasada';
+    else if (diasFalta === 0) status = 'hoje';
+    else if (diasFalta <= 2)  status = 'em_breve';
+    else                      status = 'a_fazer';
+    return { n: i + 1, dias: d, data: dt, dataISO, dataBR, status, diasFalta };
+  });
+}
+
+// Texto curto descritivo do status pra UI
+function _revStatusLabel(rev) {
+  if (rev.status === 'atrasada') return Math.abs(rev.diasFalta) === 1 ? '1 dia atrasada' : Math.abs(rev.diasFalta) + ' dias atrasada';
+  if (rev.status === 'hoje')     return 'É hoje!';
+  if (rev.diasFalta === 1)       return 'Amanhã';
+  return 'Em ' + rev.diasFalta + ' dias';
+}
+
 function abrirEditorSemana(n) {
   const s = CRONOGRAMA_2026.find(x => x.n === n);
   if (!s || s.tipo === 'recesso') return;
@@ -14817,6 +14974,16 @@ function abrirEditorSemana(n) {
   const qa_caF  = _v('qa_casa_feitas'),   qa_caA  = _v('qa_casa_acertos');
   const qc_caF  = _v('qc_casa_feitas'),   qc_caA  = _v('qc_casa_acertos');
   const qap_caF = _v('qap_casa_feitas'),  qap_caA = _v('qap_casa_acertos');
+  // Data de início dos estudos (base da curva de Ebbinghaus)
+  // Default: data da própria semana (s.data formato "DD/MM"). Pode estar vazio.
+  let dataInicioISO = prog.data_inicio_estudo || '';
+  if (!dataInicioISO && s.data) {
+    // s.data vem como "DD/MM" — assume ano 2026 (cronograma do ano)
+    const md = String(s.data).match(/^(\d{1,2})\/(\d{1,2})/);
+    if (md) {
+      dataInicioISO = '2026-' + md[2].padStart(2, '0') + '-' + md[1].padStart(2, '0');
+    }
+  }
   const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
 
   const html = `
@@ -14874,6 +15041,17 @@ function abrirEditorSemana(n) {
             <label for="sem-et">ET (horas)</label>
             <input type="number" id="sem-et" step="0.5" min="0" placeholder="0" value="${et}" oninput="atualizarPctEstudo()">
             <span class="estudo-et-hint">Tempo total estudado nesta semana</span>
+          </div>
+
+          <!-- Curva de Ebbinghaus: data de início + 4 revisões calculadas -->
+          <div class="ebb-bloco">
+            <div class="ebb-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+              <label for="sem-data-inicio">Início dos estudos</label>
+              <input type="date" id="sem-data-inicio" value="${dataInicioISO}" onchange="atualizarRevisoesEbbinghaus()" max="2030-12-31">
+              <span class="ebb-hint">Define o plano de revisões abaixo (curva do esquecimento)</span>
+            </div>
+            <div id="ebb-revisoes" class="ebb-revisoes-grid"></div>
           </div>
 
           <div class="estudo-sec-titulo">🏫 Em sala</div>
@@ -14974,6 +15152,37 @@ function abrirEditorSemana(n) {
   });
   // Calcula o badge inicial de % geral (com base nos valores pré-preenchidos)
   atualizarPctEstudo();
+  // Renderiza o bloco da curva de Ebbinghaus baseado na data inicial
+  atualizarRevisoesEbbinghaus();
+}
+
+// Re-renderiza o painel de revisões conforme o input de data muda
+function atualizarRevisoesEbbinghaus() {
+  const inp = document.getElementById('sem-data-inicio');
+  const cont = document.getElementById('ebb-revisoes');
+  if (!cont) return;
+  const val = inp ? inp.value : '';
+  if (!val) {
+    cont.innerHTML = '<div class="ebb-vazio">Defina a data de início pra ver o plano de revisões.</div>';
+    return;
+  }
+  const revs = calcularRevisoes(val);
+  if (revs.length === 0) {
+    cont.innerHTML = '<div class="ebb-vazio">Data invalida.</div>';
+    return;
+  }
+  cont.innerHTML = revs.map(r => {
+    const lbl = _revStatusLabel(r);
+    return `
+      <div class="ebb-card ebb-${r.status}">
+        <div class="ebb-card-n">R${r.n}</div>
+        <div class="ebb-card-corpo">
+          <div class="ebb-card-dias">+${r.dias} ${r.dias === 1 ? 'dia' : 'dias'}</div>
+          <div class="ebb-card-data">${r.dataBR}</div>
+        </div>
+        <div class="ebb-card-status">${lbl}</div>
+      </div>`;
+  }).join('');
 }
 
 // Calcula % geral = sum(acertos) / sum(feitas) * 100
@@ -15066,6 +15275,12 @@ async function salvarSemana() {
   };
   const zerar = (status === 'nao_iniciado');
   const et_horas = zerar ? 0 : _floatVal('sem-et');
+  // Data de início dos estudos (base da curva de Ebbinghaus)
+  // Se status = "nao_iniciado", limpa pra null. Senão usa o input (pode ser '').
+  const dataInicioEl = document.getElementById('sem-data-inicio');
+  const data_inicio_estudo = (zerar || !dataInicioEl || !dataInicioEl.value)
+    ? null
+    : dataInicioEl.value;
 
   // Helper pra ler um par (Feitas/Acertos) já clampando acertos<=feitas
   const _par = (idF, idA) => {
@@ -15094,6 +15309,7 @@ async function salvarSemana() {
 
   state.progressoCronograma[n] = {
     status, tecnicas, nota_pessoal: nota, et_horas,
+    data_inicio_estudo,
     qa_feitas, qa_acertos, qc_feitas, qc_acertos, qap_feitas, qap_acertos,
     qa_sala_feitas, qa_sala_acertos, qc_sala_feitas, qc_sala_acertos, qap_sala_feitas, qap_sala_acertos,
     qa_casa_feitas, qa_casa_acertos, qc_casa_feitas, qc_casa_acertos, qap_casa_feitas, qap_casa_acertos
@@ -15104,6 +15320,7 @@ async function salvarSemana() {
     aluno_id: state.usuario.id,
     semana_numero: n,
     status, tecnicas, nota_pessoal: nota, et_horas,
+    data_inicio_estudo,
     qa_feitas, qa_acertos, qc_feitas, qc_acertos, qap_feitas, qap_acertos,
     qa_sala_feitas, qa_sala_acertos, qc_sala_feitas, qc_sala_acertos, qap_sala_feitas, qap_sala_acertos,
     qa_casa_feitas, qa_casa_acertos, qc_casa_feitas, qc_casa_acertos, qap_casa_feitas, qap_casa_acertos,
@@ -15112,12 +15329,21 @@ async function salvarSemana() {
 
   let { error } = await sb.from('progresso_semanas').upsert(payloadCompleto, { onConflict: 'aluno_id,semana_numero' });
 
+  // Fallback 1a: SQL_data_inicio_estudo.sql ainda não rodou — remove data_inicio_estudo
+  if (error && /column|coluna/i.test(error.message || '') && /data_inicio_estudo/i.test(error.message || '')) {
+    const semData = { ...payloadCompleto };
+    delete semData.data_inicio_estudo;
+    const rdt = await sb.from('progresso_semanas').upsert(semData, { onConflict: 'aluno_id,semana_numero' });
+    error = rdt.error;
+    if (!error) console.warn('[salvarSemana] data_inicio_estudo nao persistiu — rodar SQL_data_inicio_estudo.sql no Supabase.');
+  }
   // Fallback 1: SQL_metricas_local_estudo.sql ainda não rodou — remove os 12 sala/casa
   if (error && /column|coluna/i.test(error.message || '')) {
     const semSalaCasa = { ...payloadCompleto };
     [
       'qa_sala_feitas','qa_sala_acertos','qc_sala_feitas','qc_sala_acertos','qap_sala_feitas','qap_sala_acertos',
-      'qa_casa_feitas','qa_casa_acertos','qc_casa_feitas','qc_casa_acertos','qap_casa_feitas','qap_casa_acertos'
+      'qa_casa_feitas','qa_casa_acertos','qc_casa_feitas','qc_casa_acertos','qap_casa_feitas','qap_casa_acertos',
+      'data_inicio_estudo'
     ].forEach(k => delete semSalaCasa[k]);
     const r1 = await sb.from('progresso_semanas').upsert(semSalaCasa, { onConflict: 'aluno_id,semana_numero' });
     error = r1.error;
@@ -15216,10 +15442,44 @@ async function gerarPDFProgresso(semanas, titulo) {
   let y = H - MT;
   let paginaNum = 1;
 
+  // Logo Radix: quadrado cyan sólido + path da raiz quadrada em branco.
+  // SVG original: viewBox 32x32, path "M3 18 L8 18 L13 27 L19 6 L30 6"
+  // Em vez de drawSvgPath (que tem comportamento inconsistente entre versões do pdf-lib),
+  // desenhamos os 4 segmentos manualmente com drawLine — funciona sempre.
+  function desenhaLogoRadix(x, y, lado) {
+    // Fundo cyan sólido (cor do brand)
+    page.drawRectangle({ x, y, width: lado, height: lado, color: cyan });
+    // Pontos do path no espaço SVG (viewBox 32×32, origem no canto sup-esq)
+    const ptsSVG = [[3,18],[8,18],[13,27],[19,6],[30,6]];
+    const scale = lado / 32;
+    const espessura = Math.max(1.4, 2.4 * scale);
+    const branco = rgb(1, 1, 1);
+    // PDF tem y crescente pra cima; SVG tem y crescente pra baixo.
+    // Mapeamento: (sx, sy) → ( x + sx*scale ,  y + lado - sy*scale )
+    const map = ([sx, sy]) => ({ x: x + sx * scale, y: y + lado - sy * scale });
+    for (let i = 0; i < ptsSVG.length - 1; i++) {
+      page.drawLine({
+        start: map(ptsSVG[i]),
+        end:   map(ptsSVG[i + 1]),
+        thickness: espessura,
+        color: branco,
+        lineCap: 1   // 1 = round (cantos arredondados, igual stroke-linecap="round" do SVG)
+      });
+    }
+  }
+
   // Cabeçalho do PDF (chamado em cada página)
   function desenhaHeader(nomeAluno) {
-    page.drawText('RADIX MATEMATICA', { x: ML, y: H - 35, size: 8, font: fontBold, color: cyan });
-    page.drawText('Registro de progresso', { x: ML, y: H - 47, size: 12, font: fontBold, color: preto });
+    const logoLado = 22;
+    const logoX = ML;
+    const logoY = H - 52;          // logo ocupa de y=H-52 até y=H-30
+    desenhaLogoRadix(logoX, logoY, logoLado);
+
+    // Texto ao lado da logo
+    const txtX = logoX + logoLado + 8;
+    page.drawText('RADIX MATEMATICA', { x: txtX, y: H - 35, size: 8, font: fontBold, color: cyan });
+    page.drawText('Registro de progresso', { x: txtX, y: H - 47, size: 12, font: fontBold, color: preto });
+
     // Lado direito: data + aluno
     const dataStr = new Date().toLocaleDateString('pt-BR');
     const lblData = 'Gerado em ' + dataStr;
@@ -15227,14 +15487,21 @@ async function gerarPDFProgresso(semanas, titulo) {
     page.drawText(lblData, { x: W - MR - wData, y: H - 35, size: 9, font: font, color: cinza2 });
     const wAluno = fontBold.widthOfTextAtSize(nomeAluno, 10);
     page.drawText(nomeAluno, { x: W - MR - wAluno, y: H - 48, size: 10, font: fontBold, color: cinza1 });
+
     // Linha divisória
     page.drawLine({ start: { x: ML, y: H - 58 }, end: { x: W - MR, y: H - 58 }, thickness: 0.8, color: cinzaLine });
   }
 
   function desenhaFooter() {
-    const txt = 'Pagina ' + paginaNum + '  -  Radix Matematica  -  Estude com método.';
+    // Linha divisória fina acima do footer
+    page.drawLine({ start: { x: ML, y: 36 }, end: { x: W - MR, y: 36 }, thickness: 0.4, color: cinzaLine });
+    // Mini logo à esquerda do texto
+    const txt = 'Pagina ' + paginaNum + '  ·  Radix Matematica  ·  Estude com metodo.';
     const w = font.widthOfTextAtSize(txt, 8);
-    page.drawText(txt, { x: (W - w) / 2, y: 22, size: 8, font, color: cinza3 });
+    const txtX = (W - w) / 2;
+    // Logo de 10x10 logo à esquerda do texto
+    desenhaLogoRadix(txtX - 14, 16, 10);
+    page.drawText(txt, { x: txtX, y: 19, size: 8, font, color: cinza3 });
   }
 
   function novaPagina(nomeAluno) {
@@ -15283,21 +15550,32 @@ async function gerarPDFProgresso(semanas, titulo) {
     const totA = totSalaA + totCasaA;
     const pct = totF > 0 ? Math.round(totA / totF * 100) : 0;
 
-    // Caixa de resumo
-    const boxH = 70;
-    page.drawRectangle({ x: ML, y: y - boxH, width: CW, height: boxH, color: cinzaBg, borderColor: cinzaLine, borderWidth: 0.5 });
+    // Caixa de resumo (4 KPIs com separadores verticais)
+    const boxH = 78;
+    page.drawRectangle({ x: ML, y: y - boxH, width: CW, height: boxH, color: rgb(0.97, 0.99, 1.0), borderColor: rgb(0.78, 0.92, 0.97), borderWidth: 0.8 });
     const colW = CW / 4;
+    // Separadores verticais entre KPIs
+    for (let i = 1; i < 4; i++) {
+      const xv = ML + i * colW;
+      page.drawLine({ start: { x: xv, y: y - boxH + 10 }, end: { x: xv, y: y - 10 }, thickness: 0.5, color: rgb(0.85, 0.92, 0.96) });
+    }
     const cell = (idx, label, valor, cor) => {
       const cx = ML + idx * colW + colW / 2;
-      page.drawText(sanit(label), { x: cx - font.widthOfTextAtSize(sanit(label), 8) / 2, y: y - 18, size: 8, font, color: cinza2 });
-      const wV = fontBold.widthOfTextAtSize(valor, 16);
-      page.drawText(valor, { x: cx - wV / 2, y: y - 42, size: 16, font: fontBold, color: cor || preto });
+      const lb = sanit(label);
+      page.drawText(lb, { x: cx - font.widthOfTextAtSize(lb, 7.5) / 2, y: y - 18, size: 7.5, font: fontBold, color: cinza2 });
+      const wV = fontBold.widthOfTextAtSize(valor, 22);
+      page.drawText(valor, { x: cx - wV / 2, y: y - 48, size: 22, font: fontBold, color: cor || preto });
     };
-    cell(0, 'SEMANAS ESTUDADAS', String(alvo.length), cyan);
-    cell(1, 'TEMPO TOTAL (HORAS)', totET.toString().replace('.', ','), preto);
-    cell(2, 'QUESTOES FEITAS', String(totF), preto);
-    cell(3, 'TAXA DE ACERTO', pct + '%', pct >= 70 ? verde : (pct > 0 ? amarelo : cinza3));
-    y -= boxH + 16;
+    cell(0, 'SEMANAS REGISTRADAS', String(alvo.length), cyan);
+    cell(1, 'TEMPO TOTAL (h)',     totET.toString().replace('.', ','), preto);
+    cell(2, 'QUESTOES FEITAS',     String(totF), preto);
+    cell(3, 'TAXA DE ACERTO',      (totF > 0 ? pct + '%' : '—'), totF === 0 ? cinza3 : (pct >= 70 ? verde : (pct > 0 ? amarelo : cinza3)));
+    // Sub-label embaixo (acertos/feitas)
+    if (totF > 0) {
+      const subT = totA + ' acertos em ' + totF + ' questoes';
+      page.drawText(sanit(subT), { x: ML + 3 * colW + (colW - font.widthOfTextAtSize(subT, 7)) / 2, y: y - boxH + 8, size: 7, font, color: cinza3 });
+    }
+    y -= boxH + 18;
   }
 
   // Helper: status -> label/cor
@@ -15314,75 +15592,111 @@ async function gerarPDFProgresso(semanas, titulo) {
     const altEstim = 200 + (p.nota_pessoal ? Math.ceil(p.nota_pessoal.length / 90) * 11 : 0);
     if (y - altEstim < MB + 30) novaPagina(nomeAluno);
 
-    // Cabeçalho da semana
-    const tituloSem = 'Semana ' + String(s.n).padStart(2, '0') + ' - ' + (s.titulo || '');
-    page.drawText(sanit(tituloSem), { x: ML, y, size: 12, font: fontBold, color: preto });
-    // Pill de status à direita
-    const lbl = stLabel[p.status || 'nao_iniciado'];
-    const wLbl = fontBold.widthOfTextAtSize(lbl, 8) + 14;
-    page.drawRectangle({ x: W - MR - wLbl, y: y - 3, width: wLbl, height: 14, color: rgb(1,1,1), borderColor: stCor[p.status || 'nao_iniciado'], borderWidth: 1 });
-    page.drawText(lbl, { x: W - MR - wLbl + 7, y: y, size: 8, font: fontBold, color: stCor[p.status || 'nao_iniciado'] });
-    y -= 14;
+    // Cabeçalho da semana — pill de status com BG suave + texto centralizado
+    const stKey = p.status || 'nao_iniciado';
+    const stCorAtual = stCor[stKey];
+    const stBgAtual = stKey === 'em_estudo' ? rgb(1, 0.96, 0.84)
+                    : stKey === 'concluido' ? rgb(0.86, 0.96, 0.88)
+                    : rgb(0.95, 0.95, 0.95);
+    const lbl = stLabel[stKey];
+    const wLbl = fontBold.widthOfTextAtSize(lbl, 8) + 16;
+    const pillH = 16;
+    // Pill primeiro (pra título não conflitar)
+    page.drawRectangle({ x: W - MR - wLbl, y: y - 4, width: wLbl, height: pillH, color: stBgAtual, borderColor: stCorAtual, borderWidth: 0.8 });
+    page.drawText(lbl, { x: W - MR - wLbl + 8, y: y + 1, size: 8, font: fontBold, color: stCorAtual });
+    // Título da semana (limita largura pra não sobrepor pill)
+    const tituloSem = 'Semana ' + String(s.n).padStart(2, '0') + ' · ' + (s.titulo || '');
+    const tituloMaxW = W - MR - wLbl - ML - 12;
+    let tituloFit = sanit(tituloSem);
+    while (fontBold.widthOfTextAtSize(tituloFit, 13) > tituloMaxW && tituloFit.length > 10) {
+      tituloFit = tituloFit.slice(0, -1);
+    }
+    if (tituloFit.length < sanit(tituloSem).length) tituloFit = tituloFit.replace(/.{3}$/, '...');
+    page.drawText(tituloFit, { x: ML, y: y + 1, size: 13, font: fontBold, color: preto });
+    y -= 18;
 
     // Subtítulo: módulo, tema, data
     const linhaInfo = [
-      mod ? 'Modulo ' + mod.numero + ' - ' + mod.nome : null,
+      mod ? 'Modulo ' + mod.numero + ' · ' + mod.nome : null,
       tema ? 'Tema: ' + tema.nome : null,
       s.data ? 'Inicio: ' + s.data + '/2026' : null
-    ].filter(Boolean).join('   |   ');
-    page.drawText(sanit(linhaInfo), { x: ML, y, size: 8, font, color: cinza2 });
+    ].filter(Boolean).join('   ·   ');
+    page.drawText(sanit(linhaInfo), { x: ML, y, size: 8.5, font, color: cinza2 });
     y -= 16;
 
-    // ET (horas)
-    const etTxt = 'Tempo de estudo (ET): ' + String(p.et_horas || 0).replace('.', ',') + ' h';
-    page.drawText(sanit(etTxt), { x: ML, y, size: 9, font: fontBold, color: cinza1 });
-    y -= 13;
+    // ET + Técnicas em UMA linha quando cabem — visualmente compacto
+    const etValor = String(p.et_horas || 0).replace('.', ',') + 'h';
+    const etPrefix = 'ET: ';
+    const etW = fontBold.widthOfTextAtSize(etPrefix, 9) + font.widthOfTextAtSize(etValor, 10);
+    // Caixinha ET destacada
+    page.drawRectangle({ x: ML, y: y - 3, width: etW + 14, height: 16, color: rgb(0.94, 0.99, 1.0), borderColor: rgb(0.78, 0.92, 0.97), borderWidth: 0.6 });
+    page.drawText(etPrefix, { x: ML + 7, y: y + 1, size: 9, font: fontBold, color: cinza2 });
+    page.drawText(etValor, { x: ML + 7 + fontBold.widthOfTextAtSize(etPrefix, 9), y: y + 1, size: 10, font: fontBold, color: cyan });
 
-    // Técnicas usadas
+    // Técnicas (logo à direita do ET, se couber)
     if (Array.isArray(p.tecnicas) && p.tecnicas.length > 0) {
       const nomes = p.tecnicas
         .map(id => (TECNICAS_ESTUDO.find(t => t.id === id) || {}).nome)
         .filter(Boolean)
         .join(', ');
-      const lin = wrapLines('Tecnicas: ' + nomes, font, 9, CW);
-      lin.forEach(ln => { page.drawText(ln, { x: ML, y, size: 9, font, color: cinza1 }); y -= 11; });
-      y -= 2;
+      const txTec = sanit('Tecnicas: ' + nomes);
+      const xTec = ML + etW + 22;
+      const maxW = W - MR - xTec;
+      // Quebra em até 2 linhas
+      const lin = wrapLines(txTec, font, 8.5, maxW).slice(0, 2);
+      lin.forEach((ln, i) => {
+        page.drawText(ln, { x: xTec, y: y + 4 - (i * 10), size: 8.5, font, color: cinza2 });
+      });
+      y -= Math.max(16, lin.length * 10 + 4);
+    } else {
+      y -= 18;
     }
+    y -= 4;
 
-    // ===== TABELA: Categoria x (Sala | Casa | Total) com Feitas/Acertos =====
-    // Layout: 6 colunas
-    //   [Categoria 30%] [Sala F][Sala A][Casa F][Casa A][Total F][Total A]
-    const colCat  = ML;
-    const restoW  = CW - 130;             // 130px pra Categoria, resto pra 6 colunas
-    const colVW   = restoW / 6;
-    const xSF = ML + 130;
-    const xSA = xSF + colVW;
-    const xCF = xSA + colVW;
-    const xCA = xCF + colVW;
-    const xTF = xCA + colVW;
-    const xTA = xTF + colVW;
+    // ===== TABELA: Categoria | Em Sala | Em Casa | Total =====
+    // Cada célula de dados mostra "feitas/acertos" (ex: "5/4")
+    // Quando feitas = 0, mostra "—" (visual mais limpo)
+    const xCat   = ML;
+    const wCat   = 165;                // largura da coluna categoria
+    const wDado  = (CW - wCat) / 3;    // sala / casa / total iguais
+    const xSala  = xCat + wCat;
+    const xCasa  = xSala + wDado;
+    const xTot   = xCasa + wDado;
+    const rowH   = 18;
 
-    // Header da tabela com grupos visuais
-    page.drawRectangle({ x: ML, y: y - 14, width: CW, height: 16, color: cinzaBg, borderColor: cinzaLine, borderWidth: 0.5 });
-    page.drawText('CATEGORIA', { x: colCat + 4, y: y - 10, size: 7, font: fontBold, color: cinza2 });
-    page.drawText('EM SALA',   { x: xSF + (colVW * 2 - fontBold.widthOfTextAtSize('EM SALA', 7)) / 2,   y: y - 10, size: 7, font: fontBold, color: cinza2 });
-    page.drawText('EM CASA',   { x: xCF + (colVW * 2 - fontBold.widthOfTextAtSize('EM CASA', 7)) / 2,   y: y - 10, size: 7, font: fontBold, color: cinza2 });
-    page.drawText('TOTAL',     { x: xTF + (colVW * 2 - fontBold.widthOfTextAtSize('TOTAL', 7)) / 2,     y: y - 10, size: 7, font: fontBold, color: cyan });
-    y -= 17;
+    // Legenda discreta antes da tabela (em itálico, alinhada à direita)
+    const legenda = '(valores no formato feitas / acertos)';
+    const wLeg = fontIta.widthOfTextAtSize(legenda, 7.5);
+    page.drawText(legenda, { x: W - MR - wLeg, y, size: 7.5, font: fontIta, color: cinza3 });
+    y -= 10;
 
-    // Sub-header F/A
-    const subFA = (x) => {
-      page.drawText('F', { x: x + (colVW - font.widthOfTextAtSize('F', 7)) / 2, y, size: 7, font: fontBold, color: cinza3 });
-      page.drawText('A', { x: x + colVW + (colVW - font.widthOfTextAtSize('A', 7)) / 2, y, size: 7, font: fontBold, color: cinza3 });
+    // Header da tabela com cor de fundo + texto centralizado
+    const headH = 22;
+    page.drawRectangle({ x: ML, y: y - headH, width: CW, height: headH, color: cinzaBg, borderColor: cinzaLine, borderWidth: 0.6 });
+    // Destaque cor cyan na coluna TOTAL (header) — pintar ANTES das linhas verticais
+    page.drawRectangle({ x: xTot, y: y - headH, width: wDado, height: headH, color: rgb(0.93, 0.98, 1.0) });
+    // Linhas verticais separando colunas
+    [xSala, xCasa, xTot].forEach(xx => {
+      page.drawLine({ start: { x: xx, y: y - headH }, end: { x: xx, y: y }, thickness: 0.5, color: cinzaLine });
+    });
+
+    const drawHeadCell = (txt, x, w, cor) => {
+      const tt = sanit(txt);
+      const tw = fontBold.widthOfTextAtSize(tt, 10);
+      // Centralizado verticalmente no header (headH=22, fonte=10 → baseline ≈ y - 15)
+      page.drawText(tt, { x: x + (w - tw) / 2, y: y - 15, size: 10, font: fontBold, color: cor });
     };
-    subFA(xSF); subFA(xCF); subFA(xTF);
-    y -= 9;
+    page.drawText('CATEGORIA', { x: xCat + 8, y: y - 15, size: 9, font: fontBold, color: cinza2 });
+    drawHeadCell('Em sala', xSala, wDado, cinza2);
+    drawHeadCell('Em casa', xCasa, wDado, cinza2);
+    drawHeadCell('TOTAL',   xTot,  wDado, cyan);
+    y -= headH;
 
     // Linhas: QA / QC / QAp
     const tipos = [
-      { label: 'QA  Aprendizagem',    saF: 'qa_sala_feitas',  saA: 'qa_sala_acertos',  caF: 'qa_casa_feitas',  caA: 'qa_casa_acertos' },
-      { label: 'QC  Consolidacao',    saF: 'qc_sala_feitas',  saA: 'qc_sala_acertos',  caF: 'qc_casa_feitas',  caA: 'qc_casa_acertos' },
-      { label: 'QAp Aprofundamento',  saF: 'qap_sala_feitas', saA: 'qap_sala_acertos', caF: 'qap_casa_feitas', caA: 'qap_casa_acertos' }
+      { label: 'QA',  desc: 'Aprendizagem',    saF: 'qa_sala_feitas',  saA: 'qa_sala_acertos',  caF: 'qa_casa_feitas',  caA: 'qa_casa_acertos' },
+      { label: 'QC',  desc: 'Consolidacao',    saF: 'qc_sala_feitas',  saA: 'qc_sala_acertos',  caF: 'qc_casa_feitas',  caA: 'qc_casa_acertos' },
+      { label: 'QAp', desc: 'Aprofundamento',  saF: 'qap_sala_feitas', saA: 'qap_sala_acertos', caF: 'qap_casa_feitas', caA: 'qap_casa_acertos' }
     ];
 
     let sumSF=0, sumSA=0, sumCF=0, sumCA=0;
@@ -15394,55 +15708,133 @@ async function gerarPDFProgresso(semanas, titulo) {
 
       // Zebra
       if (i % 2 === 1) {
-        page.drawRectangle({ x: ML, y: y - 12, width: CW, height: 14, color: rgb(0.98, 0.98, 0.98) });
+        page.drawRectangle({ x: ML, y: y - rowH, width: CW, height: rowH, color: rgb(0.985, 0.985, 0.985) });
       }
-      page.drawText(t.label, { x: colCat + 4, y: y - 8, size: 9, font, color: cinza1 });
-      const drawNum = (x, n) => {
-        const s = String(n);
-        page.drawText(s, { x: x + (colVW - font.widthOfTextAtSize(s, 9)) / 2, y: y - 8, size: 9, font, color: cinza1 });
+      // Fundo cyan suave SEMPRE na coluna TOTAL
+      page.drawRectangle({ x: xTot, y: y - rowH, width: wDado, height: rowH, color: rgb(0.96, 0.99, 1.0) });
+      // Linhas verticais
+      [xSala, xCasa, xTot].forEach(xx => {
+        page.drawLine({ start: { x: xx, y: y - rowH }, end: { x: xx, y: y }, thickness: 0.4, color: cinzaLine });
+      });
+
+      // Label (QA + desc)
+      const yTxt = y - 12;
+      page.drawText(t.label, { x: xCat + 8, y: yTxt, size: 10, font: fontBold, color: cinza1 });
+      page.drawText(sanit(t.desc), { x: xCat + 8 + fontBold.widthOfTextAtSize(t.label, 10) + 6, y: yTxt, size: 9.5, font, color: cinza2 });
+
+      // Helper de célula F/A
+      const formatPair = (f, a) => f === 0 ? '—' : (f + '/' + a);
+      const drawPair = (xCol, f, a, ehTotal) => {
+        const txt = formatPair(f, a);
+        const sz = ehTotal ? 11 : 10;
+        const fnt = ehTotal ? fontBold : font;
+        const cor = (f === 0) ? cinza3 : cinza1;
+        const tw = fnt.widthOfTextAtSize(txt, sz);
+        page.drawText(txt, { x: xCol + (wDado - tw) / 2, y: yTxt, size: sz, font: fnt, color: cor });
       };
-      drawNum(xSF, sF); drawNum(xSA, sA);
-      drawNum(xCF, cF); drawNum(xCA, cA);
-      drawNum(xTF, tF); drawNum(xTA, tA);
-      y -= 14;
+      drawPair(xSala, sF, sA, false);
+      drawPair(xCasa, cF, cA, false);
+      drawPair(xTot,  tF, tA, true);
+
+      y -= rowH;
     });
 
-    // Rodapé da tabela: totais + %
+    // Rodapé da tabela: % acerto destacado
     const totalF = sumSF + sumCF;
     const totalA = sumSA + sumCA;
     const pctSala = sumSF > 0 ? Math.round(sumSA / sumSF * 100) : null;
     const pctCasa = sumCF > 0 ? Math.round(sumCA / sumCF * 100) : null;
     const pctGer  = totalF > 0 ? Math.round(totalA / totalF * 100) : null;
 
-    page.drawRectangle({ x: ML, y: y - 14, width: CW, height: 16, color: rgb(0.95, 0.99, 1.0), borderColor: cinzaLine, borderWidth: 0.5 });
-    page.drawText('% acerto', { x: colCat + 4, y: y - 10, size: 8, font: fontBold, color: cinza2 });
-    const pctTxt = v => v == null ? '-' : v + '%';
-    const pctCor = v => v == null ? cinza3 : (v >= 70 ? verde : vermelho);
-    // Sala % (centralizado entre F e A da sala)
-    const tSala = pctTxt(pctSala);
-    page.drawText(tSala, { x: xSF + (colVW * 2 - fontBold.widthOfTextAtSize(tSala, 9)) / 2, y: y - 10, size: 9, font: fontBold, color: pctCor(pctSala) });
-    const tCasa = pctTxt(pctCasa);
-    page.drawText(tCasa, { x: xCF + (colVW * 2 - fontBold.widthOfTextAtSize(tCasa, 9)) / 2, y: y - 10, size: 9, font: fontBold, color: pctCor(pctCasa) });
-    const tGer = pctTxt(pctGer);
-    page.drawText(tGer, { x: xTF + (colVW * 2 - fontBold.widthOfTextAtSize(tGer, 10)) / 2, y: y - 10, size: 10, font: fontBold, color: pctCor(pctGer) });
-    y -= 20;
+    const footH = 24;
+    page.drawRectangle({ x: ML, y: y - footH, width: CW, height: footH, color: rgb(0.97, 1.0, 1.0), borderColor: cinzaLine, borderWidth: 0.6 });
+    page.drawRectangle({ x: xTot, y: y - footH, width: wDado, height: footH, color: rgb(0.87, 0.96, 0.99) });
+    [xSala, xCasa, xTot].forEach(xx => {
+      page.drawLine({ start: { x: xx, y: y - footH }, end: { x: xx, y: y }, thickness: 0.5, color: cinzaLine });
+    });
+    page.drawText('% acerto', { x: xCat + 8, y: y - 15, size: 9, font: fontBold, color: cinza2 });
 
-    // Notas pessoais
+    const pctTxt = v => v == null ? '—' : v + '%';
+    const pctCorFn = v => v == null ? cinza3 : (v >= 70 ? verde : vermelho);
+    const drawPctCell = (xCol, v, ehTotal) => {
+      const sz = ehTotal ? 14 : 12;
+      const fnt = fontBold;
+      const cor = pctCorFn(v);
+      const txt = pctTxt(v);
+      const tw = fnt.widthOfTextAtSize(txt, sz);
+      page.drawText(txt, { x: xCol + (wDado - tw) / 2, y: y - 17, size: sz, font: fnt, color: cor });
+    };
+    drawPctCell(xSala, pctSala, false);
+    drawPctCell(xCasa, pctCasa, false);
+    drawPctCell(xTot,  pctGer,  true);
+    y -= footH + 6;
+
+    // ===== PLANO DE REVISÕES (curva de Ebbinghaus) =====
+    // Só desenha se houver data de início. Mostra os 4 marcos em cards lado a lado.
+    if (p.data_inicio_estudo) {
+      const revs = calcularRevisoes(p.data_inicio_estudo);
+      if (revs.length === 4) {
+        const ebbBoxH = 56;
+        if (y - ebbBoxH < MB + 20) novaPagina(nomeAluno);
+        // Caixa lilás clara
+        page.drawRectangle({ x: ML, y: y - ebbBoxH, width: CW, height: ebbBoxH, color: rgb(0.97, 0.94, 0.99), borderColor: rgb(0.85, 0.75, 0.95), borderWidth: 0.6 });
+        // Título do bloco
+        page.drawText('Plano de revisoes  (curva de Ebbinghaus)', { x: ML + 10, y: y - 13, size: 8.5, font: fontBold, color: rgb(0.49, 0.13, 0.81) });
+        // Subtítulo: data de início
+        const baseBR = revs[0] ? (() => {
+          const m = String(p.data_inicio_estudo).match(/^(\d{4})-(\d{2})-(\d{2})/);
+          return m ? (m[3] + '/' + m[2] + '/' + m[1]) : p.data_inicio_estudo;
+        })() : '';
+        const subTxt = 'Inicio dos estudos: ' + baseBR;
+        const wSub = font.widthOfTextAtSize(subTxt, 8);
+        page.drawText(subTxt, { x: W - MR - wSub - 10, y: y - 13, size: 8, font, color: cinza2 });
+
+        // 4 cards de revisão lado a lado
+        const cardW = (CW - 20 - 6 * 3) / 4;  // 4 cards, gap 6, padding interno 10 cada lado
+        revs.forEach((r, idx) => {
+          const cx = ML + 10 + idx * (cardW + 6);
+          const cy = y - 50;
+          const cardH = 30;
+          // Cor de fundo por status
+          let bg, fg, label;
+          if (r.status === 'atrasada')      { bg = rgb(0.98, 0.91, 0.91); fg = vermelho;           label = 'Atrasada'; }
+          else if (r.status === 'hoje')     { bg = rgb(0.86, 0.96, 0.99); fg = cyan;               label = 'HOJE'; }
+          else if (r.status === 'em_breve') { bg = rgb(0.99, 0.95, 0.83); fg = rgb(0.7, 0.45, 0); label = 'Em breve'; }
+          else                              { bg = rgb(0.95, 0.92, 0.99); fg = rgb(0.49, 0.13, 0.81); label = 'A fazer'; }
+          page.drawRectangle({ x: cx, y: cy, width: cardW, height: cardH, color: bg, borderColor: fg, borderWidth: 0.5 });
+          // R1 + dias
+          page.drawText('R' + r.n, { x: cx + 6, y: cy + cardH - 11, size: 8, font: fontBold, color: cinza2 });
+          page.drawText('+' + r.dias + 'd', { x: cx + 22, y: cy + cardH - 11, size: 7.5, font, color: cinza3 });
+          // Data centralizada
+          const wData = fontBold.widthOfTextAtSize(r.dataBR, 10);
+          page.drawText(r.dataBR, { x: cx + (cardW - wData) / 2, y: cy + 11, size: 10, font: fontBold, color: cinza1 });
+          // Label de status (pequeno, alinhado à direita)
+          const wLab = fontBold.widthOfTextAtSize(label, 7);
+          page.drawText(label, { x: cx + cardW - wLab - 6, y: cy + cardH - 11, size: 7, font: fontBold, color: fg });
+        });
+        y -= ebbBoxH + 6;
+      }
+    }
+
+    // Notas pessoais (caixa cinza claro)
     if (p.nota_pessoal && p.nota_pessoal.trim()) {
-      page.drawText('Notas pessoais:', { x: ML, y, size: 8, font: fontBold, color: cinza2 });
-      y -= 11;
-      const lin = wrapLines(p.nota_pessoal, fontIta, 9, CW);
+      const lin = wrapLines(p.nota_pessoal, fontIta, 9, CW - 16);
+      const boxH = 14 + lin.length * 11 + 4;
+      if (y - boxH < MB + 20) novaPagina(nomeAluno);
+      page.drawRectangle({ x: ML, y: y - boxH, width: CW, height: boxH, color: rgb(0.99, 0.97, 0.90), borderColor: rgb(0.92, 0.86, 0.62), borderWidth: 0.5 });
+      page.drawText('Notas pessoais', { x: ML + 8, y: y - 10, size: 7.5, font: fontBold, color: rgb(0.55, 0.42, 0.10) });
+      let yy = y - 22;
       lin.forEach(ln => {
-        if (y < MB + 20) novaPagina(nomeAluno);
-        page.drawText(ln, { x: ML, y, size: 9, font: fontIta, color: cinza1 });
-        y -= 11;
+        page.drawText(ln, { x: ML + 8, y: yy, size: 9, font: fontIta, color: cinza1 });
+        yy -= 11;
       });
+      y -= boxH + 4;
     }
 
     // Separador entre semanas
-    y -= 6;
-    page.drawLine({ start: { x: ML, y }, end: { x: W - MR, y }, thickness: 0.4, color: cinzaLine });
-    y -= 16;
+    y -= 4;
+    page.drawLine({ start: { x: ML + 30, y }, end: { x: W - MR - 30, y }, thickness: 0.4, color: cinzaLine });
+    y -= 18;
 
     // Page break se sobrou pouco espaço
     if (y < MB + 60) novaPagina(nomeAluno);
