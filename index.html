@@ -957,6 +957,16 @@
     border-color: var(--radix-success) !important;
     background: rgba(52,211,153,0.08) !important;
   }
+  /* Destaque temporário ao vir de "próxima aula" do dashboard */
+  .cron-semana.cron-semana-foco {
+    box-shadow: 0 0 0 3px var(--radix-cyan), 0 8px 28px -8px rgba(34,211,238,.55) !important;
+    animation: cron-foco-pulse 1.2s ease-out 1;
+  }
+  @keyframes cron-foco-pulse {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.025); }
+    100% { transform: scale(1); }
+  }
   .cron-semana-num {
     background: rgba(34,211,238,0.18) !important;
     color: var(--radix-cyan) !important;
@@ -4239,6 +4249,16 @@
   margin-left: auto;
 }
 
+#grupo-estudo .estudo-sec-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--radix-text-muted, #6b7280);
+  margin: 4px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--radix-line, #e5e7eb);
+}
 #grupo-estudo .estudo-grid {
   display: grid;
   grid-template-columns: 1fr 80px 80px;
@@ -6899,7 +6919,8 @@ function renderDashboardAluno() {
           const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
           const mats = (materiaisCache || []).filter(m => m.semana_numero === s.n && m.visivel);
           const matsCount = mats.length;
-          const clickAction = matsCount > 0 ? `abrirMateriaisDaSemana(${s.n})` : (tema ? `abrirTema('${tema.id}')` : `abrirEditorSemana(${s.n})`);
+          // Clicar numa aula → vai pro Cronograma com a semana destacada/scroll
+          const clickAction = `renderCronograma(${s.n})`;
           return `
             <div class="v3-week-row v3-week-${s._vstatus}" onclick="${clickAction}">
               <div class="v3-week-num">${String(s.n).padStart(2,'0')}</div>
@@ -14633,7 +14654,20 @@ async function carregarProgressoCronograma() {
       qc_feitas:   p.qc_feitas   != null ? Number(p.qc_feitas)   : 0,
       qc_acertos:  p.qc_acertos  != null ? Number(p.qc_acertos)  : 0,
       qap_feitas:  p.qap_feitas  != null ? Number(p.qap_feitas)  : 0,
-      qap_acertos: p.qap_acertos != null ? Number(p.qap_acertos) : 0
+      qap_acertos: p.qap_acertos != null ? Number(p.qap_acertos) : 0,
+      // Matriz Sala/Casa × QA/QC/QAp — null/0 se SQL_metricas_local_estudo ainda não rodou
+      qa_sala_feitas:   p.qa_sala_feitas   != null ? Number(p.qa_sala_feitas)   : 0,
+      qa_sala_acertos:  p.qa_sala_acertos  != null ? Number(p.qa_sala_acertos)  : 0,
+      qc_sala_feitas:   p.qc_sala_feitas   != null ? Number(p.qc_sala_feitas)   : 0,
+      qc_sala_acertos:  p.qc_sala_acertos  != null ? Number(p.qc_sala_acertos)  : 0,
+      qap_sala_feitas:  p.qap_sala_feitas  != null ? Number(p.qap_sala_feitas)  : 0,
+      qap_sala_acertos: p.qap_sala_acertos != null ? Number(p.qap_sala_acertos) : 0,
+      qa_casa_feitas:   p.qa_casa_feitas   != null ? Number(p.qa_casa_feitas)   : 0,
+      qa_casa_acertos:  p.qa_casa_acertos  != null ? Number(p.qa_casa_acertos)  : 0,
+      qc_casa_feitas:   p.qc_casa_feitas   != null ? Number(p.qc_casa_feitas)   : 0,
+      qc_casa_acertos:  p.qc_casa_acertos  != null ? Number(p.qc_casa_acertos)  : 0,
+      qap_casa_feitas:  p.qap_casa_feitas  != null ? Number(p.qap_casa_feitas)  : 0,
+      qap_casa_acertos: p.qap_casa_acertos != null ? Number(p.qap_casa_acertos) : 0
     };
   });
 }
@@ -14652,7 +14686,7 @@ function statusDaSemana(numero) {
   return state.progressoCronograma[numero]?.status || 'nao_iniciado';
 }
 
-function renderCronograma() {
+function renderCronograma(focoN) {
   state.view = 'cronograma';
   const main = document.getElementById('main-content');
 
@@ -14709,6 +14743,18 @@ function renderCronograma() {
       `;
     }).join('')}
   `;
+
+  // Scroll suave + destaque visual se veio com foco numa semana específica
+  // (ex.: clicou numa "próxima aula" do dashboard)
+  if (focoN != null) {
+    setTimeout(() => {
+      const alvo = document.getElementById('cron-sem-' + focoN);
+      if (!alvo) return;
+      alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      alvo.classList.add('cron-semana-foco');
+      setTimeout(() => alvo.classList.remove('cron-semana-foco'), 2200);
+    }, 50);
+  }
 }
 
 function renderSemanaCard(s) {
@@ -14722,7 +14768,7 @@ function renderSemanaCard(s) {
                     s.tipo === 'evento'   ? '<span class="cron-tipo evento-tipo">EVENTO</span>' : '';
   const podeMarcar = s.tipo !== 'recesso';
   return `
-    <div class="cron-semana ${st}" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
+    <div class="cron-semana ${st}" id="cron-sem-${s.n}" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
       <div class="cron-semana-topo">
         <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
         <div class="cron-semana-meta">
@@ -14754,6 +14800,14 @@ function abrirEditorSemana(n) {
   const qcA   = prog.qc_acertos  != null ? prog.qc_acertos  : '';
   const qapF  = prog.qap_feitas  != null ? prog.qap_feitas  : '';
   const qapA  = prog.qap_acertos != null ? prog.qap_acertos : '';
+  // Matriz Sala/Casa × QA/QC/QAp (SQL_metricas_local_estudo.sql)
+  const _v = k => (prog[k] != null ? prog[k] : '');
+  const qa_saF  = _v('qa_sala_feitas'),   qa_saA  = _v('qa_sala_acertos');
+  const qc_saF  = _v('qc_sala_feitas'),   qc_saA  = _v('qc_sala_acertos');
+  const qap_saF = _v('qap_sala_feitas'),  qap_saA = _v('qap_sala_acertos');
+  const qa_caF  = _v('qa_casa_feitas'),   qa_caA  = _v('qa_casa_acertos');
+  const qc_caF  = _v('qc_casa_feitas'),   qc_caA  = _v('qc_casa_acertos');
+  const qap_caF = _v('qap_casa_feitas'),  qap_caA = _v('qap_casa_acertos');
   const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
 
   const html = `
@@ -14813,27 +14867,57 @@ function abrirEditorSemana(n) {
             <span class="estudo-et-hint">Tempo total estudado nesta semana</span>
           </div>
 
+          <div class="estudo-sec-titulo">🏫 Em sala</div>
           <div class="estudo-grid">
             <div class="colhead lbl">Categoria</div>
             <div class="colhead">Feitas</div>
             <div class="colhead">Acertos</div>
 
             <div class="rowlabel"><b>QA</b> Aprendizagem</div>
-            <input type="number" id="sem-qaF"  min="0" step="1" placeholder="0" value="${qaF}"  oninput="atualizarPctEstudo()">
-            <input type="number" id="sem-qaA"  min="0" step="1" placeholder="0" value="${qaA}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qa-saF"  min="0" step="1" placeholder="0" value="${qa_saF}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qa-saA"  min="0" step="1" placeholder="0" value="${qa_saA}"  oninput="atualizarPctEstudo()">
 
             <div class="rowlabel"><b>QC</b> Consolidação</div>
-            <input type="number" id="sem-qcF"  min="0" step="1" placeholder="0" value="${qcF}"  oninput="atualizarPctEstudo()">
-            <input type="number" id="sem-qcA"  min="0" step="1" placeholder="0" value="${qcA}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qc-saF"  min="0" step="1" placeholder="0" value="${qc_saF}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qc-saA"  min="0" step="1" placeholder="0" value="${qc_saA}"  oninput="atualizarPctEstudo()">
 
             <div class="rowlabel"><b>QAp</b> Aprofundamento</div>
-            <input type="number" id="sem-qapF" min="0" step="1" placeholder="0" value="${qapF}" oninput="atualizarPctEstudo()">
-            <input type="number" id="sem-qapA" min="0" step="1" placeholder="0" value="${qapA}" oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qap-saF" min="0" step="1" placeholder="0" value="${qap_saF}" oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qap-saA" min="0" step="1" placeholder="0" value="${qap_saA}" oninput="atualizarPctEstudo()">
           </div>
 
           <div class="estudo-foot">
-            <span class="foot-label">% geral (acertos ÷ feitas)</span>
-            <span id="sem-pct-badge" class="estudo-badge empty">— %</span>
+            <span class="foot-label">% em sala (acertos ÷ feitas)</span>
+            <span id="sem-pct-sala-badge" class="estudo-badge empty">— %</span>
+          </div>
+
+          <div class="estudo-sec-titulo" style="margin-top:18px;">🏠 Em casa</div>
+          <div class="estudo-grid">
+            <div class="colhead lbl">Categoria</div>
+            <div class="colhead">Feitas</div>
+            <div class="colhead">Acertos</div>
+
+            <div class="rowlabel"><b>QA</b> Aprendizagem</div>
+            <input type="number" id="sem-qa-caF"  min="0" step="1" placeholder="0" value="${qa_caF}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qa-caA"  min="0" step="1" placeholder="0" value="${qa_caA}"  oninput="atualizarPctEstudo()">
+
+            <div class="rowlabel"><b>QC</b> Consolidação</div>
+            <input type="number" id="sem-qc-caF"  min="0" step="1" placeholder="0" value="${qc_caF}"  oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qc-caA"  min="0" step="1" placeholder="0" value="${qc_caA}"  oninput="atualizarPctEstudo()">
+
+            <div class="rowlabel"><b>QAp</b> Aprofundamento</div>
+            <input type="number" id="sem-qap-caF" min="0" step="1" placeholder="0" value="${qap_caF}" oninput="atualizarPctEstudo()">
+            <input type="number" id="sem-qap-caA" min="0" step="1" placeholder="0" value="${qap_caA}" oninput="atualizarPctEstudo()">
+          </div>
+
+          <div class="estudo-foot">
+            <span class="foot-label">% em casa (acertos ÷ feitas)</span>
+            <span id="sem-pct-casa-badge" class="estudo-badge empty">— %</span>
+          </div>
+
+          <div class="estudo-foot" style="border-top-style:solid;">
+            <span class="foot-label" style="font-weight:700;">% geral (sala + casa)</span>
+            <span id="sem-pct-geral-badge" class="estudo-badge empty">— %</span>
           </div>
         </div>
 
@@ -14888,33 +14972,54 @@ function atualizarPctEstudo() {
     const n = parseInt(el.value, 10);
     return Number.isFinite(n) && n >= 0 ? n : 0;
   };
-  const qaF = _v('sem-qaF'),   qaA = _v('sem-qaA');
-  const qcF = _v('sem-qcF'),   qcA = _v('sem-qcA');
-  const qapF = _v('sem-qapF'), qapA = _v('sem-qapA');
+  // Lê os 12 inputs (3 tipos × 2 locais × Feitas/Acertos)
+  const qa_saF = _v('sem-qa-saF'),   qa_saA  = _v('sem-qa-saA');
+  const qc_saF = _v('sem-qc-saF'),   qc_saA  = _v('sem-qc-saA');
+  const qap_saF = _v('sem-qap-saF'), qap_saA = _v('sem-qap-saA');
+  const qa_caF = _v('sem-qa-caF'),   qa_caA  = _v('sem-qa-caA');
+  const qc_caF = _v('sem-qc-caF'),   qc_caA  = _v('sem-qc-caA');
+  const qap_caF = _v('sem-qap-caF'), qap_caA = _v('sem-qap-caA');
 
-  // Marca visualmente as caixas inválidas (acertos > feitas)
+  // Marca visualmente as caixas inválidas (acertos > feitas) nos 6 pares
   const _mark = (idF, idA) => {
     const elF = document.getElementById(idF), elA = document.getElementById(idA);
     if (!elF || !elA) return;
     const f = parseInt(elF.value, 10) || 0, a = parseInt(elA.value, 10) || 0;
     elA.classList.toggle('invalid', a > f);
   };
-  _mark('sem-qaF',  'sem-qaA');
-  _mark('sem-qcF',  'sem-qcA');
-  _mark('sem-qapF', 'sem-qapA');
+  _mark('sem-qa-saF',  'sem-qa-saA');
+  _mark('sem-qc-saF',  'sem-qc-saA');
+  _mark('sem-qap-saF', 'sem-qap-saA');
+  _mark('sem-qa-caF',  'sem-qa-caA');
+  _mark('sem-qc-caF',  'sem-qc-caA');
+  _mark('sem-qap-caF', 'sem-qap-caA');
 
-  const totFeitas  = qaF + qcF + qapF;
-  const totAcertos = Math.min(qaA, qaF) + Math.min(qcA, qcF) + Math.min(qapA, qapF);
-  const badge = document.getElementById('sem-pct-badge');
-  if (!badge) return;
-  if (totFeitas === 0) {
-    badge.className = 'estudo-badge empty';
-    badge.textContent = '— %';
-    return;
-  }
-  const pct = Math.round((totAcertos / totFeitas) * 100);
-  badge.className = 'estudo-badge ' + (pct >= 70 ? 'ok' : 'low');
-  badge.textContent = pct + '%  ·  ' + totAcertos + '/' + totFeitas;
+  // Helper: aplica visual no badge conforme totalFeitas/totalAcertos
+  const _pinta = (badgeId, fSum, aSum) => {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    if (fSum === 0) {
+      badge.className = 'estudo-badge empty';
+      badge.textContent = '— %';
+      return;
+    }
+    const pct = Math.round((aSum / fSum) * 100);
+    badge.className = 'estudo-badge ' + (pct >= 70 ? 'ok' : 'low');
+    badge.textContent = pct + '%  ·  ' + aSum + '/' + fSum;
+  };
+
+  // % sala (QA + QC + QAp em sala)
+  const salaF = qa_saF + qc_saF + qap_saF;
+  const salaA = Math.min(qa_saA, qa_saF) + Math.min(qc_saA, qc_saF) + Math.min(qap_saA, qap_saF);
+  _pinta('sem-pct-sala-badge', salaF, salaA);
+
+  // % casa (QA + QC + QAp em casa)
+  const casaF = qa_caF + qc_caF + qap_caF;
+  const casaA = Math.min(qa_caA, qa_caF) + Math.min(qc_caA, qc_caF) + Math.min(qap_caA, qap_caF);
+  _pinta('sem-pct-casa-badge', casaF, casaA);
+
+  // % geral (sala + casa)
+  _pinta('sem-pct-geral-badge', salaF + casaF, salaA + casaA);
 }
 
 function fecharModalSemana() {
@@ -14946,54 +15051,415 @@ async function salvarSemana() {
     return Number.isFinite(v) && v >= 0 ? v : 0;
   };
   const zerar = (status === 'nao_iniciado');
-  const et_horas    = zerar ? 0 : _floatVal('sem-et');
-  let qa_feitas    = zerar ? 0 : _intVal('sem-qaF');
-  let qa_acertos   = zerar ? 0 : _intVal('sem-qaA');
-  let qc_feitas    = zerar ? 0 : _intVal('sem-qcF');
-  let qc_acertos   = zerar ? 0 : _intVal('sem-qcA');
-  let qap_feitas   = zerar ? 0 : _intVal('sem-qapF');
-  let qap_acertos  = zerar ? 0 : _intVal('sem-qapA');
+  const et_horas = zerar ? 0 : _floatVal('sem-et');
 
-  // Sanidade local antes de mandar: acertos não pode passar de feitas
-  // (o CHECK no banco também trava, mas evita ida-volta no servidor).
-  if (qa_acertos  > qa_feitas)  qa_acertos  = qa_feitas;
-  if (qc_acertos  > qc_feitas)  qc_acertos  = qc_feitas;
-  if (qap_acertos > qap_feitas) qap_acertos = qap_feitas;
-
-  state.progressoCronograma[n] = {
-    status, tecnicas, nota_pessoal: nota,
-    et_horas, qa_feitas, qa_acertos,
-    qc_feitas, qc_acertos, qap_feitas, qap_acertos
+  // Helper pra ler um par (Feitas/Acertos) já clampando acertos<=feitas
+  const _par = (idF, idA) => {
+    if (zerar) return [0, 0];
+    const f = _intVal(idF);
+    const a = Math.min(_intVal(idA), f);
+    return [f, a];
   };
 
-  const { error } = await sb.from('progresso_semanas').upsert({
+  // Matriz 2×3: lê os 12 campos
+  const [qa_sala_feitas,  qa_sala_acertos]  = _par('sem-qa-saF',  'sem-qa-saA');
+  const [qc_sala_feitas,  qc_sala_acertos]  = _par('sem-qc-saF',  'sem-qc-saA');
+  const [qap_sala_feitas, qap_sala_acertos] = _par('sem-qap-saF', 'sem-qap-saA');
+  const [qa_casa_feitas,  qa_casa_acertos]  = _par('sem-qa-caF',  'sem-qa-caA');
+  const [qc_casa_feitas,  qc_casa_acertos]  = _par('sem-qc-caF',  'sem-qc-caA');
+  const [qap_casa_feitas, qap_casa_acertos] = _par('sem-qap-caF', 'sem-qap-caA');
+
+  // Os campos antigos qa_feitas/qa_acertos/qc_*/qap_* viram a SOMA sala+casa.
+  // Garante retrocompat — qualquer leitor antigo enxerga o total da categoria.
+  const qa_feitas  = qa_sala_feitas  + qa_casa_feitas;
+  const qa_acertos = qa_sala_acertos + qa_casa_acertos;
+  const qc_feitas  = qc_sala_feitas  + qc_casa_feitas;
+  const qc_acertos = qc_sala_acertos + qc_casa_acertos;
+  const qap_feitas = qap_sala_feitas + qap_casa_feitas;
+  const qap_acertos = qap_sala_acertos + qap_casa_acertos;
+
+  state.progressoCronograma[n] = {
+    status, tecnicas, nota_pessoal: nota, et_horas,
+    qa_feitas, qa_acertos, qc_feitas, qc_acertos, qap_feitas, qap_acertos,
+    qa_sala_feitas, qa_sala_acertos, qc_sala_feitas, qc_sala_acertos, qap_sala_feitas, qap_sala_acertos,
+    qa_casa_feitas, qa_casa_acertos, qc_casa_feitas, qc_casa_acertos, qap_casa_feitas, qap_casa_acertos
+  };
+
+  // Payload completo (com os 12 novos + os 6 derivados pra retrocompat)
+  const payloadCompleto = {
     aluno_id: state.usuario.id,
     semana_numero: n,
-    status, tecnicas, nota_pessoal: nota,
-    et_horas, qa_feitas, qa_acertos,
-    qc_feitas, qc_acertos, qap_feitas, qap_acertos,
+    status, tecnicas, nota_pessoal: nota, et_horas,
+    qa_feitas, qa_acertos, qc_feitas, qc_acertos, qap_feitas, qap_acertos,
+    qa_sala_feitas, qa_sala_acertos, qc_sala_feitas, qc_sala_acertos, qap_sala_feitas, qap_sala_acertos,
+    qa_casa_feitas, qa_casa_acertos, qc_casa_feitas, qc_casa_acertos, qap_casa_feitas, qap_casa_acertos,
     atualizado_em: new Date().toISOString()
-  }, { onConflict: 'aluno_id,semana_numero' });
+  };
 
-  if (error) {
-    // Se as colunas novas ainda não existem no banco (SQL não rodou),
-    // tenta de novo só com os campos antigos pra não bloquear o salvamento.
-    if (/column|coluna/i.test(error.message || '')) {
-      const { error: e2 } = await sb.from('progresso_semanas').upsert({
-        aluno_id: state.usuario.id,
-        semana_numero: n,
-        status, tecnicas, nota_pessoal: nota,
-        atualizado_em: new Date().toISOString()
-      }, { onConflict: 'aluno_id,semana_numero' });
-      if (e2) { alert('Erro ao salvar: ' + e2.message); return; }
-      console.warn('[salvarSemana] Métricas quantitativas não persistiram — falta rodar SQL_metricas_semana.sql no Supabase.');
-    } else {
-      alert('Erro ao salvar: ' + error.message);
-      return;
-    }
+  let { error } = await sb.from('progresso_semanas').upsert(payloadCompleto, { onConflict: 'aluno_id,semana_numero' });
+
+  // Fallback 1: SQL_metricas_local_estudo.sql ainda não rodou — remove os 12 sala/casa
+  if (error && /column|coluna/i.test(error.message || '')) {
+    const semSalaCasa = { ...payloadCompleto };
+    [
+      'qa_sala_feitas','qa_sala_acertos','qc_sala_feitas','qc_sala_acertos','qap_sala_feitas','qap_sala_acertos',
+      'qa_casa_feitas','qa_casa_acertos','qc_casa_feitas','qc_casa_acertos','qap_casa_feitas','qap_casa_acertos'
+    ].forEach(k => delete semSalaCasa[k]);
+    const r1 = await sb.from('progresso_semanas').upsert(semSalaCasa, { onConflict: 'aluno_id,semana_numero' });
+    error = r1.error;
+    if (!error) console.warn('[salvarSemana] Detalhamento sala/casa não persistiu — rodar SQL_metricas_local_estudo.sql no Supabase. (Total agregado por categoria foi salvo.)');
   }
+  // Fallback 2: nem SQL_metricas_semana rodou — salva só os campos antigos básicos
+  if (error && /column|coluna/i.test(error.message || '')) {
+    const r2 = await sb.from('progresso_semanas').upsert({
+      aluno_id: state.usuario.id,
+      semana_numero: n,
+      status, tecnicas, nota_pessoal: nota,
+      atualizado_em: new Date().toISOString()
+    }, { onConflict: 'aluno_id,semana_numero' });
+    error = r2.error;
+    if (!error) console.warn('[salvarSemana] Métricas quantitativas não persistiram — rodar SQL_metricas_semana.sql + SQL_metricas_local_estudo.sql no Supabase.');
+  }
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+
   fecharModalSemana();
   renderCronograma();
+}
+
+// ============================================================================
+// PDF: Registro de progresso (uma semana OU todas)
+// ============================================================================
+// Usa pdf-lib (window.PDFLib). Reusa o mesmo padrão visual do gerarPDFQuestoes.
+// `semanas`: array de números de semana a incluir. Se vazio, inclui todas
+// as semanas que têm progresso registrado.
+// `titulo`: string que vai pro cabeçalho do PDF.
+// ============================================================================
+async function gerarPDFProgresso(semanas, titulo) {
+  if (!window.PDFLib) { alert('pdf-lib nao carregou. Recarregue (Ctrl+F5).'); return; }
+
+  // Quais semanas exportar? Filtra só as que têm progresso
+  const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+  let alvo = Array.isArray(semanas) && semanas.length > 0
+    ? semanas.map(n => merged.find(s => s.n === n)).filter(Boolean)
+    : merged.filter(s => state.progressoCronograma[s.n] && state.progressoCronograma[s.n].status !== 'nao_iniciado');
+
+  if (alvo.length === 0) {
+    alert('Nenhum registro de progresso pra exportar. Marque pelo menos uma semana como "Em estudo" ou "Concluído".');
+    return;
+  }
+
+  const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
+  const pdfDoc = await PDFDocument.create();
+  const font     = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontIta  = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+
+  const W = 595, H = 842;
+  const ML = 50, MR = 50, MT = 50, MB = 45;
+  const CW = W - ML - MR;
+
+  const preto      = rgb(0, 0, 0);
+  const cinza1     = rgb(0.20, 0.20, 0.20);
+  const cinza2     = rgb(0.40, 0.40, 0.40);
+  const cinza3     = rgb(0.60, 0.60, 0.60);
+  const cinzaBg    = rgb(0.96, 0.96, 0.96);
+  const cinzaLine  = rgb(0.85, 0.85, 0.85);
+  const cyan       = rgb(0.04, 0.57, 0.70);   // #0891b2
+  const verde      = rgb(0.10, 0.55, 0.27);
+  const vermelho   = rgb(0.73, 0.10, 0.10);
+  const amarelo    = rgb(0.85, 0.55, 0.10);
+
+  // Sanitiza chars que Helvetica WinAnsi não tem (acento OK, mas emoji não)
+  function sanit(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/[^\x00-\xFF]/g, '?')
+      .replace(/[\r\n\t\v\f]+/g, ' ')
+      .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '')
+      .replace(/ {2,}/g, ' ')
+      .trim();
+  }
+
+  // Quebra texto em linhas que cabem em `width` com `font` no `size`
+  function wrapLines(txt, fnt, size, width) {
+    const palavras = sanit(txt).split(' ');
+    const lns = [];
+    let cur = '';
+    for (const p of palavras) {
+      const tent = cur ? cur + ' ' + p : p;
+      if (fnt.widthOfTextAtSize(tent, size) <= width) {
+        cur = tent;
+      } else {
+        if (cur) lns.push(cur);
+        cur = p;
+      }
+    }
+    if (cur) lns.push(cur);
+    return lns;
+  }
+
+  let page = pdfDoc.addPage([W, H]);
+  let y = H - MT;
+  let paginaNum = 1;
+
+  // Cabeçalho do PDF (chamado em cada página)
+  function desenhaHeader(nomeAluno) {
+    page.drawText('RADIX MATEMATICA', { x: ML, y: H - 35, size: 8, font: fontBold, color: cyan });
+    page.drawText('Registro de progresso', { x: ML, y: H - 47, size: 12, font: fontBold, color: preto });
+    // Lado direito: data + aluno
+    const dataStr = new Date().toLocaleDateString('pt-BR');
+    const lblData = 'Gerado em ' + dataStr;
+    const wData = font.widthOfTextAtSize(lblData, 9);
+    page.drawText(lblData, { x: W - MR - wData, y: H - 35, size: 9, font: font, color: cinza2 });
+    const wAluno = fontBold.widthOfTextAtSize(nomeAluno, 10);
+    page.drawText(nomeAluno, { x: W - MR - wAluno, y: H - 48, size: 10, font: fontBold, color: cinza1 });
+    // Linha divisória
+    page.drawLine({ start: { x: ML, y: H - 58 }, end: { x: W - MR, y: H - 58 }, thickness: 0.8, color: cinzaLine });
+  }
+
+  function desenhaFooter() {
+    const txt = 'Pagina ' + paginaNum + '  -  Radix Matematica  -  Estude com método.';
+    const w = font.widthOfTextAtSize(txt, 8);
+    page.drawText(txt, { x: (W - w) / 2, y: 22, size: 8, font, color: cinza3 });
+  }
+
+  function novaPagina(nomeAluno) {
+    desenhaFooter();
+    page = pdfDoc.addPage([W, H]);
+    paginaNum++;
+    desenhaHeader(nomeAluno);
+    y = H - MT - 25;
+  }
+
+  // Nome do aluno (preferindo perfis.nome se existir)
+  let nomeAluno;
+  try {
+    const { data: perfil } = await sb.from('perfis').select('nome').eq('id', state.usuario.id).single();
+    nomeAluno = sanit((perfil?.nome || state.usuario.nome || 'Aluno').toUpperCase());
+  } catch (e) {
+    nomeAluno = sanit((state.usuario.nome || 'Aluno').toUpperCase());
+  }
+
+  desenhaHeader(nomeAluno);
+  y = H - MT - 30;
+
+  // Título do relatório
+  page.drawText(sanit(titulo || 'Relatorio de progresso'), { x: ML, y, size: 14, font: fontBold, color: preto });
+  y -= 12;
+  const subt = alvo.length === 1
+    ? 'Semana ' + String(alvo[0].n).padStart(2, '0')
+    : alvo.length + ' semanas registradas';
+  page.drawText(sanit(subt), { x: ML, y, size: 10, font: font, color: cinza2 });
+  y -= 24;
+
+  // ===== RESUMO GERAL (só faz sentido quando exporta múltiplas) =====
+  if (alvo.length > 1) {
+    // Totaliza ET, sala/casa, etc.
+    let totET = 0;
+    let totSalaF = 0, totSalaA = 0, totCasaF = 0, totCasaA = 0;
+    alvo.forEach(s => {
+      const p = state.progressoCronograma[s.n] || {};
+      totET += Number(p.et_horas || 0);
+      totSalaF += Number(p.qa_sala_feitas || 0) + Number(p.qc_sala_feitas || 0) + Number(p.qap_sala_feitas || 0);
+      totSalaA += Number(p.qa_sala_acertos || 0) + Number(p.qc_sala_acertos || 0) + Number(p.qap_sala_acertos || 0);
+      totCasaF += Number(p.qa_casa_feitas || 0) + Number(p.qc_casa_feitas || 0) + Number(p.qap_casa_feitas || 0);
+      totCasaA += Number(p.qa_casa_acertos || 0) + Number(p.qc_casa_acertos || 0) + Number(p.qap_casa_acertos || 0);
+    });
+    const totF = totSalaF + totCasaF;
+    const totA = totSalaA + totCasaA;
+    const pct = totF > 0 ? Math.round(totA / totF * 100) : 0;
+
+    // Caixa de resumo
+    const boxH = 70;
+    page.drawRectangle({ x: ML, y: y - boxH, width: CW, height: boxH, color: cinzaBg, borderColor: cinzaLine, borderWidth: 0.5 });
+    const colW = CW / 4;
+    const cell = (idx, label, valor, cor) => {
+      const cx = ML + idx * colW + colW / 2;
+      page.drawText(sanit(label), { x: cx - font.widthOfTextAtSize(sanit(label), 8) / 2, y: y - 18, size: 8, font, color: cinza2 });
+      const wV = fontBold.widthOfTextAtSize(valor, 16);
+      page.drawText(valor, { x: cx - wV / 2, y: y - 42, size: 16, font: fontBold, color: cor || preto });
+    };
+    cell(0, 'SEMANAS ESTUDADAS', String(alvo.length), cyan);
+    cell(1, 'TEMPO TOTAL (HORAS)', totET.toString().replace('.', ','), preto);
+    cell(2, 'QUESTOES FEITAS', String(totF), preto);
+    cell(3, 'TAXA DE ACERTO', pct + '%', pct >= 70 ? verde : (pct > 0 ? amarelo : cinza3));
+    y -= boxH + 16;
+  }
+
+  // Helper: status -> label/cor
+  const stLabel = { 'nao_iniciado': 'Nao iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluido' };
+  const stCor   = { 'nao_iniciado': cinza3, 'em_estudo': amarelo, 'concluido': verde };
+
+  // ===== BLOCO POR SEMANA =====
+  for (const s of alvo) {
+    const p = state.progressoCronograma[s.n] || {};
+    const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
+    const mod  = MODULOS.find(m => m.id === s.moduloId);
+
+    // Estima altura do bloco pra fazer page-break se necessário
+    const altEstim = 200 + (p.nota_pessoal ? Math.ceil(p.nota_pessoal.length / 90) * 11 : 0);
+    if (y - altEstim < MB + 30) novaPagina(nomeAluno);
+
+    // Cabeçalho da semana
+    const tituloSem = 'Semana ' + String(s.n).padStart(2, '0') + ' - ' + (s.titulo || '');
+    page.drawText(sanit(tituloSem), { x: ML, y, size: 12, font: fontBold, color: preto });
+    // Pill de status à direita
+    const lbl = stLabel[p.status || 'nao_iniciado'];
+    const wLbl = fontBold.widthOfTextAtSize(lbl, 8) + 14;
+    page.drawRectangle({ x: W - MR - wLbl, y: y - 3, width: wLbl, height: 14, color: rgb(1,1,1), borderColor: stCor[p.status || 'nao_iniciado'], borderWidth: 1 });
+    page.drawText(lbl, { x: W - MR - wLbl + 7, y: y, size: 8, font: fontBold, color: stCor[p.status || 'nao_iniciado'] });
+    y -= 14;
+
+    // Subtítulo: módulo, tema, data
+    const linhaInfo = [
+      mod ? 'Modulo ' + mod.numero + ' - ' + mod.nome : null,
+      tema ? 'Tema: ' + tema.nome : null,
+      s.data ? 'Inicio: ' + s.data + '/2026' : null
+    ].filter(Boolean).join('   |   ');
+    page.drawText(sanit(linhaInfo), { x: ML, y, size: 8, font, color: cinza2 });
+    y -= 16;
+
+    // ET (horas)
+    const etTxt = 'Tempo de estudo (ET): ' + String(p.et_horas || 0).replace('.', ',') + ' h';
+    page.drawText(sanit(etTxt), { x: ML, y, size: 9, font: fontBold, color: cinza1 });
+    y -= 13;
+
+    // Técnicas usadas
+    if (Array.isArray(p.tecnicas) && p.tecnicas.length > 0) {
+      const nomes = p.tecnicas
+        .map(id => (TECNICAS_ESTUDO.find(t => t.id === id) || {}).nome)
+        .filter(Boolean)
+        .join(', ');
+      const lin = wrapLines('Tecnicas: ' + nomes, font, 9, CW);
+      lin.forEach(ln => { page.drawText(ln, { x: ML, y, size: 9, font, color: cinza1 }); y -= 11; });
+      y -= 2;
+    }
+
+    // ===== TABELA: Categoria x (Sala | Casa | Total) com Feitas/Acertos =====
+    // Layout: 6 colunas
+    //   [Categoria 30%] [Sala F][Sala A][Casa F][Casa A][Total F][Total A]
+    const colCat  = ML;
+    const restoW  = CW - 130;             // 130px pra Categoria, resto pra 6 colunas
+    const colVW   = restoW / 6;
+    const xSF = ML + 130;
+    const xSA = xSF + colVW;
+    const xCF = xSA + colVW;
+    const xCA = xCF + colVW;
+    const xTF = xCA + colVW;
+    const xTA = xTF + colVW;
+
+    // Header da tabela com grupos visuais
+    page.drawRectangle({ x: ML, y: y - 14, width: CW, height: 16, color: cinzaBg, borderColor: cinzaLine, borderWidth: 0.5 });
+    page.drawText('CATEGORIA', { x: colCat + 4, y: y - 10, size: 7, font: fontBold, color: cinza2 });
+    page.drawText('EM SALA',   { x: xSF + (colVW * 2 - fontBold.widthOfTextAtSize('EM SALA', 7)) / 2,   y: y - 10, size: 7, font: fontBold, color: cinza2 });
+    page.drawText('EM CASA',   { x: xCF + (colVW * 2 - fontBold.widthOfTextAtSize('EM CASA', 7)) / 2,   y: y - 10, size: 7, font: fontBold, color: cinza2 });
+    page.drawText('TOTAL',     { x: xTF + (colVW * 2 - fontBold.widthOfTextAtSize('TOTAL', 7)) / 2,     y: y - 10, size: 7, font: fontBold, color: cyan });
+    y -= 17;
+
+    // Sub-header F/A
+    const subFA = (x) => {
+      page.drawText('F', { x: x + (colVW - font.widthOfTextAtSize('F', 7)) / 2, y, size: 7, font: fontBold, color: cinza3 });
+      page.drawText('A', { x: x + colVW + (colVW - font.widthOfTextAtSize('A', 7)) / 2, y, size: 7, font: fontBold, color: cinza3 });
+    };
+    subFA(xSF); subFA(xCF); subFA(xTF);
+    y -= 9;
+
+    // Linhas: QA / QC / QAp
+    const tipos = [
+      { label: 'QA  Aprendizagem',    saF: 'qa_sala_feitas',  saA: 'qa_sala_acertos',  caF: 'qa_casa_feitas',  caA: 'qa_casa_acertos' },
+      { label: 'QC  Consolidacao',    saF: 'qc_sala_feitas',  saA: 'qc_sala_acertos',  caF: 'qc_casa_feitas',  caA: 'qc_casa_acertos' },
+      { label: 'QAp Aprofundamento',  saF: 'qap_sala_feitas', saA: 'qap_sala_acertos', caF: 'qap_casa_feitas', caA: 'qap_casa_acertos' }
+    ];
+
+    let sumSF=0, sumSA=0, sumCF=0, sumCA=0;
+    tipos.forEach((t, i) => {
+      const sF = Number(p[t.saF] || 0), sA = Number(p[t.saA] || 0);
+      const cF = Number(p[t.caF] || 0), cA = Number(p[t.caA] || 0);
+      const tF = sF + cF, tA = sA + cA;
+      sumSF += sF; sumSA += sA; sumCF += cF; sumCA += cA;
+
+      // Zebra
+      if (i % 2 === 1) {
+        page.drawRectangle({ x: ML, y: y - 12, width: CW, height: 14, color: rgb(0.98, 0.98, 0.98) });
+      }
+      page.drawText(t.label, { x: colCat + 4, y: y - 8, size: 9, font, color: cinza1 });
+      const drawNum = (x, n) => {
+        const s = String(n);
+        page.drawText(s, { x: x + (colVW - font.widthOfTextAtSize(s, 9)) / 2, y: y - 8, size: 9, font, color: cinza1 });
+      };
+      drawNum(xSF, sF); drawNum(xSA, sA);
+      drawNum(xCF, cF); drawNum(xCA, cA);
+      drawNum(xTF, tF); drawNum(xTA, tA);
+      y -= 14;
+    });
+
+    // Rodapé da tabela: totais + %
+    const totalF = sumSF + sumCF;
+    const totalA = sumSA + sumCA;
+    const pctSala = sumSF > 0 ? Math.round(sumSA / sumSF * 100) : null;
+    const pctCasa = sumCF > 0 ? Math.round(sumCA / sumCF * 100) : null;
+    const pctGer  = totalF > 0 ? Math.round(totalA / totalF * 100) : null;
+
+    page.drawRectangle({ x: ML, y: y - 14, width: CW, height: 16, color: rgb(0.95, 0.99, 1.0), borderColor: cinzaLine, borderWidth: 0.5 });
+    page.drawText('% acerto', { x: colCat + 4, y: y - 10, size: 8, font: fontBold, color: cinza2 });
+    const pctTxt = v => v == null ? '-' : v + '%';
+    const pctCor = v => v == null ? cinza3 : (v >= 70 ? verde : vermelho);
+    // Sala % (centralizado entre F e A da sala)
+    const tSala = pctTxt(pctSala);
+    page.drawText(tSala, { x: xSF + (colVW * 2 - fontBold.widthOfTextAtSize(tSala, 9)) / 2, y: y - 10, size: 9, font: fontBold, color: pctCor(pctSala) });
+    const tCasa = pctTxt(pctCasa);
+    page.drawText(tCasa, { x: xCF + (colVW * 2 - fontBold.widthOfTextAtSize(tCasa, 9)) / 2, y: y - 10, size: 9, font: fontBold, color: pctCor(pctCasa) });
+    const tGer = pctTxt(pctGer);
+    page.drawText(tGer, { x: xTF + (colVW * 2 - fontBold.widthOfTextAtSize(tGer, 10)) / 2, y: y - 10, size: 10, font: fontBold, color: pctCor(pctGer) });
+    y -= 20;
+
+    // Notas pessoais
+    if (p.nota_pessoal && p.nota_pessoal.trim()) {
+      page.drawText('Notas pessoais:', { x: ML, y, size: 8, font: fontBold, color: cinza2 });
+      y -= 11;
+      const lin = wrapLines(p.nota_pessoal, fontIta, 9, CW);
+      lin.forEach(ln => {
+        if (y < MB + 20) novaPagina(nomeAluno);
+        page.drawText(ln, { x: ML, y, size: 9, font: fontIta, color: cinza1 });
+        y -= 11;
+      });
+    }
+
+    // Separador entre semanas
+    y -= 6;
+    page.drawLine({ start: { x: ML, y }, end: { x: W - MR, y }, thickness: 0.4, color: cinzaLine });
+    y -= 16;
+
+    // Page break se sobrou pouco espaço
+    if (y < MB + 60) novaPagina(nomeAluno);
+  }
+
+  desenhaFooter();
+
+  // Download
+  const bytes = await pdfDoc.save();
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const nomeFile = alvo.length === 1
+    ? 'progresso_semana_' + String(alvo[0].n).padStart(2,'0') + '.pdf'
+    : 'progresso_geral_' + new Date().toISOString().slice(0,10) + '.pdf';
+  a.href = url;
+  a.download = nomeFile;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+// Atalhos chamados pelos botões
+async function baixarPDFProgressoSemana(n) {
+  const s = (typeof getCronogramaMerged === 'function' ? getCronogramaMerged() : CRONOGRAMA_2026).find(x => x.n === n);
+  if (!s) { alert('Semana nao encontrada.'); return; }
+  await gerarPDFProgresso([n], 'Registro da Semana ' + String(n).padStart(2, '0'));
+}
+
+async function baixarPDFProgressoTudo() {
+  await gerarPDFProgresso([], 'Relatorio completo de progresso');
 }
 
 function fazerMiniSimulado(temaId) {
