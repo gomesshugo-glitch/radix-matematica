@@ -4516,6 +4516,175 @@
   margin: 0 8px;
 }
 
+  /* ===== Layout 3-colunas da tela de Banco de Questões (aluno) ===== */
+  /* Sidebar à esquerda (árvore de temas) | Centro (lista) | Cesta à direita */
+  .qbk-3col {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    gap: 14px;
+    align-items: start;
+  }
+  .qbk-side, .qbk-cesta {
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    border-radius: 12px;
+    padding: 14px;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+  .qbk-col-titulo {
+    font-size: 11.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--radix-text-muted); margin: 0 0 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* Árvore de temas */
+  .qbk-tree-mod { border-bottom: 1px solid var(--radix-line); padding: 4px 0; }
+  .qbk-tree-mod:last-child { border-bottom: 0; }
+  .qbk-tree-mod-head {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 4px; cursor: pointer; user-select: none;
+    border-radius: 6px;
+  }
+  .qbk-tree-mod-head:hover { background: var(--radix-bg-2); }
+  .qbk-tree-chevron { width: 14px; height: 14px; color: var(--radix-text-muted); transition: transform .15s; flex-shrink: 0; }
+  .qbk-tree-mod.aberto .qbk-tree-chevron { transform: rotate(90deg); }
+  .qbk-tree-mod-nome { flex: 1; font-size: 13px; font-weight: 600; color: var(--radix-text); }
+  .qbk-tree-mod-cnt { font-size: 11px; color: var(--radix-text-muted); }
+  .qbk-tree-mod-cnt.has-sel { color: var(--radix-cyan); font-weight: 700; }
+  .qbk-tree-temas { display: none; padding: 2px 4px 4px 24px; }
+  .qbk-tree-mod.aberto .qbk-tree-temas { display: block; }
+  .qbk-tree-tema {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 0; font-size: 12.5px; color: var(--radix-text-2);
+    cursor: pointer; border-radius: 4px;
+  }
+  .qbk-tree-tema:hover { color: var(--radix-cyan); }
+  .qbk-tree-tema input { accent-color: var(--radix-cyan); cursor: pointer; }
+  .qbk-tree-tema-cnt { color: var(--radix-text-muted); font-size: 11px; margin-left: auto; }
+  .qbk-tree-limpar {
+    background: transparent; border: 1px dashed var(--radix-line-2);
+    color: var(--radix-text-muted); padding: 2px 8px; border-radius: 999px;
+    font-size: 10.5px; cursor: pointer;
+  }
+  .qbk-tree-limpar:hover { color: var(--radix-coral); border-color: var(--radix-coral); }
+
+  /* Cesta lateral */
+  .qbk-cesta-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .qbk-cesta-titulo { font-size: 14px; font-weight: 700; color: var(--radix-text); }
+  .qbk-cesta-cnt {
+    background: var(--radix-cyan); color: #fff;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700;
+  }
+  .qbk-cesta-acoes { display: grid; grid-template-columns: 1fr; gap: 6px; margin-bottom: 10px; }
+  .qbk-cesta-acoes .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    width: 100%;
+  }
+  .qbk-cesta-toggle {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; color: var(--radix-text-muted); cursor: pointer;
+    margin-bottom: 8px; user-select: none;
+  }
+  .qbk-cesta-toggle input { accent-color: var(--radix-cyan); }
+  .qbk-cesta-item {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 6px; align-items: start;
+    padding: 8px 0; border-bottom: 1px solid var(--radix-line);
+  }
+  .qbk-cesta-item:last-child { border-bottom: 0; }
+  .qbk-cesta-item-info { font-size: 12.5px; min-width: 0; }
+  .qbk-cesta-item-meta {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10.5px; color: var(--radix-text-muted); margin-bottom: 2px;
+  }
+  .qbk-cesta-item-meta b { color: var(--radix-text); font-weight: 700; }
+  .qbk-cesta-item-titulo {
+    color: var(--radix-text); font-weight: 600;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; line-height: 1.35;
+  }
+  .qbk-cesta-item-preview {
+    font-size: 11.5px; color: var(--radix-text-muted); margin-top: 3px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; line-height: 1.4;
+  }
+  .qbk-cesta.compacta .qbk-cesta-item-titulo { -webkit-line-clamp: 1; }
+  .qbk-cesta.compacta .qbk-cesta-item-preview { display: none; }
+  .qbk-cesta-item-rm {
+    background: transparent; border: 0; padding: 2px 4px;
+    color: var(--radix-text-muted); cursor: pointer; font-size: 14px;
+    align-self: start; border-radius: 4px;
+  }
+  .qbk-cesta-item-rm:hover { color: var(--radix-coral); background: rgba(255,122,92,.08); }
+  .qbk-cesta-vazia {
+    text-align: center; padding: 24px 12px;
+    color: var(--radix-text-muted); font-size: 12.5px;
+  }
+  .qbk-cesta-vazia svg { color: var(--radix-line-2); margin-bottom: 8px; }
+
+  /* Modal wizard "Como você quer estudar?" */
+  .qbk-escolha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .qbk-escolha-card {
+    border: 2px solid var(--radix-line);
+    border-radius: 12px; padding: 22px 18px;
+    background: var(--radix-bg-2);
+    cursor: pointer; transition: all .15s ease;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    color: var(--radix-text);
+    font-family: inherit;
+  }
+  .qbk-escolha-card:hover {
+    border-color: var(--radix-cyan);
+    background: rgba(34,211,238,.04);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -10px rgba(34,211,238,.4);
+  }
+  .qbk-escolha-ico {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px; font-size: 28px;
+  }
+  .qbk-escolha-card.ec-digital .qbk-escolha-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan); }
+  .qbk-escolha-card.ec-pdf .qbk-escolha-ico { background: rgba(245,158,11,.14); color: #b45309; }
+  .qbk-escolha-card.ec-teste .qbk-escolha-ico { background: rgba(168,85,247,.14); color: #7e22ce; }
+  .qbk-escolha-card.ec-teste:hover { border-color: #a855f7; box-shadow: 0 8px 24px -10px rgba(168,85,247,.4); background: rgba(168,85,247,.04); }
+  .qbk-escolha-card.ec-prova .qbk-escolha-ico { background: rgba(220,38,38,.12); color: #b91c1c; }
+  .qbk-escolha-card.ec-prova:hover { border-color: #dc2626; box-shadow: 0 8px 24px -10px rgba(220,38,38,.35); background: rgba(220,38,38,.03); }
+  .qbk-escolha-titulo { font-size: 15px; font-weight: 700; color: var(--radix-text); margin: 0 0 6px; }
+  .qbk-escolha-desc { font-size: 12.5px; color: var(--radix-text-2); line-height: 1.45; margin: 0; }
+  .qbk-escolha-tag {
+    margin-top: 12px; padding: 3px 10px; border-radius: 999px;
+    background: var(--radix-surface); border: 1px solid var(--radix-line);
+    font-size: 10.5px; color: var(--radix-text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .qbk-modal-back {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--radix-bg-2); border: 1px solid var(--radix-line);
+    color: var(--radix-text-2); font-size: 18px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .15s;
+  }
+  .qbk-modal-back:hover { border-color: var(--radix-cyan); color: var(--radix-cyan); }
+
+  /* Mobile / tablet — quebra de layout */
+  @media (max-width: 1100px) {
+    .qbk-3col { grid-template-columns: 220px 1fr; }
+    .qbk-cesta { grid-column: 1 / -1; position: static; max-height: none; }
+  }
+  @media (max-width: 720px) {
+    .qbk-3col { grid-template-columns: 1fr; }
+    .qbk-side { position: static; max-height: none; }
+    .qbk-escolha-grid { grid-template-columns: 1fr; }
+  }
+
 </style>
 </head>
 <body>
@@ -7286,6 +7455,10 @@ function toggleQuestaoLista(qid) {
   }
   // Atualizar badge no menu
   atualizarBadgeLista();
+  // Atualizar painel lateral da cesta (se estiver na tela do banco)
+  if (typeof _refreshCestaLateral === 'function' && document.getElementById('qbk-cesta')) {
+    _refreshCestaLateral();
+  }
 }
 
 function atualizarBadgeLista() {
@@ -7300,17 +7473,8 @@ function renderMontarLista() {
   state.view = 'montar-lista';
   const main = document.getElementById('main-content');
 
-  // Lista em construção (seleção atual)
-  const minhasQ = state.questoesSelecionadas
-    .map(id => state.questoes.find(q => q.id === id))
-    .filter(Boolean);
-
-  const porMod = {};
-  MODULOS.forEach(m => porMod[m.id] = []);
-  minhasQ.forEach(q => {
-    const modId = MODULOS.find(m => m.temas.includes(q.tema))?.id;
-    if (modId && porMod[modId]) porMod[modId].push(q);
-  });
+  // Contador da seleção atual — mostra um aviso convidando o aluno a finalizar
+  const nSelAtual = (state.questoesSelecionadas || []).length;
 
   // Listas salvas (várias com nome)
   const listas = Array.isArray(state.listasSalvas) ? state.listasSalvas.slice() : [];
@@ -7357,56 +7521,23 @@ function renderMontarLista() {
         }).join('')}
       </div>`;
 
-  // ----- Seção 2: lista em construção -----
-  const construcaoHtml = minhasQ.length === 0
-    ? `<div style="text-align:center;padding:32px;background:white;border-radius:14px;border:1px solid var(--radix-border);">
-         <div style="font-size:48px;margin-bottom:6px;">🛒</div>
-         <h3 style="color:var(--radix-gray);margin:0 0 6px;font-size:16px;">Nenhuma questão selecionada no momento</h3>
-         <p style="color:var(--radix-gray-light);max-width:520px;margin:0 auto 14px;font-size:13px;">
-           Navegue pelos temas e clique em <strong>"+ Adicionar à lista"</strong> nas questões que você quer estudar.
-         </p>
-         <button class="btn" onclick="abrirTema('')">🎯 Navegar pelo banco de questões</button>
-       </div>`
-    : `
-       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-         <p style="color:var(--radix-gray-light);font-size:13px;margin:0;">
-           ${minhasQ.length} ${minhasQ.length === 1 ? 'questão selecionada' : 'questões selecionadas'} · Ao baixar o PDF, esta seleção vira uma <strong>lista salva</strong> com o nome que você escolher.
-         </p>
-         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-           <button class="btn" style="background:#DC2626;" onclick="baixarMinhaListaPDF()">📥 Baixar PDF e salvar lista</button>
-           <button class="btn btn-secondary" onclick="iniciarConferenciaGabarito()">✏️ Conferir gabarito</button>
-           <button class="btn btn-secondary" onclick="limparMinhaLista()" style="color:#DC2626;border-color:#DC2626;">🗑️ Limpar seleção</button>
-         </div>
-       </div>
-       ${MODULOS.map(mod => {
-         const qs = porMod[mod.id];
-         if (!qs || qs.length === 0) return '';
-         return `
-           <div class="lista-mod-bloco">
-             <div class="lista-mod-header" style="--mod-cor:${mod.cor};">
-               <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
-               <span class="dash-pill">${qs.length} ${qs.length === 1 ? 'questão' : 'questões'}</span>
-             </div>
-             <div class="lista-questoes">
-               ${qs.map(q => {
-                 const tema = TEMAS.find(t => t.id === q.tema);
-                 return `
-                   <div class="lista-item">
-                     <div class="lista-num">${state.questoesSelecionadas.indexOf(q.id) + 1}</div>
-                     <div class="lista-conteudo">
-                       <div class="lista-tema">${tema ? tema.nome : '—'}</div>
-                       <div class="lista-enun">${q.enunciado.substring(0, 200).replace(/<[^>]+>/g,'')}${q.enunciado.length > 200 ? '...' : ''}</div>
-                     </div>
-                     <div class="lista-acoes">
-                       <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, -1)" title="Subir">↑</button>
-                       <button class="btn-mini-icon" onclick="moverQuestaoLista(${q.id}, 1)" title="Descer">↓</button>
-                       <button class="btn-mini-icon" style="color:#DC2626;" onclick="toggleQuestaoLista(${q.id});renderMontarLista();" title="Remover">✕</button>
-                     </div>
-                   </div>`;
-               }).join('')}
-             </div>
-           </div>`;
-       }).join('')}`;
+  // ----- Aviso da lista em construção (agora vive na "cesta" do Banco) -----
+  // Se houver uma seleção em andamento, sugere voltar pro Banco pra concluir.
+  const avisoSelecaoHtml = nSelAtual === 0 ? '' : `
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;margin-bottom:18px;
+                background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.22);border-radius:12px;">
+      <div style="font-size:22px;">🛒</div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-weight:700;color:var(--radix-text,#111);font-size:13.5px;">
+          Você tem ${nSelAtual} ${nSelAtual === 1 ? 'questão' : 'questões'} na sua lista atual
+        </div>
+        <div style="font-size:12px;color:var(--radix-gray-light);margin-top:2px;">
+          Volte ao Banco de Questões pra estudar (digital ou PDF) — quando você baixar/iniciar, a lista vira um arquivo aqui.
+        </div>
+      </div>
+      <button class="btn" onclick="abrirTema('')" style="padding:8px 14px;font-size:13px;">📚 Ir pro Banco</button>
+    </div>
+  `;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minhas Listas</div>
@@ -7420,15 +7551,9 @@ function renderMontarLista() {
       Suas listas salvas ficam aqui. Clique em uma para abrir, conferir o gabarito ou baixar o PDF de novo.
     </p>
 
+    ${avisoSelecaoHtml}
+
     ${cardsListasHtml}
-
-    <h3 class="section-title" style="margin-top:32px;">
-      <span class="section-title-accent"></span>
-      <span class="st-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
-      Lista em construção
-    </h3>
-
-    ${construcaoHtml}
   `;
 }
 
@@ -7879,6 +8004,126 @@ function pedirNomeLista(sugestao, opcoes) {
       }
     }, 50);
   });
+}
+
+// ============================================================================
+// MODAL WIZARD: "Como você quer estudar com essa lista?"
+//  Step 1: Digital × PDF
+//  Step 2 (só se Digital): Modo Teste × Modo Prova
+// Fase 1: ambos os modos digitais reusam iniciarConferenciaGabarito.
+//   Modo Teste  → feedback questão a questão (TODO Fase 2)
+//   Modo Prova  → só corrige no final (já é o comportamento atual)
+// ============================================================================
+
+const _MODAL_GERAR_ID = 'modal-gerar-lista';
+
+function abrirModalGerar() {
+  const n = (state.questoesSelecionadas || []).length;
+  if (n === 0) { alert('Sua lista está vazia. Adicione questões antes de estudar.'); return; }
+  _renderModalGerar('step1');
+}
+
+function fecharModalGerar() {
+  const m = document.getElementById(_MODAL_GERAR_ID);
+  if (m) m.remove();
+  if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
+}
+
+function voltarStep1WizardGerar() {
+  _renderModalGerar('step1');
+}
+
+function _renderModalGerar(step) {
+  fecharModalGerar(); // remove se existe
+  const n = (state.questoesSelecionadas || []).length;
+  const corpo = (step === 'step2-digital')
+    ? _modalGerarCorpoStep2()
+    : _modalGerarCorpoStep1();
+  const titulo = (step === 'step2-digital')
+    ? 'Modo Teste ou Modo Prova?'
+    : 'Como você quer estudar com essa lista?';
+  const subtitulo = (step === 'step2-digital')
+    ? 'Escolha o estilo da resolução digital.'
+    : `${n} ${n === 1 ? 'questão selecionada' : 'questões selecionadas'}. Escolha o formato:`;
+  const backBtn = (step === 'step2-digital')
+    ? `<button class="qbk-modal-back" onclick="voltarStep1WizardGerar()" title="Voltar">←</button>`
+    : '';
+
+  const html = `
+    <div class="modal-overlay" id="${_MODAL_GERAR_ID}" onclick="if(event.target===this)fecharModalGerar()">
+      <div class="modal" style="max-width:560px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          ${backBtn}
+          <h2 style="margin:0;flex:1;font-size:18px;">${titulo}</h2>
+          <button onclick="fecharModalGerar()" title="Fechar" style="background:transparent;border:0;font-size:22px;cursor:pointer;color:var(--radix-text-muted);line-height:1;padding:4px 8px;">×</button>
+        </div>
+        <p style="margin:0 0 16px;font-size:13px;color:var(--radix-text-muted);">${subtitulo}</p>
+        ${corpo}
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.body.classList.add('modal-open');
+}
+
+function _modalGerarCorpoStep1() {
+  return `
+    <div class="qbk-escolha-grid">
+      <button class="qbk-escolha-card ec-digital" onclick="escolherDigital()">
+        <div class="qbk-escolha-ico">💻</div>
+        <h3 class="qbk-escolha-titulo">Resolver digitalmente</h3>
+        <p class="qbk-escolha-desc">Marque as respostas aqui no app. Salva no seu histórico automaticamente.</p>
+        <span class="qbk-escolha-tag">Recomendado</span>
+      </button>
+      <button class="qbk-escolha-card ec-pdf" onclick="escolherPDF()">
+        <div class="qbk-escolha-ico">📄</div>
+        <h3 class="qbk-escolha-titulo">Baixar PDF impresso</h3>
+        <p class="qbk-escolha-desc">Gera um arquivo com as questões e gabarito. Bom pra resolver no papel.</p>
+        <span class="qbk-escolha-tag">Lista vira arquivo</span>
+      </button>
+    </div>`;
+}
+
+function _modalGerarCorpoStep2() {
+  return `
+    <div class="qbk-escolha-grid">
+      <button class="qbk-escolha-card ec-teste" onclick="escolherModoTeste()">
+        <div class="qbk-escolha-ico">🎯</div>
+        <h3 class="qbk-escolha-titulo">Modo Teste</h3>
+        <p class="qbk-escolha-desc">Vê o gabarito e o comentário <b>logo após responder</b> cada questão. Ideal pra aprender enquanto pratica.</p>
+        <span class="qbk-escolha-tag">Feedback imediato</span>
+      </button>
+      <button class="qbk-escolha-card ec-prova" onclick="escolherModoProva()">
+        <div class="qbk-escolha-ico">⏱</div>
+        <h3 class="qbk-escolha-titulo">Modo Prova</h3>
+        <p class="qbk-escolha-desc">Responde tudo de uma vez e <b>só vê o resultado no final</b>. Simula a pressão da prova de verdade.</p>
+        <span class="qbk-escolha-tag">Corrige só no fim</span>
+      </button>
+    </div>`;
+}
+
+// Handlers do wizard
+function escolherDigital() {
+  _renderModalGerar('step2-digital');
+}
+
+async function escolherPDF() {
+  fecharModalGerar();
+  await baixarMinhaListaPDF();
+}
+
+function escolherModoTeste() {
+  fecharModalGerar();
+  // Fase 1: reusa o motor de conferência atual. O modo teste vai usar
+  // a UI inline existente (responderQuestao mostra explicação na hora).
+  // TODO Fase 2: UI dedicada com auto-avanço + cronômetro opcional.
+  state._modoEstudoLista = 'teste';
+  iniciarConferenciaGabarito();
+}
+
+function escolherModoProva() {
+  fecharModalGerar();
+  state._modoEstudoLista = 'prova';
+  iniciarConferenciaGabarito();
 }
 
 async function baixarQuestoesFiltradasPDF() {
@@ -8467,15 +8712,19 @@ function abrirTema(temaId) {
   state._provaAtual = '';
   state._statusRespAtual = '';
   state._semanaFiltro = '';
-  // Se chegou via um tema específico, deduz o módulo dele E fixa o sub-filtro de tema
+  // Sidebar: cria sets se faltam
+  if (!(state._sideTemasAtivos instanceof Set))    state._sideTemasAtivos = new Set();
+  if (!(state._sideModulosAbertos instanceof Set)) state._sideModulosAbertos = new Set();
+  // Se chegou via um tema específico, marca ele na sidebar e abre o módulo dele
+  state._sideTemasAtivos.clear();
   if (temaId) {
     const modulo = MODULOS.find(m => (m.temas || []).includes(temaId));
-    state._modAtual = modulo ? modulo.id : null;
-    state._temaSubAtual = temaId;
-  } else {
-    state._modAtual = null;
-    state._temaSubAtual = '';
+    if (modulo) state._sideModulosAbertos.add(modulo.id);
+    state._sideTemasAtivos.add(temaId);
   }
+  // Compat com código legado (chips antigos podem checar)
+  state._modAtual = null;
+  state._temaSubAtual = '';
 
   renderTelaQuestoes();
 }
@@ -8503,66 +8752,45 @@ function _statusDaQuestao(q, idxResp) {
 // re-render parcial sem perder estado quando trocam módulo/dificuldade/etc.)
 function renderTelaQuestoes() {
   const main = document.getElementById('main-content');
-  const modAtual    = state._modAtual;
   const difAtual    = state._difAtual || '';
   const provaAtual  = state._provaAtual || '';
-  const temaSubAtual = state._temaSubAtual || '';
   const statusAtual = state._statusRespAtual || '';
-  const naLista     = (state.questoesSelecionadas || []).length;
   const totalGeral  = (state.questoes || []).length;
   const idxResp     = _idxRespostasPorQuestao();
 
-  // Conta quantas questões cada módulo tem (pra mostrar badge nas chips)
-  const cntPorMod = {};
-  MODULOS.forEach(m => { cntPorMod[m.id] = 0; });
-  (state.questoes || []).forEach(q => {
-    const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
-    if (mod) cntPorMod[mod.id]++;
-  });
+  // Inicializa sets da sidebar (multi-seleção de temas + módulos abertos)
+  if (!(state._sideTemasAtivos instanceof Set))     state._sideTemasAtivos = new Set();
+  if (!(state._sideModulosAbertos instanceof Set))  state._sideModulosAbertos = new Set();
+  // Default: abre o módulo da semana atual
+  if (state._sideModulosAbertos.size === 0) {
+    const semAtual = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+    if (semAtual && semAtual.moduloId) state._sideModulosAbertos.add(semAtual.moduloId);
+  }
 
-  // Conta por dificuldade considerando módulo atual
+  // Conta por dificuldade (escopo: temas selecionados, se houver)
   const cntPorDif = { facil: 0, media: 0, dificil: 0 };
   (state.questoes || []).forEach(q => {
-    if (modAtual) {
-      const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
-      if (!mod || mod.id !== modAtual) return;
-    }
+    if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
     if (q.dificuldade && cntPorDif[q.dificuldade] != null) cntPorDif[q.dificuldade]++;
   });
 
-  // Temas do módulo atual (sub-chips). Só aparece quando módulo selecionado.
-  const modSel = modAtual ? MODULOS.find(m => m.id === modAtual) : null;
-  const temasDoMod = (modSel?.temas || []).map(tid => {
-    const t = TEMAS.find(x => x.id === tid);
-    if (!t) return null;
-    const cnt = (state.questoes || []).filter(q => q.tema === tid).length;
-    return { ...t, cnt };
-  }).filter(Boolean).filter(t => t.cnt > 0);
-
-  // Provas disponíveis (do banco). Conta considerando o módulo atual pra contagem fazer sentido.
+  // Provas disponíveis (escopo: temas selecionados)
   const cntPorProva = new Map();
   (state.questoes || []).forEach(q => {
     if (!q.prova) return;
-    if (modAtual) {
-      const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
-      if (!mod || mod.id !== modAtual) return;
-    }
+    if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
     cntPorProva.set(q.prova, (cntPorProva.get(q.prova) || 0) + 1);
   });
   const provas = [...cntPorProva.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
 
-  // Conta por status (não feita / acertei / errei) — escopo: módulo atual
+  // Conta por status — escopo: temas selecionados
   const cntStatus = { nao_feita: 0, acertei: 0, errei: 0 };
   (state.questoes || []).forEach(q => {
-    if (modAtual) {
-      const mod = MODULOS.find(m => (m.temas || []).includes(q.tema));
-      if (!mod || mod.id !== modAtual) return;
-    }
+    if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
     cntStatus[_statusDaQuestao(q, idxResp)]++;
   });
 
   // Semanas do curso disponíveis pra filtro (só as que têm temaId, ou seja, aula real).
-  // Conta também quantas questões cada semana tem (pelo tema).
   const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
   const semanaAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
   const semanasFiltraveis = cronoMerged
@@ -8585,58 +8813,13 @@ function renderTelaQuestoes() {
       Escolha questões pra montar sua lista de estudos. ${totalGeral} ${totalGeral === 1 ? 'questão disponível' : 'questões disponíveis'} no total.
     </p>
 
-    <!-- Topbar persistente: contador da lista + atalho -->
-    <div class="qbk-topbar">
-      <div class="qbk-topbar-info">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--radix-cyan,#0891b2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-        <b>${naLista}</b><span>${naLista === 1 ? 'questão na sua lista atual' : 'questões na sua lista atual'}</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        ${naLista > 0 ? `<button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="renderMontarLista()">Ver minha lista →</button>` : ''}
-        <button class="btn btn-danger" style="padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;" onclick="baixarQuestoesFiltradasPDF()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Baixar PDF
-        </button>
-      </div>
-    </div>
-
-    <!-- Busca em destaque (acima dos filtros) -->
+    <!-- Busca em destaque -->
     <div class="qbk-busca-wrap">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input type="text" id="filtro-busca" class="qbk-busca"
              placeholder="Buscar no texto da questão ou alternativas…"
              oninput="agendarFiltrarQuestoes()">
     </div>
-
-    <!-- Filtro: módulo (chips) -->
-    <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Módulo</div>
-      <div class="qbk-chips">
-        <button class="qbk-chip ${modAtual == null ? 'active' : ''}" onclick="selecionarModulo(null)">
-          Todos <span class="qbk-chip-count">(${totalGeral})</span>
-        </button>
-        ${MODULOS.map(mod => `
-          <button class="qbk-chip ${modAtual === mod.id ? 'active' : ''}" onclick="selecionarModulo('${mod.id}')">
-            ${mod.nome} <span class="qbk-chip-count">(${cntPorMod[mod.id] || 0})</span>
-          </button>
-        `).join('')}
-      </div>
-    </div>
-
-    ${temasDoMod.length > 0 ? `
-      <!-- Filtro: tema (sub-chips, só com módulo selecionado) -->
-      <div class="qbk-filtros-bloco">
-        <div class="qbk-filtros-label">Tema</div>
-        <div class="qbk-chips">
-          <button class="qbk-chip ${!temaSubAtual ? 'active' : ''}" onclick="selecionarTemaSub('')">Todos do módulo</button>
-          ${temasDoMod.map(t => `
-            <button class="qbk-chip ${temaSubAtual === t.id ? 'active' : ''}" onclick="selecionarTemaSub('${t.id}')">
-              ${t.nome} <span class="qbk-chip-count">(${t.cnt})</span>
-            </button>
-          `).join('')}
-        </div>
-      </div>
-    ` : ''}
 
     ${semanasFiltraveis.length > 0 ? `
       <!-- Filtro: semana do curso -->
@@ -8666,7 +8849,6 @@ function renderTelaQuestoes() {
     ` : ''}
 
     ${provas.length > 1 ? `
-      <!-- Filtro: prova -->
       <div class="qbk-filtros-bloco">
         <div class="qbk-filtros-label">Prova</div>
         <div class="qbk-chips">
@@ -8680,7 +8862,6 @@ function renderTelaQuestoes() {
       </div>
     ` : ''}
 
-    <!-- Filtro: dificuldade -->
     <div class="qbk-filtros-bloco">
       <div class="qbk-filtros-label">Dificuldade</div>
       <div class="qbk-chips">
@@ -8691,7 +8872,6 @@ function renderTelaQuestoes() {
       </div>
     </div>
 
-    <!-- Filtro: status do aluno -->
     <div class="qbk-filtros-bloco">
       <div class="qbk-filtros-label">Como eu fui</div>
       <div class="qbk-chips">
@@ -8711,20 +8891,200 @@ function renderTelaQuestoes() {
     <!-- Indicador de filtros ativos (rendered dinamicamente em filtrarQuestoes) -->
     <div id="qbk-filtros-ativos"></div>
 
-    <div id="lista-questoes"></div>
+    <!-- Layout 3 colunas: sidebar tree | resultados | cesta -->
+    <div class="qbk-3col">
+
+      <!-- Coluna 1: Sidebar de temas -->
+      <aside class="qbk-side">
+        <div class="qbk-col-titulo">
+          <span>Temas</span>
+          <button class="qbk-tree-limpar" onclick="limparTemasSidebar()">Limpar</button>
+        </div>
+        <div id="qbk-tree">${renderTreeTemas()}</div>
+      </aside>
+
+      <!-- Coluna 2: Resultados -->
+      <main id="lista-questoes"></main>
+
+      <!-- Coluna 3: Cesta -->
+      <aside class="qbk-cesta" id="qbk-cesta">
+        ${renderCestaLateral()}
+      </aside>
+
+    </div>
   `;
   filtrarQuestoes();
 }
 
-// Handlers das chips
-function selecionarModulo(modId) {
-  state._modAtual = modId || null;
-  // Trocou de módulo: resetar sub-filtros que dependem dele (tema do módulo)
-  state._temaSubAtual = '';
+// Renderiza a árvore de módulos > temas pra sidebar
+function renderTreeTemas() {
+  return MODULOS.map(mod => {
+    const temasDoMod = (mod.temas || []).map(tid => {
+      const t = TEMAS.find(x => x.id === tid);
+      if (!t) return null;
+      const cnt = (state.questoes || []).filter(q => q.tema === tid).length;
+      return { ...t, cnt };
+    }).filter(Boolean).filter(t => t.cnt > 0);
+    if (temasDoMod.length === 0) return '';
+    const cntMod = temasDoMod.reduce((s, t) => s + t.cnt, 0);
+    const aberto = state._sideModulosAbertos.has(mod.id);
+    const algumSel = temasDoMod.some(t => state._sideTemasAtivos.has(t.id));
+    return `
+      <div class="qbk-tree-mod ${aberto ? 'aberto' : ''}">
+        <div class="qbk-tree-mod-head" onclick="toggleModAbertoSidebar('${mod.id}')">
+          <svg class="qbk-tree-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="qbk-tree-mod-nome">${mod.nome}</span>
+          <span class="qbk-tree-mod-cnt ${algumSel ? 'has-sel' : ''}">${algumSel ? '● ' : ''}${cntMod}</span>
+        </div>
+        <div class="qbk-tree-temas">
+          ${temasDoMod.map(t => `
+            <label class="qbk-tree-tema">
+              <input type="checkbox" ${state._sideTemasAtivos.has(t.id) ? 'checked' : ''} onchange="toggleTemaSidebar('${t.id}')">
+              <span>${t.nome}</span>
+              <span class="qbk-tree-tema-cnt">${t.cnt}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Re-renderiza só a árvore (preserva foco e scroll do resto)
+function _refreshTreeTemas() {
+  const cont = document.getElementById('qbk-tree');
+  if (cont) cont.innerHTML = renderTreeTemas();
+}
+
+// Handlers da sidebar
+function toggleTemaSidebar(temaId) {
+  if (!(state._sideTemasAtivos instanceof Set)) state._sideTemasAtivos = new Set();
+  if (state._sideTemasAtivos.has(temaId)) state._sideTemasAtivos.delete(temaId);
+  else                                     state._sideTemasAtivos.add(temaId);
   state._paginaQuestoes = 0;
   state._expandidoQuestoes = new Set();
+  // Re-render completo pra atualizar contagens nos chips horizontais também
   renderTelaQuestoes();
 }
+function toggleModAbertoSidebar(modId) {
+  if (!(state._sideModulosAbertos instanceof Set)) state._sideModulosAbertos = new Set();
+  if (state._sideModulosAbertos.has(modId)) state._sideModulosAbertos.delete(modId);
+  else                                       state._sideModulosAbertos.add(modId);
+  _refreshTreeTemas();
+}
+function limparTemasSidebar() {
+  if (!(state._sideTemasAtivos instanceof Set)) state._sideTemasAtivos = new Set();
+  state._sideTemasAtivos.clear();
+  state._paginaQuestoes = 0;
+  renderTelaQuestoes();
+}
+
+// ===== Cesta lateral (substitui a antiga "Lista em construção") =====
+// Renderiza painel direito: contador + ações + lista das questões selecionadas.
+// Sempre renderiza um conteúdo válido — vazia mostra estado "carrinho vazio".
+function renderCestaLateral() {
+  const ids = state.questoesSelecionadas || [];
+  const n = ids.length;
+  const compactaTxt = state._cestaCompacta ? 'checked' : '';
+
+  if (n === 0) {
+    return `
+      <div class="qbk-col-titulo">
+        <span>Minha lista</span>
+      </div>
+      <div class="qbk-cesta-vazia">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <div>Sua lista está vazia.</div>
+        <div style="margin-top:6px;font-size:11.5px;">Clique em <b>+ Adicionar à lista</b> nos cards à esquerda.</div>
+      </div>`;
+  }
+
+  // Pega as questões na ordem em que foram adicionadas
+  const qs = ids
+    .map(id => (state.questoes || []).find(q => q.id === id))
+    .filter(Boolean);
+
+  // Render dos itens (compacto ou expandido conforme toggle)
+  const itensHtml = qs.map((q, idx) => {
+    const tema = TEMAS.find(t => t.id === q.tema);
+    const preview = String(q.enunciado || '')
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const previewCurto = preview.length > 90 ? preview.substring(0, 90) + '…' : preview;
+    const provaTxt = q.prova ? ` · ${String(q.prova).replace(/[<>&]/g,'')}` : '';
+    return `
+      <div class="qbk-cesta-item">
+        <div class="qbk-cesta-item-info">
+          <div class="qbk-cesta-item-meta">
+            <b>${String(idx + 1).padStart(2, '0')}</b>
+            <span>${tema ? tema.nome : '—'}${provaTxt}</span>
+          </div>
+          <div class="qbk-cesta-item-titulo">${previewCurto || 'Sem enunciado'}</div>
+        </div>
+        <button class="qbk-cesta-item-rm" onclick="removerDaCesta(${q.id})" title="Remover da lista">✕</button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="qbk-cesta-head">
+      <div class="qbk-cesta-titulo">Minha lista</div>
+      <span class="qbk-cesta-cnt">${n}</span>
+    </div>
+    <div class="qbk-cesta-acoes">
+      <button class="btn" onclick="abrirModalGerar()">📝 Estudar com essa lista</button>
+      <button class="btn btn-secondary" onclick="limparCestaLateral()" style="color:#DC2626;border-color:rgba(220,38,38,.3);">🗑 Limpar lista</button>
+    </div>
+    <label class="qbk-cesta-toggle">
+      <input type="checkbox" ${compactaTxt} onchange="toggleCestaCompacta(this.checked)">
+      Modo compacto
+    </label>
+    <div class="qbk-cesta-itens ${state._cestaCompacta ? '' : ''}">
+      ${itensHtml}
+    </div>
+  `;
+}
+
+// Re-render só do painel da cesta (preserva o resto da tela)
+function _refreshCestaLateral() {
+  const cont = document.getElementById('qbk-cesta');
+  if (cont) cont.innerHTML = renderCestaLateral();
+  if (cont) cont.classList.toggle('compacta', !!state._cestaCompacta);
+}
+
+function removerDaCesta(qid) {
+  if (!Array.isArray(state.questoesSelecionadas)) return;
+  state.questoesSelecionadas = state.questoesSelecionadas.filter(id => id !== qid);
+  salvarListaLocal();
+  atualizarBadgeLista();
+  _refreshCestaLateral();
+  // Atualiza o botão do card (se visível)
+  atualizarBotaoLista(qid);
+}
+
+function limparCestaLateral() {
+  if ((state.questoesSelecionadas || []).length === 0) return;
+  if (!confirm('Limpar todas as questões da lista? Você não vai perder as respostas, só remover da lista.')) return;
+  state.questoesSelecionadas = [];
+  salvarListaLocal();
+  atualizarBadgeLista();
+  _refreshCestaLateral();
+  // Atualiza os botões dos cards visíveis (volta pra "+ Adicionar")
+  document.querySelectorAll('[data-lista-btn]').forEach(btn => {
+    btn.innerHTML = '+ Adicionar à lista';
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-secondary');
+  });
+}
+
+function toggleCestaCompacta(val) {
+  state._cestaCompacta = !!val;
+  const cesta = document.getElementById('qbk-cesta');
+  if (cesta) cesta.classList.toggle('compacta', state._cestaCompacta);
+}
+
+// Handlers das chips (módulo/sub-tema viraram sidebar — removidos: selecionarModulo/selecionarTemaSub)
 function selecionarDificuldade(dif) {
   state._difAtual = dif || '';
   state._paginaQuestoes = 0;
@@ -8732,11 +9092,6 @@ function selecionarDificuldade(dif) {
 }
 function selecionarProva(prova) {
   state._provaAtual = prova || '';
-  state._paginaQuestoes = 0;
-  renderTelaQuestoes();
-}
-function selecionarTemaSub(temaId) {
-  state._temaSubAtual = temaId || '';
   state._paginaQuestoes = 0;
   renderTelaQuestoes();
 }
@@ -8758,13 +9113,16 @@ function _renderFiltrosAtivos() {
   if (!cont) return;
 
   const ativos = [];
-  if (state._modAtual) {
-    const mod = MODULOS.find(m => m.id === state._modAtual);
-    if (mod) ativos.push({ label: 'Módulo: ' + mod.nome, onClear: 'selecionarModulo(null)' });
-  }
-  if (state._temaSubAtual) {
-    const t = TEMAS.find(x => x.id === state._temaSubAtual);
-    if (t) ativos.push({ label: 'Tema: ' + t.nome, onClear: 'selecionarTemaSub(\'\')' });
+  // Temas selecionados na sidebar (multi-seleção) — uma pill por tema
+  const sideTemas = (state._sideTemasAtivos instanceof Set) ? state._sideTemasAtivos : new Set();
+  if (sideTemas.size > 0) {
+    sideTemas.forEach(tid => {
+      const t = TEMAS.find(x => x.id === tid);
+      if (t) ativos.push({
+        label: 'Tema: ' + t.nome,
+        onClear: `toggleTemaSidebar('${tid.replace(/'/g, "\\'")}')`
+      });
+    });
   }
   if (state._semanaFiltro) {
     const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
@@ -8826,13 +9184,15 @@ function _renderFiltrosAtivos() {
 }
 
 function limparTodosFiltros() {
-  state._modAtual = null;
   state._difAtual = '';
   state._provaAtual = '';
-  state._temaSubAtual = '';
   state._statusRespAtual = '';
   state._semanaFiltro = '';
   state._paginaQuestoes = 0;
+  if (state._sideTemasAtivos instanceof Set) state._sideTemasAtivos.clear();
+  // Compat: zera legados se ainda existirem em algum lugar
+  state._modAtual = null;
+  state._temaSubAtual = '';
   const buscaEl = document.getElementById('filtro-busca');
   if (buscaEl) buscaEl.value = '';
   renderTelaQuestoes();
@@ -8850,19 +9210,16 @@ const QBK_POR_PAGINA = 20;
 function filtrarQuestoes() {
   const buscaEl = document.getElementById('filtro-busca');
   const termo = _normBusca(buscaEl ? buscaEl.value : '');
-  const modAtual     = state._modAtual;
   const difAtual     = state._difAtual || '';
   const provaAtual   = state._provaAtual || '';
-  const temaSubAtual = state._temaSubAtual || '';
   const statusAtual  = state._statusRespAtual || '';
   const semanaFiltro = state._semanaFiltro || '';
+  const sideTemas = (state._sideTemasAtivos instanceof Set) ? state._sideTemasAtivos : new Set();
 
   let questoes = (state.questoes || []).slice();
-  // Módulo
-  if (modAtual) {
-    const mod = MODULOS.find(m => m.id === modAtual);
-    const temasDoMod = mod ? new Set(mod.temas || []) : new Set();
-    questoes = questoes.filter(q => temasDoMod.has(q.tema));
+  // Filtro multi-tema da sidebar — se algum tema marcado, filtra; senão, mostra tudo
+  if (sideTemas.size > 0) {
+    questoes = questoes.filter(q => sideTemas.has(q.tema));
   }
   // Filtro por semana do curso — mapeia semana → tema, e filtra pelo tema dela.
   // Se a semana não existir ou não tiver temaId, resulta em zero (intencional).
@@ -8876,8 +9233,6 @@ function filtrarQuestoes() {
       questoes = []; // semana sem tema (recesso/simulado) → nada
     }
   }
-  // Sub-filtro de tema (dentro do módulo)
-  if (temaSubAtual) questoes = questoes.filter(q => q.tema === temaSubAtual);
   // Prova
   if (provaAtual) questoes = questoes.filter(q => (q.prova || '') === provaAtual);
   // Dificuldade
@@ -8897,7 +9252,7 @@ function filtrarQuestoes() {
   if (!container) return;
 
   if (questoes.length === 0) {
-    const algumFiltroAtivo = !!(termo || modAtual || difAtual || provaAtual || temaSubAtual || statusAtual || semanaFiltro);
+    const algumFiltroAtivo = !!(termo || sideTemas.size > 0 || difAtual || provaAtual || statusAtual || semanaFiltro);
     const msg = termo
       ? `Nenhuma questão contém o texto <strong>"${(buscaEl.value||'').replace(/[<>&]/g,'')}"</strong>. Tente outras palavras ou limpe a busca.`
       : 'Nenhuma questão com esses filtros.';
