@@ -4711,6 +4711,234 @@
   margin: 0 8px;
 }
 
+  /* ===== Tela "Minhas Revisões" (aluno) ===== */
+  .rev-resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  @media (max-width: 700px) { .rev-resumo-grid { grid-template-columns: repeat(2, 1fr); } }
+  .rev-resumo-card {
+    background: var(--radix-surface, #fff);
+    border: 1px solid var(--radix-line, #e5e7eb);
+    border-radius: 12px;
+    padding: 14px 16px;
+    border-left-width: 4px;
+    text-align: center;
+  }
+  .rev-resumo-card.rev-urgente { border-left-color: #dc2626; background: rgba(254,226,226,0.30); }
+  .rev-resumo-card.rev-hoje    { border-left-color: var(--radix-cyan, #0891b2); background: rgba(207,250,254,0.40); }
+  .rev-resumo-card.rev-prox    { border-left-color: #f59e0b; background: rgba(254,243,199,0.25); }
+  .rev-resumo-card.rev-feita   { border-left-color: #10b981; background: rgba(209,250,229,0.30); }
+  .rev-resumo-card.rev-ok      { border-left-color: var(--radix-line-2, #d1d5db); }
+  .rev-resumo-n {
+    font-size: 26px; font-weight: 800; color: var(--radix-text, #111);
+    line-height: 1.05;
+  }
+  .rev-resumo-l {
+    font-size: 11.5px; font-weight: 700; color: var(--radix-text-muted, #6b7280);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;
+  }
+  .rev-resumo-card.rev-urgente .rev-resumo-n { color: #dc2626; }
+  .rev-resumo-card.rev-hoje    .rev-resumo-n { color: var(--radix-cyan, #0891b2); }
+  .rev-resumo-card.rev-prox    .rev-resumo-n { color: #b45309; }
+  .rev-resumo-card.rev-feita   .rev-resumo-n { color: #10b981; }
+
+  .rev-grupo {
+    background: var(--radix-surface, #fff);
+    border: 1px solid var(--radix-line, #e5e7eb);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .rev-grupo-head {
+    width: 100%;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--radix-text, #111);
+  }
+  .rev-grupo-head:hover { background: var(--radix-bg-2, #f9fafb); }
+  .rev-chevron {
+    width: 14px; height: 14px;
+    color: var(--radix-text-muted, #6b7280);
+    transition: transform .15s;
+    flex-shrink: 0;
+  }
+  .rev-grupo:not(.colapsado) .rev-chevron { transform: rotate(90deg); }
+  .rev-grupo-titulo {
+    flex: 1; font-weight: 700; font-size: 14px; text-align: left;
+  }
+  .rev-grupo-count {
+    background: var(--radix-bg-2, #f3f4f6);
+    color: var(--radix-text-muted, #6b7280);
+    font-weight: 800; font-size: 12px;
+    padding: 2px 10px; border-radius: 999px;
+    min-width: 28px; text-align: center;
+  }
+  .rev-grupo.colapsado .rev-grupo-itens { display: none; }
+  .rev-grupo-itens { border-top: 1px solid var(--radix-line, #e5e7eb); }
+  .rev-grupo:not(.colapsado) .rev-grupo-head { border-bottom: 1px solid var(--radix-line, #e5e7eb); }
+
+  .rev-item {
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--radix-line, #e5e7eb);
+    border-left: 4px solid transparent;
+  }
+  .rev-item:last-child { border-bottom: 0; }
+  .rev-item:hover { background: var(--radix-bg-2, #f9fafb); }
+
+  .rev-item.rev-status-atrasada { border-left-color: #dc2626; }
+  .rev-item.rev-status-hoje     { border-left-color: var(--radix-cyan, #0891b2); }
+  .rev-item.rev-status-em_breve { border-left-color: #f59e0b; }
+  .rev-item.rev-status-a_fazer  { border-left-color: #a855f7; }
+  .rev-item.rev-status-feita    { border-left-color: #10b981; opacity: 0.7; }
+  .rev-item.rev-status-feita .rev-item-tema,
+  .rev-item.rev-status-feita .rev-item-sem { text-decoration: line-through; text-decoration-color: rgba(16,185,129,0.5); }
+
+  .rev-item-corpo { min-width: 0; }
+  .rev-item-titulo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rev-item-sem {
+    background: var(--radix-bg-2, #f3f4f6);
+    color: var(--radix-text-muted, #6b7280);
+    font-size: 10.5px; font-weight: 800;
+    padding: 2px 8px; border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+  .rev-item-tema {
+    font-size: 14px; font-weight: 700; color: var(--radix-text, #111);
+  }
+  .rev-item-rev {
+    background: rgba(168,85,247,0.14); color: #7e22ce;
+    font-size: 10.5px; font-weight: 800;
+    padding: 2px 8px; border-radius: 6px;
+  }
+  .rev-item-meta {
+    display: block; font-size: 11.5px; color: var(--radix-text-muted, #6b7280); margin-top: 3px;
+  }
+  .rev-item-status {
+    font-size: 11.5px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--radix-bg-2, #f3f4f6);
+    color: var(--radix-text-muted, #6b7280);
+    white-space: nowrap;
+  }
+  .rev-item.rev-status-atrasada .rev-item-status { background: #dc2626; color: #fff; }
+  .rev-item.rev-status-hoje     .rev-item-status { background: var(--radix-cyan, #0891b2); color: #fff; }
+  .rev-item.rev-status-em_breve .rev-item-status { background: #f59e0b; color: #78350f; }
+  .rev-item.rev-status-a_fazer  .rev-item-status { background: rgba(168,85,247,0.14); color: #7e22ce; }
+  .rev-item.rev-status-feita    .rev-item-status { background: #10b981; color: #fff; }
+
+  .rev-item-abrir {
+    background: transparent;
+    border: 1px solid var(--radix-line-2, #d1d5db);
+    color: var(--radix-text-muted, #6b7280);
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .rev-item-abrir:hover {
+    border-color: var(--radix-cyan, #0891b2);
+    color: var(--radix-cyan, #0891b2);
+    background: rgba(34,211,238,0.06);
+  }
+  .rev-item.rev-saving { opacity: 0.6; pointer-events: none; }
+
+  /* Checkbox custom (mesmo padrão do .ebb-card-check) */
+  .rev-item-check { cursor: pointer; display: inline-flex; }
+  .rev-item-check input[type=checkbox] {
+    position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;
+  }
+  .rev-item-check-box {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--radix-line-2, #d1d5db);
+    background: var(--radix-surface, #fff);
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    color: transparent;
+  }
+  .rev-item-check-box svg { width: 14px; height: 14px; }
+  .rev-item-check:hover .rev-item-check-box {
+    border-color: #10b981; background: rgba(16,185,129,0.08);
+  }
+  .rev-item-check input:checked + .rev-item-check-box {
+    background: #10b981; border-color: #10b981; color: #fff;
+  }
+
+  /* === Card "Revisões pendentes" no dashboard do aluno === */
+  .dash-rev-alerta {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(34,211,238,0.10), rgba(168,85,247,0.06));
+    border: 1px solid rgba(34,211,238,0.30);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .dash-rev-alerta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px -10px rgba(34,211,238,0.4);
+  }
+  .dash-rev-alerta.dash-rev-urgente {
+    background: linear-gradient(135deg, rgba(254,226,226,0.55), rgba(254,243,199,0.30));
+    border-color: rgba(220,38,38,0.35);
+  }
+  .dash-rev-alerta.dash-rev-zero {
+    background: linear-gradient(135deg, rgba(209,250,229,0.45), rgba(207,250,254,0.30));
+    border-color: rgba(16,185,129,0.30);
+  }
+  .dash-rev-ico {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(34,211,238,0.15);
+    color: var(--radix-cyan, #0891b2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .dash-rev-alerta.dash-rev-urgente .dash-rev-ico { background: rgba(220,38,38,0.13); color: #dc2626; }
+  .dash-rev-alerta.dash-rev-zero    .dash-rev-ico { background: rgba(16,185,129,0.15); color: #10b981; }
+  .dash-rev-txt { flex: 1; min-width: 0; }
+  .dash-rev-titulo {
+    font-size: 14px; font-weight: 800; color: var(--radix-text, #111); margin: 0 0 3px;
+  }
+  .dash-rev-sub {
+    font-size: 12px; color: var(--radix-text-muted, #6b7280); margin: 0;
+  }
+  .dash-rev-cta {
+    background: var(--radix-cyan, #0891b2); color: #fff;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .dash-rev-alerta.dash-rev-urgente .dash-rev-cta { background: #dc2626; }
+  .dash-rev-alerta.dash-rev-zero    .dash-rev-cta { background: #10b981; }
+
+  /* Badge no card da semana do cronograma (revisão hoje/atrasada) */
+  .cron-semana-rev-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--radix-cyan, #0891b2); color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 2px 7px; border-radius: 999px;
+    box-shadow: 0 2px 6px -2px rgba(34,211,238,0.5);
+    display: inline-flex; align-items: center; gap: 3px;
+    pointer-events: none;
+  }
+  .cron-semana-rev-badge.rev-atrasada {
+    background: #dc2626;
+    box-shadow: 0 2px 6px -2px rgba(220,38,38,0.5);
+  }
+
   /* ===== Tela "Métricas dos alunos" (professor) ===== */
   .met-kpis {
     display: grid;
@@ -7142,6 +7370,9 @@ function renderDashboardAluno() {
       </div>
     </div>
 
+    <!-- Alerta de revisões pendentes (curva de Ebbinghaus) -->
+    ${_renderAlertaRevisoes()}
+
     <!-- Stats principais -->
     <div class="dash-stats-grid">
       <div class="dash-stat dash-stat-v3 v3-cyan">
@@ -7230,6 +7461,11 @@ function renderDashboardAluno() {
             <span>Minhas listas</span>
             <small>Listas salvas + em construção</small>
             <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:var(--radix-coral);"></span>
+          </div>
+          <div class="dash-atalho" onclick="renderMinhasRevisoes()">
+            <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg></div>
+            <span>Minhas revisões</span>
+            <small>Plano de Ebbinghaus</small>
           </div>
           <div class="dash-atalho" onclick="renderHistoricoSimulados()">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
@@ -15407,8 +15643,32 @@ function renderSemanaCard(s) {
                     s.tipo === 'revisao'  ? '<span class="cron-tipo revisao-tipo">REVISÃO</span>' :
                     s.tipo === 'evento'   ? '<span class="cron-tipo evento-tipo">EVENTO</span>' : '';
   const podeMarcar = s.tipo !== 'recesso';
+
+  // Badge de revisões urgentes (hoje + atrasadas) DESTA semana
+  let revBadge = '';
+  if (s.temaId && (st === 'em_estudo' || st === 'concluido')) {
+    const prog = state.progressoCronograma[s.n] || {};
+    let dataInicio = prog.data_inicio_estudo;
+    if (!dataInicio && s.data) {
+      const md = String(s.data).match(/^(\d{1,2})\/(\d{1,2})/);
+      if (md) dataInicio = '2026-' + md[2].padStart(2, '0') + '-' + md[1].padStart(2, '0');
+    }
+    if (dataInicio) {
+      const feitas = _feitasDoProgresso(prog);
+      const revs = calcularRevisoes(dataInicio, feitas);
+      const atrasadas = revs.filter(r => r.status === 'atrasada').length;
+      const hoje = revs.filter(r => r.status === 'hoje').length;
+      if (atrasadas > 0) {
+        revBadge = `<span class="cron-semana-rev-badge rev-atrasada" title="${atrasadas} ${atrasadas===1?'revisão atrasada':'revisões atrasadas'}">⚠ ${atrasadas}</span>`;
+      } else if (hoje > 0) {
+        revBadge = `<span class="cron-semana-rev-badge" title="${hoje} ${hoje===1?'revisão pra hoje':'revisões pra hoje'}">🔔 ${hoje}</span>`;
+      }
+    }
+  }
+
   return `
-    <div class="cron-semana ${st}" id="cron-sem-${s.n}" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
+    <div class="cron-semana ${st}" id="cron-sem-${s.n}" style="position:relative;" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
+      ${revBadge}
       <div class="cron-semana-topo">
         <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
         <div class="cron-semana-meta">
@@ -15501,6 +15761,275 @@ function _feitasDoProgresso(prog) {
     3: prog.rev_3_feita_em || null,
     4: prog.rev_4_feita_em || null
   };
+}
+
+// Lista TODAS as revisões previstas do aluno (semanas em_estudo ou concluido)
+// Retorna array com cada revisão + info da semana original (pra navegar).
+function _listarRevisoesAluno() {
+  const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+  const todas = [];
+  merged.forEach(s => {
+    if (!s.temaId || s.cancelada) return;          // só semanas com aula
+    const prog = state.progressoCronograma[s.n] || {};
+    if (prog.status !== 'em_estudo' && prog.status !== 'concluido') return;
+    // dataInicio: preferência pra preenchida pelo aluno; fallback pro cronograma
+    let dataInicio = prog.data_inicio_estudo;
+    if (!dataInicio && s.data) {
+      const md = String(s.data).match(/^(\d{1,2})\/(\d{1,2})/);
+      if (md) dataInicio = '2026-' + md[2].padStart(2, '0') + '-' + md[1].padStart(2, '0');
+    }
+    if (!dataInicio) return;
+    const tema = TEMAS.find(t => t.id === s.temaId);
+    const mod  = MODULOS.find(m => m.id === s.moduloId);
+    const feitas = _feitasDoProgresso(prog);
+    calcularRevisoes(dataInicio, feitas).forEach(r => {
+      todas.push({
+        ...r,
+        semanaN: s.n,
+        semanaTitulo: s.titulo || '',
+        semanaData: s.data || '',
+        temaNome: tema ? tema.nome : '—',
+        moduloId: s.moduloId,
+        moduloNome: mod ? mod.nome : '',
+        moduloCor: mod ? mod.cor : '#9ca3af'
+      });
+    });
+  });
+  return todas;
+}
+
+// Agrupa por urgência. Cada bucket já vem ordenado pelo critério mais útil.
+function _agruparRevisoes(todas) {
+  const g = { atrasadas: [], hoje: [], estaSemana: [], proximas30: [], futuras: [], feitas: [] };
+  todas.forEach(r => {
+    if (r.status === 'feita')        g.feitas.push(r);
+    else if (r.status === 'atrasada') g.atrasadas.push(r);
+    else if (r.status === 'hoje')     g.hoje.push(r);
+    else if (r.diasFalta <= 7)        g.estaSemana.push(r);
+    else if (r.diasFalta <= 30)       g.proximas30.push(r);
+    else                              g.futuras.push(r);
+  });
+  // Ordenação por relevância dentro de cada bucket
+  g.atrasadas.sort((a, b) => a.diasFalta - b.diasFalta);  // mais atrasada 1º
+  g.hoje.sort((a, b) => a.semanaN - b.semanaN);
+  g.estaSemana.sort((a, b) => a.diasFalta - b.diasFalta);
+  g.proximas30.sort((a, b) => a.diasFalta - b.diasFalta);
+  g.futuras.sort((a, b) => a.diasFalta - b.diasFalta);
+  g.feitas.sort((a, b) => String(b.feitaEm || '').localeCompare(String(a.feitaEm || '')));
+  return g;
+}
+
+// HTML do card de alerta no dashboard do aluno
+function _renderAlertaRevisoes() {
+  const c = _contagensRevisoes();
+  // Sem nenhuma revisão prevista — não mostra nada (semanas ainda em "nao_iniciado")
+  if (c.todas.length === 0) return '';
+
+  // Caso: tudo em dia (zero atrasadas + zero hoje + zero próximos 7 dias)
+  if (c.nUrgentes === 0 && c.nEstaSemana === 0) {
+    const futuras = c.grupos.proximas30.length + c.grupos.futuras.length;
+    return `
+      <div class="dash-rev-alerta dash-rev-zero" onclick="renderMinhasRevisoes()">
+        <div class="dash-rev-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="dash-rev-txt">
+          <p class="dash-rev-titulo">Suas revisões estão em dia 🎉</p>
+          <p class="dash-rev-sub">${futuras} ${futuras === 1 ? 'revisão programada' : 'revisões programadas'} pros próximos dias.</p>
+        </div>
+        <div class="dash-rev-cta">Ver plano →</div>
+      </div>`;
+  }
+
+  // Caso: tem coisas pra hoje OU atrasadas — alerta urgente
+  const partes = [];
+  if (c.nAtrasadas > 0) partes.push(`<b>${c.nAtrasadas}</b> atrasada${c.nAtrasadas === 1 ? '' : 's'}`);
+  if (c.nHoje > 0)      partes.push(`<b>${c.nHoje}</b> pra hoje`);
+  if (c.nEstaSemana > 0 && partes.length === 0) partes.push(`<b>${c.nEstaSemana}</b> nos próximos dias`);
+  const tituloPalavra = c.nHoje > 0 ? 'Revisões pra hoje' : (c.nAtrasadas > 0 ? 'Revisões atrasadas' : 'Revisões esta semana');
+  const ehUrgente = c.nUrgentes > 0;
+
+  // Lista compacta dos 3 itens mais urgentes
+  const top = []
+    .concat(c.grupos.atrasadas.slice(0, 3))
+    .concat(c.grupos.hoje.slice(0, Math.max(0, 3 - c.grupos.atrasadas.length)))
+    .concat(c.grupos.estaSemana.slice(0, Math.max(0, 3 - c.grupos.atrasadas.length - c.grupos.hoje.length)))
+    .slice(0, 3);
+  const topTxt = top.length === 0 ? '' : top.map(r =>
+    `<span style="display:inline-block;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;color:var(--radix-text,#111);margin:2px 4px 2px 0;">SEM ${String(r.semanaN).padStart(2,'0')} · ${(r.temaNome||'').slice(0,18)}</span>`
+  ).join('');
+
+  return `
+    <div class="dash-rev-alerta ${ehUrgente ? 'dash-rev-urgente' : ''}" onclick="renderMinhasRevisoes()">
+      <div class="dash-rev-ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+      </div>
+      <div class="dash-rev-txt">
+        <p class="dash-rev-titulo">${tituloPalavra}</p>
+        <p class="dash-rev-sub">Você tem ${partes.join(' e ')}. ${topTxt}</p>
+      </div>
+      <div class="dash-rev-cta">Ver lista →</div>
+    </div>`;
+}
+
+// Conta rapida pra o dashboard / badge
+function _contagensRevisoes() {
+  const all = _listarRevisoesAluno();
+  const g = _agruparRevisoes(all);
+  return {
+    todas: all,
+    grupos: g,
+    nHoje: g.hoje.length,
+    nAtrasadas: g.atrasadas.length,
+    nUrgentes: g.hoje.length + g.atrasadas.length,
+    nEstaSemana: g.estaSemana.length,
+    nFeitas: g.feitas.length,
+    nPendentes: g.atrasadas.length + g.hoje.length + g.estaSemana.length + g.proximas30.length + g.futuras.length
+  };
+}
+
+// ============================================================================
+// TELA "Minhas Revisões" — visão consolidada de TODAS as revisões pendentes
+// Agrupa por urgência: Atrasadas → Hoje → Esta semana → Próximos 30 dias → Futuras → Feitas
+// O aluno marca como feita direto da lista (sem precisar abrir o editor da semana).
+// ============================================================================
+function renderMinhasRevisoes() {
+  state.view = 'minhas-revisoes';
+  const main = document.getElementById('main-content');
+  if (state._revFiltroMod === undefined) state._revFiltroMod = '';
+  if (state._revMostrarFeitas === undefined) state._revMostrarFeitas = false;
+
+  const cont = _contagensRevisoes();
+  // Aplica filtro de módulo (se houver)
+  let all = cont.todas;
+  if (state._revFiltroMod) all = all.filter(r => r.moduloId === state._revFiltroMod);
+  const g = _agruparRevisoes(all);
+
+  // Header com totais
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minhas Revisões</div>
+    <h2 class="section-title">
+      <span class="section-title-accent"></span>
+      <span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg></span>
+      Minhas Revisões
+    </h2>
+    <p style="color:var(--radix-text-muted);font-size:13px;margin-top:-6px;margin-bottom:14px;">
+      Plano de revisões baseado na curva do esquecimento (Ebbinghaus). Marque conforme for fazendo — o app rastreia tudo.
+    </p>
+
+    <!-- Resumo em pills -->
+    <div class="rev-resumo-grid">
+      <div class="rev-resumo-card rev-${cont.nAtrasadas > 0 ? 'urgente' : 'ok'}">
+        <div class="rev-resumo-n">${cont.nAtrasadas}</div>
+        <div class="rev-resumo-l">${cont.nAtrasadas === 1 ? 'Atrasada' : 'Atrasadas'}</div>
+      </div>
+      <div class="rev-resumo-card rev-${cont.nHoje > 0 ? 'hoje' : 'ok'}">
+        <div class="rev-resumo-n">${cont.nHoje}</div>
+        <div class="rev-resumo-l">${cont.nHoje === 1 ? 'É hoje' : 'Hoje'}</div>
+      </div>
+      <div class="rev-resumo-card rev-prox">
+        <div class="rev-resumo-n">${cont.nEstaSemana}</div>
+        <div class="rev-resumo-l">Esta semana</div>
+      </div>
+      <div class="rev-resumo-card rev-feita">
+        <div class="rev-resumo-n">${cont.nFeitas}</div>
+        <div class="rev-resumo-l">${cont.nFeitas === 1 ? 'Feita' : 'Feitas'}</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 12px;">
+      <select onchange="state._revFiltroMod=this.value;renderMinhasRevisoes();"
+              style="padding:8px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:13px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);min-width:240px;">
+        <option value="" ${!state._revFiltroMod?'selected':''}>Todos os módulos</option>
+        ${MODULOS.map(m => `<option value="${m.id}" ${state._revFiltroMod===m.id?'selected':''}>Módulo ${m.numero} — ${m.nome}</option>`).join('')}
+      </select>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--radix-text-muted);cursor:pointer;">
+        <input type="checkbox" ${state._revMostrarFeitas?'checked':''} onchange="state._revMostrarFeitas=this.checked;renderMinhasRevisoes();">
+        Mostrar revisões já feitas
+      </label>
+    </div>
+
+    ${all.length === 0 ? `
+      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface,#fff);border-radius:14px;border:1px dashed var(--radix-line,#e5e7eb);color:var(--radix-text-muted);">
+        <div style="font-size:42px;margin-bottom:8px;">🌱</div>
+        <p style="margin:0 0 6px;font-size:14px;"><b>Você ainda não tem revisões previstas.</b></p>
+        <p style="margin:0;font-size:12.5px;">Abra uma semana no Cronograma, marque como <b>"Em estudo"</b> e defina a data de início. As revisões aparecem aqui automaticamente.</p>
+      </div>
+    ` : `
+      ${_renderGrupoRevisao('atrasadas',   '🔴 Atrasadas',           g.atrasadas,    true)}
+      ${_renderGrupoRevisao('hoje',        '🔵 Hoje',                g.hoje,         true)}
+      ${_renderGrupoRevisao('estaSemana',  '🟠 Próximos 7 dias',     g.estaSemana,   true)}
+      ${_renderGrupoRevisao('proximas30',  '🟣 Próximos 30 dias',    g.proximas30,   false)}
+      ${_renderGrupoRevisao('futuras',     '⚪ Mais distantes',      g.futuras,      false)}
+      ${state._revMostrarFeitas ? _renderGrupoRevisao('feitas', '✅ Feitas', g.feitas, false) : ''}
+    `}
+  `;
+}
+
+// Renderiza um grupo de revisões (Atrasadas / Hoje / etc.)
+// expandidoPadrão: se true, o grupo abre por padrão; senão fica colapsado
+function _renderGrupoRevisao(chave, titulo, revs, expandidoPadrao) {
+  if (!revs || revs.length === 0) return '';
+  if (state._revGrupoColapso === undefined) state._revGrupoColapso = {};
+  // Define estado inicial conforme padrão; mantém escolha do usuário
+  if (state._revGrupoColapso[chave] === undefined) {
+    state._revGrupoColapso[chave] = !expandidoPadrao;
+  }
+  const colapsado = state._revGrupoColapso[chave];
+  const itensHtml = revs.map(r => {
+    const lbl = _revStatusLabel(r);
+    const checked = r.status === 'feita';
+    const detalhe = r.feitaEm
+      ? `<span class="rev-item-meta">Marcada em ${(() => { const m=String(r.feitaEm).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?(m[3]+'/'+m[2]+'/'+m[1]):r.feitaEm; })()}</span>`
+      : `<span class="rev-item-meta">Sugerida: ${r.dataBR}</span>`;
+    return `
+      <div class="rev-item rev-status-${r.status}">
+        <label class="rev-item-check" title="${checked ? 'Desmarcar revisão' : 'Marcar como feita'}">
+          <input type="checkbox" ${checked ? 'checked' : ''}
+                 onchange="marcarRevisaoTela(${r.semanaN}, ${r.n}, this.checked, this)">
+          <span class="rev-item-check-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+        </label>
+        <div class="rev-item-corpo">
+          <div class="rev-item-titulo">
+            <span class="rev-item-sem">SEM ${String(r.semanaN).padStart(2,'0')}</span>
+            <span class="rev-item-tema">${(r.temaNome || '').replace(/[<>&]/g,'')}</span>
+            <span class="rev-item-rev">R${r.n}</span>
+          </div>
+          ${detalhe}
+        </div>
+        <span class="rev-item-status">${lbl}</span>
+        <button class="rev-item-abrir" onclick="abrirSemanaDeRevisao(${r.semanaN})" title="Abrir a semana no cronograma">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="rev-grupo rev-grupo-${chave} ${colapsado ? 'colapsado' : ''}">
+      <button class="rev-grupo-head" onclick="_toggleGrupoRev('${chave}')">
+        <svg class="rev-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="rev-grupo-titulo">${titulo}</span>
+        <span class="rev-grupo-count">${revs.length}</span>
+      </button>
+      <div class="rev-grupo-itens">${itensHtml}</div>
+    </div>`;
+}
+
+function _toggleGrupoRev(chave) {
+  if (!state._revGrupoColapso) state._revGrupoColapso = {};
+  state._revGrupoColapso[chave] = !state._revGrupoColapso[chave];
+  renderMinhasRevisoes();
+}
+
+// Atalho: vai pro cronograma com foco/scroll na semana e abre o editor
+function abrirSemanaDeRevisao(n) {
+  // Reusa o sistema de foco já implementado em renderCronograma
+  renderCronograma(n);
+  // Espera um beat e abre o editor da semana
+  setTimeout(() => abrirEditorSemana(n), 500);
 }
 
 function abrirEditorSemana(n) {
@@ -15751,40 +16280,58 @@ function atualizarRevisoesEbbinghaus() {
 async function toggleRevisaoFeita(revN, marcar, inputEl) {
   const n = state.semanaEditando;
   if (n == null) return;
-  // Atualiza state local primeiro (otimista)
-  if (!state.progressoCronograma[n]) state.progressoCronograma[n] = { status: 'em_estudo', tecnicas: [], nota_pessoal: '' };
-  const prog = state.progressoCronograma[n];
-  const campo = 'rev_' + revN + '_feita_em';
-  prog[campo] = marcar ? new Date().toISOString().slice(0, 10) : null;
-
-  // Visual de loading no card (desabilita o checkbox)
   const card = inputEl && inputEl.closest('.ebb-card');
   if (card) card.classList.add('ebb-saving');
   if (inputEl) inputEl.disabled = true;
+  await _salvarMarcaRevisao(n, revN, marcar);
+  if (card) card.classList.remove('ebb-saving');
+  if (inputEl) inputEl.disabled = false;
+  // Re-renderiza o painel pra atualizar o visual do card
+  atualizarRevisoesEbbinghaus();
+}
 
-  // Persiste no banco com fallback gracioso (se SQL nao rodou, ignora silenciosamente)
+// Helper genérico — usado pelo toggleRevisaoFeita (modal) e marcarRevisaoTela (tela global).
+// Atualiza state local + persiste no banco com fallback gracioso.
+async function _salvarMarcaRevisao(semanaN, revN, marcar) {
+  if (!state.progressoCronograma[semanaN]) {
+    state.progressoCronograma[semanaN] = { status: 'em_estudo', tecnicas: [], nota_pessoal: '' };
+  }
+  const prog = state.progressoCronograma[semanaN];
+  const campo = 'rev_' + revN + '_feita_em';
+  const valorAnt = prog[campo];
+  prog[campo] = marcar ? new Date().toISOString().slice(0, 10) : null;
+
   try {
     const upd = { [campo]: prog[campo] };
     const { error } = await sb.from('progresso_semanas').update(upd)
       .eq('aluno_id', state.usuario.id)
-      .eq('semana_numero', n);
+      .eq('semana_numero', semanaN);
     if (error) {
       if (/column|coluna/i.test(error.message || '')) {
-        console.warn('[toggleRevisaoFeita] Colunas rev_*_feita_em nao existem — rodar SQL_revisoes_feitas.sql no Supabase.');
+        console.warn('[_salvarMarcaRevisao] Colunas rev_*_feita_em nao existem — rodar SQL_revisoes_feitas.sql no Supabase.');
       } else {
-        // Reverte state local em caso de erro
-        prog[campo] = marcar ? null : new Date().toISOString().slice(0, 10);
+        prog[campo] = valorAnt;  // reverte
         alert('Erro ao salvar revisao: ' + error.message);
+        return false;
       }
     }
   } catch (e) {
-    console.warn('[toggleRevisaoFeita] Exceção:', e);
+    console.warn('[_salvarMarcaRevisao] Exceção:', e);
+    prog[campo] = valorAnt;
+    return false;
   }
+  return true;
+}
 
-  // Re-renderiza o painel pra atualizar o visual do card (cor, label de status)
-  if (card) card.classList.remove('ebb-saving');
+// Toggle chamado pela tela "Minhas Revisões" (fora do editor de semana)
+async function marcarRevisaoTela(semanaN, revN, marcar, inputEl) {
+  const row = inputEl && inputEl.closest('.rev-item');
+  if (row) row.classList.add('rev-saving');
+  if (inputEl) inputEl.disabled = true;
+  await _salvarMarcaRevisao(semanaN, revN, marcar);
+  if (row) row.classList.remove('rev-saving');
   if (inputEl) inputEl.disabled = false;
-  atualizarRevisoesEbbinghaus();
+  renderMinhasRevisoes();  // re-render pra atualizar grupos
 }
 
 // Calcula % geral = sum(acertos) / sum(feitas) * 100
