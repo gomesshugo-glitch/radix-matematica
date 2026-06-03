@@ -4712,52 +4712,43 @@
 }
 
   /* ===== Caderno de Erros ===== */
-  /* KPIs do topo — single card com 4 segmentos divididos por linhas */
+  /* KPIs do topo — 4 cards separados, ícone grande à esquerda */
   .ce-kpis {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    background: var(--radix-surface);
-    border: 1px solid var(--radix-line);
-    border-radius: 12px;
-    overflow: hidden;
+    gap: 12px;
     margin-bottom: 16px;
   }
   @media (max-width: 640px) { .ce-kpis { grid-template-columns: repeat(2, 1fr); } }
   .ce-kpi {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 18px;
-    border-right: 1px solid var(--radix-line);
-    border-top: 4px solid transparent;
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px;
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    border-radius: 14px;
     position: relative;
+    transition: transform .15s, box-shadow .15s;
   }
-  .ce-kpi:last-child { border-right: 0; }
-  @media (max-width: 640px) {
-    .ce-kpi:nth-child(2) { border-right: 0; }
-    .ce-kpi:nth-child(1), .ce-kpi:nth-child(2) { border-bottom: 1px solid var(--radix-line); }
-  }
-  .ce-kpi.kpi-alta   { border-top-color: #dc2626; }
-  .ce-kpi.kpi-media  { border-top-color: #f59e0b; }
-  .ce-kpi.kpi-baixa  { border-top-color: var(--radix-cyan); }
-  .ce-kpi.kpi-resolv { border-top-color: #10b981; }
+  .ce-kpi:hover { transform: translateY(-1px); box-shadow: 0 8px 18px -10px rgba(0,0,0,.10); }
 
   .ce-kpi-ico {
-    width: 38px; height: 38px; border-radius: 10px;
+    width: 48px; height: 48px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
+    flex-shrink: 0;
   }
-  .ce-kpi-ico svg { width: 20px; height: 20px; }
-  .ce-kpi.kpi-alta   .ce-kpi-ico { background: rgba(220,38,38,.12); color: #dc2626; }
-  .ce-kpi.kpi-media  .ce-kpi-ico { background: rgba(245,158,11,.14); color: #b45309; }
-  .ce-kpi.kpi-baixa  .ce-kpi-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan); }
-  .ce-kpi.kpi-resolv .ce-kpi-ico { background: rgba(16,185,129,.14); color: #10b981; }
+  .ce-kpi-ico svg { width: 26px; height: 26px; }
+  .ce-kpi.kpi-alta   .ce-kpi-ico { background: rgba(220,38,38,.14); color: #dc2626; }
+  .ce-kpi.kpi-media  .ce-kpi-ico { background: rgba(245,158,11,.16); color: #b45309; }
+  .ce-kpi.kpi-baixa  .ce-kpi-ico { background: rgba(34,211,238,.16); color: var(--radix-cyan); }
+  .ce-kpi.kpi-resolv .ce-kpi-ico { background: rgba(16,185,129,.16); color: #10b981; }
 
   .ce-kpi-corpo { min-width: 0; }
   .ce-kpi .v {
-    font-size: 28px; font-weight: 800; color: var(--radix-text);
+    font-size: 30px; font-weight: 800; color: var(--radix-text);
     line-height: 1; display: block;
   }
   .ce-kpi .l {
     font-size: 11px; font-weight: 700; color: var(--radix-text-muted);
-    text-transform: uppercase; letter-spacing: 0.04em; margin-top: 3px;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 5px;
     display: block;
   }
   .ce-kpi.kpi-alta .v   { color: #dc2626; }
@@ -4787,6 +4778,104 @@
   .ce-vazio-tit { margin: 0 0 4px; font-size: 15px; font-weight: 800; color: var(--radix-text); }
   .ce-vazio-sub { margin: 0; font-size: 12.5px; color: var(--radix-text-muted); line-height: 1.45; }
   .ce-vazio .btn { flex-shrink: 0; }
+
+  /* === Lista compacta (formato linha) === */
+  .ce-lista {
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .ce-secao + .ce-secao { border-top: 1px solid var(--radix-line); }
+  .ce-secao-head {
+    width: 100%;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--radix-bg-2, #f9fafb);
+    border: 0; border-bottom: 1px solid var(--radix-line);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--radix-text);
+    text-align: left;
+  }
+  .ce-secao-head:hover { background: var(--radix-bg, #f3f6fa); }
+  .ce-secao-chev {
+    width: 12px; height: 12px;
+    color: var(--radix-text-muted);
+    transition: transform .15s; flex-shrink: 0;
+  }
+  .ce-secao:not(.colapsada) .ce-secao-chev { transform: rotate(90deg); }
+  .ce-secao-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .ce-secao-titulo {
+    flex: 1; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--radix-text-2, #374151);
+  }
+  .ce-secao-count {
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    color: var(--radix-text-muted);
+    padding: 1px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 800;
+  }
+  .ce-secao.colapsada .ce-secao-linhas { display: none; }
+
+  /* Linha compacta de erro */
+  .ce-linha {
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--radix-line);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .ce-linha:last-child { border-bottom: 0; }
+  .ce-linha:hover { background: var(--radix-bg-2, #f9fafb); }
+  .ce-linha-ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px;
+  }
+  .ce-linha-ico svg { width: 18px; height: 18px; }
+  .ce-linha-titulo {
+    font-size: 13.5px; font-weight: 600; color: var(--radix-text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+  }
+  .ce-linha-meta {
+    font-size: 11px; color: var(--radix-text-muted);
+    white-space: nowrap;
+  }
+  .ce-linha-data {
+    font-size: 11.5px; color: var(--radix-text-muted);
+    white-space: nowrap;
+    min-width: 70px; text-align: right;
+  }
+  .ce-linha-btn {
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line-2, #d1d5db);
+    color: var(--radix-text-2, #374151);
+    font-family: inherit; font-size: 11.5px; font-weight: 700;
+    padding: 5px 12px; border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .12s;
+  }
+  .ce-linha-btn:hover {
+    border-color: var(--radix-cyan, #0891b2);
+    color: var(--radix-cyan, #0891b2);
+    background: rgba(34,211,238,.06);
+  }
+  .ce-linha.resolvida { opacity: 0.65; }
+  .ce-linha.resolvida .ce-linha-titulo { text-decoration: line-through; text-decoration-color: rgba(16,185,129,0.5); }
+  @media (max-width: 700px) {
+    .ce-linha { grid-template-columns: 28px 1fr auto; }
+    .ce-linha .ce-linha-meta, .ce-linha .ce-linha-data { display: none; }
+  }
 
   /* Grupo (Alta/Média/Baixa/Resolvidos) */
   .ce-grupo {
@@ -16598,10 +16687,15 @@ function abrirModalErro(opcoes) {
         <input type="hidden" id="ce-modal-questao" value="${questaoId || ''}">
         <input type="hidden" id="ce-modal-id" value="${editando ? editando.id : ''}">
 
-        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:18px;border-top:1px solid var(--radix-line);margin-top:20px;align-items:center;">
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:18px;border-top:1px solid var(--radix-line);margin-top:20px;align-items:center;flex-wrap:wrap;">
           ${editando ? `<button class="btn btn-secondary" style="color:#dc2626;margin-right:auto;display:inline-flex;align-items:center;gap:6px;" onclick="excluirErroNoModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Excluir
+          </button>` : ''}
+          ${editando ? `<button class="btn btn-secondary" onclick="toggleResolvidoErro('${editando.id}');fecharModalErro();" style="padding:10px 16px;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;color:${editando.resolvido ? 'var(--radix-text-muted)' : '#10b981'};">
+            ${editando.resolvido
+              ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg> Reabrir'
+              : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Marcar resolvido'}
           </button>` : ''}
           <button class="btn btn-secondary" onclick="fecharModalErro()" style="padding:10px 20px;font-size:14px;">Cancelar</button>
           <button class="btn btn-success" onclick="salvarErroNoModal()" style="padding:10px 20px;font-size:14px;display:inline-flex;align-items:center;gap:7px;">
@@ -16657,8 +16751,12 @@ async function salvarErroNoModal() {
     semana_numero: semanaN,
     tema_id: temaId,
     titulo, descricao, causa, aprendizado,
-    categoria, prioridade,
-    questao_id: questaoId
+    categoria, prioridade
+    // questao_id removido: a FK pra `questoes` conflita quando o id local
+    // não bate com o id no banco. O número da questão fica no título.
+    // Se quiser ativar de novo, rode SQL_caderno_erros_fix_fk.sql pra
+    // remover a constraint e descomente a linha abaixo.
+    // , questao_id: questaoId
   };
 
   try {
@@ -16674,10 +16772,19 @@ async function salvarErroNoModal() {
       state.cadernoErros.unshift(data);
     }
   } catch (e) {
-    if (/relation|table|does not exist/i.test(e.message || '')) {
+    const msg = e?.message || JSON.stringify(e);
+    console.error('[caderno_erros] erro ao salvar:', e, '| payload:', payload);
+    // Só mostra o aviso "rode o SQL" se for ESPECIFICAMENTE a tabela que não existe
+    if (/relation "?caderno_erros"? does not exist|table "?caderno_erros"? does not exist/i.test(msg)) {
       alert('Caderno de erros ainda não está configurado no banco. Rode SQL_caderno_erros.sql no Supabase.');
+    } else if (/row.level security|rls|policy/i.test(msg)) {
+      alert('Erro de permissão (RLS):\n' + msg + '\n\nVerifique se as policies de caderno_erros foram criadas (parte do SQL_caderno_erros.sql).');
+    } else if (/violates.*foreign key|fkey/i.test(msg)) {
+      alert('Erro de referência:\n' + msg + '\n\nProvável: questao_id apontando pra questão que não existe. Veja o console (F12) pra detalhes.');
+    } else if (/check constraint/i.test(msg)) {
+      alert('Erro de validação:\n' + msg + '\n\nProvável: categoria ou prioridade fora do esperado.');
     } else {
-      alert('Erro ao salvar: ' + (e.message || e));
+      alert('Erro ao salvar:\n' + msg + '\n\nVeja o console (F12) pra mais detalhes.');
     }
     return;
   }
@@ -16850,10 +16957,12 @@ function renderCadernoErros() {
         <button class="btn" onclick="abrirModalErro()">+ Registrar primeiro erro</button>
       </div>
     ` : `
-      ${_renderGrupoErros(3, '🔴 Alta prioridade', grupos[3])}
-      ${_renderGrupoErros(2, '🟠 Média prioridade', grupos[2])}
-      ${_renderGrupoErros(1, '🔵 Baixa prioridade', grupos[1])}
-      ${state._ceMostrarResolv ? _renderGrupoErros('r', '✅ Resolvidos', resolvidos, true) : ''}
+      <div class="ce-lista">
+        ${_renderSecaoListaErros(3, 'Alta prioridade', grupos[3])}
+        ${_renderSecaoListaErros(2, 'Média prioridade', grupos[2])}
+        ${_renderSecaoListaErros(1, 'Baixa prioridade', grupos[1])}
+        ${state._ceMostrarResolv ? _renderSecaoListaErros('r', 'Resolvidos', resolvidos, true) : ''}
+      </div>
     `}
   `;
 }
@@ -16869,20 +16978,24 @@ function agendarFiltrarCaderno() {
   }, 200);
 }
 
-function _renderGrupoErros(chave, titulo, lista, ehResolv) {
+// Renderiza uma seção (Alta/Média/Baixa/Resolvidos) — separador sutil + linhas compactas
+function _renderSecaoListaErros(chave, titulo, lista, ehResolv) {
   if (!lista || lista.length === 0) return '';
   if (!state._ceColapso) state._ceColapso = {};
-  if (state._ceColapso[chave] === undefined) state._ceColapso[chave] = (chave === 1 || chave === 'r');  // Baixa e Resolvidos começam colapsados
+  if (state._ceColapso[chave] === undefined) state._ceColapso[chave] = (chave === 1 || chave === 'r');
   const colapsado = state._ceColapso[chave];
-  const itens = lista.map(e => _renderCardErro(e, ehResolv)).join('');
+  // Cores semânticas pra cada seção
+  const corBadge = { 3: '#dc2626', 2: '#b45309', 1: 'var(--radix-cyan, #0891b2)', 'r': '#10b981' }[chave];
+  const linhas = lista.map(e => _renderLinhaErro(e, ehResolv)).join('');
   return `
-    <div class="ce-grupo ${colapsado ? 'colapsado' : ''}">
-      <button class="ce-grupo-head" onclick="_toggleGrupoErro('${chave}')">
-        <svg class="ce-grupo-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        <span class="ce-grupo-titulo">${titulo}</span>
-        <span class="ce-grupo-count">${lista.length}</span>
+    <div class="ce-secao ${colapsado ? 'colapsada' : ''}">
+      <button class="ce-secao-head" onclick="_toggleGrupoErro('${chave}')">
+        <svg class="ce-secao-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="ce-secao-dot" style="background:${corBadge};"></span>
+        <span class="ce-secao-titulo">${titulo}</span>
+        <span class="ce-secao-count">${lista.length}</span>
       </button>
-      <div class="ce-grupo-itens">${itens}</div>
+      <div class="ce-secao-linhas">${linhas}</div>
     </div>`;
 }
 function _toggleGrupoErro(chave) {
@@ -16891,41 +17004,32 @@ function _toggleGrupoErro(chave) {
   renderCadernoErros();
 }
 
-function _renderCardErro(e, ehResolv) {
+// Linha compacta — 1 linha por erro (ícone + título + data + botão)
+function _renderLinhaErro(e, ehResolv) {
   const cat = _catErroPorId(e.categoria);
   const pri = _priErroPorId(e.prioridade);
-  const tema = TEMAS.find(t => t.id === e.tema_id);
   const _esc = s => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
-  const dataMeta = ehResolv
-    ? (e.resolvido_em ? `Resolvido em ${e.resolvido_em.slice(8,10)}/${e.resolvido_em.slice(5,7)}/${e.resolvido_em.slice(0,4)}` : 'Resolvido')
-    : (e.criado_em ? `Registrado ${e.criado_em.slice(8,10)}/${e.criado_em.slice(5,7)}/${e.criado_em.slice(0,4)}` : '');
-  const camposExtras = (e.causa || e.aprendizado) ? `
-    <div class="ce-erro-campos">
-      ${e.causa ? `<div class="cc cc-causa"><b>Causa</b>${_esc(e.causa)}</div>` : ''}
-      ${e.aprendizado ? `<div class="cc cc-aprend"><b>Aprendizado</b>${_esc(e.aprendizado)}</div>` : ''}
-    </div>` : '';
-
+  // Data: usa resolvido_em pra resolvidos, criado_em pra ativos
+  const dataRaw = ehResolv ? e.resolvido_em : e.criado_em;
+  const dataBR = dataRaw
+    ? (dataRaw.slice(8,10) + '/' + dataRaw.slice(5,7) + '/' + dataRaw.slice(0,4))
+    : '—';
+  // Ícone de status: cor da prioridade (ou verde se resolvido) + SVG
+  const corIco = ehResolv ? '#10b981' : (pri.id === 3 ? '#dc2626' : pri.id === 2 ? '#b45309' : 'var(--radix-cyan, #0891b2)');
+  const svgIco = ehResolv ? _SVGI.check : (pri.id === 3 ? _SVGI.alerta : pri.id === 2 ? _SVGI.circulo : _SVGI.circuloO);
   return `
-    <div class="ce-erro ${ehResolv ? 'resolvido' : ''}">
-      <div class="ce-erro-cat c-${cat.id}">${cat.icone}</div>
-      <div class="ce-erro-corpo">
-        <div class="ce-erro-meta">
-          <span class="pill-sem">SEM ${String(e.semana_numero).padStart(2,'0')}</span>
-          <span class="pill-cat" style="color:${cat.cor};">${cat.icone} ${cat.nome}</span>
-          ${tema ? `<span style="color:var(--radix-text-muted);">·</span><span>${_esc(tema.nome)}</span>` : ''}
-          ${dataMeta ? `<span style="color:var(--radix-text-muted);">·</span><span>${dataMeta}</span>` : ''}
-        </div>
-        <h4 class="ce-erro-titulo">${_esc(e.titulo)}</h4>
-        ${e.descricao ? `<p class="ce-erro-desc">${_esc(e.descricao)}</p>` : ''}
-        ${camposExtras}
-      </div>
-      <div class="ce-erro-acoes">
-        <span class="pri-pill ${ehResolv ? 'pri-resolv' : 'pri-' + (pri.id === 3 ? 'alta' : pri.id === 2 ? 'media' : 'baixa')}">${ehResolv ? 'Resolvido' : pri.nome}</span>
-        <button class="ce-erro-btn-ico ok" title="${ehResolv ? 'Reabrir' : 'Marcar resolvido'}" onclick="toggleResolvidoErro('${e.id}')">${ehResolv ? '↺' : '✓'}</button>
-        <button class="ce-erro-btn-ico edit" title="Editar" onclick="abrirModalErro({erroId: '${e.id}'})">✏</button>
-        <button class="ce-erro-btn-ico del" title="Excluir" onclick="excluirErroDireto('${e.id}')">🗑</button>
-      </div>
+    <div class="ce-linha ${ehResolv ? 'resolvida' : ''}" onclick="verDetalheErro('${e.id}')">
+      <span class="ce-linha-ico" style="color:${corIco};">${svgIco}</span>
+      <span class="ce-linha-titulo">${_esc(e.titulo)}</span>
+      <span class="ce-linha-meta">SEM ${String(e.semana_numero).padStart(2,'0')} · ${cat.nome}</span>
+      <span class="ce-linha-data">${dataBR}</span>
+      <button class="ce-linha-btn" onclick="event.stopPropagation();verDetalheErro('${e.id}')">${ehResolv ? 'Ver detalhes' : 'Revisar'}</button>
     </div>`;
+}
+
+// Modal de detalhes/edição rápida
+function verDetalheErro(erroId) {
+  abrirModalErro({ erroId });
 }
 
 // =========================================================
