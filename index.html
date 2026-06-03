@@ -4711,6 +4711,320 @@
   margin: 0 8px;
 }
 
+  /* ===== Caderno de Erros ===== */
+  /* KPIs do topo */
+  .ce-kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 14px;
+  }
+  @media (max-width: 700px) { .ce-kpis { grid-template-columns: repeat(2, 1fr); } }
+  .ce-kpi {
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    border-left-width: 4px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .ce-kpi.kpi-alta   { border-left-color: #dc2626; background: rgba(254,226,226,.30); }
+  .ce-kpi.kpi-media  { border-left-color: #f59e0b; background: rgba(254,243,199,.25); }
+  .ce-kpi.kpi-baixa  { border-left-color: var(--radix-cyan); background: rgba(207,250,254,.30); }
+  .ce-kpi.kpi-resolv { border-left-color: #10b981; background: rgba(209,250,229,.30); }
+  .ce-kpi .v { font-size: 26px; font-weight: 800; color: var(--radix-text); line-height: 1.05; }
+  .ce-kpi .l {
+    font-size: 11px; font-weight: 700; color: var(--radix-text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;
+  }
+  .ce-kpi.kpi-alta .v   { color: #dc2626; }
+  .ce-kpi.kpi-media .v  { color: #b45309; }
+  .ce-kpi.kpi-baixa .v  { color: var(--radix-cyan); }
+  .ce-kpi.kpi-resolv .v { color: #10b981; }
+
+  /* Grupo (Alta/Média/Baixa/Resolvidos) */
+  .ce-grupo {
+    background: var(--radix-bg-2);
+    border: 1px solid var(--radix-line);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .ce-grupo-head {
+    width: 100%;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--radix-surface);
+    border: 0; border-bottom: 1px solid var(--radix-line);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--radix-text);
+  }
+  .ce-grupo-head:hover { background: var(--radix-bg-2); }
+  .ce-grupo-chev {
+    width: 14px; height: 14px; color: var(--radix-text-muted);
+    transition: transform .15s; flex-shrink: 0;
+  }
+  .ce-grupo:not(.colapsado) .ce-grupo-chev { transform: rotate(90deg); }
+  .ce-grupo-titulo { flex: 1; font-weight: 700; font-size: 14px; text-align: left; }
+  .ce-grupo-count {
+    background: var(--radix-bg-2); color: var(--radix-text-muted);
+    padding: 2px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 800;
+  }
+  .ce-grupo.colapsado .ce-grupo-itens { display: none; }
+  .ce-grupo:not(.colapsado) .ce-grupo-head { border-bottom: 1px solid var(--radix-line); }
+
+  /* Card de erro */
+  .ce-erro {
+    background: var(--radix-surface);
+    border-top: 1px solid var(--radix-line);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: start;
+  }
+  .ce-erro:first-of-type { border-top: 0; }
+  .ce-erro-cat {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .ce-erro-cat.c-conceitual    { background: rgba(59,130,246,.14); }
+  .ce-erro-cat.c-calculo       { background: rgba(245,158,11,.14); }
+  .ce-erro-cat.c-interpretacao { background: rgba(168,85,247,.14); }
+  .ce-erro-cat.c-distracao     { background: rgba(234,179,8,.18); }
+  .ce-erro-cat.c-formula       { background: rgba(220,38,38,.12); }
+  .ce-erro-cat.c-outro         { background: rgba(107,114,128,.18); }
+  .ce-erro-corpo { min-width: 0; }
+  .ce-erro-meta {
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    font-size: 11px; color: var(--radix-text-muted); margin-bottom: 4px;
+  }
+  .ce-erro-meta .pill-sem {
+    background: var(--radix-bg-2); padding: 2px 8px; border-radius: 6px;
+    font-weight: 800; letter-spacing: 0.05em; color: var(--radix-text-muted);
+  }
+  .ce-erro-meta .pill-cat {
+    font-weight: 700; padding: 2px 8px; border-radius: 6px;
+    background: var(--radix-bg-2);
+  }
+  .ce-erro-titulo {
+    font-size: 15px; font-weight: 700; color: var(--radix-text);
+    margin: 0 0 6px; line-height: 1.3;
+  }
+  .ce-erro-desc {
+    font-size: 12.5px; color: var(--radix-text-2);
+    margin: 0; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .ce-erro-campos {
+    margin-top: 8px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;
+  }
+  @media (max-width: 600px) { .ce-erro-campos { grid-template-columns: 1fr; } }
+  .ce-erro-campos .cc {
+    background: var(--radix-bg-2);
+    padding: 8px 10px; border-radius: 6px;
+    border-left: 3px solid var(--radix-line-2);
+  }
+  .ce-erro-campos .cc b {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--radix-text-muted); display: block; margin-bottom: 3px;
+  }
+  .ce-erro-campos .cc.cc-causa  { border-left-color: var(--radix-coral, #ff7a5c); }
+  .ce-erro-campos .cc.cc-aprend { border-left-color: #10b981; }
+
+  .ce-erro-acoes {
+    display: flex; flex-direction: column; gap: 4px;
+    align-items: flex-end;
+  }
+  .ce-erro-btn-ico {
+    width: 28px; height: 28px;
+    border: 1px solid var(--radix-line-2); background: var(--radix-surface);
+    border-radius: 7px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--radix-text-muted);
+    font-family: inherit;
+  }
+  .ce-erro-btn-ico.ok:hover   { color: #10b981; border-color: #10b981; background: rgba(16,185,129,.06); }
+  .ce-erro-btn-ico.edit:hover { color: var(--radix-cyan); border-color: var(--radix-cyan); }
+  .ce-erro-btn-ico.del:hover  { color: #dc2626; border-color: #dc2626; }
+
+  .ce-erro.resolvido {
+    background: rgba(209,250,229,.20); opacity: 0.85;
+  }
+  .ce-erro.resolvido .ce-erro-titulo {
+    text-decoration: line-through;
+    text-decoration-color: rgba(16,185,129,.45);
+  }
+  .ce-erro.resolvido .ce-erro-cat { opacity: 0.6; }
+
+  .pri-pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .pri-pill.pri-alta   { background: #dc2626; color: #fff; }
+  .pri-pill.pri-media  { background: #f59e0b; color: #78350f; }
+  .pri-pill.pri-baixa  { background: var(--radix-cyan); color: #fff; }
+  .pri-pill.pri-resolv { background: #10b981; color: #fff; }
+
+  /* Modal de adicionar/editar erro */
+  .ce-modal-form .ce-form-row { margin-bottom: 14px; }
+  .ce-modal-form .ce-form-row label {
+    display: block; font-size: 12px; font-weight: 700;
+    color: var(--radix-text-2); margin-bottom: 5px;
+  }
+  .ce-modal-form .ce-form-row label .opt {
+    font-weight: 500; color: var(--radix-text-muted); font-size: 11px;
+  }
+  .ce-modal-form input[type=text],
+  .ce-modal-form textarea {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--radix-line-2); border-radius: 8px;
+    font-family: inherit; font-size: 13.5px;
+    background: var(--radix-surface); color: var(--radix-text);
+    resize: vertical;
+  }
+  .ce-modal-form input[type=text]:focus,
+  .ce-modal-form textarea:focus {
+    outline: none; border-color: var(--radix-cyan);
+    box-shadow: 0 0 0 2px rgba(34,211,238,.15);
+  }
+  .ce-modal-form textarea { min-height: 56px; }
+  .ce-modal-form .ce-form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  @media (max-width: 540px) { .ce-modal-form .ce-form-grid { grid-template-columns: 1fr; } }
+  .ce-cat-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  }
+  @media (max-width: 540px) { .ce-cat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .ce-cat-opc {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 4px;
+    border: 1.5px solid var(--radix-line); background: var(--radix-surface);
+    border-radius: 8px; cursor: pointer;
+    font-size: 11px; font-weight: 600; color: var(--radix-text-2);
+    gap: 3px;
+  }
+  .ce-cat-opc.sel {
+    border-color: var(--radix-cyan); background: rgba(34,211,238,.06); color: var(--radix-cyan);
+  }
+  .ce-cat-opc .ico { font-size: 18px; }
+  .ce-pri-seg {
+    display: flex; gap: 4px;
+    background: var(--radix-bg-2);
+    padding: 3px; border-radius: 8px;
+  }
+  .ce-pri-seg button {
+    flex: 1; padding: 7px 10px;
+    border: 0; background: transparent; border-radius: 6px;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    color: var(--radix-text-muted); cursor: pointer;
+  }
+  .ce-pri-seg button.sel {
+    background: var(--radix-surface);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .ce-pri-seg button.sel.pri-1 { color: var(--radix-cyan); }
+  .ce-pri-seg button.sel.pri-2 { color: #b45309; }
+  .ce-pri-seg button.sel.pri-3 { color: #dc2626; }
+
+  /* Seção dentro do editor da semana */
+  .ce-na-semana {
+    background: rgba(168,85,247,.05);
+    border: 1px solid rgba(168,85,247,.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 14px 0;
+  }
+  .ce-na-semana-head {
+    display: flex; align-items: center; gap: 8px;
+    color: #7e22ce; font-weight: 700; font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .ce-na-semana-head .ico { font-size: 16px; }
+  .ce-na-semana-head .count {
+    background: rgba(168,85,247,.18); color: #7e22ce;
+    padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; margin-left: auto;
+  }
+  .ce-na-semana-itens { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .ce-na-semana-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: var(--radix-surface);
+    border: 1px solid var(--radix-line);
+    border-left-width: 3px;
+    border-radius: 6px;
+    font-size: 12.5px;
+  }
+  .ce-na-semana-item .pri-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .ce-na-semana-item .ce-name { flex: 1; color: var(--radix-text); font-weight: 600; }
+  .ce-na-semana-item .acoes { display: flex; gap: 3px; }
+  .ce-na-semana-item .mini-btn {
+    width: 24px; height: 24px;
+    border: 1px solid var(--radix-line); background: var(--radix-surface);
+    border-radius: 5px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--radix-text-muted); font-size: 11px;
+    font-family: inherit;
+  }
+  .ce-na-semana-item.resolvido { opacity: 0.6; }
+  .ce-na-semana-item.resolvido .ce-name { text-decoration: line-through; }
+  .ce-na-semana-add {
+    width: 100%; padding: 8px;
+    background: var(--radix-surface);
+    border: 1.5px dashed rgba(168,85,247,.4);
+    border-radius: 6px;
+    color: #7e22ce; font-weight: 700; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+  .ce-na-semana-add:hover { background: rgba(168,85,247,.06); }
+
+  /* Card de erros no dashboard do aluno */
+  .dash-ce-alerta {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(168,85,247,.10), rgba(220,38,38,.06));
+    border: 1px solid rgba(168,85,247,.30);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .dash-ce-alerta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px -10px rgba(168,85,247,.4);
+  }
+  .dash-ce-ico {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(168,85,247,.15);
+    color: #7e22ce;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .dash-ce-txt { flex: 1; min-width: 0; }
+  .dash-ce-tit { font-size: 14px; font-weight: 800; color: var(--radix-text); margin: 0 0 3px; }
+  .dash-ce-sub { font-size: 12px; color: var(--radix-text-muted); margin: 0; }
+  .dash-ce-cta {
+    background: #7e22ce; color: #fff;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 700; white-space: nowrap;
+  }
+
+  /* Badge no card de semana do cronograma */
+  .cron-semana-erro-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: #7e22ce; color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 2px 7px; border-radius: 999px;
+    box-shadow: 0 2px 6px -2px rgba(168,85,247,.5);
+    pointer-events: none;
+  }
+  /* Quando convive com badge de revisão (rev-badge ocupa top:8 right:8) */
+  .cron-semana.tem-rev-e-erro .cron-semana-erro-badge { right: 56px; }
+
   /* ===== Tela "Minhas Revisões" (aluno) ===== */
   .rev-resumo-grid {
     display: grid;
@@ -5851,7 +6165,7 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos()]);
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos(), carregarCadernoErros()]);
   carregarListaLocal();
   carregarListasSalvas();
 
@@ -7393,6 +7707,9 @@ function renderDashboardAluno() {
     <!-- Alerta de revisões pendentes (curva de Ebbinghaus) -->
     ${_renderAlertaRevisoes()}
 
+    <!-- Alerta de caderno de erros (alta prioridade) -->
+    ${_renderAlertaCaderno()}
+
     <!-- Stats principais -->
     <div class="dash-stats-grid">
       <div class="dash-stat dash-stat-v3 v3-cyan">
@@ -7486,6 +7803,11 @@ function renderDashboardAluno() {
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg></div>
             <span>Minhas revisões</span>
             <small>Plano de Ebbinghaus</small>
+          </div>
+          <div class="dash-atalho" onclick="renderCadernoErros()">
+            <div class="dash-atalho-icon" style="background:rgba(168,85,247,.14);color:#7e22ce;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
+            <span>Caderno de erros</span>
+            <small>Anote e revise</small>
           </div>
           <div class="dash-atalho" onclick="renderHistoricoSimulados()">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
@@ -10429,12 +10751,23 @@ function responderQuestao(qid, idx) {
     else if (i === idx) el.classList.add('errada');
     el.onclick = null;
   });
+  // Botão "Adicionar ao caderno de erros" SÓ aparece quando errou + perfil aluno + tem semana atual
+  const correto2 = idx === q.correta;
+  const semAtualResp = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  const podeCaderno = !correto2 && state.usuario?.perfil === 'aluno' && semAtualResp && semAtualResp.n;
+  const btnCaderno = podeCaderno ? `
+    <div style="margin-top:10px;">
+      <button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;" onclick="abrirModalErroDaQuestao(${qid})">
+        📕 Adicionar ao caderno de erros
+      </button>
+    </div>` : '';
   document.getElementById(`explicacao-${qid}`).innerHTML = `
     <div class="explicacao">
       <strong>${idx === q.correta ? '✓ Correto!' : '✗ Resposta incorreta.'}</strong><br>
       <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
       <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
       ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
+      ${btnCaderno}
     </div>
   `;
   const correto = idx === q.correta;
@@ -12823,23 +13156,33 @@ async function renderMetricasAlunos() {
   `;
 
   // === Queries em paralelo (RLS deve permitir professor ler tudo) ===
-  let perfis = [], respostas = [], progressos = [];
+  let perfis = [], respostas = [], progressos = [], cadernos = [];
   try {
-    const [r1, r2, r3] = await Promise.all([
+    const [r1, r2, r3, r4] = await Promise.all([
       sb.from('perfis').select('id, nome, email, turma, perfil, status, foto_base64, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
       sb.from('respostas').select('aluno_id, tema, correto, data_resposta, fonte'),
-      sb.from('progresso_semanas').select('*')
+      sb.from('progresso_semanas').select('*'),
+      sb.from('caderno_erros').select('aluno_id, resolvido')
     ]);
     if (r1.error) throw new Error('Perfis: ' + r1.error.message);
     perfis = r1.data || [];
     respostas = r2.data || [];     // se erro de RLS, vira []
     progressos = r3.data || [];
+    cadernos = r4.data || [];
     if (r2.error) console.warn('[metricas] erro respostas:', r2.error.message);
     if (r3.error) console.warn('[metricas] erro progressos:', r3.error.message);
+    if (r4.error) console.warn('[metricas] erro caderno_erros:', r4.error.message);
   } catch (e) {
     main.innerHTML += `<div style="padding:20px;color:#dc2626;">Erro: ${e.message}</div>`;
     return;
   }
+  // Indexa cadernos por aluno
+  const cadernoPorAluno = {};
+  cadernos.forEach(c => {
+    if (!cadernoPorAluno[c.aluno_id]) cadernoPorAluno[c.aluno_id] = { total: 0, resolvidos: 0 };
+    cadernoPorAluno[c.aluno_id].total++;
+    if (c.resolvido) cadernoPorAluno[c.aluno_id].resolvidos++;
+  });
 
   // === Indexar pra calcular métricas por aluno ===
   const respPorAluno = {};   // alunoId → [{tema, correto, data}, ...]
@@ -12900,6 +13243,8 @@ async function renderMetricasAlunos() {
     // Dias desde a última atividade
     const diasDesde = ultima ? Math.floor((Date.now() - new Date(ultima).getTime()) / 86400000) : null;
 
+    // Caderno de erros
+    const cad = cadernoPorAluno[p.id] || { total: 0, resolvidos: 0 };
     return {
       id: p.id, nome: p.nome || '(sem nome)', email: p.email || '',
       foto: p.foto_base64 || '',
@@ -12909,7 +13254,8 @@ async function renderMetricasAlunos() {
       etTotal,
       qEstudo, qEstudoA, taxaEstudo,
       revFeitas, revPrevistas,
-      ultima, ultimaBR, diasDesde
+      ultima, ultimaBR, diasDesde,
+      erroTotal: cad.total, erroResolv: cad.resolvidos
     };
   });
 
@@ -13051,6 +13397,7 @@ function _renderTabelaMetricas() {
             <th class="met-num" title="Horas registradas no campo ET">ET (h)</th>
             <th class="met-num" title="Questões feitas no registro de estudo (sala+casa)">Q estudo</th>
             <th class="met-num" title="Revisões marcadas como feitas / total previsto">Revisões</th>
+            <th class="met-num" title="Caderno de erros: resolvidos / total">📕 Erros</th>
             <th class="met-num" title="Dias desde a última atividade">Última</th>
           </tr>
         </thead>
@@ -13085,6 +13432,7 @@ function _renderTabelaMetricas() {
                 <td class="met-num">${l.etTotal.toString().replace('.', ',')}</td>
                 <td class="met-num">${l.qEstudo}${taxaEst}</td>
                 <td class="met-num"><b style="color:#10b981;">${revTxt}</b></td>
+                <td class="met-num">${l.erroTotal === 0 ? '—' : `<b style="color:#7e22ce;">${l.erroResolv}/${l.erroTotal}</b>`}</td>
                 <td class="met-num" style="color:${_diasCor(l.diasDesde)};">${diasTxt}</td>
               </tr>`;
           }).join('')}
@@ -13141,7 +13489,7 @@ function exportarMetricasCSV() {
     const s = String(v).replace(/"/g, '""');
     return /[,;"\n]/.test(s) ? '"' + s + '"' : s;
   };
-  const hdr = ['Nome','Email','Turma','Q resp.','Acertos','% acerto','Sem. concluidas','Sem. em estudo','ET (h)','Q estudo','Acertos estudo','% estudo','Revisoes feitas','Revisoes previstas','Ultima atividade'];
+  const hdr = ['Nome','Email','Turma','Q resp.','Acertos','% acerto','Sem. concluidas','Sem. em estudo','ET (h)','Q estudo','Acertos estudo','% estudo','Revisoes feitas','Revisoes previstas','Erros total','Erros resolvidos','Ultima atividade'];
   const body = linhas.map(l => [
     l.nome, l.email, l.turmaNome,
     l.qTotal, l.qAcertos, (l.taxa == null ? '' : l.taxa),
@@ -13149,6 +13497,7 @@ function exportarMetricasCSV() {
     l.etTotal.toString().replace('.', ','),
     l.qEstudo, l.qEstudoA, (l.taxaEstudo == null ? '' : l.taxaEstudo),
     l.revFeitas, l.revPrevistas,
+    l.erroTotal, l.erroResolv,
     l.ultima || ''
   ].map(esc).join(';'));
   const csv = '﻿' + hdr.join(';') + '\n' + body.join('\n');
@@ -15686,9 +16035,18 @@ function renderSemanaCard(s) {
     }
   }
 
+  // Badge de erros não-resolvidos da semana
+  const errosAtivos = _errosAtivos(_errosDaSemana(s.n));
+  let erroBadge = '';
+  if (errosAtivos.length > 0) {
+    erroBadge = `<span class="cron-semana-erro-badge" title="${errosAtivos.length} ${errosAtivos.length===1?'erro registrado':'erros registrados'}">📕 ${errosAtivos.length}</span>`;
+  }
+  const temAmbos = !!(revBadge && erroBadge);
+
   return `
-    <div class="cron-semana ${st}" id="cron-sem-${s.n}" style="position:relative;" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
+    <div class="cron-semana ${st} ${temAmbos ? 'tem-rev-e-erro' : ''}" id="cron-sem-${s.n}" style="position:relative;" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
       ${revBadge}
+      ${erroBadge}
       <div class="cron-semana-topo">
         <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
         <div class="cron-semana-meta">
@@ -15906,6 +16264,541 @@ function _contagensRevisoes() {
     nFeitas: g.feitas.length,
     nPendentes: g.atrasadas.length + g.hoje.length + g.estaSemana.length + g.proximas30.length + g.futuras.length
   };
+}
+
+// ============================================================================
+// CADERNO DE ERROS — loader, CRUD, modal, tela dedicada, integrações
+// ============================================================================
+
+async function carregarCadernoErros() {
+  state.cadernoErros = [];
+  if (!state.usuario?.id) return;
+  const { data, error } = await sb.from('caderno_erros')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .order('atualizado_em', { ascending: false });
+  if (error) {
+    if (/relation|table|does not exist/i.test(error.message || '')) {
+      console.warn('[caderno_erros] Tabela nao existe — rodar SQL_caderno_erros.sql no Supabase.');
+    } else {
+      console.warn('[caderno_erros] Erro carregando:', error.message);
+    }
+    return;
+  }
+  state.cadernoErros = data || [];
+}
+
+// Helpers
+function _errosDaSemana(n)        { return (state.cadernoErros || []).filter(e => e.semana_numero === n); }
+function _errosAtivos(arr)        { return (arr || []).filter(e => !e.resolvido); }
+function _errosResolvidos(arr)    { return (arr || []).filter(e =>  e.resolvido); }
+function _totalErrosAtivos()      { return _errosAtivos(state.cadernoErros).length; }
+function _totalErrosAltaPrior()   { return _errosAtivos(state.cadernoErros).filter(e => e.prioridade >= 3).length; }
+function _temasComErroNaSemana(n) {
+  const set = new Set();
+  _errosAtivos(_errosDaSemana(n)).forEach(e => { if (e.tema_id) set.add(e.tema_id); });
+  return set;
+}
+
+// =========================================================
+// MODAL: Adicionar / Editar erro
+// =========================================================
+// opcoes: { semanaN, semanaTitulo, temaId, erroId (pra editar), questaoId, pre: { titulo, categoria } }
+function abrirModalErro(opcoes) {
+  opcoes = opcoes || {};
+  const id = 'modal-caderno-erro';
+  const old = document.getElementById(id); if (old) old.remove();
+
+  // Se erroId, é edição; senão, novo
+  const editando = opcoes.erroId
+    ? (state.cadernoErros.find(e => e.id === opcoes.erroId) || null)
+    : null;
+
+  const semanaN = editando ? editando.semana_numero : (opcoes.semanaN || (typeof getSemanaAtual === 'function' ? (getSemanaAtual() || {}).n : null));
+  if (semanaN == null) { alert('Nao foi possivel identificar a semana. Abra o caderno pelo editor de uma semana.'); return; }
+  const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+  const sem = merged.find(s => s.n === semanaN) || {};
+  const temaId = editando ? editando.tema_id : (opcoes.temaId || sem.temaId || null);
+  const tituloPre = editando ? (editando.titulo || '') : (opcoes.pre?.titulo || '');
+  const descricaoPre = editando ? (editando.descricao || '') : '';
+  const causaPre = editando ? (editando.causa || '') : '';
+  const aprendPre = editando ? (editando.aprendizado || '') : '';
+  const categoriaPre = editando ? editando.categoria : (opcoes.pre?.categoria || 'outro');
+  const prioridadePre = editando ? editando.prioridade : 2;
+  const questaoId = editando ? editando.questao_id : (opcoes.questaoId || null);
+
+  // Cards de categoria
+  const catCards = CATEGORIAS_ERRO.map(c =>
+    `<div class="ce-cat-opc ${c.id === categoriaPre ? 'sel' : ''}" data-cat="${c.id}" onclick="_modalErroSelectCat('${c.id}')">
+      <span class="ico">${c.icone}</span>${c.nome}
+    </div>`).join('');
+
+  // Botões de prioridade
+  const priBtns = PRIORIDADES_ERRO.map(p =>
+    `<button class="${p.id === prioridadePre ? 'sel pri-' + p.id : ''}" data-pri="${p.id}" onclick="_modalErroSelectPri(${p.id})">${p.emoji} ${p.nome}</button>`
+  ).join('');
+
+  const escAttr = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const escTxt  = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const html = `
+    <div class="modal-overlay" id="${id}" onclick="if(event.target===this)fecharModalErro()">
+      <div class="modal ce-modal-form" style="max-width:560px;">
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--radix-line);margin-bottom:14px;">
+          <span style="font-size:22px;">📕</span>
+          <h2 style="margin:0;flex:1;font-size:16px;">${editando ? 'Editar erro' : 'Novo erro'}</h2>
+          <span style="background:var(--radix-bg-2);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:0.05em;color:var(--radix-text-muted);">SEM ${String(semanaN).padStart(2,'0')}</span>
+        </div>
+
+        <div class="ce-form-row">
+          <label>Título do erro <span style="color:#dc2626;">*</span></label>
+          <input type="text" id="ce-modal-titulo" placeholder="Ex: Confundi seno e cosseno" value="${escAttr(tituloPre)}" maxlength="200" autofocus>
+        </div>
+
+        <div class="ce-form-row">
+          <label>Categoria <span style="color:#dc2626;">*</span></label>
+          <div class="ce-cat-grid">${catCards}</div>
+          <input type="hidden" id="ce-modal-cat" value="${categoriaPre}">
+        </div>
+
+        <div class="ce-form-row">
+          <label>Prioridade</label>
+          <div class="ce-pri-seg" id="ce-modal-pri-seg">${priBtns}</div>
+          <input type="hidden" id="ce-modal-pri" value="${prioridadePre}">
+        </div>
+
+        <div class="ce-form-row">
+          <label>Descrição <span class="opt">(opcional — contexto do erro)</span></label>
+          <textarea id="ce-modal-desc" placeholder="O que aconteceu? Em qual questão ou momento?">${escTxt(descricaoPre)}</textarea>
+        </div>
+
+        <div class="ce-form-grid">
+          <div class="ce-form-row" style="margin-bottom:0;">
+            <label>Causa <span class="opt">(opcional)</span></label>
+            <textarea id="ce-modal-causa" placeholder="Por que você acha que errou?">${escTxt(causaPre)}</textarea>
+          </div>
+          <div class="ce-form-row" style="margin-bottom:0;">
+            <label>Aprendizado <span class="opt">(opcional)</span></label>
+            <textarea id="ce-modal-aprend" placeholder="O que vai fazer diferente?">${escTxt(aprendPre)}</textarea>
+          </div>
+        </div>
+
+        <input type="hidden" id="ce-modal-semana" value="${semanaN}">
+        <input type="hidden" id="ce-modal-tema" value="${escAttr(temaId || '')}">
+        <input type="hidden" id="ce-modal-questao" value="${questaoId || ''}">
+        <input type="hidden" id="ce-modal-id" value="${editando ? editando.id : ''}">
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--radix-line);margin-top:16px;">
+          ${editando ? `<button class="btn btn-secondary" style="color:#dc2626;margin-right:auto;" onclick="excluirErroNoModal()">🗑 Excluir</button>` : ''}
+          <button class="btn btn-secondary" onclick="fecharModalErro()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarErroNoModal()">${editando ? 'Salvar alterações' : '📕 Salvar erro'}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.body.classList.add('modal-open');
+  setTimeout(() => {
+    const inp = document.getElementById('ce-modal-titulo');
+    if (inp) { inp.focus(); inp.select(); }
+  }, 50);
+}
+function fecharModalErro() {
+  const m = document.getElementById('modal-caderno-erro');
+  if (m) m.remove();
+  if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
+}
+function _modalErroSelectCat(catId) {
+  document.querySelectorAll('#modal-caderno-erro .ce-cat-opc').forEach(el => {
+    el.classList.toggle('sel', el.dataset.cat === catId);
+  });
+  const h = document.getElementById('ce-modal-cat'); if (h) h.value = catId;
+}
+function _modalErroSelectPri(pri) {
+  document.querySelectorAll('#modal-caderno-erro .ce-pri-seg button').forEach(el => {
+    const sel = parseInt(el.dataset.pri, 10) === pri;
+    el.className = sel ? ('sel pri-' + pri) : '';
+  });
+  const h = document.getElementById('ce-modal-pri'); if (h) h.value = String(pri);
+}
+
+async function salvarErroNoModal() {
+  const _val = id => (document.getElementById(id)?.value || '').trim();
+  const titulo = _val('ce-modal-titulo');
+  if (!titulo) { alert('Informe o título do erro.'); return; }
+  const categoria = _val('ce-modal-cat') || 'outro';
+  const prioridade = parseInt(_val('ce-modal-pri'), 10) || 2;
+  const semanaN = parseInt(_val('ce-modal-semana'), 10);
+  const temaId = _val('ce-modal-tema') || null;
+  const descricao = _val('ce-modal-desc') || null;
+  const causa = _val('ce-modal-causa') || null;
+  const aprendizado = _val('ce-modal-aprend') || null;
+  const questaoIdRaw = _val('ce-modal-questao');
+  const questaoId = questaoIdRaw ? parseInt(questaoIdRaw, 10) : null;
+  const idExistente = _val('ce-modal-id');
+
+  const payload = {
+    aluno_id: state.usuario.id,
+    semana_numero: semanaN,
+    tema_id: temaId,
+    titulo, descricao, causa, aprendizado,
+    categoria, prioridade,
+    questao_id: questaoId
+  };
+
+  try {
+    if (idExistente) {
+      const { data, error } = await sb.from('caderno_erros').update(payload).eq('id', idExistente).select().single();
+      if (error) throw error;
+      // Atualiza state local
+      const idx = state.cadernoErros.findIndex(e => e.id === idExistente);
+      if (idx >= 0) state.cadernoErros[idx] = data; else state.cadernoErros.unshift(data);
+    } else {
+      const { data, error } = await sb.from('caderno_erros').insert(payload).select().single();
+      if (error) throw error;
+      state.cadernoErros.unshift(data);
+    }
+  } catch (e) {
+    if (/relation|table|does not exist/i.test(e.message || '')) {
+      alert('Caderno de erros ainda não está configurado no banco. Rode SQL_caderno_erros.sql no Supabase.');
+    } else {
+      alert('Erro ao salvar: ' + (e.message || e));
+    }
+    return;
+  }
+
+  fecharModalErro();
+  // Re-render do que estiver na tela
+  if (state.view === 'caderno-erros') renderCadernoErros();
+  // Se está com modal de editor de semana aberto, atualiza a seção compacta
+  _refreshSecaoCadernoNaSemana();
+}
+
+async function excluirErroNoModal() {
+  const idExistente = document.getElementById('ce-modal-id')?.value;
+  if (!idExistente) { fecharModalErro(); return; }
+  if (!confirm('Excluir este erro do seu caderno?')) return;
+  const { error } = await sb.from('caderno_erros').delete().eq('id', idExistente);
+  if (error) { alert('Erro ao excluir: ' + error.message); return; }
+  state.cadernoErros = state.cadernoErros.filter(e => e.id !== idExistente);
+  fecharModalErro();
+  if (state.view === 'caderno-erros') renderCadernoErros();
+  _refreshSecaoCadernoNaSemana();
+}
+
+async function toggleResolvidoErro(erroId) {
+  const erro = state.cadernoErros.find(e => e.id === erroId);
+  if (!erro) return;
+  const novoEstado = !erro.resolvido;
+  const upd = {
+    resolvido: novoEstado,
+    resolvido_em: novoEstado ? new Date().toISOString().slice(0, 10) : null
+  };
+  const { data, error } = await sb.from('caderno_erros').update(upd).eq('id', erroId).select().single();
+  if (error) { alert('Erro ao atualizar: ' + error.message); return; }
+  const idx = state.cadernoErros.findIndex(e => e.id === erroId);
+  if (idx >= 0) state.cadernoErros[idx] = data;
+  if (state.view === 'caderno-erros') renderCadernoErros();
+  _refreshSecaoCadernoNaSemana();
+}
+
+async function excluirErroDireto(erroId) {
+  if (!confirm('Excluir este erro do seu caderno?')) return;
+  const { error } = await sb.from('caderno_erros').delete().eq('id', erroId);
+  if (error) { alert('Erro ao excluir: ' + error.message); return; }
+  state.cadernoErros = state.cadernoErros.filter(e => e.id !== erroId);
+  if (state.view === 'caderno-erros') renderCadernoErros();
+  _refreshSecaoCadernoNaSemana();
+}
+
+// =========================================================
+// Tela dedicada "Meu Caderno de Erros"
+// =========================================================
+function renderCadernoErros() {
+  state.view = 'caderno-erros';
+  const main = document.getElementById('main-content');
+  if (state._ceFiltroMod === undefined)      state._ceFiltroMod = '';
+  if (state._ceFiltroCat === undefined)      state._ceFiltroCat = '';
+  if (state._ceBusca === undefined)          state._ceBusca = '';
+  if (state._ceMostrarResolv === undefined)  state._ceMostrarResolv = false;
+  if (state._ceColapso === undefined)        state._ceColapso = { resolv: true };
+
+  // Aplica filtros
+  const termo = _normBusca(state._ceBusca || '');
+  let lista = (state.cadernoErros || []).slice();
+  if (state._ceFiltroCat) lista = lista.filter(e => e.categoria === state._ceFiltroCat);
+  if (state._ceFiltroMod) {
+    const temasMod = new Set((MODULOS.find(m => m.id === state._ceFiltroMod)?.temas) || []);
+    lista = lista.filter(e => temasMod.has(e.tema_id));
+  }
+  if (termo) {
+    const partes = termo.split(' ').filter(Boolean);
+    lista = lista.filter(e => {
+      const corpo = _normBusca((e.titulo || '') + ' ' + (e.descricao || '') + ' ' + (e.causa || '') + ' ' + (e.aprendizado || ''));
+      return partes.every(p => corpo.includes(p));
+    });
+  }
+
+  // KPIs (das listas filtradas)
+  const ativos = _errosAtivos(lista);
+  const resolvidos = _errosResolvidos(lista);
+  const nAlta  = ativos.filter(e => e.prioridade === 3).length;
+  const nMedia = ativos.filter(e => e.prioridade === 2).length;
+  const nBaixa = ativos.filter(e => e.prioridade === 1).length;
+
+  // Agrupa ativos por prioridade
+  const grupos = {
+    3: ativos.filter(e => e.prioridade === 3),
+    2: ativos.filter(e => e.prioridade === 2),
+    1: ativos.filter(e => e.prioridade === 1)
+  };
+  // Ordena por atualizado_em desc dentro de cada grupo
+  [3, 2, 1].forEach(p => grupos[p].sort((a, b) => String(b.atualizado_em || '').localeCompare(String(a.atualizado_em || ''))));
+  resolvidos.sort((a, b) => String(b.resolvido_em || '').localeCompare(String(a.resolvido_em || '')));
+
+  // Tema com mais erros (entre os ativos)
+  const contTema = {};
+  ativos.forEach(e => { if (e.tema_id) contTema[e.tema_id] = (contTema[e.tema_id] || 0) + 1; });
+  const topTema = Object.entries(contTema).sort((a, b) => b[1] - a[1])[0];
+  const topTemaInfo = topTema ? `${(TEMAS.find(t => t.id === topTema[0]) || {nome: topTema[0]}).nome} (${topTema[1]} erros)` : '—';
+
+  const totalGeral = (state.cadernoErros || []).length;
+  const totalResolv = _errosResolvidos(state.cadernoErros).length;
+  const pctResolv = totalGeral > 0 ? Math.round(totalResolv / totalGeral * 100) : 0;
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Meu Caderno de Erros</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
+      <div>
+        <h2 class="section-title" style="margin:0;">
+          <span class="section-title-accent"></span>
+          📕 Meu Caderno de Erros
+        </h2>
+        <p style="color:var(--radix-text-muted);font-size:13px;margin:6px 0 0;">
+          ${totalGeral} erros registrados · ${totalResolv} resolvidos (${pctResolv}%) ${topTema ? '· Tema com mais erros: <b>' + topTemaInfo + '</b>' : ''}
+        </p>
+      </div>
+      <button class="btn" onclick="abrirModalErro()">+ Novo erro</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="ce-kpis" style="margin-top:14px;">
+      <div class="ce-kpi kpi-alta"><div class="v">${nAlta}</div><div class="l">Alta prioridade</div></div>
+      <div class="ce-kpi kpi-media"><div class="v">${nMedia}</div><div class="l">Média prioridade</div></div>
+      <div class="ce-kpi kpi-baixa"><div class="v">${nBaixa}</div><div class="l">Baixa prioridade</div></div>
+      <div class="ce-kpi kpi-resolv"><div class="v">${resolvidos.length}</div><div class="l">Resolvidos</div></div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 12px;">
+      <div class="qbk-busca-wrap" style="flex:1;min-width:240px;margin-bottom:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="ce-busca" class="qbk-busca" placeholder="Buscar nos erros (título, causa, aprendizado)..." value="${(state._ceBusca || '').replace(/"/g, '&quot;')}" oninput="agendarFiltrarCaderno()">
+      </div>
+      <select onchange="state._ceFiltroMod=this.value;renderCadernoErros();"
+              style="padding:8px 12px;border:1px solid var(--radix-line-2);border-radius:8px;font-size:13px;background:var(--radix-surface);color:var(--radix-text);min-width:220px;">
+        <option value="" ${!state._ceFiltroMod?'selected':''}>Todos os módulos</option>
+        ${MODULOS.map(m => `<option value="${m.id}" ${state._ceFiltroMod===m.id?'selected':''}>Módulo ${m.numero} — ${m.nome}</option>`).join('')}
+      </select>
+      <select onchange="state._ceFiltroCat=this.value;renderCadernoErros();"
+              style="padding:8px 12px;border:1px solid var(--radix-line-2);border-radius:8px;font-size:13px;background:var(--radix-surface);color:var(--radix-text);min-width:200px;">
+        <option value="" ${!state._ceFiltroCat?'selected':''}>Todas as categorias</option>
+        ${CATEGORIAS_ERRO.map(c => `<option value="${c.id}" ${state._ceFiltroCat===c.id?'selected':''}>${c.icone} ${c.nome}</option>`).join('')}
+      </select>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--radix-text-muted);cursor:pointer;">
+        <input type="checkbox" ${state._ceMostrarResolv?'checked':''} onchange="state._ceMostrarResolv=this.checked;renderCadernoErros();">
+        Mostrar resolvidos
+      </label>
+    </div>
+
+    ${(ativos.length + resolvidos.length) === 0 ? `
+      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface);border-radius:14px;border:1px dashed var(--radix-line);color:var(--radix-text-muted);">
+        <div style="font-size:42px;margin-bottom:8px;">📕</div>
+        <p style="margin:0 0 6px;font-size:14px;"><b>Seu caderno está vazio.</b></p>
+        <p style="margin:0 0 14px;font-size:12.5px;">Registre os erros conforme estuda — vira sua base pra revisar com mais foco.</p>
+        <button class="btn" onclick="abrirModalErro()">+ Registrar primeiro erro</button>
+      </div>
+    ` : `
+      ${_renderGrupoErros(3, '🔴 Alta prioridade', grupos[3])}
+      ${_renderGrupoErros(2, '🟠 Média prioridade', grupos[2])}
+      ${_renderGrupoErros(1, '🔵 Baixa prioridade', grupos[1])}
+      ${state._ceMostrarResolv ? _renderGrupoErros('r', '✅ Resolvidos', resolvidos, true) : ''}
+    `}
+  `;
+}
+
+let _ceBuscaDebounce = null;
+function agendarFiltrarCaderno() {
+  if (_ceBuscaDebounce) clearTimeout(_ceBuscaDebounce);
+  _ceBuscaDebounce = setTimeout(() => {
+    _ceBuscaDebounce = null;
+    const inp = document.getElementById('ce-busca');
+    if (inp) state._ceBusca = inp.value;
+    renderCadernoErros();
+  }, 200);
+}
+
+function _renderGrupoErros(chave, titulo, lista, ehResolv) {
+  if (!lista || lista.length === 0) return '';
+  if (!state._ceColapso) state._ceColapso = {};
+  if (state._ceColapso[chave] === undefined) state._ceColapso[chave] = (chave === 1 || chave === 'r');  // Baixa e Resolvidos começam colapsados
+  const colapsado = state._ceColapso[chave];
+  const itens = lista.map(e => _renderCardErro(e, ehResolv)).join('');
+  return `
+    <div class="ce-grupo ${colapsado ? 'colapsado' : ''}">
+      <button class="ce-grupo-head" onclick="_toggleGrupoErro('${chave}')">
+        <svg class="ce-grupo-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="ce-grupo-titulo">${titulo}</span>
+        <span class="ce-grupo-count">${lista.length}</span>
+      </button>
+      <div class="ce-grupo-itens">${itens}</div>
+    </div>`;
+}
+function _toggleGrupoErro(chave) {
+  if (!state._ceColapso) state._ceColapso = {};
+  state._ceColapso[chave] = !state._ceColapso[chave];
+  renderCadernoErros();
+}
+
+function _renderCardErro(e, ehResolv) {
+  const cat = _catErroPorId(e.categoria);
+  const pri = _priErroPorId(e.prioridade);
+  const tema = TEMAS.find(t => t.id === e.tema_id);
+  const _esc = s => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const dataMeta = ehResolv
+    ? (e.resolvido_em ? `Resolvido em ${e.resolvido_em.slice(8,10)}/${e.resolvido_em.slice(5,7)}/${e.resolvido_em.slice(0,4)}` : 'Resolvido')
+    : (e.criado_em ? `Registrado ${e.criado_em.slice(8,10)}/${e.criado_em.slice(5,7)}/${e.criado_em.slice(0,4)}` : '');
+  const camposExtras = (e.causa || e.aprendizado) ? `
+    <div class="ce-erro-campos">
+      ${e.causa ? `<div class="cc cc-causa"><b>Causa</b>${_esc(e.causa)}</div>` : ''}
+      ${e.aprendizado ? `<div class="cc cc-aprend"><b>Aprendizado</b>${_esc(e.aprendizado)}</div>` : ''}
+    </div>` : '';
+
+  return `
+    <div class="ce-erro ${ehResolv ? 'resolvido' : ''}">
+      <div class="ce-erro-cat c-${cat.id}">${cat.icone}</div>
+      <div class="ce-erro-corpo">
+        <div class="ce-erro-meta">
+          <span class="pill-sem">SEM ${String(e.semana_numero).padStart(2,'0')}</span>
+          <span class="pill-cat" style="color:${cat.cor};">${cat.icone} ${cat.nome}</span>
+          ${tema ? `<span style="color:var(--radix-text-muted);">·</span><span>${_esc(tema.nome)}</span>` : ''}
+          ${dataMeta ? `<span style="color:var(--radix-text-muted);">·</span><span>${dataMeta}</span>` : ''}
+        </div>
+        <h4 class="ce-erro-titulo">${_esc(e.titulo)}</h4>
+        ${e.descricao ? `<p class="ce-erro-desc">${_esc(e.descricao)}</p>` : ''}
+        ${camposExtras}
+      </div>
+      <div class="ce-erro-acoes">
+        <span class="pri-pill ${ehResolv ? 'pri-resolv' : 'pri-' + (pri.id === 3 ? 'alta' : pri.id === 2 ? 'media' : 'baixa')}">${ehResolv ? 'Resolvido' : pri.nome}</span>
+        <button class="ce-erro-btn-ico ok" title="${ehResolv ? 'Reabrir' : 'Marcar resolvido'}" onclick="toggleResolvidoErro('${e.id}')">${ehResolv ? '↺' : '✓'}</button>
+        <button class="ce-erro-btn-ico edit" title="Editar" onclick="abrirModalErro({erroId: '${e.id}'})">✏</button>
+        <button class="ce-erro-btn-ico del" title="Excluir" onclick="excluirErroDireto('${e.id}')">🗑</button>
+      </div>
+    </div>`;
+}
+
+// =========================================================
+// Seção compacta dentro do editor de semana
+// =========================================================
+function _renderSecaoCadernoNaSemana(semanaN) {
+  if (!semanaN) return '';
+  const erros = _errosDaSemana(semanaN);
+  const ativos = _errosAtivos(erros);
+  if (erros.length === 0) {
+    return `
+      <div class="ce-na-semana">
+        <div class="ce-na-semana-head">
+          <span class="ico">📕</span> Caderno de erros desta semana
+          <span class="count" style="background:var(--radix-bg-2);color:var(--radix-text-muted);">vazio</span>
+        </div>
+        <button class="ce-na-semana-add" onclick="abrirModalErro({semanaN: ${semanaN}})">+ Adicionar erro desta semana</button>
+      </div>`;
+  }
+  const itens = erros.map(e => {
+    const cat = _catErroPorId(e.categoria);
+    const pri = _priErroPorId(e.prioridade);
+    const _esc = s => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+    return `
+      <div class="ce-na-semana-item ${e.resolvido ? 'resolvido' : ''}" style="border-left-color:${e.resolvido ? '#10b981' : pri.cor};">
+        <span class="pri-dot" style="background:${e.resolvido ? '#10b981' : pri.cor};"></span>
+        <span style="font-size:14px;">${cat.icone}</span>
+        <span class="ce-name">${_esc(e.titulo)}</span>
+        <div class="acoes">
+          <button class="mini-btn" title="${e.resolvido ? 'Reabrir' : 'Marcar resolvido'}" onclick="toggleResolvidoErro('${e.id}')">${e.resolvido ? '↺' : '✓'}</button>
+          <button class="mini-btn" title="Editar" onclick="abrirModalErro({erroId: '${e.id}'})">✏</button>
+        </div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="ce-na-semana" id="ce-na-semana-bloco">
+      <div class="ce-na-semana-head">
+        <span class="ico">📕</span> Caderno de erros desta semana
+        <span class="count">${ativos.length} ativ${ativos.length === 1 ? 'o' : 'os'}</span>
+      </div>
+      <div class="ce-na-semana-itens">${itens}</div>
+      <button class="ce-na-semana-add" onclick="abrirModalErro({semanaN: ${semanaN}})">+ Adicionar novo erro</button>
+    </div>`;
+}
+// Re-render só do bloco (chamado após toggle/save sem fechar o editor)
+function _refreshSecaoCadernoNaSemana() {
+  const n = state.semanaEditando;
+  if (n == null) return;
+  const bloco = document.getElementById('ce-na-semana-bloco');
+  if (!bloco) return;
+  // Substitui o nó inteiro pela nova versão
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = _renderSecaoCadernoNaSemana(n);
+  const novo = wrapper.firstElementChild;
+  if (novo && bloco.parentNode) bloco.parentNode.replaceChild(novo, bloco);
+}
+
+// Abre modal pré-preenchido a partir de uma questão errada (vem do Modo Teste/Prova)
+function abrirModalErroDaQuestao(qid) {
+  const q = (state.questoes || []).find(x => x.id === qid);
+  if (!q) { abrirModalErro(); return; }
+  const tema = TEMAS.find(t => t.id === q.tema);
+  const semAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  // Tenta achar a semana correspondente ao tema da questão; senão usa semana atual
+  let semanaN = null;
+  const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+  const semDoTema = cronoMerged.find(s => s.temaId === q.tema);
+  if (semDoTema) semanaN = semDoTema.n;
+  else if (semAtualObj) semanaN = semAtualObj.n;
+  abrirModalErro({
+    semanaN,
+    temaId: q.tema,
+    questaoId: qid,
+    pre: {
+      titulo: 'Errei Q' + qid + (tema ? ' — ' + tema.nome : ''),
+      categoria: 'conceitual'
+    }
+  });
+}
+
+// =========================================================
+// Card no dashboard do aluno (alta prioridade)
+// =========================================================
+function _renderAlertaCaderno() {
+  const ativos = _errosAtivos(state.cadernoErros);
+  if (ativos.length === 0) return '';
+  const altas = ativos.filter(e => e.prioridade === 3);
+  if (altas.length === 0) return ''; // só mostra se tem alta prioridade
+  // Pega até 3 temas distintos
+  const temasUnicos = [];
+  altas.forEach(e => {
+    const t = TEMAS.find(t => t.id === e.tema_id);
+    if (t && !temasUnicos.includes(t.nome)) temasUnicos.push(t.nome);
+  });
+  const top3 = temasUnicos.slice(0, 3).join(' · ');
+  return `
+    <div class="dash-ce-alerta" onclick="renderCadernoErros()">
+      <div class="dash-ce-ico">📕</div>
+      <div class="dash-ce-txt">
+        <p class="dash-ce-tit">${altas.length} ${altas.length === 1 ? 'erro' : 'erros'} de alta prioridade pra revisar</p>
+        <p class="dash-ce-sub">${top3 || 'Releia antes da próxima prova.'}</p>
+      </div>
+      <div class="dash-ce-cta">Ver caderno →</div>
+    </div>`;
 }
 
 // ============================================================================
@@ -16206,6 +17099,8 @@ function abrirEditorSemana(n) {
             <span id="sem-pct-geral-badge" class="estudo-badge empty">— %</span>
           </div>
         </div>
+
+        ${_renderSecaoCadernoNaSemana(s.n)}
 
         <div class="form-group">
           <label>Notas pessoais (opcional)</label>
@@ -17005,6 +17900,71 @@ async function gerarPDFProgresso(semanas, titulo) {
         });
         y -= ebbBoxH + 6;
       }
+    }
+
+    // ===== Caderno de Erros desta semana =====
+    const errosDaSem = _errosDaSemana(s.n);
+    const errosAtivos = _errosAtivos(errosDaSem);
+    if (errosAtivos.length > 0) {
+      // Cabeçalho do bloco
+      const tituloErrosTxt = 'Caderno de erros (' + errosAtivos.length + ' ' + (errosAtivos.length === 1 ? 'ativo' : 'ativos') + ')';
+      // Calcula altura aproximada (24 do header + ~32 por erro c/ causa+aprendizado, ou ~20 sem)
+      const altEstim = 24 + errosAtivos.reduce((acc, e) => acc + 22 + (e.causa ? 11 : 0) + (e.aprendizado ? 11 : 0) + (e.descricao ? 11 : 0), 0);
+      if (y - altEstim < MB + 20) novaPagina(nomeAluno);
+
+      // Título do bloco
+      page.drawText('Caderno de erros desta semana  (' + errosAtivos.length + ' ' + (errosAtivos.length === 1 ? 'ativo' : 'ativos') + ')',
+        { x: ML, y: y - 4, size: 9, font: fontBold, color: rgb(0.49, 0.13, 0.81) });
+      y -= 14;
+
+      errosAtivos.forEach(e => {
+        const cat = _catErroPorId(e.categoria);
+        const pri = _priErroPorId(e.prioridade);
+        // Cor de borda por prioridade
+        const corBorda = e.prioridade === 3 ? vermelho : (e.prioridade === 2 ? rgb(0.7, 0.45, 0) : cyan);
+        const bgCard = e.prioridade === 3 ? rgb(0.99, 0.92, 0.92) : (e.prioridade === 2 ? rgb(0.99, 0.96, 0.87) : rgb(0.94, 0.99, 1.0));
+        // Wrap do título e dos campos
+        const linTit = wrapLines(sanit(e.titulo), fontBold, 11, CW - 16);
+        const linDesc = e.descricao ? wrapLines(sanit(e.descricao), font, 9, CW - 16) : [];
+        const linCausa = e.causa ? wrapLines('Causa: ' + sanit(e.causa), font, 9, CW - 16) : [];
+        const linAprend = e.aprendizado ? wrapLines('Aprendizado: ' + sanit(e.aprendizado), font, 9, CW - 16) : [];
+        const totalLinhas = linTit.length + linDesc.length + linCausa.length + linAprend.length;
+        const cardH = 18 + totalLinhas * 11 + 8;
+
+        if (y - cardH < MB + 20) novaPagina(nomeAluno);
+
+        // Caixa do erro
+        page.drawRectangle({ x: ML, y: y - cardH, width: CW, height: cardH, color: bgCard, borderColor: corBorda, borderWidth: 0.5 });
+        // Barra colorida à esquerda
+        page.drawRectangle({ x: ML, y: y - cardH, width: 3, height: cardH, color: corBorda });
+        // Meta (prioridade + categoria)
+        const metaTxt = sanit(pri.nome.toUpperCase() + ' · ' + cat.icone + ' ' + cat.nome);
+        page.drawText(metaTxt, { x: ML + 10, y: y - 11, size: 7.5, font: fontBold, color: corBorda });
+
+        // Título
+        let yy = y - 22;
+        linTit.forEach(ln => {
+          page.drawText(ln, { x: ML + 10, y: yy, size: 11, font: fontBold, color: cinza1 });
+          yy -= 12;
+        });
+        // Descrição
+        linDesc.forEach(ln => {
+          page.drawText(ln, { x: ML + 10, y: yy, size: 9, font: font, color: cinza2 });
+          yy -= 11;
+        });
+        // Causa
+        linCausa.forEach((ln, i) => {
+          page.drawText(ln, { x: ML + 10, y: yy, size: 9, font: i === 0 ? fontBold : font, color: cinza1 });
+          yy -= 11;
+        });
+        // Aprendizado
+        linAprend.forEach((ln, i) => {
+          page.drawText(ln, { x: ML + 10, y: yy, size: 9, font: i === 0 ? fontBold : font, color: cinza1 });
+          yy -= 11;
+        });
+        y -= cardH + 4;
+      });
+      y -= 4;
     }
 
     // Notas pessoais (caixa cinza claro)
