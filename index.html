@@ -4712,33 +4712,79 @@
 }
 
   /* ===== Caderno de Erros ===== */
-  /* KPIs do topo */
+  /* KPIs do topo — single card com 4 segmentos divididos por linhas */
   .ce-kpis {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 10px; margin-bottom: 14px;
-  }
-  @media (max-width: 700px) { .ce-kpis { grid-template-columns: repeat(2, 1fr); } }
-  .ce-kpi {
     background: var(--radix-surface);
     border: 1px solid var(--radix-line);
-    border-left-width: 4px;
     border-radius: 12px;
-    padding: 14px 16px;
-    text-align: center;
+    overflow: hidden;
+    margin-bottom: 16px;
   }
-  .ce-kpi.kpi-alta   { border-left-color: #dc2626; background: rgba(254,226,226,.30); }
-  .ce-kpi.kpi-media  { border-left-color: #f59e0b; background: rgba(254,243,199,.25); }
-  .ce-kpi.kpi-baixa  { border-left-color: var(--radix-cyan); background: rgba(207,250,254,.30); }
-  .ce-kpi.kpi-resolv { border-left-color: #10b981; background: rgba(209,250,229,.30); }
-  .ce-kpi .v { font-size: 26px; font-weight: 800; color: var(--radix-text); line-height: 1.05; }
+  @media (max-width: 640px) { .ce-kpis { grid-template-columns: repeat(2, 1fr); } }
+  .ce-kpi {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-right: 1px solid var(--radix-line);
+    border-top: 4px solid transparent;
+    position: relative;
+  }
+  .ce-kpi:last-child { border-right: 0; }
+  @media (max-width: 640px) {
+    .ce-kpi:nth-child(2) { border-right: 0; }
+    .ce-kpi:nth-child(1), .ce-kpi:nth-child(2) { border-bottom: 1px solid var(--radix-line); }
+  }
+  .ce-kpi.kpi-alta   { border-top-color: #dc2626; }
+  .ce-kpi.kpi-media  { border-top-color: #f59e0b; }
+  .ce-kpi.kpi-baixa  { border-top-color: var(--radix-cyan); }
+  .ce-kpi.kpi-resolv { border-top-color: #10b981; }
+
+  .ce-kpi-ico {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .ce-kpi.kpi-alta   .ce-kpi-ico { background: rgba(220,38,38,.12); color: #dc2626; }
+  .ce-kpi.kpi-media  .ce-kpi-ico { background: rgba(245,158,11,.14); color: #b45309; }
+  .ce-kpi.kpi-baixa  .ce-kpi-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan); }
+  .ce-kpi.kpi-resolv .ce-kpi-ico { background: rgba(16,185,129,.14); color: #10b981; }
+
+  .ce-kpi-corpo { min-width: 0; }
+  .ce-kpi .v {
+    font-size: 28px; font-weight: 800; color: var(--radix-text);
+    line-height: 1; display: block;
+  }
   .ce-kpi .l {
     font-size: 11px; font-weight: 700; color: var(--radix-text-muted);
-    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;
+    text-transform: uppercase; letter-spacing: 0.04em; margin-top: 3px;
+    display: block;
   }
   .ce-kpi.kpi-alta .v   { color: #dc2626; }
   .ce-kpi.kpi-media .v  { color: #b45309; }
   .ce-kpi.kpi-baixa .v  { color: var(--radix-cyan); }
   .ce-kpi.kpi-resolv .v { color: #10b981; }
+
+  /* Estado vazio — caixa horizontal compacta */
+  .ce-vazio {
+    display: flex; align-items: center; gap: 18px;
+    padding: 22px 24px;
+    background: linear-gradient(135deg, rgba(168,85,247,.08), rgba(34,211,238,.04));
+    border: 1px dashed rgba(168,85,247,.35);
+    border-radius: 14px;
+  }
+  @media (max-width: 600px) {
+    .ce-vazio { flex-direction: column; text-align: center; }
+  }
+  .ce-vazio-ico {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: rgba(168,85,247,.14); color: #7e22ce;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; flex-shrink: 0;
+  }
+  .ce-vazio-txt { flex: 1; min-width: 0; }
+  .ce-vazio-tit { margin: 0 0 4px; font-size: 15px; font-weight: 800; color: var(--radix-text); }
+  .ce-vazio-sub { margin: 0; font-size: 12.5px; color: var(--radix-text-muted); line-height: 1.45; }
+  .ce-vazio .btn { flex-shrink: 0; }
 
   /* Grupo (Alta/Média/Baixa/Resolvidos) */
   .ce-grupo {
@@ -5026,33 +5072,53 @@
   .cron-semana.tem-rev-e-erro .cron-semana-erro-badge { right: 56px; }
 
   /* ===== Tela "Minhas Revisões" (aluno) ===== */
+  /* KPIs em single card (mesmo padrão do Caderno de Erros) */
   .rev-resumo-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 6px;
-  }
-  @media (max-width: 700px) { .rev-resumo-grid { grid-template-columns: repeat(2, 1fr); } }
-  .rev-resumo-card {
+    display: grid; grid-template-columns: repeat(4, 1fr);
     background: var(--radix-surface, #fff);
     border: 1px solid var(--radix-line, #e5e7eb);
     border-radius: 12px;
-    padding: 14px 16px;
-    border-left-width: 4px;
-    text-align: center;
+    overflow: hidden;
+    margin-bottom: 14px;
   }
-  .rev-resumo-card.rev-urgente { border-left-color: #dc2626; background: rgba(254,226,226,0.30); }
-  .rev-resumo-card.rev-hoje    { border-left-color: var(--radix-cyan, #0891b2); background: rgba(207,250,254,0.40); }
-  .rev-resumo-card.rev-prox    { border-left-color: #f59e0b; background: rgba(254,243,199,0.25); }
-  .rev-resumo-card.rev-feita   { border-left-color: #10b981; background: rgba(209,250,229,0.30); }
-  .rev-resumo-card.rev-ok      { border-left-color: var(--radix-line-2, #d1d5db); }
+  @media (max-width: 640px) { .rev-resumo-grid { grid-template-columns: repeat(2, 1fr); } }
+  .rev-resumo-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-right: 1px solid var(--radix-line, #e5e7eb);
+    border-top: 4px solid transparent;
+    text-align: left;
+  }
+  .rev-resumo-card:last-child { border-right: 0; }
+  @media (max-width: 640px) {
+    .rev-resumo-card:nth-child(2) { border-right: 0; }
+    .rev-resumo-card:nth-child(1), .rev-resumo-card:nth-child(2) { border-bottom: 1px solid var(--radix-line); }
+  }
+  .rev-resumo-card.rev-urgente { border-top-color: #dc2626; }
+  .rev-resumo-card.rev-hoje    { border-top-color: var(--radix-cyan, #0891b2); }
+  .rev-resumo-card.rev-prox    { border-top-color: #f59e0b; }
+  .rev-resumo-card.rev-feita   { border-top-color: #10b981; }
+  .rev-resumo-card.rev-ok      { border-top-color: var(--radix-line-2, #d1d5db); }
+  .rev-resumo-ico {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    background: var(--radix-bg-2, #f3f4f6);
+    color: var(--radix-text-muted, #6b7280);
+  }
+  .rev-resumo-card.rev-urgente .rev-resumo-ico { background: rgba(220,38,38,.12); color: #dc2626; }
+  .rev-resumo-card.rev-hoje    .rev-resumo-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan, #0891b2); }
+  .rev-resumo-card.rev-prox    .rev-resumo-ico { background: rgba(245,158,11,.14); color: #b45309; }
+  .rev-resumo-card.rev-feita   .rev-resumo-ico { background: rgba(16,185,129,.14); color: #10b981; }
+  .rev-resumo-corpo { min-width: 0; }
   .rev-resumo-n {
-    font-size: 26px; font-weight: 800; color: var(--radix-text, #111);
-    line-height: 1.05;
+    font-size: 28px; font-weight: 800; color: var(--radix-text, #111);
+    line-height: 1; display: block;
   }
   .rev-resumo-l {
-    font-size: 11.5px; font-weight: 700; color: var(--radix-text-muted, #6b7280);
-    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;
+    font-size: 11px; font-weight: 700; color: var(--radix-text-muted, #6b7280);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-top: 3px; display: block;
   }
   .rev-resumo-card.rev-urgente .rev-resumo-n { color: #dc2626; }
   .rev-resumo-card.rev-hoje    .rev-resumo-n { color: var(--radix-cyan, #0891b2); }
@@ -5102,61 +5168,65 @@
     display: grid;
     grid-template-columns: 24px 1fr auto auto;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: 10px;
+    padding: 9px 14px;
     border-bottom: 1px solid var(--radix-line, #e5e7eb);
-    border-left: 4px solid transparent;
+    border-left: 3px solid transparent;
   }
   .rev-item:last-child { border-bottom: 0; }
   .rev-item:hover { background: var(--radix-bg-2, #f9fafb); }
 
   .rev-item.rev-status-atrasada { border-left-color: #dc2626; }
-  .rev-item.rev-status-hoje     { border-left-color: var(--radix-cyan, #0891b2); }
+  .rev-item.rev-status-hoje     { border-left-color: var(--radix-cyan, #0891b2); background: rgba(207,250,254,.25); }
   .rev-item.rev-status-em_breve { border-left-color: #f59e0b; }
   .rev-item.rev-status-a_fazer  { border-left-color: #a855f7; }
-  .rev-item.rev-status-feita    { border-left-color: #10b981; opacity: 0.7; }
+  .rev-item.rev-status-feita    { border-left-color: #10b981; opacity: 0.65; }
   .rev-item.rev-status-feita .rev-item-tema,
   .rev-item.rev-status-feita .rev-item-sem { text-decoration: line-through; text-decoration-color: rgba(16,185,129,0.5); }
 
   .rev-item-corpo { min-width: 0; }
-  .rev-item-titulo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rev-item-titulo { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .rev-item-sem {
     background: var(--radix-bg-2, #f3f4f6);
     color: var(--radix-text-muted, #6b7280);
-    font-size: 10.5px; font-weight: 800;
-    padding: 2px 8px; border-radius: 6px;
-    letter-spacing: 0.05em;
+    font-size: 10px; font-weight: 800;
+    padding: 1px 7px; border-radius: 5px;
+    letter-spacing: 0.04em;
   }
   .rev-item-tema {
-    font-size: 14px; font-weight: 700; color: var(--radix-text, #111);
+    font-size: 13.5px; font-weight: 700; color: var(--radix-text, #111);
   }
   .rev-item-rev {
     background: rgba(168,85,247,0.14); color: #7e22ce;
-    font-size: 10.5px; font-weight: 800;
-    padding: 2px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 800;
+    padding: 1px 7px; border-radius: 5px;
   }
   .rev-item-meta {
-    display: block; font-size: 11.5px; color: var(--radix-text-muted, #6b7280); margin-top: 3px;
+    display: block; font-size: 11px; color: var(--radix-text-muted, #6b7280); margin-top: 2px;
   }
+  /* Status como pill MAIS SUTIL e MENOR — não compete com a info principal */
   .rev-item-status {
-    font-size: 11.5px; font-weight: 700;
-    padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 9px; border-radius: 5px;
     background: var(--radix-bg-2, #f3f4f6);
     color: var(--radix-text-muted, #6b7280);
     white-space: nowrap;
   }
-  .rev-item.rev-status-atrasada .rev-item-status { background: #dc2626; color: #fff; }
+  .rev-item.rev-status-atrasada .rev-item-status {
+    background: rgba(220,38,38,.10); color: #b91c1c;
+    border: 1px solid rgba(220,38,38,.25);
+  }
   .rev-item.rev-status-hoje     .rev-item-status { background: var(--radix-cyan, #0891b2); color: #fff; }
-  .rev-item.rev-status-em_breve .rev-item-status { background: #f59e0b; color: #78350f; }
-  .rev-item.rev-status-a_fazer  .rev-item-status { background: rgba(168,85,247,0.14); color: #7e22ce; }
-  .rev-item.rev-status-feita    .rev-item-status { background: #10b981; color: #fff; }
+  .rev-item.rev-status-em_breve .rev-item-status { background: rgba(245,158,11,.18); color: #92400e; border: 1px solid rgba(245,158,11,.35); }
+  .rev-item.rev-status-a_fazer  .rev-item-status { background: rgba(168,85,247,0.10); color: #7e22ce; }
+  .rev-item.rev-status-feita    .rev-item-status { background: rgba(16,185,129,.14); color: #047857; }
 
   .rev-item-abrir {
     background: transparent;
     border: 1px solid var(--radix-line-2, #d1d5db);
     color: var(--radix-text-muted, #6b7280);
-    width: 30px; height: 30px;
-    border-radius: 8px;
+    width: 26px; height: 26px;
+    border-radius: 6px;
     cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
     transition: all .15s;
@@ -5167,6 +5237,34 @@
     background: rgba(34,211,238,0.06);
   }
   .rev-item.rev-saving { opacity: 0.6; pointer-events: none; }
+
+  /* Botão "ver mais X" no fim de cada grupo */
+  .rev-ver-mais {
+    width: 100%;
+    padding: 10px;
+    background: var(--radix-bg-2, #f9fafb);
+    border: 0;
+    border-top: 1px dashed var(--radix-line, #e5e7eb);
+    color: var(--radix-text-muted, #6b7280);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .rev-ver-mais:hover { background: var(--radix-bg, #f3f6fa); color: var(--radix-cyan, #0891b2); }
+
+  /* Botão "marcar todas do grupo" no header */
+  .rev-grupo-bulk {
+    background: transparent;
+    border: 1px solid var(--radix-line-2, #d1d5db);
+    color: var(--radix-text-muted, #6b7280);
+    font-size: 11px; font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .rev-grupo-bulk:hover { border-color: #10b981; color: #10b981; background: rgba(16,185,129,.06); }
 
   /* Checkbox custom (mesmo padrão do .ebb-card-check) */
   .rev-item-check { cursor: pointer; display: inline-flex; }
@@ -16581,12 +16679,24 @@ function renderCadernoErros() {
       <button class="btn" onclick="abrirModalErro()">+ Novo erro</button>
     </div>
 
-    <!-- KPIs -->
+    <!-- KPIs (single card, 4 segmentos com ícone) -->
     <div class="ce-kpis" style="margin-top:14px;">
-      <div class="ce-kpi kpi-alta"><div class="v">${nAlta}</div><div class="l">Alta prioridade</div></div>
-      <div class="ce-kpi kpi-media"><div class="v">${nMedia}</div><div class="l">Média prioridade</div></div>
-      <div class="ce-kpi kpi-baixa"><div class="v">${nBaixa}</div><div class="l">Baixa prioridade</div></div>
-      <div class="ce-kpi kpi-resolv"><div class="v">${resolvidos.length}</div><div class="l">Resolvidos</div></div>
+      <div class="ce-kpi kpi-alta">
+        <div class="ce-kpi-ico">🔴</div>
+        <div class="ce-kpi-corpo"><span class="v">${nAlta}</span><span class="l">Alta prioridade</span></div>
+      </div>
+      <div class="ce-kpi kpi-media">
+        <div class="ce-kpi-ico">🟠</div>
+        <div class="ce-kpi-corpo"><span class="v">${nMedia}</span><span class="l">Média prioridade</span></div>
+      </div>
+      <div class="ce-kpi kpi-baixa">
+        <div class="ce-kpi-ico">🔵</div>
+        <div class="ce-kpi-corpo"><span class="v">${nBaixa}</span><span class="l">Baixa prioridade</span></div>
+      </div>
+      <div class="ce-kpi kpi-resolv">
+        <div class="ce-kpi-ico">✓</div>
+        <div class="ce-kpi-corpo"><span class="v">${resolvidos.length}</span><span class="l">Resolvidos</span></div>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -16612,10 +16722,12 @@ function renderCadernoErros() {
     </div>
 
     ${(ativos.length + resolvidos.length) === 0 ? `
-      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface);border-radius:14px;border:1px dashed var(--radix-line);color:var(--radix-text-muted);">
-        <div style="font-size:42px;margin-bottom:8px;">📕</div>
-        <p style="margin:0 0 6px;font-size:14px;"><b>Seu caderno está vazio.</b></p>
-        <p style="margin:0 0 14px;font-size:12.5px;">Registre os erros conforme estuda — vira sua base pra revisar com mais foco.</p>
+      <div class="ce-vazio">
+        <div class="ce-vazio-ico">📕</div>
+        <div class="ce-vazio-txt">
+          <h3 class="ce-vazio-tit">Seu caderno está vazio</h3>
+          <p class="ce-vazio-sub">Registre erros conforme estuda — fica fácil revisar com foco depois. Você também pode adicionar direto pelo editor de cada semana.</p>
+        </div>
         <button class="btn" onclick="abrirModalErro()">+ Registrar primeiro erro</button>
       </div>
     ` : `
@@ -16830,23 +16942,35 @@ function renderMinhasRevisoes() {
       Plano de revisões baseado na curva do esquecimento (Ebbinghaus). Marque conforme for fazendo — o app rastreia tudo.
     </p>
 
-    <!-- Resumo em pills -->
+    <!-- Resumo em single-card com 4 segmentos -->
     <div class="rev-resumo-grid">
       <div class="rev-resumo-card rev-${cont.nAtrasadas > 0 ? 'urgente' : 'ok'}">
-        <div class="rev-resumo-n">${cont.nAtrasadas}</div>
-        <div class="rev-resumo-l">${cont.nAtrasadas === 1 ? 'Atrasada' : 'Atrasadas'}</div>
+        <div class="rev-resumo-ico">⚠</div>
+        <div class="rev-resumo-corpo">
+          <span class="rev-resumo-n">${cont.nAtrasadas}</span>
+          <span class="rev-resumo-l">${cont.nAtrasadas === 1 ? 'Atrasada' : 'Atrasadas'}</span>
+        </div>
       </div>
       <div class="rev-resumo-card rev-${cont.nHoje > 0 ? 'hoje' : 'ok'}">
-        <div class="rev-resumo-n">${cont.nHoje}</div>
-        <div class="rev-resumo-l">${cont.nHoje === 1 ? 'É hoje' : 'Hoje'}</div>
+        <div class="rev-resumo-ico">🔔</div>
+        <div class="rev-resumo-corpo">
+          <span class="rev-resumo-n">${cont.nHoje}</span>
+          <span class="rev-resumo-l">${cont.nHoje === 1 ? 'É hoje' : 'Hoje'}</span>
+        </div>
       </div>
       <div class="rev-resumo-card rev-prox">
-        <div class="rev-resumo-n">${cont.nEstaSemana}</div>
-        <div class="rev-resumo-l">Esta semana</div>
+        <div class="rev-resumo-ico">📅</div>
+        <div class="rev-resumo-corpo">
+          <span class="rev-resumo-n">${cont.nEstaSemana}</span>
+          <span class="rev-resumo-l">Esta semana</span>
+        </div>
       </div>
       <div class="rev-resumo-card rev-feita">
-        <div class="rev-resumo-n">${cont.nFeitas}</div>
-        <div class="rev-resumo-l">${cont.nFeitas === 1 ? 'Feita' : 'Feitas'}</div>
+        <div class="rev-resumo-ico">✓</div>
+        <div class="rev-resumo-corpo">
+          <span class="rev-resumo-n">${cont.nFeitas}</span>
+          <span class="rev-resumo-l">${cont.nFeitas === 1 ? 'Feita' : 'Feitas'}</span>
+        </div>
       </div>
     </div>
 
@@ -16880,17 +17004,28 @@ function renderMinhasRevisoes() {
   `;
 }
 
+// Limite inicial de itens exibidos por grupo (resto fica atrás do "ver mais")
+const REV_LIMITE_INICIAL = 8;
+
 // Renderiza um grupo de revisões (Atrasadas / Hoje / etc.)
 // expandidoPadrão: se true, o grupo abre por padrão; senão fica colapsado
 function _renderGrupoRevisao(chave, titulo, revs, expandidoPadrao) {
   if (!revs || revs.length === 0) return '';
   if (state._revGrupoColapso === undefined) state._revGrupoColapso = {};
+  if (state._revGrupoExpand === undefined)  state._revGrupoExpand  = {};  // expansão do "ver mais"
   // Define estado inicial conforme padrão; mantém escolha do usuário
   if (state._revGrupoColapso[chave] === undefined) {
     state._revGrupoColapso[chave] = !expandidoPadrao;
   }
   const colapsado = state._revGrupoColapso[chave];
-  const itensHtml = revs.map(r => {
+  const todasExpand = !!state._revGrupoExpand[chave];
+
+  // Aplica limite (se não está expandido com "ver mais")
+  const total = revs.length;
+  const exibir = todasExpand ? revs : revs.slice(0, REV_LIMITE_INICIAL);
+  const restantes = total - exibir.length;
+
+  const itensHtml = exibir.map(r => {
     const lbl = _revStatusLabel(r);
     const checked = r.status === 'feita';
     const detalhe = r.feitaEm
@@ -16920,15 +17055,55 @@ function _renderGrupoRevisao(chave, titulo, revs, expandidoPadrao) {
       </div>`;
   }).join('');
 
+  // Botão de ação em massa só pra grupos não-feitas (atrasadas/hoje/etc)
+  const podeBulk = (chave !== 'feitas') && total > 0;
+  const bulkBtn = podeBulk
+    ? `<button class="rev-grupo-bulk" onclick="event.stopPropagation();marcarTodasRevDoGrupo('${chave}')" title="Marca todas do grupo como feitas (com confirmação)">✓ Marcar todas (${total})</button>`
+    : '';
+
+  // Botão "ver mais"
+  const verMaisBtn = restantes > 0
+    ? `<button class="rev-ver-mais" onclick="_revExpandirGrupo('${chave}')">+ ver mais ${restantes} ${restantes === 1 ? 'revisão' : 'revisões'} →</button>`
+    : '';
+
   return `
     <div class="rev-grupo rev-grupo-${chave} ${colapsado ? 'colapsado' : ''}">
       <button class="rev-grupo-head" onclick="_toggleGrupoRev('${chave}')">
         <svg class="rev-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         <span class="rev-grupo-titulo">${titulo}</span>
-        <span class="rev-grupo-count">${revs.length}</span>
+        <span class="rev-grupo-count">${total}</span>
+        ${bulkBtn}
       </button>
-      <div class="rev-grupo-itens">${itensHtml}</div>
+      <div class="rev-grupo-itens">${itensHtml}${verMaisBtn}</div>
     </div>`;
+}
+
+function _revExpandirGrupo(chave) {
+  if (!state._revGrupoExpand) state._revGrupoExpand = {};
+  state._revGrupoExpand[chave] = true;
+  renderMinhasRevisoes();
+}
+
+// Marca todas as revisões do grupo como feitas (com confirmação)
+async function marcarTodasRevDoGrupo(chave) {
+  const cont = _contagensRevisoes();
+  let alvo = [];
+  if (chave === 'atrasadas')       alvo = cont.grupos.atrasadas;
+  else if (chave === 'hoje')       alvo = cont.grupos.hoje;
+  else if (chave === 'estaSemana') alvo = cont.grupos.estaSemana;
+  else if (chave === 'proximas30') alvo = cont.grupos.proximas30;
+  else if (chave === 'futuras')    alvo = cont.grupos.futuras;
+  // Aplica filtro de módulo igual da tela
+  if (state._revFiltroMod) alvo = alvo.filter(r => r.moduloId === state._revFiltroMod);
+
+  if (alvo.length === 0) return;
+  if (!confirm(`Marcar ${alvo.length} ${alvo.length === 1 ? 'revisão' : 'revisões'} como feita${alvo.length === 1 ? '' : 's'}? Útil pra colocar o backlog em dia.`)) return;
+
+  // Executa em sequência (não bombarda o banco)
+  for (const r of alvo) {
+    await _salvarMarcaRevisao(r.semanaN, r.n, true);
+  }
+  renderMinhasRevisoes();
 }
 
 function _toggleGrupoRev(chave) {
