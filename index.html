@@ -4744,6 +4744,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; flex-shrink: 0;
   }
+  .ce-kpi-ico svg { width: 20px; height: 20px; }
   .ce-kpi.kpi-alta   .ce-kpi-ico { background: rgba(220,38,38,.12); color: #dc2626; }
   .ce-kpi.kpi-media  .ce-kpi-ico { background: rgba(245,158,11,.14); color: #b45309; }
   .ce-kpi.kpi-baixa  .ce-kpi-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan); }
@@ -4781,6 +4782,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 28px; flex-shrink: 0;
   }
+  .ce-vazio-ico svg { width: 28px; height: 28px; }
   .ce-vazio-txt { flex: 1; min-width: 0; }
   .ce-vazio-tit { margin: 0 0 4px; font-size: 15px; font-weight: 800; color: var(--radix-text); }
   .ce-vazio-sub { margin: 0; font-size: 12.5px; color: var(--radix-text-muted); line-height: 1.45; }
@@ -4941,36 +4943,56 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
   }
   @media (max-width: 540px) { .ce-modal-form .ce-form-grid { grid-template-columns: 1fr; } }
+  /* Categoria — grid 3×2 com SVGs grandes e cards quadrados arejados */
   .ce-cat-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
   }
   @media (max-width: 540px) { .ce-cat-grid { grid-template-columns: repeat(2, 1fr); } }
   .ce-cat-opc {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 8px 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 18px 8px;
     border: 1.5px solid var(--radix-line); background: var(--radix-surface);
-    border-radius: 8px; cursor: pointer;
-    font-size: 11px; font-weight: 600; color: var(--radix-text-2);
-    gap: 3px;
+    border-radius: 12px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--radix-text-2);
+    gap: 8px;
+    transition: border-color .15s, background .15s, transform .12s;
   }
+  .ce-cat-opc:hover { border-color: var(--radix-line-2); background: var(--radix-bg-2); }
   .ce-cat-opc.sel {
-    border-color: var(--radix-cyan); background: rgba(34,211,238,.06); color: var(--radix-cyan);
+    border-color: #2563eb;
+    background: rgba(37,99,235,.06);
+    color: #2563eb;
   }
-  .ce-cat-opc .ico { font-size: 18px; }
+  .ce-cat-opc .ico {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--radix-text-2);
+  }
+  .ce-cat-opc .ico svg { width: 28px; height: 28px; }
+  .ce-cat-opc.sel .ico { color: #2563eb; }
+  .ce-cat-opc .nm {
+    font-size: 13.5px; font-weight: 700;
+    color: var(--radix-text);
+  }
+  .ce-cat-opc.sel .nm { color: #2563eb; }
+
+  /* Prioridade — segmented control com setas ASCII */
   .ce-pri-seg {
     display: flex; gap: 4px;
     background: var(--radix-bg-2);
-    padding: 3px; border-radius: 8px;
+    padding: 4px; border-radius: 10px;
   }
   .ce-pri-seg button {
-    flex: 1; padding: 7px 10px;
-    border: 0; background: transparent; border-radius: 6px;
-    font-family: inherit; font-size: 12px; font-weight: 700;
+    flex: 1; padding: 11px 10px;
+    border: 0; background: transparent; border-radius: 7px;
+    font-family: inherit; font-size: 13.5px; font-weight: 700;
     color: var(--radix-text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .15s;
   }
+  .ce-pri-seg button:hover { color: var(--radix-text-2); }
   .ce-pri-seg button.sel {
     background: var(--radix-surface);
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
   }
   .ce-pri-seg button.sel.pri-1 { color: var(--radix-cyan); }
   .ce-pri-seg button.sel.pri-2 { color: #b45309; }
@@ -5050,6 +5072,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; flex-shrink: 0;
   }
+  .dash-ce-ico svg { width: 22px; height: 22px; }
   .dash-ce-txt { flex: 1; min-width: 0; }
   .dash-ce-tit { font-size: 14px; font-weight: 800; color: var(--radix-text); margin: 0 0 3px; }
   .dash-ce-sub { font-size: 12px; color: var(--radix-text-muted); margin: 0; }
@@ -5102,10 +5125,11 @@
   .rev-resumo-ico {
     width: 38px; height: 38px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
+    flex-shrink: 0;
     background: var(--radix-bg-2, #f3f4f6);
     color: var(--radix-text-muted, #6b7280);
   }
+  .rev-resumo-ico svg { width: 20px; height: 20px; }
   .rev-resumo-card.rev-urgente .rev-resumo-ico { background: rgba(220,38,38,.12); color: #dc2626; }
   .rev-resumo-card.rev-hoje    .rev-resumo-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan, #0891b2); }
   .rev-resumo-card.rev-prox    .rev-resumo-ico { background: rgba(245,158,11,.14); color: #b45309; }
@@ -5352,30 +5376,59 @@
   }
 
   /* ===== Tela "Métricas dos alunos" (professor) ===== */
+  /* KPIs em single-card com 5 segmentos (mesmo padrão das outras telas) */
   .met-kpis {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-bottom: 6px;
-  }
-  @media (max-width: 900px) { .met-kpis { grid-template-columns: repeat(2, 1fr); } }
-  .met-kpi {
     background: var(--radix-surface, #fff);
     border: 1px solid var(--radix-line, #e5e7eb);
     border-radius: 12px;
-    padding: 14px 16px;
+    overflow: hidden;
+    margin-bottom: 14px;
   }
+  @media (max-width: 900px) { .met-kpis { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .met-kpis { grid-template-columns: 1fr; } }
+  .met-kpi {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    border-right: 1px solid var(--radix-line, #e5e7eb);
+    border-top: 4px solid transparent;
+  }
+  .met-kpi:last-child { border-right: 0; }
+  @media (max-width: 900px) {
+    .met-kpi:nth-child(2) { border-right: 0; }
+    .met-kpi:nth-child(-n+3) { border-bottom: 1px solid var(--radix-line); }
+    .met-kpi:nth-child(odd) { border-right: 1px solid var(--radix-line); }
+    .met-kpi:nth-child(even) { border-right: 0; }
+  }
+  .met-kpi.met-kpi-cyan    { border-top-color: var(--radix-cyan, #0891b2); }
+  .met-kpi.met-kpi-success { border-top-color: #10b981; }
+  .met-kpi.met-kpi-text    { border-top-color: var(--radix-line-2, #d1d5db); }
+  .met-kpi-ico {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--radix-bg-2, #f3f4f6);
+    color: var(--radix-text-muted, #6b7280);
+  }
+  .met-kpi-ico svg { width: 20px; height: 20px; }
+  .met-kpi.met-kpi-cyan    .met-kpi-ico { background: rgba(34,211,238,.14); color: var(--radix-cyan, #0891b2); }
+  .met-kpi.met-kpi-success .met-kpi-ico { background: rgba(16,185,129,.14); color: #10b981; }
+  .met-kpi-corpo { min-width: 0; }
   .met-kpi-lab {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.05em; color: var(--radix-text-muted, #6b7280);
-    margin-bottom: 6px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--radix-text-muted, #6b7280);
+    display: block; margin-top: 3px;
   }
   .met-kpi-val {
-    font-size: 26px; font-weight: 800; color: var(--radix-text, #111);
-    line-height: 1.05;
+    font-size: 24px; font-weight: 800; color: var(--radix-text, #111);
+    line-height: 1; display: block;
   }
+  .met-kpi.met-kpi-cyan    .met-kpi-val { color: var(--radix-cyan, #0891b2); }
+  .met-kpi.met-kpi-success .met-kpi-val { color: #10b981; }
   .met-kpi-sub {
-    margin-top: 4px; font-size: 11px; color: var(--radix-text-muted, #6b7280);
+    margin-top: 4px; font-size: 10.5px; color: var(--radix-text-muted, #6b7280);
+    display: block;
   }
   .met-tabela-wrap {
     background: var(--radix-surface, #fff);
@@ -5870,6 +5923,15 @@ const TECNICAS_ESTUDO = [
 // =========================================================
 // CADERNO DE ERROS — categorias e prioridades
 // =========================================================
+// SVGs (feather-style) usados nos cards de categoria — mais profissional que emoji
+const _SVG_CAT = {
+  conceitual:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.7.6 1 1.4 1 2.3v1h6v-1c0-.9.3-1.7 1-2.3A7 7 0 0 0 12 2z"/></svg>',
+  calculo:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="10" y2="11"/><line x1="13" y1="11" x2="14" y2="11"/><line x1="17" y1="11" x2="17" y2="11"/><line x1="8" y1="15" x2="10" y2="15"/><line x1="13" y1="15" x2="14" y2="15"/><line x1="17" y1="15" x2="17" y2="15"/></svg>',
+  interpretacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  distracao:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><text x="13" y="6" font-size="6" font-weight="700" fill="currentColor" stroke="none">zz</text></svg>',
+  formula:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 21 21 21 21 3"/><line x1="10" y1="17" x2="10" y2="15"/><line x1="13" y1="17" x2="13" y2="13"/><line x1="16" y1="17" x2="16" y2="11"/><line x1="19" y1="17" x2="19" y2="9"/></svg>',
+  outro:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+};
 const CATEGORIAS_ERRO = [
   { id: 'conceitual',    nome: 'Conceitual',    icone: '💡', cor: '#1d4ed8', bg: 'rgba(59,130,246,.14)' },
   { id: 'calculo',       nome: 'Cálculo',       icone: '🔢', cor: '#b45309', bg: 'rgba(245,158,11,.14)' },
@@ -5878,13 +5940,43 @@ const CATEGORIAS_ERRO = [
   { id: 'formula',       nome: 'Fórmula',       icone: '📐', cor: '#b91c1c', bg: 'rgba(220,38,38,.12)' },
   { id: 'outro',         nome: 'Outro',         icone: '➕', cor: '#4b5563', bg: 'rgba(107,114,128,.18)' }
 ];
+// Símbolos ASCII (em vez de emoji circular) — mais sóbrio e profissional
 const PRIORIDADES_ERRO = [
-  { id: 1, nome: 'Baixa', cor: '#0891b2', emoji: '🔵' },
-  { id: 2, nome: 'Média', cor: '#f59e0b', emoji: '🟠' },
-  { id: 3, nome: 'Alta',  cor: '#dc2626', emoji: '🔴' }
+  { id: 1, nome: 'Baixa', cor: '#0891b2', emoji: '🔵', simbolo: '↓' },
+  { id: 2, nome: 'Média', cor: '#f59e0b', emoji: '🟠', simbolo: '—' },
+  { id: 3, nome: 'Alta',  cor: '#dc2626', emoji: '🔴', simbolo: '↑' }
 ];
 function _catErroPorId(id) { return CATEGORIAS_ERRO.find(c => c.id === id) || CATEGORIAS_ERRO[CATEGORIAS_ERRO.length - 1]; }
 function _priErroPorId(p)  { return PRIORIDADES_ERRO.find(x => x.id === p) || PRIORIDADES_ERRO[1]; }
+
+// =========================================================
+// SVGs reutilizáveis (feather-style) — substitutos de emoji
+// nos KPIs, cabeçalhos de grupo e ícones de tela.
+// =========================================================
+const _SVGI = {
+  // alertas / status
+  alerta:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  sino:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  calendario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  check:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  circulo:  '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>',
+  circuloO: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
+  relogio:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  // entidades
+  pessoas:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  questoes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  livro:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>',
+  refresh:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>',
+  grafico:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>'
+};
+// Helper: ícone de status de revisão padronizado
+function _svgRevStatus(status) {
+  if (status === 'atrasada') return _SVGI.alerta;
+  if (status === 'hoje')     return _SVGI.sino;
+  if (status === 'em_breve') return _SVGI.calendario;
+  if (status === 'feita')    return _SVGI.check;
+  return _SVGI.circuloO;
+}
 
 // =========================================================
 // TURMAS DO CURSO (4 turmas fixas — slug curto no banco)
@@ -7902,7 +7994,7 @@ function renderDashboardAluno() {
             <span>Minhas revisões</span>
             <small>Plano de Ebbinghaus</small>
           </div>
-          <div class="dash-atalho" onclick="renderCadernoErros()">
+          <div class="dash-atalho" onclick="renderCadernoErros()" style="position:relative;">
             <div class="dash-atalho-icon" style="background:rgba(168,85,247,.14);color:#7e22ce;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
             <span>Caderno de erros</span>
             <small>Anote e revise</small>
@@ -13382,13 +13474,32 @@ async function renderMetricasAlunos() {
       Visão consolidada de estudo, questões respondidas e revisões de todos os alunos aprovados.
     </p>
 
-    <!-- KPIs globais -->
+    <!-- KPIs globais (single-card 5 segmentos, padrão unificado) -->
     <div class="met-kpis">
-      <div class="met-kpi"><div class="met-kpi-lab">Alunos aprovados</div><div class="met-kpi-val" style="color:var(--radix-cyan);">${totAlunos}</div></div>
-      <div class="met-kpi"><div class="met-kpi-lab">Questões respondidas</div><div class="met-kpi-val">${totQ}</div><div class="met-kpi-sub">${totA} acertos · ${taxaGeral}% geral</div></div>
-      <div class="met-kpi"><div class="met-kpi-lab">Semanas em estudo</div><div class="met-kpi-val">${totSem}</div></div>
-      <div class="met-kpi"><div class="met-kpi-lab">Revisões feitas</div><div class="met-kpi-val" style="color:#10b981;">${totRev}</div></div>
-      <div class="met-kpi"><div class="met-kpi-lab">Tempo total (h)</div><div class="met-kpi-val">${totET.toString().replace('.', ',')}</div></div>
+      <div class="met-kpi met-kpi-cyan">
+        <div class="met-kpi-ico">${_SVGI.pessoas}</div>
+        <div class="met-kpi-corpo"><span class="met-kpi-val">${totAlunos}</span><span class="met-kpi-lab">Alunos aprovados</span></div>
+      </div>
+      <div class="met-kpi met-kpi-text">
+        <div class="met-kpi-ico">${_SVGI.questoes}</div>
+        <div class="met-kpi-corpo">
+          <span class="met-kpi-val">${totQ}</span>
+          <span class="met-kpi-lab">Questões respondidas</span>
+          <span class="met-kpi-sub">${totA} acertos · ${taxaGeral}% geral</span>
+        </div>
+      </div>
+      <div class="met-kpi met-kpi-cyan">
+        <div class="met-kpi-ico">${_SVGI.calendario}</div>
+        <div class="met-kpi-corpo"><span class="met-kpi-val">${totSem}</span><span class="met-kpi-lab">Semanas em estudo</span></div>
+      </div>
+      <div class="met-kpi met-kpi-success">
+        <div class="met-kpi-ico">${_SVGI.refresh}</div>
+        <div class="met-kpi-corpo"><span class="met-kpi-val">${totRev}</span><span class="met-kpi-lab">Revisões feitas</span></div>
+      </div>
+      <div class="met-kpi met-kpi-text">
+        <div class="met-kpi-ico">${_SVGI.relogio}</div>
+        <div class="met-kpi-corpo"><span class="met-kpi-val">${totET.toString().replace('.', ',')}</span><span class="met-kpi-lab">Tempo total (h)</span></div>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -13495,7 +13606,7 @@ function _renderTabelaMetricas() {
             <th class="met-num" title="Horas registradas no campo ET">ET (h)</th>
             <th class="met-num" title="Questões feitas no registro de estudo (sala+casa)">Q estudo</th>
             <th class="met-num" title="Revisões marcadas como feitas / total previsto">Revisões</th>
-            <th class="met-num" title="Caderno de erros: resolvidos / total">📕 Erros</th>
+            <th class="met-num" title="Caderno de erros: resolvidos / total"><span style="display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>Erros</span></th>
             <th class="met-num" title="Dias desde a última atividade">Última</th>
           </tr>
         </thead>
@@ -16425,15 +16536,16 @@ function abrirModalErro(opcoes) {
   const prioridadePre = editando ? editando.prioridade : 2;
   const questaoId = editando ? editando.questao_id : (opcoes.questaoId || null);
 
-  // Cards de categoria
+  // Cards de categoria (SVG + nome)
   const catCards = CATEGORIAS_ERRO.map(c =>
     `<div class="ce-cat-opc ${c.id === categoriaPre ? 'sel' : ''}" data-cat="${c.id}" onclick="_modalErroSelectCat('${c.id}')">
-      <span class="ico">${c.icone}</span>${c.nome}
+      <span class="ico">${_SVG_CAT[c.id] || ''}</span>
+      <span class="nm">${c.nome}</span>
     </div>`).join('');
 
-  // Botões de prioridade
+  // Botões de prioridade (símbolo ASCII em vez de emoji circular)
   const priBtns = PRIORIDADES_ERRO.map(p =>
-    `<button class="${p.id === prioridadePre ? 'sel pri-' + p.id : ''}" data-pri="${p.id}" onclick="_modalErroSelectPri(${p.id})">${p.emoji} ${p.nome}</button>`
+    `<button class="${p.id === prioridadePre ? 'sel pri-' + p.id : ''}" data-pri="${p.id}" onclick="_modalErroSelectPri(${p.id})">${p.simbolo} ${p.nome}</button>`
   ).join('');
 
   const escAttr = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -16441,11 +16553,11 @@ function abrirModalErro(opcoes) {
 
   const html = `
     <div class="modal-overlay" id="${id}" onclick="if(event.target===this)fecharModalErro()">
-      <div class="modal ce-modal-form" style="max-width:560px;">
-        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--radix-line);margin-bottom:14px;">
-          <span style="font-size:22px;">📕</span>
-          <h2 style="margin:0;flex:1;font-size:16px;">${editando ? 'Editar erro' : 'Novo erro'}</h2>
-          <span style="background:var(--radix-bg-2);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:0.05em;color:var(--radix-text-muted);">SEM ${String(semanaN).padStart(2,'0')}</span>
+      <div class="modal ce-modal-form" style="max-width:600px;padding:24px 28px;">
+        <div style="display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--radix-line);margin-bottom:18px;">
+          <span style="font-size:28px;line-height:1;">📕</span>
+          <h2 style="margin:0;flex:1;font-size:20px;font-weight:800;">${editando ? 'Editar erro' : 'Novo erro'}</h2>
+          <span style="background:var(--radix-bg-2);padding:5px 12px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:0.05em;color:var(--radix-text-muted);">SEM ${String(semanaN).padStart(2,'0')}</span>
         </div>
 
         <div class="ce-form-row">
@@ -16486,10 +16598,16 @@ function abrirModalErro(opcoes) {
         <input type="hidden" id="ce-modal-questao" value="${questaoId || ''}">
         <input type="hidden" id="ce-modal-id" value="${editando ? editando.id : ''}">
 
-        <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--radix-line);margin-top:16px;">
-          ${editando ? `<button class="btn btn-secondary" style="color:#dc2626;margin-right:auto;" onclick="excluirErroNoModal()">🗑 Excluir</button>` : ''}
-          <button class="btn btn-secondary" onclick="fecharModalErro()">Cancelar</button>
-          <button class="btn btn-success" onclick="salvarErroNoModal()">${editando ? 'Salvar alterações' : '📕 Salvar erro'}</button>
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:18px;border-top:1px solid var(--radix-line);margin-top:20px;align-items:center;">
+          ${editando ? `<button class="btn btn-secondary" style="color:#dc2626;margin-right:auto;display:inline-flex;align-items:center;gap:6px;" onclick="excluirErroNoModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Excluir
+          </button>` : ''}
+          <button class="btn btn-secondary" onclick="fecharModalErro()" style="padding:10px 20px;font-size:14px;">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarErroNoModal()" style="padding:10px 20px;font-size:14px;display:inline-flex;align-items:center;gap:7px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            ${editando ? 'Salvar alterações' : 'Salvar erro'}
+          </button>
         </div>
       </div>
     </div>`;
@@ -16668,9 +16786,10 @@ function renderCadernoErros() {
 
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
       <div>
-        <h2 class="section-title" style="margin:0;">
+        <h2 class="section-title" style="margin:0;display:inline-flex;align-items:center;gap:8px;">
           <span class="section-title-accent"></span>
-          📕 Meu Caderno de Erros
+          <span style="color:#7e22ce;display:inline-flex;">${_SVGI.livro.replace('<svg ', '<svg width="22" height="22" ')}</span>
+          Meu Caderno de Erros
         </h2>
         <p style="color:var(--radix-text-muted);font-size:13px;margin:6px 0 0;">
           ${totalGeral} erros registrados · ${totalResolv} resolvidos (${pctResolv}%) ${topTema ? '· Tema com mais erros: <b>' + topTemaInfo + '</b>' : ''}
@@ -16682,19 +16801,19 @@ function renderCadernoErros() {
     <!-- KPIs (single card, 4 segmentos com ícone) -->
     <div class="ce-kpis" style="margin-top:14px;">
       <div class="ce-kpi kpi-alta">
-        <div class="ce-kpi-ico">🔴</div>
+        <div class="ce-kpi-ico">${_SVGI.alerta}</div>
         <div class="ce-kpi-corpo"><span class="v">${nAlta}</span><span class="l">Alta prioridade</span></div>
       </div>
       <div class="ce-kpi kpi-media">
-        <div class="ce-kpi-ico">🟠</div>
+        <div class="ce-kpi-ico">${_SVGI.circulo}</div>
         <div class="ce-kpi-corpo"><span class="v">${nMedia}</span><span class="l">Média prioridade</span></div>
       </div>
       <div class="ce-kpi kpi-baixa">
-        <div class="ce-kpi-ico">🔵</div>
+        <div class="ce-kpi-ico">${_SVGI.circuloO}</div>
         <div class="ce-kpi-corpo"><span class="v">${nBaixa}</span><span class="l">Baixa prioridade</span></div>
       </div>
       <div class="ce-kpi kpi-resolv">
-        <div class="ce-kpi-ico">✓</div>
+        <div class="ce-kpi-ico">${_SVGI.check}</div>
         <div class="ce-kpi-corpo"><span class="v">${resolvidos.length}</span><span class="l">Resolvidos</span></div>
       </div>
     </div>
@@ -16723,7 +16842,7 @@ function renderCadernoErros() {
 
     ${(ativos.length + resolvidos.length) === 0 ? `
       <div class="ce-vazio">
-        <div class="ce-vazio-ico">📕</div>
+        <div class="ce-vazio-ico">${_SVGI.livro}</div>
         <div class="ce-vazio-txt">
           <h3 class="ce-vazio-tit">Seu caderno está vazio</h3>
           <p class="ce-vazio-sub">Registre erros conforme estuda — fica fácil revisar com foco depois. Você também pode adicionar direto pelo editor de cada semana.</p>
@@ -16820,7 +16939,8 @@ function _renderSecaoCadernoNaSemana(semanaN) {
     return `
       <div class="ce-na-semana">
         <div class="ce-na-semana-head">
-          <span class="ico">📕</span> Caderno de erros desta semana
+          <span class="ico" style="display:inline-flex;color:#7e22ce;">${_SVGI.livro.replace('<svg ', '<svg width="16" height="16" ')}</span>
+          Caderno de erros desta semana
           <span class="count" style="background:var(--radix-bg-2);color:var(--radix-text-muted);">vazio</span>
         </div>
         <button class="ce-na-semana-add" onclick="abrirModalErro({semanaN: ${semanaN}})">+ Adicionar erro desta semana</button>
@@ -16844,7 +16964,8 @@ function _renderSecaoCadernoNaSemana(semanaN) {
   return `
     <div class="ce-na-semana" id="ce-na-semana-bloco">
       <div class="ce-na-semana-head">
-        <span class="ico">📕</span> Caderno de erros desta semana
+        <span class="ico" style="display:inline-flex;color:#7e22ce;">${_SVGI.livro.replace('<svg ', '<svg width="16" height="16" ')}</span>
+        Caderno de erros desta semana
         <span class="count">${ativos.length} ativ${ativos.length === 1 ? 'o' : 'os'}</span>
       </div>
       <div class="ce-na-semana-itens">${itens}</div>
@@ -16904,7 +17025,7 @@ function _renderAlertaCaderno() {
   const top3 = temasUnicos.slice(0, 3).join(' · ');
   return `
     <div class="dash-ce-alerta" onclick="renderCadernoErros()">
-      <div class="dash-ce-ico">📕</div>
+      <div class="dash-ce-ico">${_SVGI.livro}</div>
       <div class="dash-ce-txt">
         <p class="dash-ce-tit">${altas.length} ${altas.length === 1 ? 'erro' : 'erros'} de alta prioridade pra revisar</p>
         <p class="dash-ce-sub">${top3 || 'Releia antes da próxima prova.'}</p>
@@ -16945,28 +17066,28 @@ function renderMinhasRevisoes() {
     <!-- Resumo em single-card com 4 segmentos -->
     <div class="rev-resumo-grid">
       <div class="rev-resumo-card rev-${cont.nAtrasadas > 0 ? 'urgente' : 'ok'}">
-        <div class="rev-resumo-ico">⚠</div>
+        <div class="rev-resumo-ico">${_SVGI.alerta}</div>
         <div class="rev-resumo-corpo">
           <span class="rev-resumo-n">${cont.nAtrasadas}</span>
           <span class="rev-resumo-l">${cont.nAtrasadas === 1 ? 'Atrasada' : 'Atrasadas'}</span>
         </div>
       </div>
       <div class="rev-resumo-card rev-${cont.nHoje > 0 ? 'hoje' : 'ok'}">
-        <div class="rev-resumo-ico">🔔</div>
+        <div class="rev-resumo-ico">${_SVGI.sino}</div>
         <div class="rev-resumo-corpo">
           <span class="rev-resumo-n">${cont.nHoje}</span>
           <span class="rev-resumo-l">${cont.nHoje === 1 ? 'É hoje' : 'Hoje'}</span>
         </div>
       </div>
       <div class="rev-resumo-card rev-prox">
-        <div class="rev-resumo-ico">📅</div>
+        <div class="rev-resumo-ico">${_SVGI.calendario}</div>
         <div class="rev-resumo-corpo">
           <span class="rev-resumo-n">${cont.nEstaSemana}</span>
           <span class="rev-resumo-l">Esta semana</span>
         </div>
       </div>
       <div class="rev-resumo-card rev-feita">
-        <div class="rev-resumo-ico">✓</div>
+        <div class="rev-resumo-ico">${_SVGI.check}</div>
         <div class="rev-resumo-corpo">
           <span class="rev-resumo-n">${cont.nFeitas}</span>
           <span class="rev-resumo-l">${cont.nFeitas === 1 ? 'Feita' : 'Feitas'}</span>
