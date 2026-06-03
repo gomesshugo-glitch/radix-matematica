@@ -5456,6 +5456,25 @@ const TECNICAS_ESTUDO = [
 ];
 
 // =========================================================
+// CADERNO DE ERROS — categorias e prioridades
+// =========================================================
+const CATEGORIAS_ERRO = [
+  { id: 'conceitual',    nome: 'Conceitual',    icone: '💡', cor: '#1d4ed8', bg: 'rgba(59,130,246,.14)' },
+  { id: 'calculo',       nome: 'Cálculo',       icone: '🔢', cor: '#b45309', bg: 'rgba(245,158,11,.14)' },
+  { id: 'interpretacao', nome: 'Interpretação', icone: '📖', cor: '#7e22ce', bg: 'rgba(168,85,247,.14)' },
+  { id: 'distracao',     nome: 'Distração',     icone: '😴', cor: '#854d0e', bg: 'rgba(234,179,8,.18)' },
+  { id: 'formula',       nome: 'Fórmula',       icone: '📐', cor: '#b91c1c', bg: 'rgba(220,38,38,.12)' },
+  { id: 'outro',         nome: 'Outro',         icone: '➕', cor: '#4b5563', bg: 'rgba(107,114,128,.18)' }
+];
+const PRIORIDADES_ERRO = [
+  { id: 1, nome: 'Baixa', cor: '#0891b2', emoji: '🔵' },
+  { id: 2, nome: 'Média', cor: '#f59e0b', emoji: '🟠' },
+  { id: 3, nome: 'Alta',  cor: '#dc2626', emoji: '🔴' }
+];
+function _catErroPorId(id) { return CATEGORIAS_ERRO.find(c => c.id === id) || CATEGORIAS_ERRO[CATEGORIAS_ERRO.length - 1]; }
+function _priErroPorId(p)  { return PRIORIDADES_ERRO.find(x => x.id === p) || PRIORIDADES_ERRO[1]; }
+
+// =========================================================
 // TURMAS DO CURSO (4 turmas fixas — slug curto no banco)
 // Pra trocar nome/dia/turno, editar aqui (não precisa migrar dados).
 // Os slugs (t01..t04) vivem em perfis.turma e na constraint do banco.
@@ -5550,6 +5569,7 @@ let state = {
   progressoCronograma: {},
   semanaEditando: null,
   questoesSelecionadas: [], // IDs de questoes selecionadas para a lista
+  cadernoErros: [],          // Erros registrados pelo aluno (curva personalizada)
 };
 
 // ========== PERSISTÊNCIA (Supabase) ==========
