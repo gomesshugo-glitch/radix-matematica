@@ -6068,15 +6068,16 @@ function _svgRevStatus(status) {
 }
 
 // =========================================================
-// TURMAS DO CURSO (4 turmas fixas — slug curto no banco)
+// TURMAS DO CURSO (5 turmas fixas — slug curto no banco)
 // Pra trocar nome/dia/turno, editar aqui (não precisa migrar dados).
-// Os slugs (t01..t04) vivem em perfis.turma e na constraint do banco.
+// Os slugs (t01..t05) vivem em perfis.turma e na constraint do banco.
 // =========================================================
 const TURMAS = [
-  { id: 't01', nome: 'Turma 01 — Terça Manhã',   dia: 'Terça',   turno: 'Manhã', cor: '#22d3ee' },
-  { id: 't02', nome: 'Turma 02 — Terça Tarde',   dia: 'Terça',   turno: 'Tarde', cor: '#fbbf24' },
-  { id: 't03', nome: 'Turma 03 — Segunda Noite', dia: 'Segunda', turno: 'Noite', cor: '#a78bfa' },
-  { id: 't04', nome: 'Turma 04 — Quarta Tarde',  dia: 'Quarta',  turno: 'Tarde', cor: '#34d399' },
+  { id: 't01', nome: 'Turma 01 — Terça Manhã',   dia: 'Terça',   turno: 'Manhã',    cor: '#22d3ee' },
+  { id: 't02', nome: 'Turma 02 — Terça Tarde',   dia: 'Terça',   turno: 'Tarde',    cor: '#fbbf24' },
+  { id: 't03', nome: 'Turma 03 — Segunda Noite', dia: 'Segunda', turno: 'Noite',    cor: '#ec4899' },
+  { id: 't04', nome: 'Turma 04 — Quarta Tarde',  dia: 'Quarta',  turno: 'Tarde',    cor: '#34d399' },
+  { id: 't05', nome: 'Turma 05 — Curso Integral', dia: '—',      turno: 'Integral', cor: '#a78bfa' },
 ];
 
 function turmaPorId(id) {
