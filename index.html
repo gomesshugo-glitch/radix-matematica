@@ -10962,43 +10962,18 @@ function removerDaCesta(qid) {
   atualizarBotaoLista(qid);
 }
 
-// Confirmação inline em 2 cliques (mais robusta que confirm() nativo)
-let _cestaLimparPendente = false;
-let _cestaLimparTimer = null;
+// Limpa a cesta de questões selecionadas. Usa confirm() nativo — caminho mais
+// robusto e com feedback óbvio. (A estratégia anterior de "2 cliques + feedback
+// inline" às vezes ficava sem feedback visual e o aluno achava que não funcionava.)
 function limparCestaLateral() {
-  if (!Array.isArray(state.questoesSelecionadas)) state.questoesSelecionadas = [];
-  if (state.questoesSelecionadas.length === 0) return;
-  // 1º clique: pede confirmação inline (troca o texto do botão)
-  if (!_cestaLimparPendente) {
-    _cestaLimparPendente = true;
-    const btns = document.querySelectorAll('#qbk-cesta .qbk-cesta-acoes .btn.btn-secondary');
-    btns.forEach(b => {
-      b.dataset._txtOrig = b.innerHTML;
-      b.innerHTML = '⚠ Clique de novo para confirmar';
-      b.style.background = '#fee2e2';
-      b.style.color = '#dc2626';
-      b.style.borderColor = '#dc2626';
-    });
-    clearTimeout(_cestaLimparTimer);
-    _cestaLimparTimer = setTimeout(() => {
-      _cestaLimparPendente = false;
-      const btns2 = document.querySelectorAll('#qbk-cesta .qbk-cesta-acoes .btn.btn-secondary');
-      btns2.forEach(b => {
-        if (b.dataset._txtOrig) b.innerHTML = b.dataset._txtOrig;
-        b.style.background = '';
-        b.style.color = '';
-        b.style.borderColor = '';
-      });
-    }, 3000);
-    return;
-  }
-  // 2º clique (dentro de 3s): limpa de verdade
-  clearTimeout(_cestaLimparTimer);
-  _cestaLimparPendente = false;
+  const arr = Array.isArray(state.questoesSelecionadas) ? state.questoesSelecionadas : [];
+  const n = arr.length;
+  if (n === 0) { alert('Sua lista já está vazia.'); return; }
+  if (!confirm(`Esvaziar sua lista de ${n} questão${n === 1 ? '' : 'ões'}?\n\nNão dá pra desfazer.`)) return;
   state.questoesSelecionadas = [];
   try { salvarListaLocal(); } catch (e) { console.warn('Erro salvarListaLocal:', e); }
-  atualizarBadgeLista();
-  _refreshCestaLateral();
+  try { atualizarBadgeLista(); } catch (e) { /* nop */ }
+  try { _refreshCestaLateral(); } catch (e) { /* nop */ }
   // Atualiza os botões dos cards visíveis (volta pra "+ Adicionar")
   document.querySelectorAll('[data-lista-btn]').forEach(btn => {
     btn.innerHTML = '+ Adicionar à lista';
