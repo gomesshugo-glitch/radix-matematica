@@ -18861,6 +18861,21 @@ function fazerMiniSimulado(temaId) {
     /[?&]code=[A-Za-z0-9_\-\.]{8,}/.test(_hrefURL) ||   // PKCE: ?code=...
     /#access_token=/.test(_hrefURL);                     // legado fallback
 
+  // 1b) Sinais indiretos de "veio de link de recovery mas chegou sem parâmetros"
+  //     (config errada de Redirect URLs no Supabase, link expirado redirecionando
+  //     com erro, ou webview de Gmail/Outlook que estripa o hash).
+  const _refer = document.referrer || '';
+  const _veioDoSupabase = /\.supabase\.co\b/i.test(_refer);
+  const _temErroRecovery =
+    /[?#&](error|error_code|error_description)=/i.test(_hrefURL) &&
+    /(otp|recovery|reset|password|expired|invalid)/i.test(decodeURIComponent(_hrefURL));
+  const _suspeitoRecoveryQuebrado = !ehRecovery && (_veioDoSupabase || _temErroRecovery);
+  if (_suspeitoRecoveryQuebrado) {
+    console.warn('[recovery] URL parece vir de link de recuperação mas sem parâmetros válidos.', {
+      href: _hrefURL, referrer: _refer
+    });
+  }
+
   // 2) Registra o listener ANTES do getSession() — para não perder o evento
   //    PASSWORD_RECOVERY que o Supabase emite durante a detecção na URL.
   sb.auth.onAuthStateChange((event, session) => {
@@ -18886,9 +18901,49 @@ function fazerMiniSimulado(temaId) {
     return;
   }
 
+  // 4b) Suspeito de link de recovery quebrado → mostra aviso amigável na tela
+  //     de login antes que o aluno fique perdido.
+  if (_suspeitoRecoveryQuebrado) {
+    _mostrarAvisoRecoveryQuebrado();
+    // não return — deixa o fluxo normal seguir; se tiver sessão antiga, ainda
+    // assim entra. Aviso fica visível só na tela de login.
+  }
+
   // 5) Fluxo normal: se já tem sessão, entrar.
   if (session) {
     await iniciarSessao();
   }
 })();
+
+// Exibe um aviso amarelo na tela de login quando detectamos que o aluno
+// PROVAVELMENTE veio de um link de recuperação que chegou estripado (sem
+// ?code=, sem #type=recovery). Causas conhecidas:
+//   - Supabase URL Configuration sem Redirect URLs whitelistado (sumiu o param)
+//   - Link expirado (>1h) → Supabase redireciona com error_code=otp_expired
+//   - Gmail/Outlook app webview que remove o hash da URL
+function _mostrarAvisoRecoveryQuebrado() {
+  const v = document.getElementById('view-login');
+  if (!v) return;
+  if (document.getElementById('aviso-recovery-quebrado')) return;
+  const html = `
+    <div id="aviso-recovery-quebrado"
+         style="max-width:520px;margin:14px auto 0;padding:14px 18px;border-radius:12px;
+                background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.45);
+                font-size:13px;line-height:1.5;color:var(--radix-text,#111);">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:18px;line-height:1;">⚠️</span>
+        <div>
+          <b style="display:block;margin-bottom:4px;">Veio pelo link de recuperação?</b>
+          Não conseguimos abrir a tela de nova senha automaticamente. Isso pode acontecer se:
+          <ul style="margin:6px 0 8px 18px;padding:0;">
+            <li>O link expirou (vale por 1 hora)</li>
+            <li>Você abriu o link pelo app de e-mail no celular (tenta abrir no Chrome/Safari direto)</li>
+          </ul>
+          <b>Solicite um novo link abaixo</b> — digita seu e-mail e clica em "Esqueci minha senha".
+        </div>
+      </div>
+    </div>
+  `;
+  v.insertAdjacentHTML('afterbegin', html);
+}
 </script>
