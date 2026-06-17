@@ -9889,80 +9889,186 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     let y = 0;
     const pages = [];
 
-    // ============ CAPA — compacta e profissional ============
+    // ============ CAPA — estilo ENEM (azul-claro, identidade Radix) ============
     const capa = pdfDoc.addPage([W, H]);
     pages.push(capa);
     const centrar = (txt, fnt, sz) => (W - fnt.widthOfTextAtSize(txt, sz)) / 2;
 
-    // --- Marca: √ RADIX 2026 (sem caixa preta) ---
-    const lblRadix = 'RADIX', lbl2026 = ' 2026';
-    const bSize = 34;
-    const wR = fontBold.widthOfTextAtSize(lblRadix, bSize);
-    const w2 = fontBold.widthOfTextAtSize(lbl2026, bSize);
-    const radSize = 30, radW = radSize * 0.95;
-    const totalW = radW + 10 + wR + w2;
-    let bx = (W - totalW) / 2;
-    let yC = H - 100;
-    drawRadical(capa, bx, yC - 4, radSize, preto, 2.6);
-    capa.drawText(lblRadix, { x: bx + radW + 10, y: yC, size: bSize, font: fontBold, color: preto });
-    capa.drawText(lbl2026, { x: bx + radW + 10 + wR, y: yC, size: bSize, font: fontBold, color: cinzaMedio });
+    // Cores da capa
+    const azulClaro      = rgb(0.78, 0.88, 0.96);  // fundo
+    const azulMaisClaro  = rgb(0.85, 0.93, 0.98);  // gradient leve
+    const cyanRadix      = rgb(0.04, 0.57, 0.70);  // #0891b2
+    const navyRadix      = rgb(0.05, 0.10, 0.21);  // #0e1a36
+    const azulPattern    = rgb(0.78, 0.88, 0.96);  // texto cyan na faixa
 
-    // Tagline
-    yC -= 24;
-    const tagline = '"Raiz que vira resultado"';
-    capa.drawText(tagline, { x: centrar(tagline, fontItalic, 10.5), y: yC, size: 10.5, font: fontItalic, color: cinzaMedio });
+    // Fundo azul-claro (página inteira)
+    capa.drawRectangle({ x: 0, y: 0, width: W, height: H, color: azulClaro });
 
-    // Régua de marca (largura total do conteúdo)
+    // -------- Topo: tag de ID da lista (estilo barcode/caderno) --------
+    const idLista = 'RADIX-2026-L' + String(Date.now()).slice(-4);
+    const tagPad = 16, tagH = 26;
+    const tagW = fontBold.widthOfTextAtSize(idLista, 11) + tagPad * 2;
+    const tagX = (W - tagW) / 2;
+    const tagY = H - 56;
+    capa.drawRectangle({ x: tagX, y: tagY - tagH + 4, width: tagW, height: tagH, color: rgb(1, 1, 1), borderColor: preto, borderWidth: 2 });
+    capa.drawText(idLista, { x: tagX + tagPad, y: tagY - 14, size: 11, font: fontBold, color: preto });
+
+    // -------- Título "RADIX MATEMÁTICA" --------
+    const tituloPrincipal = 'RADIX MATEMÁTICA';
+    capa.drawText(tituloPrincipal, {
+      x: centrar(tituloPrincipal, fontBold, 24),
+      y: H - 100,
+      size: 24, font: fontBold, color: preto
+    });
+
+    // -------- Subtítulo: "LISTA DE ESTUDOS — MATEMÁTICA" --------
+    const subTitulo = 'LISTA DE ESTUDOS  -  MATEMÁTICA';
+    capa.drawText(subTitulo, {
+      x: centrar(subTitulo, fontBold, 11),
+      y: H - 122,
+      size: 11, font: fontBold, color: cinzaEscuro
+    });
+
+    // -------- Marca grande: radix2026 (estilo "enem 2020") + selo circular lateral --------
+    const marcaSize = 56;
+    const tRadix = 'radix';
+    const tAno = '2026';
+    const wTRadix = fontBold.widthOfTextAtSize(tRadix, marcaSize);
+    const wTAno   = fontBold.widthOfTextAtSize(tAno, marcaSize);
+    // Posicionamento: marca à esquerda, selo circular à direita
+    const seloR = 56;  // raio
+    const seloCx = W - MR - seloR - 10;
+    const seloCy = H - 195;
+    const marcaX = ML + 10;
+    const marcaY = H - 215;  // baseline
+    // Marca
+    capa.drawText(tRadix, { x: marcaX, y: marcaY, size: marcaSize, font: fontBold, color: navyRadix });
+    capa.drawText(tAno,   { x: marcaX + wTRadix + 6, y: marcaY, size: marcaSize, font: fontBold, color: rgb(0.58, 0.64, 0.72) });
+
+    // -------- Selo circular (LISTA / N / QUESTÕES) --------
+    // Círculo de fundo branco
+    capa.drawCircle({ x: seloCx, y: seloCy, size: seloR, color: rgb(1, 1, 1), borderColor: cyanRadix, borderWidth: 1.5 });
+    // Borda externa dashed (simulada com pequenos arcos — usando um segundo círculo offset)
+    capa.drawCircle({ x: seloCx, y: seloCy, size: seloR + 5, color: rgb(1,1,1,0), borderColor: rgb(0.65, 0.80, 0.90), borderWidth: 1, opacity: 0 });
+    // "LISTA"
+    const tSeloTipo = 'LISTA';
+    capa.drawText(tSeloTipo, {
+      x: seloCx - font.widthOfTextAtSize(tSeloTipo, 9) / 2,
+      y: seloCy + 22,
+      size: 9, font: fontBold, color: cinzaMedio
+    });
+    // Número grande
+    const nQ = String(questoes.length);
+    capa.drawText(nQ, {
+      x: seloCx - fontBold.widthOfTextAtSize(nQ, 32) / 2,
+      y: seloCy - 6,
+      size: 32, font: fontBold, color: navyRadix
+    });
+    // "QUESTÕES"
+    const tSeloLbl = questoes.length === 1 ? 'QUESTAO' : 'QUESTOES';
+    capa.drawText(tSeloLbl, {
+      x: seloCx - fontBold.widthOfTextAtSize(tSeloLbl, 9) / 2,
+      y: seloCy - 28,
+      size: 9, font: fontBold, color: cyanRadix
+    });
+
+    // -------- Faixa horizontal "radixmatematica · radixmatematica..." --------
+    const faixaY = H - 285;
+    const faixaH = 22;
+    capa.drawRectangle({ x: 0, y: faixaY, width: W, height: faixaH, color: cyanRadix });
+    const tFaixa = 'radixmatematica  -  radixmatematica  -  radixmatematica  -  radixmatematica  -  radixmatematica';
+    const wF = fontBold.widthOfTextAtSize(tFaixa, 11);
+    // Centra o texto na faixa
+    capa.drawText(tFaixa, {
+      x: (W - wF) / 2,
+      y: faixaY + 7,
+      size: 11, font: fontBold, color: azulPattern
+    });
+
+    // -------- ATENÇÃO + frase motivacional --------
+    let yC = H - 320;
+    const tAtencao = 'ATENÇÃO: leia o enunciado de cada questão com calma.';
+    capa.drawText(tAtencao, {
+      x: centrar(tAtencao, font, 10),
+      y: yC,
+      size: 10, font: font, color: cinzaEscuro
+    });
+    yC -= 14;
+    const tFrasePre = 'Lembre-se da nossa frase do dia:';
+    capa.drawText(tFrasePre, {
+      x: centrar(tFrasePre, font, 10),
+      y: yC,
+      size: 10, font: font, color: cinzaEscuro
+    });
+
+    // Pílula branca com a frase motivacional
+    yC -= 32;
+    const fraseTxt = '"' + sanit(fraseMot) + '"';
+    const wFrase = fontBold.widthOfTextAtSize(fraseTxt, 13);
+    const pillW = Math.min(CW, wFrase + 48);
+    const pillX = (W - pillW) / 2;
+    const pillH = 30;
+    capa.drawRectangle({
+      x: pillX, y: yC - 10, width: pillW, height: pillH,
+      color: rgb(1, 1, 1), borderColor: rgb(0.85, 0.90, 0.95), borderWidth: 0.8
+    });
+    capa.drawText(fraseTxt, {
+      x: pillX + (pillW - wFrase) / 2,
+      y: yC,
+      size: 13, font: fontBold, color: preto
+    });
+
+    // -------- LEIA ATENTAMENTE + instruções numeradas --------
+    yC -= 50;
+    const tLeia = 'LEIA ATENTAMENTE AS INSTRUÇÕES SEGUINTES:';
+    capa.drawText(tLeia, {
+      x: centrar(tLeia, fontBold, 12),
+      y: yC,
+      size: 12, font: fontBold, color: preto
+    });
     yC -= 22;
-    capa.drawLine({ start: { x: ML, y: yC }, end: { x: W - MR, y: yC }, thickness: 0.6, color: cinzaClaro });
 
-    // Subtítulo
-    yC -= 30;
-    const subT = 'MATEMÁTICA E SUAS TECNOLOGIAS';
-    capa.drawText(subT, { x: centrar(subT, font, 9.5), y: yC, size: 9.5, font: font, color: cinzaMedio });
-
-    // Título (quebra se for longo)
-    yC -= 34;
-    const tituloSan = sanit(tituloLista);
-    const tLines = quebrarTexto(tituloSan, fontBold, 24, CW);
-    tLines.forEach(l => {
-      capa.drawText(l, { x: centrar(l, fontBold, 24), y: yC, size: 24, font: fontBold, color: preto });
-      yC -= 30;
-    });
-    yC += 30;
-
-    // Contagem de questões
-    yC -= 26;
-    const qLabel = questoes.length + (questoes.length === 1 ? ' questão' : ' questões');
-    capa.drawText(qLabel, { x: centrar(qLabel, fontItalic, 11), y: yC, size: 11, font: fontItalic, color: cinzaMedio });
-
-    // Frase motivacional — logo abaixo do bloco principal (não no rodapé)
-    yC -= 30;
-    const fraseLinhas = quebrarTexto('"' + fraseMot + '"', fontItalic, 11, CW - 120);
-    fraseLinhas.forEach(l => {
-      capa.drawText(l, { x: centrar(l, fontItalic, 11), y: yC, size: 11, font: fontItalic, color: cinzaMedio });
-      yC -= 15;
+    const instrucoes = [
+      'Este caderno contém ' + questoes.length + (questoes.length === 1 ? ' questão selecionada' : ' questões selecionadas') + ' para sua lista de estudos.',
+      'Para cada questão objetiva, são apresentadas 5 alternativas. Apenas uma responde corretamente.',
+      'Reserve tempo suficiente para fazer com calma — não há limite de tempo fora do simulado.',
+      'O gabarito completo e a resolução comentada estão disponíveis no app, em "Conferir gabarito".',
+      'Os rascunhos no caderno NÃO serão corrigidos pelo app — registre suas respostas só no app.',
+      'Ao terminar, abra o app e marque suas respostas. O sistema mostra acertos, erros e revisão.'
+    ];
+    instrucoes.forEach((txt, i) => {
+      const num = (i + 1) + '.';
+      // Número em cyan
+      capa.drawText(num, { x: ML + 4, y: yC, size: 10, font: fontBold, color: cyanRadix });
+      // Texto da instrução (quebra se longo)
+      const linhas = quebrarTexto(sanit(txt), font, 10, CW - 24);
+      linhas.forEach((l, k) => {
+        capa.drawText(l, { x: ML + 22, y: yC - (k * 12), size: 10, font: font, color: cinzaEscuro });
+      });
+      yC -= linhas.length * 12 + 6;
     });
 
-    // Caixa de identificação discreta (com borda), centralizada
-    yC -= 26;
-    const boxW = 360, boxH = 96, boxX = (W - boxW) / 2, boxY = yC - boxH;
-    capa.drawRectangle({ x: boxX, y: boxY, width: boxW, height: boxH, borderColor: cinzaClaro, borderWidth: 1, color: rgb(1, 1, 1) });
-    let iy = yC - 24;
-    capa.drawText('IDENTIFICAÇÃO', { x: boxX + 20, y: iy, size: 8, font: fontBold, color: cinzaEscuro });
-    iy -= 22;
-    capa.drawText('Nome:', { x: boxX + 20, y: iy, size: 9, font: font, color: cinzaMedio });
-    capa.drawText(sanit(nomeAluno || ''), { x: boxX + 62, y: iy, size: 10, font: fontBold, color: preto });
-    iy -= 18;
-    capa.drawText('CPF:', { x: boxX + 20, y: iy, size: 9, font: font, color: cinzaMedio });
-    capa.drawText(cpfFmt || '', { x: boxX + 62, y: iy, size: 10, font: font, color: preto });
-    iy -= 18;
-    capa.drawText('Data:', { x: boxX + 20, y: iy, size: 9, font: font, color: cinzaMedio });
-    capa.drawText(new Date().toLocaleDateString('pt-BR'), { x: boxX + 62, y: iy, size: 10, font: font, color: preto });
-
-    // Rodapé discreto
-    const rod = 'app.radixmatematica.com.br';
-    capa.drawText(rod, { x: centrar(rod, font, 8), y: 42, size: 8, font: font, color: cinzaClaro });
+    // -------- Footer: logo mini + identidade + nome + data --------
+    const footY = 50;
+    // Linha divisória fina
+    capa.drawLine({ start: { x: ML, y: footY + 20 }, end: { x: W - MR, y: footY + 20 }, thickness: 0.6, color: cinzaClaro });
+    // Logo mini Radix à esquerda + texto "RADIX MATEMÁTICA · Curso preparatório ENEM"
+    const miniLogoLado = 16;
+    capa.drawRectangle({ x: ML, y: footY, width: miniLogoLado, height: miniLogoLado, color: cyanRadix });
+    drawRadical(capa, ML, footY, miniLogoLado, rgb(1, 1, 1), 1.6);
+    capa.drawText('RADIX MATEMÁTICA  ·  Curso preparatório ENEM', {
+      x: ML + miniLogoLado + 8,
+      y: footY + 4,
+      size: 9, font: fontBold, color: cinzaEscuro
+    });
+    // Direita: nome do aluno + data
+    const footRight = sanit(nomeAluno) + '  ·  ' + new Date().toLocaleDateString('pt-BR');
+    const wFR = font.widthOfTextAtSize(footRight, 9);
+    capa.drawText(footRight, {
+      x: W - MR - wFR,
+      y: footY + 4,
+      size: 9, font: font, color: cinzaMedio
+    });
 
     // ============ PÁGINAS DAS QUESTÕES ============
     function novaPagina() {
@@ -10084,9 +10190,10 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
           const xCol = ML + k * (altW + gap);
           const cx = xCol + 8;
           const cy = y - 1;
-          currentPage.drawCircle({ x: cx, y: cy, size: 8, borderColor: preto, borderWidth: 1.1, color: rgb(1, 1, 1) });
+          // Círculo PRETO preenchido + letra BRANCA (estilo ENEM)
+          currentPage.drawCircle({ x: cx, y: cy, size: 8, color: preto });
           const lw3 = fontBold.widthOfTextAtSize(letra, 10);
-          currentPage.drawText(letra, { x: cx - lw3/2, y: cy - 3.2, size: 10, font: fontBold, color: preto });
+          currentPage.drawText(letra, { x: cx - lw3/2, y: cy - 3.2, size: 10, font: fontBold, color: rgb(1, 1, 1) });
           const img = await embedImg(q.alternativasImg[k]);
           if (img) {
             currentPage.drawImage(img, { x: xCol, y: y - 16 - altH, width: altW, height: altH });
@@ -10106,10 +10213,11 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
           // Texto baseline em y; centro visual da linha = y + 3 (ascender ~3pt)
           const cx = ML + 9;
           const cy = y + 3;
-          currentPage.drawCircle({ x: cx, y: cy, size: 8.5, borderColor: preto, borderWidth: 1.2, color: rgb(1, 1, 1) });
+          // Círculo PRETO preenchido + letra BRANCA (estilo ENEM)
+          currentPage.drawCircle({ x: cx, y: cy, size: 8.5, color: preto });
           const lw = fontBold.widthOfTextAtSize(letra, 10);
           // Letra: baseline = cy - (ascender_letra / 2) ~ cy - 3.5
-          currentPage.drawText(letra, { x: cx - lw/2 + 0.2, y: cy - 3.5, size: 10, font: fontBold, color: preto });
+          currentPage.drawText(letra, { x: cx - lw/2 + 0.2, y: cy - 3.5, size: 10, font: fontBold, color: rgb(1, 1, 1) });
           // Texto da alternativa, justificado
           drawWrappedJustified(textoLimpo, ML + 26, y, font, 10, CW - 26, preto, 14);
           y -= altH + 6;
