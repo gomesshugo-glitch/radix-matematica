@@ -9935,7 +9935,12 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
         'α':'alfa','β':'beta','γ':'gama','δ':'delta','ε':'eps','θ':'teta','λ':'lambda','μ':'mu','σ':'sigma','τ':'tau','ϕ':'phi','φ':'phi','ω':'omega',
         'Δ':'Delta','Σ':'Sigma','Π':'Pi','Ω':'Omega','Θ':'Teta','Λ':'Lambda','Φ':'Phi',
         'ℓ':'l','∑':'soma','∫':'int','∂':'d','∇':'nabla','∈':'pertence','∉':'naopertence','⊂':'subset','⊃':'supset','∪':'uniao','∩':'intersec','∀':'paratodo','∃':'existe','∅':'vazio',
-        '→':'->','←':'<-','↔':'<->','⇒':'=>','⇐':'<=','⇔':'<=>','∴':'logo','∵':'pois','∝':'prop','⋅':'.'
+        '→':'->','←':'<-','↔':'<->','⇒':'=>','⇐':'<=','⇔':'<=>','∴':'logo','∵':'pois','∝':'prop','⋅':'.',
+        // Marcadores de lista e símbolos decorativos (causavam '?' no PDF)
+        '•':'-','◦':'o','▪':'-','▫':'-','■':'-','□':'-','●':'-','○':'o','◆':'-','◇':'-',
+        '►':'>','▶':'>','◄':'<','◀':'<','▲':'^','▼':'v',
+        '✓':'v','✔':'v','✗':'x','✘':'x','✱':'*','✦':'*','★':'*','☆':'*',
+        '°':'o'
       };
       let out = String(s);
       for (const [k, v] of Object.entries(map)) out = out.split(k).join(v);
@@ -18306,7 +18311,22 @@ async function gerarPDFProgresso(semanas, titulo) {
   // Sanitiza chars que Helvetica WinAnsi não tem (acento OK, mas emoji não)
   function sanit(s) {
     if (s == null) return '';
-    return String(s)
+    // Mapa de transliteração Unicode → Latin-1 (espelha o sanit() principal do gerador
+    // de PDF — sem ele, bullets/setas/símbolos viravam '?' no PDF).
+    const _map = {
+      '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+      '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+      '√':'raiz','π':'pi','∞':'inf','≤':'<=','≥':'>=','≠':'!=','≈':'~','÷':'/','×':'x','−':'-',
+      '·':'.','—':'-','–':'-','…':'...','‒':'-','„':'"','«':'"','»':'"',
+      '“':'"','”':'"','‘':"'","’":"'",
+      '•':'-','◦':'o','▪':'-','▫':'-','■':'-','□':'-','●':'-','○':'o','◆':'-','◇':'-',
+      '►':'>','▶':'>','◄':'<','◀':'<','▲':'^','▼':'v',
+      '✓':'v','✔':'v','✗':'x','✘':'x','★':'*','☆':'*','°':'o',
+      '→':'->','←':'<-','↔':'<->','⇒':'=>','⇐':'<=','⇔':'<=>'
+    };
+    let out = String(s);
+    for (const k in _map) out = out.split(k).join(_map[k]);
+    return out
       .replace(/[^\x00-\xFF]/g, '?')
       .replace(/[\r\n\t\v\f]+/g, ' ')
       .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '')
