@@ -4015,18 +4015,221 @@
   box-shadow: 0 0 0 3px rgba(34,211,238,0.15);
 }
 
-/* Card-linha de questão */
+/* ===== Toolbar compacta de filtros (Semana + Prova + Dificuldade + Status numa linha) ===== */
+.qbk-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--radix-surface-2, #fff);
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.qbk-tb-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.qbk-tb-item.grow { flex: 1; min-width: 200px; }
+.qbk-tb-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--radix-text-muted, #6b7280);
+  padding-left: 2px;
+}
+/* Select compacto e elegante */
+.qbk-tb-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 8px 30px 8px 12px;
+  border: 1px solid var(--radix-line-2, #e5e7eb);
+  border-radius: 9px;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: var(--radix-surface, #fff);
+  color: var(--radix-text, #111);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color .15s, box-shadow .15s;
+}
+.qbk-tb-select:focus {
+  outline: none;
+  border-color: var(--radix-cyan, #22d3ee);
+  box-shadow: 0 0 0 3px rgba(34,211,238,0.15);
+}
+.qbk-tb-select.is-active {
+  border-color: var(--radix-cyan, #0891b2);
+  background-color: rgba(34,211,238,0.06);
+  color: var(--radix-cyan, #0891b2);
+  font-weight: 600;
+}
+/* Botão "Esta semana" compacto */
+.qbk-tb-hoje {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--radix-line-2, #e5e7eb);
+  background: var(--radix-surface, #fff);
+  color: var(--radix-text-2, #374151);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: all .15s;
+}
+.qbk-tb-hoje:hover { border-color: var(--radix-cyan, #22d3ee); color: var(--radix-cyan, #0891b2); }
+.qbk-tb-hoje.active {
+  background: var(--radix-cyan, #22d3ee); border-color: var(--radix-cyan, #22d3ee); color: #fff;
+}
+/* Segmented control (Dificuldade / Status) */
+.qbk-seg {
+  display: inline-flex;
+  background: var(--radix-bg-2, #f3f4f6);
+  border: 1px solid var(--radix-line, #e5e7eb);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+.qbk-seg button {
+  border: 0; background: transparent;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--radix-text-muted, #6b7280);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: all .12s;
+}
+.qbk-seg button:hover { color: var(--radix-text-2, #374151); }
+.qbk-seg button.active {
+  background: var(--radix-surface, #fff);
+  color: var(--radix-cyan, #0891b2);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.qbk-seg button .qbk-seg-cnt {
+  font-size: 10.5px; opacity: 0.6; font-weight: 500;
+}
+/* Variantes de cor pra status no segmented */
+.qbk-seg button.active.seg-acertei { color: #10b981; }
+.qbk-seg button.active.seg-errei   { color: #dc2626; }
+.qbk-seg button.active.seg-naofeita { color: #6b7280; }
+@media (max-width: 600px) {
+  .qbk-toolbar { gap: 10px; }
+  .qbk-tb-item.grow { flex-basis: 100%; }
+}
+
+/* ============================================================
+   PREMIUM REDESIGN — Banco de Questões (paleta moderna)
+   Tokens novos, escopados só onde aplico classes pqb-* / .qbk-card
+   ============================================================ */
+:root {
+  --pqb-primary:  #2563EB;
+  --pqb-primary-d:#1d4ed8;
+  --pqb-success:  #22C55E;
+  --pqb-warning:  #F59E0B;
+  --pqb-error:    #EF4444;
+  --pqb-ink:      #0f172a;
+  --pqb-ink-2:    #334155;
+  --pqb-muted:    #64748b;
+  --pqb-line:     #e2e8f0;
+  --pqb-bg:       #f8fafc;
+  --pqb-surface:  #ffffff;
+}
+
+/* --- Cards de estatística (dashboard topo) --- */
+.pqb-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 720px) { .pqb-stats { grid-template-columns: repeat(2, 1fr); } }
+.pqb-stat {
+  background: var(--radix-surface, #fff);
+  border: 1px solid var(--radix-line, var(--pqb-line));
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform .15s, box-shadow .15s;
+}
+.pqb-stat:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(15,23,42,.18); }
+.pqb-stat-ico {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pqb-stat-ico svg { width: 22px; height: 22px; }
+.pqb-stat.s-resolv .pqb-stat-ico { background: rgba(37,99,235,.12);  color: var(--pqb-primary); }
+.pqb-stat.s-taxa   .pqb-stat-ico { background: rgba(34,197,94,.14);  color: var(--pqb-success); }
+.pqb-stat.s-seq    .pqb-stat-ico { background: rgba(245,158,11,.16); color: var(--pqb-warning); }
+.pqb-stat.s-semana .pqb-stat-ico { background: rgba(99,102,241,.14); color: #6366f1; }
+.pqb-stat-corpo { min-width: 0; }
+.pqb-stat-val {
+  font-size: 24px; font-weight: 800; line-height: 1;
+  color: var(--radix-text, var(--pqb-ink));
+  letter-spacing: -0.02em;
+}
+.pqb-stat-lab {
+  font-size: 11.5px; font-weight: 600; color: var(--radix-text-muted, var(--pqb-muted));
+  margin-top: 5px;
+}
+
+/* --- Desempenho por assunto (barras) no painel direito --- */
+.pqb-desemp { margin-top: 16px; }
+.pqb-desemp-titulo {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--radix-text-muted, var(--pqb-muted));
+  margin: 0 0 12px; display: flex; align-items: center; gap: 7px;
+}
+.pqb-desemp-titulo svg { width: 14px; height: 14px; }
+.pqb-bar-item { margin-bottom: 11px; }
+.pqb-bar-top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px; margin-bottom: 5px;
+}
+.pqb-bar-nome {
+  font-size: 12.5px; font-weight: 600; color: var(--radix-text, var(--pqb-ink-2));
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pqb-bar-pct { font-size: 12px; font-weight: 800; flex-shrink: 0; }
+.pqb-bar-track {
+  height: 7px; border-radius: 999px;
+  background: var(--radix-bg-2, #eef2f7);
+  overflow: hidden;
+}
+.pqb-bar-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+.pqb-bar-fill.lvl-alto  { background: var(--pqb-success); }
+.pqb-bar-fill.lvl-medio { background: var(--pqb-warning); }
+.pqb-bar-fill.lvl-baixo { background: var(--pqb-error); }
+.pqb-bar-pct.lvl-alto  { color: #15803d; }
+.pqb-bar-pct.lvl-medio { color: #b45309; }
+.pqb-bar-pct.lvl-baixo { color: #b91c1c; }
+.pqb-desemp-vazio {
+  font-size: 12px; color: var(--radix-text-muted, var(--pqb-muted));
+  font-style: italic; padding: 4px 0;
+}
+
+/* Card-linha de questão — upgrade premium */
 .qbk-card {
   background: var(--radix-surface-2, #fff);
   border: 1px solid var(--radix-line, #e5e7eb);
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin-bottom: 10px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
 }
 .qbk-card:hover {
-  border-color: rgba(34,211,238,0.45);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  border-color: rgba(37,99,235,0.40);
+  box-shadow: 0 12px 28px -16px rgba(15,23,42,0.22);
+  transform: translateY(-1px);
 }
 .qbk-card-head {
   display: flex;
@@ -10334,6 +10537,109 @@ function abrirTema(temaId) {
   renderTelaQuestoes();
 }
 
+// ===== PREMIUM: cards de estatística do topo (dados 100% reais) =====
+function _renderStatsBanco() {
+  const resp = state.respostasAluno || [];
+  // Questões resolvidas (distintas)
+  const idsDistintos = new Set(resp.map(r => r.questaoId));
+  const resolvidas = idsDistintos.size;
+  // Taxa de acerto (sobre todas as tentativas)
+  const totalTent = resp.length;
+  const acertos = resp.filter(r => r.correto).length;
+  const taxa = totalTent > 0 ? Math.round(acertos / totalTent * 100) : 0;
+  // Nesta semana (últimos 7 dias)
+  const agora = Date.now();
+  const seteDias = 7 * 86400000;
+  const nestaSemana = resp.filter(r => {
+    const d = r.data ? new Date(r.data).getTime() : 0;
+    return d && (agora - d) <= seteDias;
+  }).length;
+  // Sequência: dias distintos consecutivos terminando hoje/ontem
+  const diasSet = new Set();
+  resp.forEach(r => { if (r.data) diasSet.add(new Date(r.data).toISOString().slice(0,10)); });
+  let seq = 0;
+  const hojeD = new Date(); hojeD.setHours(0,0,0,0);
+  // Aceita streak começando hoje OU ontem (pra não zerar se ainda não estudou hoje)
+  let cursor = new Date(hojeD);
+  const iso = d => d.toISOString().slice(0,10);
+  if (!diasSet.has(iso(cursor))) cursor.setDate(cursor.getDate() - 1);
+  while (diasSet.has(iso(cursor))) { seq++; cursor.setDate(cursor.getDate() - 1); }
+
+  const taxaCor = taxa >= 70 ? 'var(--pqb-success)' : (taxa >= 50 ? 'var(--pqb-warning)' : 'var(--pqb-error)');
+
+  return `
+    <div class="pqb-stats">
+      <div class="pqb-stat s-resolv">
+        <div class="pqb-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="pqb-stat-corpo"><div class="pqb-stat-val">${resolvidas}</div><div class="pqb-stat-lab">Questões resolvidas</div></div>
+      </div>
+      <div class="pqb-stat s-taxa">
+        <div class="pqb-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
+        <div class="pqb-stat-corpo"><div class="pqb-stat-val" style="color:${taxaCor};">${totalTent > 0 ? taxa + '%' : '—'}</div><div class="pqb-stat-lab">Taxa de acertos</div></div>
+      </div>
+      <div class="pqb-stat s-seq">
+        <div class="pqb-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="pqb-stat-corpo"><div class="pqb-stat-val">${seq}</div><div class="pqb-stat-lab">${seq === 1 ? 'dia de sequência' : 'dias de sequência'}</div></div>
+      </div>
+      <div class="pqb-stat s-semana">
+        <div class="pqb-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="pqb-stat-corpo"><div class="pqb-stat-val">${nestaSemana}</div><div class="pqb-stat-lab">Nesta semana</div></div>
+      </div>
+    </div>`;
+}
+
+// ===== PREMIUM: desempenho por assunto (barras) — dados reais agrupados por tema =====
+function _renderDesempenhoBanco() {
+  const resp = state.respostasAluno || [];
+  if (resp.length === 0) {
+    return `
+      <div class="pqb-desemp">
+        <div class="pqb-desemp-titulo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          Seu desempenho
+        </div>
+        <div class="pqb-desemp-vazio">Responda questões pra ver seu desempenho por assunto aqui.</div>
+      </div>`;
+  }
+  // Agrupa por tema
+  const porTema = {};
+  resp.forEach(r => {
+    const tid = r.tema;
+    if (!tid) return;
+    if (!porTema[tid]) porTema[tid] = { total: 0, acertos: 0 };
+    porTema[tid].total++;
+    if (r.correto) porTema[tid].acertos++;
+  });
+  // Monta lista com nome do tema, ordena por mais respondidas, top 6
+  const linhas = Object.entries(porTema)
+    .map(([tid, d]) => {
+      const tema = TEMAS.find(t => t.id === tid);
+      return { nome: tema ? tema.nome : tid, total: d.total, pct: Math.round(d.acertos / d.total * 100) };
+    })
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+  if (linhas.length === 0) return '';
+  const barras = linhas.map(l => {
+    const lvl = l.pct >= 70 ? 'lvl-alto' : (l.pct >= 50 ? 'lvl-medio' : 'lvl-baixo');
+    return `
+      <div class="pqb-bar-item">
+        <div class="pqb-bar-top">
+          <span class="pqb-bar-nome" title="${(l.nome||'').replace(/"/g,'')}">${(l.nome||'').replace(/[<>&]/g,'')}</span>
+          <span class="pqb-bar-pct ${lvl}">${l.pct}%</span>
+        </div>
+        <div class="pqb-bar-track"><div class="pqb-bar-fill ${lvl}" style="width:${l.pct}%;"></div></div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="pqb-desemp">
+      <div class="pqb-desemp-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        Seu desempenho
+      </div>
+      ${barras}
+    </div>`;
+}
+
 // Indexa respostas do aluno por questaoId pra calcular status (não feita / acertou / errou)
 // sem percorrer respostasAluno toda vez. Recalcula sob demanda em renderTelaQuestoes/filtrarQuestoes.
 function _idxRespostasPorQuestao() {
@@ -10366,11 +10672,8 @@ function renderTelaQuestoes() {
   // Inicializa sets da sidebar (multi-seleção de temas + módulos abertos)
   if (!(state._sideTemasAtivos instanceof Set))     state._sideTemasAtivos = new Set();
   if (!(state._sideModulosAbertos instanceof Set))  state._sideModulosAbertos = new Set();
-  // Default: abre o módulo da semana atual
-  if (state._sideModulosAbertos.size === 0) {
-    const semAtual = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
-    if (semAtual && semAtual.moduloId) state._sideModulosAbertos.add(semAtual.moduloId);
-  }
+  // Árvore de temas começa toda COLAPSADA (o aluno abre o módulo que quiser).
+  // Se chegou via um tema específico (atalho do dashboard), o abrirTema já abre só aquele módulo.
 
   // Conta por dificuldade (escopo: temas selecionados, se houver)
   const cntPorDif = { facil: 0, media: 0, dificil: 0 };
@@ -10418,6 +10721,9 @@ function renderTelaQuestoes() {
       Escolha questões pra montar sua lista de estudos. ${totalGeral} ${totalGeral === 1 ? 'questão disponível' : 'questões disponíveis'} no total.
     </p>
 
+    <!-- Cards de estatística (dashboard) -->
+    ${_renderStatsBanco()}
+
     <!-- Busca em destaque -->
     <div class="qbk-busca-wrap">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -10426,71 +10732,67 @@ function renderTelaQuestoes() {
              oninput="agendarFiltrarQuestoes()">
     </div>
 
-    ${semanasFiltraveis.length > 0 ? `
-      <!-- Filtro: semana do curso -->
-      <div class="qbk-filtros-bloco">
-        <div class="qbk-filtros-label">Semana do curso</div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          ${semanaAtualObj && semanaAtualObj.temaId ? `
-            <button class="qbk-chip ${String(semanaFiltro) === String(semanaAtualObj.n) ? 'active' : ''}"
-                    onclick="selecionarSemanaFiltro(${semanaAtualObj.n})"
-                    title="Filtra pelas questões do tema da aula desta semana"
-                    style="display:inline-flex;align-items:center;gap:6px;">
-              📅 Esta semana <span style="opacity:0.75;font-size:11.5px;">(Sem ${String(semanaAtualObj.n).padStart(2,'0')} · ${(TEMAS.find(t=>t.id===semanaAtualObj.temaId)||{nome:''}).nome})</span>
-            </button>
-          ` : ''}
-          <select id="filtro-semana"
-                  onchange="selecionarSemanaFiltro(this.value)"
-                  style="padding:8px 12px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:8px;font-size:13px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);min-width:280px;cursor:pointer;">
-            <option value="" ${!semanaFiltro ? 'selected' : ''}>— Todas as semanas —</option>
-            ${semanasFiltraveis.map(s => {
-              const tema = TEMAS.find(t => t.id === s.temaId);
-              const labelTema = tema ? tema.nome : s.titulo;
-              return `<option value="${s.n}" ${String(semanaFiltro) === String(s.n) ? 'selected' : ''}>Sem ${String(s.n).padStart(2,'0')} · ${s.data || ''} · ${labelTema} (${s._cnt})</option>`;
+    <!-- Toolbar compacta: Semana + Prova + Dificuldade + Status numa linha só -->
+    <div class="qbk-toolbar">
+
+      ${semanasFiltraveis.length > 0 ? `
+        <div class="qbk-tb-item">
+          <span class="qbk-tb-label">Semana do curso</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${semanaAtualObj && semanaAtualObj.temaId ? `
+              <button class="qbk-tb-hoje ${String(semanaFiltro) === String(semanaAtualObj.n) ? 'active' : ''}"
+                      onclick="selecionarSemanaFiltro(${semanaAtualObj.n})"
+                      title="Questões do tema da aula desta semana">
+                📅 Esta semana
+              </button>
+            ` : ''}
+            <select id="filtro-semana" class="qbk-tb-select ${semanaFiltro ? 'is-active' : ''}"
+                    onchange="selecionarSemanaFiltro(this.value)" style="min-width:200px;">
+              <option value="" ${!semanaFiltro ? 'selected' : ''}>Todas as semanas</option>
+              ${semanasFiltraveis.map(s => {
+                const tema = TEMAS.find(t => t.id === s.temaId);
+                const labelTema = tema ? tema.nome : s.titulo;
+                return `<option value="${s.n}" ${String(semanaFiltro) === String(s.n) ? 'selected' : ''}>Sem ${String(s.n).padStart(2,'0')} · ${labelTema} (${s._cnt})</option>`;
+              }).join('')}
+            </select>
+          </div>
+        </div>
+      ` : ''}
+
+      ${provas.length > 1 ? `
+        <div class="qbk-tb-item">
+          <span class="qbk-tb-label">Prova</span>
+          <select id="filtro-prova" class="qbk-tb-select ${provaAtual ? 'is-active' : ''}"
+                  onchange="selecionarProva(this.value)" style="min-width:170px;">
+            <option value="" ${!provaAtual ? 'selected' : ''}>Todas as provas</option>
+            ${provas.map(([nome, cnt]) => {
+              const nomeEsc = String(nome).replace(/[<>&]/g,'').replace(/"/g,'&quot;');
+              return `<option value="${nomeEsc}" ${provaAtual === nome ? 'selected' : ''}>${nomeEsc} (${cnt})</option>`;
             }).join('')}
           </select>
         </div>
-      </div>
-    ` : ''}
+      ` : ''}
 
-    ${provas.length > 1 ? `
-      <div class="qbk-filtros-bloco">
-        <div class="qbk-filtros-label">Prova</div>
-        <div class="qbk-chips">
-          <button class="qbk-chip ${!provaAtual ? 'active' : ''}" onclick="selecionarProva('')">Todas as provas</button>
-          ${provas.map(([nome, cnt]) => `
-            <button class="qbk-chip ${provaAtual === nome ? 'active' : ''}" onclick="selecionarProva('${String(nome).replace(/'/g,'\\\'')}')">
-              ${String(nome).replace(/[<>&]/g,'')} <span class="qbk-chip-count">(${cnt})</span>
-            </button>
-          `).join('')}
+      <div class="qbk-tb-item">
+        <span class="qbk-tb-label">Dificuldade</span>
+        <div class="qbk-seg">
+          <button class="${!difAtual ? 'active' : ''}" onclick="selecionarDificuldade('')">Todas</button>
+          <button class="${difAtual === 'facil' ? 'active' : ''}" onclick="selecionarDificuldade('facil')">Fácil <span class="qbk-seg-cnt">${cntPorDif.facil}</span></button>
+          <button class="${difAtual === 'media' ? 'active' : ''}" onclick="selecionarDificuldade('media')">Média <span class="qbk-seg-cnt">${cntPorDif.media}</span></button>
+          <button class="${difAtual === 'dificil' ? 'active' : ''}" onclick="selecionarDificuldade('dificil')">Difícil <span class="qbk-seg-cnt">${cntPorDif.dificil}</span></button>
         </div>
       </div>
-    ` : ''}
 
-    <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Dificuldade</div>
-      <div class="qbk-chips">
-        <button class="qbk-chip ${!difAtual ? 'active' : ''}" onclick="selecionarDificuldade('')">Todas</button>
-        <button class="qbk-chip ${difAtual === 'facil' ? 'active' : ''}" onclick="selecionarDificuldade('facil')">Fácil <span class="qbk-chip-count">(${cntPorDif.facil})</span></button>
-        <button class="qbk-chip ${difAtual === 'media' ? 'active' : ''}" onclick="selecionarDificuldade('media')">Média <span class="qbk-chip-count">(${cntPorDif.media})</span></button>
-        <button class="qbk-chip ${difAtual === 'dificil' ? 'active' : ''}" onclick="selecionarDificuldade('dificil')">Difícil <span class="qbk-chip-count">(${cntPorDif.dificil})</span></button>
+      <div class="qbk-tb-item">
+        <span class="qbk-tb-label">Como eu fui</span>
+        <div class="qbk-seg">
+          <button class="${!statusAtual ? 'active' : ''}" onclick="selecionarStatusResp('')">Todas</button>
+          <button class="seg-naofeita ${statusAtual === 'nao_feita' ? 'active' : ''}" onclick="selecionarStatusResp('nao_feita')" title="Questões que eu ainda não respondi">○ Não feita <span class="qbk-seg-cnt">${cntStatus.nao_feita}</span></button>
+          <button class="seg-acertei ${statusAtual === 'acertei' ? 'active' : ''}" onclick="selecionarStatusResp('acertei')" title="Questões que eu já acertei">✓ Acertei <span class="qbk-seg-cnt">${cntStatus.acertei}</span></button>
+          <button class="seg-errei ${statusAtual === 'errei' ? 'active' : ''}" onclick="selecionarStatusResp('errei')" title="Questões que eu errei — bom pra refazer">✗ Errei <span class="qbk-seg-cnt">${cntStatus.errei}</span></button>
+        </div>
       </div>
-    </div>
 
-    <div class="qbk-filtros-bloco">
-      <div class="qbk-filtros-label">Como eu fui</div>
-      <div class="qbk-chips">
-        <button class="qbk-chip ${!statusAtual ? 'active' : ''}" onclick="selecionarStatusResp('')">Todas</button>
-        <button class="qbk-chip ${statusAtual === 'nao_feita' ? 'active' : ''}" onclick="selecionarStatusResp('nao_feita')" title="Questões que eu ainda não respondi">
-          ○ Não feita <span class="qbk-chip-count">(${cntStatus.nao_feita})</span>
-        </button>
-        <button class="qbk-chip ${statusAtual === 'acertei' ? 'active' : ''}" onclick="selecionarStatusResp('acertei')" title="Questões que eu já acertei pelo menos uma vez">
-          ✓ Acertei <span class="qbk-chip-count">(${cntStatus.acertei})</span>
-        </button>
-        <button class="qbk-chip ${statusAtual === 'errei' ? 'active' : ''}" onclick="selecionarStatusResp('errei')" title="Questões que eu respondi mas nunca acertei — bom pra refazer">
-          ✗ Errei <span class="qbk-chip-count">(${cntStatus.errei})</span>
-        </button>
-      </div>
     </div>
 
     <!-- Indicador de filtros ativos (rendered dinamicamente em filtrarQuestoes) -->
@@ -10519,6 +10821,8 @@ function renderTelaQuestoes() {
     </div>
   `;
   filtrarQuestoes();
+  // Garante que a tela do banco abra no topo (não herda o scroll da tela anterior)
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
 }
 
 // Renderiza a árvore de módulos > temas pra sidebar
@@ -10601,6 +10905,9 @@ function renderCestaLateral() {
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         <div>Sua lista está vazia.</div>
         <div style="margin-top:6px;font-size:11.5px;">Clique em <b>+ Adicionar à lista</b> nos cards à esquerda.</div>
+      </div>
+      <div style="border-top:1px solid var(--radix-line);margin-top:16px;padding-top:16px;">
+        ${_renderDesempenhoBanco()}
       </div>`;
   }
 
@@ -10647,6 +10954,9 @@ function renderCestaLateral() {
     </label>
     <div class="qbk-cesta-itens ${state._cestaCompacta ? '' : ''}">
       ${itensHtml}
+    </div>
+    <div style="border-top:1px solid var(--radix-line);margin-top:16px;padding-top:16px;">
+      ${_renderDesempenhoBanco()}
     </div>
   `;
 }
