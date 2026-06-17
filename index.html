@@ -10537,6 +10537,12 @@ function abrirTema(temaId) {
   renderTelaQuestoes();
 }
 
+// Normaliza o nome da prova removendo o sufixo "(adaptada)" pra agrupar
+// variações na prova-base. Ex.: "ENEM 2022 (adaptada)" → "ENEM 2022".
+function _provaBase(prova) {
+  return String(prova || '').replace(/\s*\(adaptada\)\s*$/i, '').trim();
+}
+
 // ===== PREMIUM: cards de estatística do topo (dados 100% reais) =====
 function _renderStatsBanco() {
   const resp = state.respostasAluno || [];
@@ -10683,11 +10689,13 @@ function renderTelaQuestoes() {
   });
 
   // Provas disponíveis (escopo: temas selecionados)
+  // Agrupa variações "(adaptada)" na prova-base (ex.: "ENEM 2022 (adaptada)" → "ENEM 2022")
   const cntPorProva = new Map();
   (state.questoes || []).forEach(q => {
     if (!q.prova) return;
     if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
-    cntPorProva.set(q.prova, (cntPorProva.get(q.prova) || 0) + 1);
+    const base = _provaBase(q.prova);
+    cntPorProva.set(base, (cntPorProva.get(base) || 0) + 1);
   });
   const provas = [...cntPorProva.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
 
@@ -11178,8 +11186,8 @@ function filtrarQuestoes() {
       questoes = []; // semana sem tema (recesso/simulado) → nada
     }
   }
-  // Prova
-  if (provaAtual) questoes = questoes.filter(q => (q.prova || '') === provaAtual);
+  // Prova (compara pela prova-base pra incluir variações "(adaptada)")
+  if (provaAtual) questoes = questoes.filter(q => _provaBase(q.prova || '') === provaAtual);
   // Dificuldade
   if (difAtual) questoes = questoes.filter(q => q.dificuldade === difAtual);
   // Status do aluno (não feita / acertei / errei)
