@@ -17927,8 +17927,10 @@ function abrirEditorSemana(n) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             PDF desta semana
           </button>
+          <span id="sem-feedback-salvo" style="font-size:12.5px;color:var(--radix-success,#34d399);font-weight:600;margin-right:6px;opacity:0;transition:opacity .25s;"></span>
           <button class="btn btn-secondary" onclick="fecharModalSemana()">Cancelar</button>
-          <button class="btn btn-success" onclick="salvarSemana()">Salvar</button>
+          <button class="btn btn-secondary" style="border-color:var(--radix-cyan,#22d3ee);color:var(--radix-cyan,#22d3ee);" onclick="salvarSemana({fechar:false})" title="Salva sem fechar — continue adicionando anotações">Salvar</button>
+          <button class="btn btn-success" onclick="salvarSemana({fechar:true})">Salvar e sair</button>
         </div>
       </div>
     </div>
@@ -18117,7 +18119,8 @@ function fecharModalSemana() {
   state.semanaEditando = null;
 }
 
-async function salvarSemana() {
+async function salvarSemana(opts) {
+  const fechar = !(opts && opts.fechar === false); // default = fecha (retrocompat com salvarSemana() sem args)
   const n = state.semanaEditando;
   if (n === null) return;
   const statusEl = document.querySelector('[name="status-radio"]:checked');
@@ -18236,8 +18239,22 @@ async function salvarSemana() {
   }
   if (error) { alert('Erro ao salvar: ' + error.message); return; }
 
-  fecharModalSemana();
-  renderCronograma();
+  if (fechar) {
+    fecharModalSemana();
+    renderCronograma();
+    return;
+  }
+  // Salvou sem fechar — feedback inline no rodapé do modal (não interrompe o aluno)
+  const fb = document.getElementById('sem-feedback-salvo');
+  if (fb) {
+    const agora = new Date();
+    const hh = String(agora.getHours()).padStart(2, '0');
+    const mm = String(agora.getMinutes()).padStart(2, '0');
+    fb.textContent = `✓ Salvo às ${hh}:${mm}`;
+    fb.style.opacity = '1';
+    clearTimeout(fb._fadeTimer);
+    fb._fadeTimer = setTimeout(() => { fb.style.opacity = '0'; }, 3500);
+  }
 }
 
 // ============================================================================
