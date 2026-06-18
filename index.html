@@ -2350,24 +2350,25 @@
   .status-opc[data-status="concluido"]:has(input:checked) { background: linear-gradient(135deg, rgba(34,197,94,0.14), rgba(34,197,94,0.04)); border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.10); }
   .status-opc[data-status="concluido"]:has(input:checked) .status-svg { color: #15803d; }
 
-  /* Técnicas — grid de chips */
+  /* Técnicas — chips compactos, seguindo o padrão visual de .status-opc */
   .tecnicas-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 6px;
   }
   .tecnica-item {
     position: relative;
-    padding: 12px 14px;
+    padding: 8px 10px;
     background: var(--radix-surface-2, #fff);
     border: 1.5px solid var(--radix-line, #e5e7eb);
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12.5px;
+    font-weight: 600;
     color: var(--radix-text-2, #374151);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     transition: all 0.15s ease;
     user-select: none;
   }
@@ -2378,30 +2379,30 @@
     width: 0; height: 0;
   }
   .tecnica-item .tec-ico {
-    width: 18px; height: 18px;
+    width: 16px; height: 16px;
     color: var(--radix-text-muted, #6b7280);
     flex-shrink: 0;
-    transition: color 0.15s;
+    transition: color 0.15s, transform 0.15s;
   }
   .tecnica-item:hover {
     border-color: var(--radix-cyan, #22d3ee);
     color: var(--radix-text, #111);
   }
-  .tecnica-item:hover .tec-ico { color: var(--radix-cyan, #22d3ee); }
+  .tecnica-item:hover .tec-ico { color: var(--radix-cyan, #22d3ee); transform: scale(1.05); }
   .tecnica-item.sel,
   .tecnica-item:has(input:checked) {
-    background: rgba(34,211,238,0.08);
+    background: linear-gradient(135deg, rgba(34,211,238,0.12), rgba(34,211,238,0.04));
     border-color: var(--radix-cyan, #22d3ee);
     color: var(--radix-text, #111);
-    font-weight: 600;
+    box-shadow: 0 0 0 3px rgba(34,211,238,0.10);
   }
   .tecnica-item:has(input:checked) .tec-ico { color: var(--radix-cyan, #0891b2); }
-  /* Pequeno tick que aparece no canto quando selecionado */
+  /* Tick discreto no canto quando selecionado (menor pra combinar com card menor) */
   .tecnica-item:has(input:checked)::after {
     content: '';
     position: absolute;
-    top: 8px; right: 8px;
-    width: 14px; height: 14px;
+    top: 5px; right: 5px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: var(--radix-cyan, #22d3ee);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
