@@ -16472,6 +16472,59 @@ function aplicarModeloWhats() {
   if (templates[tipo]) document.getElementById('whats-msg').value = templates[tipo];
 }
 
+// Extrai DETALHE REAL de um erro retornado por sb.functions.invoke().
+// O supabase-js mascara o erro real da Edge Function como
+// "Edge Function returned a non-2xx status code" no error.message —
+// a causa real está em error.context (Response). Esta função lê o body
+// (JSON ou texto) e monta uma mensagem útil pro aluno/professor.
+async function _detalheErroEdge(err, contextoHumano) {
+  const ctx = err && err.context;
+  const partes = [];
+  partes.push(err?.message || 'Erro desconhecido');
+
+  if (ctx && typeof ctx === 'object') {
+    if (ctx.status) partes.push(`HTTP ${ctx.status}${ctx.statusText ? ' ' + ctx.statusText : ''}`);
+    let bodyTxt = '';
+    try {
+      // Clone pra não consumir o body original
+      const clone = typeof ctx.clone === 'function' ? ctx.clone() : null;
+      if (clone) {
+        const raw = await clone.text();
+        if (raw) {
+          // Tenta JSON; se não der, mostra texto cru
+          try {
+            const j = JSON.parse(raw);
+            // Heurística: usa o primeiro campo de texto que parecer mensagem
+            bodyTxt = j.error || j.message || j.detail || j.reason || j.msg || raw;
+            if (typeof bodyTxt !== 'string') bodyTxt = JSON.stringify(j, null, 2);
+          } catch (_) {
+            bodyTxt = raw;
+          }
+        }
+      }
+    } catch (_) { /* ignora — só não consegue ler o body */ }
+    if (bodyTxt) partes.push('Resposta da função: ' + bodyTxt);
+  }
+
+  // Sugestão amigável baseada em padrões conhecidos
+  const txt = partes.join(' | ').toLowerCase();
+  let sugestao = '';
+  if (/429|rate limit|too many/.test(txt)) {
+    sugestao = '⚠ Possível rate limit da Z-API ou da Edge Function. Aguarde alguns minutos e tente de novo.';
+  } else if (/401|403|unauthor|forbidden|token|api.?key/.test(txt)) {
+    sugestao = '⚠ Credenciais da Z-API podem estar inválidas ou expiradas. Verifique no painel da Z-API.';
+  } else if (/timeout|504|524|gateway/.test(txt)) {
+    sugestao = '⚠ A função demorou demais (provavelmente Z-API lenta ou muitos destinatários). Tente lotes menores.';
+  } else if (/500|internal/.test(txt)) {
+    sugestao = '⚠ A função quebrou no servidor. Veja os logs em Supabase Studio → Edge Functions → enviar-whatsapp → Logs.';
+  } else if (/network|fetch|cors|failed to fetch/.test(txt)) {
+    sugestao = '⚠ Problema de rede entre seu navegador e o Supabase. Verifique conexão e tente de novo.';
+  }
+  if (sugestao) partes.push(sugestao);
+
+  return partes.join('\n');
+}
+
 async function enviarWhatsLinks(alunos, btnEl) {
   const ta = document.getElementById('whats-msg');
   const msg = ta ? ta.value.trim() : '';
@@ -16549,8 +16602,10 @@ async function enviarWhatsLinks(alunos, btnEl) {
     }
     fecharModalWhats();
   } catch (e) {
-    const erroMsg = e?.message || (typeof e === 'string' ? e : JSON.stringify(e, null, 2));
-    console.error('Erro envio WhatsApp:', e);
+    // Extrai detalhe REAL da Edge Function (body, status HTTP, sugestão)
+    // em vez de só "Edge Function returned a non-2xx status code"
+    const erroMsg = await _detalheErroEdge(e, 'envio WhatsApp em massa');
+    console.error('Erro envio WhatsApp:', e, '\nDetalhe extraído:', erroMsg);
 
     // Marca o registro como erro pra ficar visível no Histórico
     if (notifId) {
