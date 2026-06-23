@@ -6234,9 +6234,9 @@ const CRONOGRAMA_2026 = [
 // =========================================================
 const MODULOS_INTEGRAL = [
   { id: 'mi1', numero: '01', nome: 'Matemática Básica',
-    subtitulo: 'Sistema de medidas · Conjuntos · Razão · Porcentagem',
+    subtitulo: 'Sistema de medidas · Aritmética · Razão · Porcentagem',
     cor: '#1565C0',
-    temas: ['sist-numeracao','conjuntos','multiplos','razao-proporcao','porcentagem'] },
+    temas: ['sist-numeracao','operacoes','multiplos','razao-proporcao','porcentagem'] },
   { id: 'mi2', numero: '02', nome: 'Funções e Progressões',
     subtitulo: 'Funções · Potências · Exp/Log · PA · PG · Financeira',
     cor: '#0277BD',
@@ -6265,7 +6265,7 @@ const MODULOS_INTEGRAL = [
 const CRONOGRAMA_INTEGRAL_2026 = [
   // Módulo 01 — Matemática Básica  (curso começou após o Carnaval — 17/02 sem aula)
   { n: 1,  data: '24/02', titulo: 'Sistema de Medidas e de Numeração',     moduloId: 'mi1', temaId: 'sist-numeracao' },
-  { n: 2,  data: '03/03', titulo: 'Aritmética Básica - Conjuntos Numéricos', moduloId: 'mi1', temaId: 'conjuntos' },
+  { n: 2,  data: '03/03', titulo: 'Aritmética Básica - Conjuntos Numéricos', moduloId: 'mi1', temaId: 'operacoes' },
   { n: 3,  data: '10/03', titulo: 'Múltiplos e Divisores',                  moduloId: 'mi1', temaId: 'multiplos' },
   { n: 4,  data: '17/03', titulo: 'Razão e Proporção',                      moduloId: 'mi1', temaId: 'razao-proporcao' },
   { n: 5,  data: '24/03', titulo: 'Porcentagem',                            moduloId: 'mi1', temaId: 'porcentagem' },
@@ -6328,6 +6328,56 @@ function getCronogramaAtivo() {
 }
 function getModulosCronograma() {
   return getCronogramaTipo() === 'integral' ? MODULOS_INTEGRAL : MODULOS;
+}
+
+// =========================================================
+// MAPEAMENTO MATERIAL → ALUNO
+// Os materiais (vídeos/PDFs/links) são cadastrados pelo professor com
+// `semana_numero` apontando pras semanas do CRONOGRAMA_2026 (regular).
+// Pro aluno INTEGRAL, mapeamos esses materiais via TEMA — uma semana do
+// integral mostra todos os materiais cujo tema bate com o tema dela.
+// Assim mantemos uma fonte só de materiais e ambos os cronogramas
+// recebem o conteúdo correto sem duplicação.
+// =========================================================
+function _temaDoMaterial(m) {
+  if (!m || m.semana_numero == null) return null;
+  // Olhamos sempre no CRONOGRAMA_2026 — onde o material foi cadastrado
+  const sem = (CRONOGRAMA_2026 || []).find(s => s.n === m.semana_numero);
+  return sem ? (sem.temaId || null) : null;
+}
+
+// Retorna os materiais associados a uma semana DO CRONOGRAMA DO ALUNO.
+//
+// Regular: só materiais cronograma='regular' (default), match por semana_numero direto.
+// Integral, mistura 2 fontes (sem duplicar):
+//   (A) materiais cronograma='integral' cuja semana_numero === sem.n  (postados
+//       diretamente no calendário do Integral pelo professor)
+//   (B) materiais cronograma='regular' cujo TEMA bate com o tema da semana do
+//       Integral (mapeamento herdado do Regular via tema compartilhado)
+function _materiaisDaSemanaPraAluno(sem, todos) {
+  if (!sem) return [];
+  const arr = todos || [];
+  const tipo = (typeof getCronogramaTipo === 'function') ? getCronogramaTipo() : 'regular';
+  if (tipo === 'regular') {
+    return arr.filter(m =>
+      (m.cronograma || 'regular') === 'regular' &&
+      m.semana_numero === sem.n
+    );
+  }
+  // Integral
+  const diretos = arr.filter(m => m.cronograma === 'integral' && m.semana_numero === sem.n);
+  if (!sem.temaId) return diretos;
+  const porTema = arr.filter(m =>
+    (m.cronograma || 'regular') === 'regular' &&
+    _temaDoMaterial(m) === sem.temaId
+  );
+  // Dedup por id (caso algum material apareça nos 2 conjuntos por acaso)
+  const seen = new Set();
+  return [...diretos, ...porTema].filter(m => {
+    if (seen.has(m.id)) return false;
+    seen.add(m.id);
+    return true;
+  });
 }
 
 // Técnicas de estudo que o aluno pode marcar
@@ -8367,7 +8417,11 @@ function renderDashboardAluno() {
           <div class="dash-empty"><p>Nenhuma aula configurada ainda.</p></div>
         ` : proxAulas.map(s => {
           const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
-          const mats = (materiaisCache || []).filter(m => m.semana_numero === s.n && m.visivel);
+          // Pro aluno integral, mapeia via tema (não por semana_numero literal)
+          const visi = (materiaisCache || []).filter(m => m.visivel);
+          const mats = (typeof _materiaisDaSemanaPraAluno === 'function')
+            ? _materiaisDaSemanaPraAluno(s, visi)
+            : visi.filter(m => m.semana_numero === s.n);
           const matsCount = mats.length;
           // Clicar numa aula → vai pro Cronograma com a semana destacada/scroll
           const clickAction = `renderCronograma(${s.n})`;
@@ -15521,7 +15575,15 @@ function filtrarMaterialQueQuer(m) {
 // Render dos blocos accordion de módulo (chamado tanto no render inicial
 // quanto após mudança de filtro/expansão — re-renderiza só a lista).
 function renderListaModulos() {
-  const visiveis = (materiaisCache || []).filter(m => m.visivel);
+  // Pré-filtra pelo tipo do aluno: regular não vê materiais marcados como integral.
+  // Integral vê os 2 conjuntos (a separação fina vem do _materiaisDaSemanaPraAluno).
+  const tipoAluno = (typeof getCronogramaTipo === 'function') ? getCronogramaTipo() : 'regular';
+  const visiveis = (materiaisCache || []).filter(m => {
+    if (!m.visivel) return false;
+    const cr = m.cronograma || 'regular';
+    if (tipoAluno === 'regular' && cr === 'integral') return false;
+    return true;
+  });
   if (visiveis.length === 0) {
     return `
       <div class="mat-empty">
@@ -15547,12 +15609,21 @@ function renderListaModulos() {
       </div>`;
   }
 
-  return MODULOS.map(mod => {
-    // Materiais desse módulo (por modulo_id direto OU por semana pertencente ao mod)
-    const matsMod = filtrados.filter(m =>
-      m.modulo_id === mod.id ||
-      (m.semana_numero != null && merged.find(s => s.n === m.semana_numero && s.moduloId === mod.id))
-    );
+  // Usa os MÓDULOS do cronograma ATIVO do aluno (regular ou integral).
+  // Pro integral, os materiais (que estão amarrados a semanas do regular) são
+  // mapeados aqui via TEMA — função _materiaisDaSemanaPraAluno faz a ponte.
+  return getModulosCronograma().map(mod => {
+    // Conjunto de temas desse módulo (vale pra regular e integral)
+    const temasDoMod = new Set(mod.temas || []);
+
+    // Materiais desse módulo: ou (a) cadastrados com modulo_id direto = mod.id,
+    // ou (b) cujo tema (via _temaDoMaterial) pertence a esse módulo.
+    // O caminho (a) só funciona pra módulos do regular; pra integral funciona o (b).
+    const matsMod = filtrados.filter(m => {
+      if (m.modulo_id === mod.id) return true;
+      const t = _temaDoMaterial(m);
+      return t && temasDoMod.has(t);
+    });
     if (matsMod.length === 0) return '';
 
     // Progresso: concluídos / total
@@ -15561,8 +15632,9 @@ function renderListaModulos() {
     const pctMod = totalMod ? Math.round((conclMod / totalMod) * 100) : 0;
     const aberto = state._matAbertos.has(mod.id);
 
-    // Semanas desse módulo que TÊM materiais filtrados
+    // Semanas desse módulo no cronograma ATIVO do aluno
     const semanasDoMod = merged.filter(s => s.moduloId === mod.id);
+    // Materiais sem semana definida (vão pra seção "Geral")
     const semSemana = matsMod.filter(m => m.semana_numero == null);
 
     return `
@@ -15581,8 +15653,9 @@ function renderListaModulos() {
         </div>
         <div class="vmod-body">
           ${semanasDoMod.map(sem => {
-            const matsSem = matsMod
-              .filter(m => m.semana_numero === sem.n)
+            // Pro aluno integral, _materiaisDaSemanaPraAluno mapeia via tema;
+            // pro regular, é o match direto por semana_numero (como antes).
+            const matsSem = _materiaisDaSemanaPraAluno(sem, matsMod)
               .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
             if (matsSem.length === 0) return '';
             const conclSem = matsSem.filter(m => state.materiaisConcluidos.has(m.id)).length;
@@ -15863,14 +15936,27 @@ async function renderGerenciarMateriais() {
   await carregarCronogramaCustom();
   const main = document.getElementById('main-content');
 
-  // Agrupar por modulo > semana
-  const merged = getCronogramaMerged();
-  const semanasPorMod = {};
-  MODULOS.forEach(m => semanasPorMod[m.id] = []);
-  merged.forEach(s => semanasPorMod[s.moduloId].push(s));
+  // Tab ativa do professor: 'regular' (default) ou 'integral'.
+  // Isolada do cronograma do USUÁRIO logado — professor edita os 2 lados.
+  if (state._matGerCrono !== 'integral') state._matGerCrono = 'regular';
+  const cronoEdit = state._matGerCrono;
+  const cronoSemanas = cronoEdit === 'integral' ? CRONOGRAMA_INTEGRAL_2026 : CRONOGRAMA_2026;
+  const cronoModulos = cronoEdit === 'integral' ? MODULOS_INTEGRAL : MODULOS;
 
-  // Materiais sem semana definida (vão para "soltos")
-  const semSemana = materiaisCache.filter(m => m.visivel !== false && (m.semana_numero === null || m.semana_numero === undefined));
+  // Agrupar por modulo > semana (no cronograma DA TAB ATIVA, não do usuário)
+  const semanasPorMod = {};
+  cronoModulos.forEach(m => semanasPorMod[m.id] = []);
+  cronoSemanas.forEach(s => { if (semanasPorMod[s.moduloId]) semanasPorMod[s.moduloId].push(s); });
+
+  // Filtra os materiais que pertencem ao cronograma DA TAB (default 'regular' se NULL)
+  const matsDoCrono = (materiaisCache || []).filter(m => (m.cronograma || 'regular') === cronoEdit);
+
+  // Materiais sem semana definida (vão para "soltos") — só do cronograma ativo
+  const semSemana = matsDoCrono.filter(m => m.visivel !== false && (m.semana_numero === null || m.semana_numero === undefined));
+
+  // Contadores pra tabs
+  const cntRegular  = (materiaisCache || []).filter(m => (m.cronograma || 'regular') === 'regular').length;
+  const cntIntegral = (materiaisCache || []).filter(m => m.cronograma === 'integral').length;
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Materiais</div>
@@ -15883,13 +15969,29 @@ async function renderGerenciarMateriais() {
       </span>
     </h2>
 
+    <!-- Tabs Regular / Integral -->
+    <div style="display:flex;gap:8px;margin:14px 0 10px;padding:4px;background:var(--radix-surface-2,#f3f4f6);border-radius:10px;width:max-content;max-width:100%;">
+      <button class="${cronoEdit==='regular'?'btn btn-success':'btn btn-secondary'}"
+              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;"
+              onclick="state._matGerCrono='regular';renderGerenciarMateriais();">
+        Cronograma Regular <span style="opacity:0.7;font-weight:600;">(${cntRegular})</span>
+      </button>
+      <button class="${cronoEdit==='integral'?'btn btn-success':'btn btn-secondary'}"
+              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;${cronoEdit==='integral'?'background:linear-gradient(135deg,#7e22ce,#a855f7);border-color:#7e22ce;':''}"
+              onclick="state._matGerCrono='integral';renderGerenciarMateriais();">
+        ⚡ Integral <span style="opacity:0.7;font-weight:600;">(${cntIntegral})</span>
+      </button>
+    </div>
+
     <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
-      Os materiais são organizados por <strong>semana do cronograma</strong>. Dentro de cada semana, você pode reordenar (vídeo-aula → apostila → gabarito, por exemplo).
+      ${cronoEdit === 'integral'
+        ? 'Materiais EXCLUSIVOS do <strong>Cronograma Integral</strong> (Turma 05). Estes não aparecem pros alunos do regular.'
+        : 'Materiais do <strong>Cronograma Regular</strong>. Alunos do Integral também veem estes via mapeamento por tema (a aula equivalente do integral mostra o mesmo material).'}
     </p>
 
-    ${MODULOS.map(mod => {
-      const semanas = semanasPorMod[mod.id];
-      const matsDesseModulo = materiaisCache.filter(mat => mat.modulo_id === mod.id || (mat.semana_numero !== null && semanas.some(s => s.n === mat.semana_numero)));
+    ${cronoModulos.map(mod => {
+      const semanas = semanasPorMod[mod.id] || [];
+      const matsDesseModulo = matsDoCrono.filter(mat => mat.modulo_id === mod.id || (mat.semana_numero !== null && semanas.some(s => s.n === mat.semana_numero)));
       if (matsDesseModulo.length === 0) return '';
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};margin-bottom:18px;">
@@ -15902,10 +16004,11 @@ async function renderGerenciarMateriais() {
           </div>
           <div style="padding:10px 14px;">
             ${semanas.map(sem => {
-              const matsDestaSem = materiaisCache
+              // Filtra só os materiais do cronograma ATIVO (regular ou integral)
+              const matsDestaSem = matsDoCrono
                 .filter(mat => mat.semana_numero === sem.n)
                 .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-              if (matsDestaSem.length === 0) return '';
+              // Sempre mostra a semana, mesmo sem materiais — pra ter onde clicar pra adicionar.
               return `
                 <div class="gerencia-semana">
                   <div class="gerencia-semana-titulo">
@@ -15945,8 +16048,8 @@ async function renderGerenciarMateriais() {
               `;
             }).join('')}
             ${(() => {
-              // Materiais ligados ao módulo mas sem semana definida
-              const semSem = materiaisCache.filter(mat => mat.modulo_id === mod.id && (mat.semana_numero === null || mat.semana_numero === undefined));
+              // Materiais ligados ao módulo mas sem semana definida (só do cronograma ativo)
+              const semSem = matsDoCrono.filter(mat => mat.modulo_id === mod.id && (mat.semana_numero === null || mat.semana_numero === undefined));
               if (semSem.length === 0) return '';
               return `
                 <div class="gerencia-semana" style="border-left-color:#9CA3AF;">
@@ -15980,7 +16083,8 @@ async function renderGerenciarMateriais() {
     }).join('')}
 
     ${(() => {
-      const sem = materiaisCache.filter(m => !m.modulo_id);
+      // Materiais sem módulo definido (só do cronograma ativo)
+      const sem = matsDoCrono.filter(m => !m.modulo_id);
       if (sem.length === 0) return '';
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;margin-bottom:18px;">
@@ -16069,11 +16173,22 @@ function abrirEdicaoMaterial(matId) {
 
 function abrirModalMaterial(material, tipo) {
   const isNovo = !material;
+  // Cronograma do material: edição herda do próprio; novo herda da tab ativa do professor
+  const cronograma = isNovo
+    ? (state._matGerCrono === 'integral' ? 'integral' : 'regular')
+    : ((material.cronograma || 'regular') === 'integral' ? 'integral' : 'regular');
+  const modsCrono = cronograma === 'integral' ? MODULOS_INTEGRAL : MODULOS;
+  const semsCrono = cronograma === 'integral' ? CRONOGRAMA_INTEGRAL_2026 : CRONOGRAMA_2026;
+  const maxN = semsCrono.reduce((mx, s) => Math.max(mx, s.n || 0), 0);
   const tipoLabel = { 'aula_youtube': '🎬 Vídeo-aula (YouTube)', 'pdf': '📄 PDF / Apostila', 'link_externo': '🔗 Link externo' }[tipo];
+  const cronoBadge = cronograma === 'integral'
+    ? '<span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#7e22ce,#a855f7);color:#fff;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.05em;margin-left:10px;vertical-align:middle;">⚡ INTEGRAL</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(34,211,238,0.18);color:var(--radix-cyan,#0891b2);padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.05em;margin-left:10px;vertical-align:middle;">REGULAR</span>';
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalMaterial()">
       <div class="modal" style="max-width:600px;">
-        <h2>${isNovo ? 'Adicionar' : 'Editar'} ${tipoLabel}</h2>
+        <h2>${isNovo ? 'Adicionar' : 'Editar'} ${tipoLabel}${cronoBadge}</h2>
+        <input type="hidden" id="mat-cronograma" value="${cronograma}">
 
         <div class="form-group">
           <label>Título</label>
@@ -16110,10 +16225,10 @@ function abrirModalMaterial(material, tipo) {
         `}
 
         <div class="form-group">
-          <label>Vincular ao módulo (opcional)</label>
+          <label>Vincular ao módulo (opcional) <small style="color:var(--radix-gray-light);font-weight:400;">— módulos do ${cronograma === 'integral' ? 'Integral' : 'Regular'}</small></label>
           <select id="mat-mod">
             <option value="">— sem vínculo —</option>
-            ${MODULOS.map(mod => `<option value="${mod.id}" ${material?.modulo_id === mod.id ? 'selected' : ''}>Módulo ${mod.numero} - ${mod.nome}</option>`).join('')}
+            ${modsCrono.map(mod => `<option value="${mod.id}" ${material?.modulo_id === mod.id ? 'selected' : ''}>Módulo ${mod.numero} - ${mod.nome}</option>`).join('')}
           </select>
         </div>
 
@@ -16126,8 +16241,8 @@ function abrirModalMaterial(material, tipo) {
         </div>
 
         <div class="form-group">
-          <label>Vincular à semana (0-39, opcional)</label>
-          <input type="number" id="mat-sem" min="0" max="39" value="${material?.semana_numero ?? ''}">
+          <label>Vincular à semana <small style="color:var(--radix-gray-light);font-weight:400;">— do cronograma ${cronograma === 'integral' ? 'Integral' : 'Regular'} (1-${maxN})</small></label>
+          <input type="number" id="mat-sem" min="1" max="${maxN}" value="${material?.semana_numero ?? ''}">
         </div>
 
         <div class="modal-acoes">
@@ -16186,7 +16301,14 @@ async function salvarMaterial(matId, tipo) {
     }
   }
 
-  const payload = { tipo, titulo, descricao, url, modulo_id, tema_id, semana_numero, duracao_min, visivel: true };
+  // Cronograma do material: vem da tab ativa do professor (ou de um campo hidden
+  // no modal, caso seja edição de material existente — herda o cronograma original).
+  const cronoEl = document.getElementById('mat-cronograma');
+  const cronograma = (cronoEl && cronoEl.value === 'integral') ? 'integral'
+                   : (state._matGerCrono === 'integral' && !matId) ? 'integral'
+                   : 'regular';
+
+  const payload = { tipo, titulo, descricao, url, modulo_id, tema_id, semana_numero, duracao_min, visivel: true, cronograma };
   if (storage_path) payload.storage_path = storage_path;
 
   let res;
@@ -16198,18 +16320,27 @@ async function salvarMaterial(matId, tipo) {
     }
     res = await sb.from('materiais').update(payload).eq('id', matId);
   } else {
-    // Novo material: entra no FIM da lista da sua semana/módulo.
+    // Novo material: entra no FIM da lista da sua semana/módulo/cronograma.
     // Hoje a coluna `ordem` é NULL/0 por default → cai no topo. Calculamos
-    // max(ordem) das peças vizinhas (mesma semana E módulo) e somamos 1.
+    // max(ordem) das peças vizinhas (mesma semana + módulo + cronograma) e somamos 1.
     const irmaos = (materiaisCache || []).filter(m =>
       (m.semana_numero ?? null) === (semana_numero ?? null) &&
-      (m.modulo_id ?? null) === (modulo_id ?? null)
+      (m.modulo_id ?? null) === (modulo_id ?? null) &&
+      (m.cronograma || 'regular') === cronograma
     );
     const maxOrdem = irmaos.reduce((mx, m) => Math.max(mx, m.ordem || 0), 0);
     payload.ordem = maxOrdem + 1;
     res = await sb.from('materiais').insert(payload);
   }
-  if (res.error) { alert('Erro: ' + res.error.message); return; }
+  if (res.error) {
+    // Detecta caso comum: SQL_materiais_cronograma.sql ainda não rodou
+    if (/cronograma/i.test(res.error.message || '') && /column|coluna/i.test(res.error.message || '')) {
+      alert('Erro ao salvar: a coluna `cronograma` ainda não existe em `materiais`. Rode SQL_materiais_cronograma.sql no Supabase primeiro.\n\nDetalhe: ' + res.error.message);
+    } else {
+      alert('Erro: ' + res.error.message);
+    }
+    return;
+  }
   fecharModalMaterial();
   renderGerenciarMateriais();
 }
