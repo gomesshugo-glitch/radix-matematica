@@ -6366,14 +6366,32 @@ function _materiaisDaSemanaPraAluno(sem, todos) {
   }
   // Integral
   const diretos = arr.filter(m => m.cronograma === 'integral' && m.semana_numero === sem.n);
-  if (!sem.temaId) return diretos;
-  const porTema = arr.filter(m =>
-    (m.cronograma || 'regular') === 'regular' &&
-    _temaDoMaterial(m) === sem.temaId
-  );
+  // (B) materiais do REGULAR herdados. Aulas que compartilham o MESMO TEMA
+  //     (ex.: "Geometria Espacial I" e "II", ambas geo-espacial; "Plana I" e "II")
+  //     não podem ser distinguidas só pelo tema — isso fazia as duas semanas
+  //     mostrarem TODOS os materiais das duas. Então casamos primeiro pela(s)
+  //     semana(s) regular(es) de MESMO TÍTULO; só se nenhuma bater caímos no tema.
+  let porRegular = [];
+  if (sem.temaId) {
+    const norm = s => String(s || '').trim().toLowerCase();
+    const semsMesmoTitulo = (CRONOGRAMA_2026 || [])
+      .filter(s => s.titulo && sem.titulo && norm(s.titulo) === norm(sem.titulo))
+      .map(s => s.n);
+    if (semsMesmoTitulo.length > 0) {
+      const setN = new Set(semsMesmoTitulo);
+      porRegular = arr.filter(m =>
+        (m.cronograma || 'regular') === 'regular' && setN.has(m.semana_numero)
+      );
+    } else {
+      porRegular = arr.filter(m =>
+        (m.cronograma || 'regular') === 'regular' &&
+        _temaDoMaterial(m) === sem.temaId
+      );
+    }
+  }
   // Dedup por id (caso algum material apareça nos 2 conjuntos por acaso)
   const seen = new Set();
-  return [...diretos, ...porTema].filter(m => {
+  return [...diretos, ...porRegular].filter(m => {
     if (seen.has(m.id)) return false;
     seen.add(m.id);
     return true;
