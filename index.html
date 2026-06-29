@@ -16845,54 +16845,108 @@ async function enviarWhatsLinks(alunos, btnEl) {
     }
   }
 
-  // 2) Invoca a Edge Function de fato
-  try {
-    const destinatarios = alunos.map(a => a.tel);
-    const { data, error } = await sb.functions.invoke('enviar-whatsapp', {
-      body: { mensagem: msg, destinatarios }
-    });
-    if (error) throw error;
+  // 2) Invoca a Edge Function em LOTES (chunks de 25 destinatários).
+  //    Por quê: a Edge Function fica viva por ~1.5s × N destinatários e estoura
+  //    HTTP 546 (compute resources / timeout) quando N é alto (visto com 175 alunos).
+  //    Quebrando em lotes pequenos, cada invocação termina rápido e o que já
+  //    foi enviado não se perde se um lote falhar.
+  const TAMANHO_LOTE = 25; // ~37.5s por lote (1.5s × 25), folga ampla pro limite ~150-400s
+  const lotes = [];
+  for (let i = 0; i < alunos.length; i += TAMANHO_LOTE) {
+    lotes.push(alunos.slice(i, i + TAMANHO_LOTE));
+  }
 
-    // Sucesso: atualiza status do registro pra 'enviada' + contadores
+  let enviadasTotal = 0;
+  let falhasTotal = 0;
+  const errosLote = []; // [{lote: N, erro: 'msg'}]
+
+  try {
+    for (let i = 0; i < lotes.length; i++) {
+      const lote = lotes[i];
+      const destinatarios = lote.map(a => a.tel);
+
+      // Feedback visual de progresso
+      if (btnEl) {
+        btnEl.innerHTML = `Enviando lote ${i + 1}/${lotes.length}… (${enviadasTotal} ok)`;
+      }
+
+      try {
+        const { data, error } = await sb.functions.invoke('enviar-whatsapp', {
+          body: { mensagem: msg, destinatarios }
+        });
+        if (error) throw error;
+        enviadasTotal += Number(data?.enviadas) || 0;
+        falhasTotal   += Number(data?.falhas)   || 0;
+      } catch (eLote) {
+        // Lote inteiro falhou (timeout, 500, etc.). Conta como N falhas mas SEGUE
+        // com os próximos lotes — assim os 150 que vinham depois ainda recebem.
+        const detalhe = await _detalheErroEdge(eLote, `lote ${i + 1}/${lotes.length}`);
+        errosLote.push({ lote: i + 1, erro: detalhe });
+        falhasTotal += lote.length;
+        console.warn(`[enviarWhatsLinks] Lote ${i + 1}/${lotes.length} falhou:`, detalhe);
+      }
+
+      // Pausa pequena entre lotes pra não martelar a Edge nem a Z-API
+      if (i < lotes.length - 1) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+
+    // Decide status final baseado nos contadores
+    const houveSucessoAlgum = enviadasTotal > 0;
+    const houveFalhaAlguma  = falhasTotal > 0 || errosLote.length > 0;
+    const statusFinal = !houveFalhaAlguma ? 'enviada'
+                      : (houveSucessoAlgum ? 'parcial' : 'erro');
+    const erroResumo = errosLote.length === 0 ? null
+      : errosLote.map(e => `Lote ${e.lote}: ${e.erro}`).join('\n\n---\n\n').slice(0, 2000);
+
+    // Atualiza histórico com totais agregados de todos os lotes
     if (notifId) {
       try {
         await sb.from('notificacoes_whatsapp')
-          .update({ status: 'enviada', enviadas_ok: data?.enviadas ?? null, enviadas_falhas: data?.falhas ?? null })
+          .update({
+            status: statusFinal,
+            enviadas_ok: enviadasTotal,
+            enviadas_falhas: falhasTotal,
+            erro_detalhe: erroResumo
+          })
           .eq('id', notifId);
       } catch(_) { /* colunas novas podem não existir ainda — ignora */ }
     }
 
-    _whatsLimparRascunho();
-    if (data?.falhas > 0) {
-      alert(`✅ ${data.enviadas} mensagens enviadas com sucesso.\n⚠️ ${data.falhas} falharam (verifique no painel Z-API ou no Histórico de Mensagens).`);
+    // Resultado pro usuário
+    if (statusFinal === 'enviada') {
+      _whatsLimparRascunho();
+      alert(`✅ ${enviadasTotal} mensagens enviadas com sucesso!\n\n(em ${lotes.length} lote${lotes.length > 1 ? 's' : ''} de até ${TAMANHO_LOTE})`);
+      fecharModalWhats();
+    } else if (statusFinal === 'parcial') {
+      _whatsLimparRascunho();
+      const erroBox = document.getElementById('whats-erro-box');
+      const erroDet = document.getElementById('whats-erro-detalhe');
+      const msgParcial = `Envio parcial.\n\n✅ ${enviadasTotal} enviadas\n⚠️ ${falhasTotal} falharam\n\n` +
+        (errosLote.length > 0 ? `${errosLote.length} lote${errosLote.length > 1 ? 's' : ''} com erro:\n${errosLote.map(e => '• Lote ' + e.lote).join(', ')}\n\nDetalhes no Histórico de Mensagens.` : 'Veja detalhes no painel Z-API.');
+      if (erroBox && erroDet) {
+        erroDet.textContent = msgParcial;
+        erroBox.style.display = 'block';
+        erroBox.style.background = 'rgba(251,191,36,0.10)';
+        erroBox.style.borderColor = 'rgba(251,191,36,0.45)';
+        erroBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        alert(msgParcial);
+      }
     } else {
-      alert(`✅ ${data.enviadas} mensagens enviadas com sucesso!`);
-    }
-    fecharModalWhats();
-  } catch (e) {
-    // Extrai detalhe REAL da Edge Function (body, status HTTP, sugestão)
-    // em vez de só "Edge Function returned a non-2xx status code"
-    const erroMsg = await _detalheErroEdge(e, 'envio WhatsApp em massa');
-    console.error('Erro envio WhatsApp:', e, '\nDetalhe extraído:', erroMsg);
-
-    // Marca o registro como erro pra ficar visível no Histórico
-    if (notifId) {
-      try {
-        await sb.from('notificacoes_whatsapp')
-          .update({ status: 'erro', erro_detalhe: String(erroMsg).slice(0, 2000) })
-          .eq('id', notifId);
-      } catch(_) { /* colunas novas podem não existir ainda */ }
-    }
-
-    // Mostra erro INLINE (não some quando clicar OK)
-    const box = document.getElementById('whats-erro-box');
-    const det = document.getElementById('whats-erro-detalhe');
-    if (box && det) {
-      det.textContent = erroMsg + (registroFalhou ? '\n\n[Aviso: o registro no histórico também falhou — confira RLS/conexão.]' : '');
-      box.style.display = 'block';
-      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-      alert('Erro: ' + erroMsg);
+      // Erro total — nenhum lote passou
+      const detalhe = errosLote.length > 0 ? errosLote[0].erro : 'Falha desconhecida no envio.';
+      const box = document.getElementById('whats-erro-box');
+      const det = document.getElementById('whats-erro-detalhe');
+      if (box && det) {
+        det.textContent = detalhe + (errosLote.length > 1 ? `\n\n(Todos os ${lotes.length} lotes falharam.)` : '') +
+          (registroFalhou ? '\n\n[Aviso: o registro no histórico também falhou — confira RLS/conexão.]' : '');
+        box.style.display = 'block';
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        alert('Erro: ' + detalhe);
+      }
     }
   } finally {
     if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = oldHTML; }
