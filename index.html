@@ -14248,23 +14248,39 @@ function _renderTabelaMetricas() {
   // Filtro turma
   if (state._metTurma) linhas = linhas.filter(l => l.turma === state._metTurma);
 
-  // Ordenação
-  const cmp = (a, b, asc) => asc ? (a - b) : (b - a);
+  // Ordenação. Tiebreaker SEMPRE por nome — sem ele, quando vários alunos
+  // empatam no critério principal (comum quando dados são zerados), a tela
+  // parece "não estar ordenando". Com tiebreaker, mesmo empates seguem ordem
+  // alfabética visível.
+  const cmpN = (a, b, asc) => asc ? (a - b) : (b - a);
   const cmpStr = (a, b, asc) => asc ? a.localeCompare(b, 'pt-BR') : b.localeCompare(a, 'pt-BR');
+  // Datas no formato ISO ('2026-06-23T...') — comparam direto como string.
+  // Pra desc, NULLs vão pro fim; pra asc, NULLs vão pro fim também.
+  const cmpData = (a, b, asc) => {
+    const va = a || ''; const vb = b || '';
+    if (!va && !vb) return 0;
+    if (!va) return 1;   // sem data sempre por último
+    if (!vb) return -1;
+    return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  };
   const sort = state._metOrdem || 'qTotal_desc';
+  // Aplica o critério principal; se der 0 (empate), cai no tiebreaker por nome.
+  const tieNome = (a, b) => a.nome.localeCompare(b.nome, 'pt-BR');
   linhas.sort((a, b) => {
+    let r = 0;
     switch (sort) {
-      case 'qTotal_asc':  return cmp(a.qTotal, b.qTotal, true);
-      case 'qTotal_desc': return cmp(a.qTotal, b.qTotal, false);
-      case 'taxa_asc':    return cmp(a.taxa ?? -1, b.taxa ?? -1, true);
-      case 'taxa_desc':   return cmp(a.taxa ?? -1, b.taxa ?? -1, false);
-      case 'sem_desc':    return cmp(a.semIniciadas, b.semIniciadas, false);
-      case 'rev_desc':    return cmp(a.revFeitas, b.revFeitas, false);
-      case 'ultima_desc': return cmp((a.ultima || ''), (b.ultima || ''), false);
-      case 'ultima_asc':  return cmp((a.ultima || '9999'), (b.ultima || '9999'), true);
-      case 'nome_asc':    return cmpStr(a.nome, b.nome, true);
-      default:            return cmp(a.qTotal, b.qTotal, false);
+      case 'qTotal_asc':  r = cmpN(a.qTotal, b.qTotal, true); break;
+      case 'qTotal_desc': r = cmpN(a.qTotal, b.qTotal, false); break;
+      case 'taxa_asc':    r = cmpN(a.taxa ?? -1, b.taxa ?? -1, true); break;
+      case 'taxa_desc':   r = cmpN(a.taxa ?? -1, b.taxa ?? -1, false); break;
+      case 'sem_desc':    r = cmpN(a.semIniciadas, b.semIniciadas, false); break;
+      case 'rev_desc':    r = cmpN(a.revFeitas, b.revFeitas, false); break;
+      case 'ultima_desc': r = cmpData(a.ultima, b.ultima, false); break;
+      case 'ultima_asc':  r = cmpData(a.ultima, b.ultima, true); break;
+      case 'nome_asc':    return cmpStr(a.nome, b.nome, true); // já é a ordenação por nome
+      default:            r = cmpN(a.qTotal, b.qTotal, false);
     }
+    return r !== 0 ? r : tieNome(a, b);
   });
 
   if (linhas.length === 0) {
@@ -16646,6 +16662,23 @@ async function abrirNotificarWhatsApp(opts) {
           ` : ''}
         </div>
 
+        <!-- Banner de risco — Z-API é não-oficial e o WhatsApp já restringiu a conta antes -->
+        <div style="margin-top:14px;padding:12px 14px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.35);border-radius:10px;font-size:12.5px;line-height:1.5;color:var(--radix-text,#111);">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <span style="font-size:18px;line-height:1;">⚠️</span>
+            <div>
+              <b style="display:block;margin-bottom:4px;color:#b91c1c;">Use com moderação</b>
+              Z-API é uma API <b>não-oficial</b>. Enviar em massa pode restringir sua conta do WhatsApp (24h na 1ª vez, 7d na 2ª, permanente depois). Recomendações:
+              <ul style="margin:6px 0 0 18px;padding:0;">
+                <li>No máximo <b>${LIMITE_DIARIO_WHATS} mensagens/dia</b> (limite imposto pelo app)</li>
+                <li>Espace envios grandes em dias diferentes — não mande pra todos de uma vez</li>
+                <li>Pra comunicação realmente em massa, considere migrar pra <b>WhatsApp Business Cloud API</b> (oficial) ou e-mail</li>
+              </ul>
+              <div id="whats-cota-hoje" style="margin-top:8px;font-weight:700;color:#7c2d12;">Carregando cota de hoje…</div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group" style="margin-top:18px;">
           <label>Modelo de mensagem</label>
           <select id="whats-modelo" onchange="aplicarModeloWhats()">
@@ -16696,6 +16729,23 @@ async function abrirNotificarWhatsApp(opts) {
   document.body.classList.add('modal-open');
   // Restaurar rascunho não enviado da última vez (se existir)
   _whatsRestaurarRascunho();
+  // Preencher a cota de hoje (consulta assíncrona — não bloqueia abertura do modal)
+  _consultarEnviadosHoje().then(n => {
+    const el = document.getElementById('whats-cota-hoje');
+    if (!el) return;
+    const restante = Math.max(0, LIMITE_DIARIO_WHATS - n);
+    if (restante === 0) {
+      el.textContent = `⛔ Você já enviou ${n}/${LIMITE_DIARIO_WHATS} hoje — limite atingido. Aguarde até amanhã.`;
+      el.style.color = '#7f1d1d';
+    } else if (n > 0) {
+      el.textContent = `Hoje: ${n}/${LIMITE_DIARIO_WHATS} enviadas · ${restante} ainda dispon${restante === 1 ? 'ível' : 'íveis'}`;
+    } else {
+      el.textContent = `Hoje: 0/${LIMITE_DIARIO_WHATS} enviadas — cota cheia disponível`;
+    }
+  }).catch(() => {
+    const el = document.getElementById('whats-cota-hoje');
+    if (el) el.textContent = `Cota de hoje: indisponível (verifique conexão)`;
+  });
 }
 
 // Rascunho local — sobrevive a fechamento acidental do modal
@@ -16793,12 +16843,66 @@ async function _detalheErroEdge(err, contextoHumano) {
   return partes.join('\n');
 }
 
+// Limite diário pra evitar restrição do WhatsApp (Z-API é não-oficial).
+// 50 é abaixo do threshold conhecido que dispara o anti-spam.
+const LIMITE_DIARIO_WHATS = 50;
+
+// Consulta quantas mensagens já foram enviadas HOJE pelo professor atual.
+// Soma `enviadas_ok` de tentativas com status 'enviada' OU 'parcial'.
+// Retorna 0 silenciosamente se as colunas novas ainda não existem.
+async function _consultarEnviadosHoje() {
+  if (!state.usuario?.id) return 0;
+  const hojeISO = new Date();
+  hojeISO.setHours(0, 0, 0, 0);
+  try {
+    const { data, error } = await sb.from('notificacoes_whatsapp')
+      .select('enviadas_ok, destinatarios_total, status')
+      .eq('enviada_por', state.usuario.id)
+      .gte('enviada_em', hojeISO.toISOString());
+    if (error) throw error;
+    return (data || []).reduce((sum, n) => {
+      // Se a coluna enviadas_ok existe, usa; senão fallback pra destinatarios_total (legado)
+      const v = (n.enviadas_ok != null) ? Number(n.enviadas_ok) : Number(n.destinatarios_total || 0);
+      // Conta só tentativas que realmente saíram (enviada/parcial) — tentando/erro não conta
+      if (n.status === 'enviada' || n.status === 'parcial' || n.status == null) return sum + v;
+      return sum;
+    }, 0);
+  } catch (e) {
+    console.warn('[_consultarEnviadosHoje] Falhou (provável coluna ausente):', e);
+    return 0;
+  }
+}
+
 async function enviarWhatsLinks(alunos, btnEl) {
   const ta = document.getElementById('whats-msg');
   const msg = ta ? ta.value.trim() : '';
   if (!msg) { alert('Digite a mensagem'); return; }
   if (alunos.length === 0) { alert('Nenhum aluno com WhatsApp'); return; }
-  const c1 = confirm(`Enviar essa mensagem para ${alunos.length} aluno(s) via WhatsApp automaticamente (Z-API)?`);
+
+  // GUARD DE COTA — bloqueia se já enviou demais hoje
+  const jaHoje = await _consultarEnviadosHoje();
+  const restante = Math.max(0, LIMITE_DIARIO_WHATS - jaHoje);
+  if (restante === 0) {
+    alert(
+      `⛔ Limite diário atingido (${LIMITE_DIARIO_WHATS} mensagens/dia).\n\n` +
+      `Você já enviou ${jaHoje} mensagens hoje. O WhatsApp pode restringir a conta se exceder o ritmo (já aconteceu antes).\n\n` +
+      `Aguarde até amanhã pra continuar, ou edite o LIMITE_DIARIO_WHATS no código se for caso de exceção.`
+    );
+    return;
+  }
+  if (alunos.length > restante) {
+    if (!confirm(
+      `⚠️ AVISO DE COTA\n\n` +
+      `Você quer enviar pra ${alunos.length} alunos, mas só restam ${restante} mensagens no limite de hoje (${LIMITE_DIARIO_WHATS}/dia).\n\n` +
+      `Vou enviar apenas pros primeiros ${restante}. Os outros ${alunos.length - restante} ficam pra outro dia.\n\nContinuar?`
+    )) return;
+    alunos = alunos.slice(0, restante);
+  }
+
+  const c1 = confirm(
+    `Enviar essa mensagem para ${alunos.length} aluno(s) via WhatsApp automaticamente (Z-API)?\n\n` +
+    `Hoje você já enviou ${jaHoje}/${LIMITE_DIARIO_WHATS}. Após este envio: ${jaHoje + alunos.length}/${LIMITE_DIARIO_WHATS}.`
+  );
   if (!c1) return;
 
   // Esconder erro anterior, se houver
@@ -16845,12 +16949,18 @@ async function enviarWhatsLinks(alunos, btnEl) {
     }
   }
 
-  // 2) Invoca a Edge Function em LOTES (chunks de 25 destinatários).
-  //    Por quê: a Edge Function fica viva por ~1.5s × N destinatários e estoura
-  //    HTTP 546 (compute resources / timeout) quando N é alto (visto com 175 alunos).
-  //    Quebrando em lotes pequenos, cada invocação termina rápido e o que já
-  //    foi enviado não se perde se um lote falhar.
-  const TAMANHO_LOTE = 25; // ~37.5s por lote (1.5s × 25), folga ampla pro limite ~150-400s
+  // 2) Invoca a Edge Function em LOTES PEQUENOS.
+  //    Por quê: a Z-API é não-oficial e o WhatsApp baniu a conta do Hugo (24h)
+  //    quando recebeu 175 mensagens em poucos minutos. Lotes pequenos com
+  //    pausa maior entre eles imitam comportamento "humano" e reduzem o risco
+  //    de anti-spam disparar de novo. Também previne timeout HTTP 546 da Edge.
+  //
+  // 📝 NOTA TÉCNICA pra próxima rodada (na EDGE FUNCTION, não aqui):
+  //    O delay ENTRE destinatários DENTRO de um lote (hoje 1.5s fixo) deveria
+  //    ser jitter aleatório 2-5s. Bots usam delay fixo, humanos variam. Como a
+  //    Edge Function fica no Supabase Studio, isso precisa ser ajustado lá.
+  const TAMANHO_LOTE   = 10;   // ~15-30s por lote (10 × 1.5s base + jitter futuro)
+  const PAUSA_LOTES_MS = 3000; // 3s entre lotes = mais "humano" + alívio pra Z-API
   const lotes = [];
   for (let i = 0; i < alunos.length; i += TAMANHO_LOTE) {
     lotes.push(alunos.slice(i, i + TAMANHO_LOTE));
@@ -16886,9 +16996,9 @@ async function enviarWhatsLinks(alunos, btnEl) {
         console.warn(`[enviarWhatsLinks] Lote ${i + 1}/${lotes.length} falhou:`, detalhe);
       }
 
-      // Pausa pequena entre lotes pra não martelar a Edge nem a Z-API
+      // Pausa entre lotes pra imitar comportamento "humano" + aliviar Z-API
       if (i < lotes.length - 1) {
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, PAUSA_LOTES_MS));
       }
     }
 
