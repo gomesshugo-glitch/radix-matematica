@@ -9838,6 +9838,10 @@ function renderEstudoDigital() {
     </div>
   `;
 
+  // Sobe pro topo: sem isso, a tela herda o scroll da anterior (banco de questões)
+  // e o aluno abre no meio das questões. Fix reportado em 24/06.
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+
   // Re-renderiza KaTeX (questões podem ter $...$ matemático)
   setTimeout(() => {
     if (window.renderMathInElement) {
