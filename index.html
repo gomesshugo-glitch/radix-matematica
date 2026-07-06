@@ -12340,7 +12340,11 @@ function radixValidarPayload(p) {
   if (!NIVEIS_ENEM.includes(p.nivel_enem))
     criticos.push(`nivel_enem deve ser um de: ${NIVEIS_ENEM.join(', ')}. Recebido: "${p.nivel_enem == null ? '' : p.nivel_enem}"`);
   const alts = Array.isArray(p.alternativas) ? p.alternativas : [];
-  if (alts.length !== 5) criticos.push(`${alts.length} alternativas (esperado 5 A–E)`);
+  // Aceita 4 (A–D — comum em Uece, Epcar, Unicamp, alguns vestibulares regionais)
+  // ou 5 (A–E — ENEM e maior parte). Qualquer outro número é erro.
+  if (alts.length !== 4 && alts.length !== 5) {
+    criticos.push(`${alts.length} alternativas (esperado 4 ou 5 — A–D ou A–E)`);
+  }
   const corretas = alts.filter(a => a && a.correta === true).length;
   if (corretas === 0) criticos.push('Gabarito ausente/inconsistente — defina a alternativa correta');
   else if (corretas > 1) criticos.push(`${corretas} alternativas marcadas como corretas (esperado 1)`);
@@ -12577,7 +12581,10 @@ function diagnosticarQuestao(q) {
   if (!Array.isArray(q.alternativas) || q.alternativas.length === 0) {
     probs.push('Sem alternativas');
   } else {
-    if (q.alternativas.length !== 5) probs.push(`${q.alternativas.length} alternativas (esperado 5)`);
+    // Aceita 4 (A–D) ou 5 (A–E). Fora disso é problema.
+    if (q.alternativas.length !== 4 && q.alternativas.length !== 5) {
+      probs.push(`${q.alternativas.length} alternativas (esperado 4 ou 5)`);
+    }
     const vazias = q.alternativas.filter(a => {
       const limpo = (a || '').replace(/^[A-E]\)\s*/, '').trim();
       return limpo.length === 0;
