@@ -6777,22 +6777,42 @@ function sanitizarTextoQuestao(s) {
 }
 
 async function carregarQuestoesDoBanco() {
-  // Busca questões no Supabase. Se falhar, retorna null pro fallback.
+  // Busca TODAS as questões no Supabase, em páginas de 1000.
+  // O PostgREST tem limite padrão de 1000 linhas por request. Sem paginação
+  // o banco "trava" nesse número mesmo que existam mais. Fazemos loop com
+  // .range(offset, offset+999) até vir menos que o tamanho da página.
+  const TAMANHO_PAGINA = 1000;
+  const LIMITE_SAFETY = 100000; // para se algo estiver muito estranho (100k questões é MUITO)
   try {
-    const { data, error } = await sb.from('v_questoes_legado')
-      .select('*')
-      .order('id');
-    if (error) {
-      console.warn('Erro buscando questões no Supabase:', error.message);
-      return null;
+    let todos = [];
+    let offset = 0;
+    while (true) {
+      const { data, error } = await sb.from('v_questoes_legado')
+        .select('*')
+        .order('id')
+        .range(offset, offset + TAMANHO_PAGINA - 1);
+      if (error) {
+        console.warn('Erro buscando questões no Supabase (página offset=' + offset + '):', error.message);
+        // Se já pegamos algumas páginas, devolve o parcial em vez de perder tudo
+        if (todos.length > 0) break;
+        return null;
+      }
+      if (!data || data.length === 0) break;
+      todos = todos.concat(data);
+      if (data.length < TAMANHO_PAGINA) break; // última página
+      offset += TAMANHO_PAGINA;
+      if (offset >= LIMITE_SAFETY) {
+        console.warn('[carregarQuestoesDoBanco] Safety limit atingido em', offset, '— parando.');
+        break;
+      }
     }
-    if (!data || data.length === 0) {
+    if (todos.length === 0) {
       console.warn('Tabela questoes vazia no Supabase.');
       return null;
     }
     // Converter snake_case -> camelCase pro código existente
     // Sanitiza texto que possa vir com \n literais do import inicial
-    return data.map(q => ({
+    return todos.map(q => ({
       id: q.id,
       tema: q.tema,
       dificuldade: q.dificuldade,
