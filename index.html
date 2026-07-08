@@ -14322,21 +14322,56 @@ function _renderTabelaMetricas() {
   const _pctCor = v => v == null ? 'var(--radix-text-muted)' : (v >= 70 ? '#10b981' : (v >= 50 ? '#f59e0b' : '#dc2626'));
   const _diasCor = d => d == null ? 'var(--radix-text-muted)' : (d <= 2 ? '#10b981' : (d <= 7 ? '#f59e0b' : '#dc2626'));
 
+  // Mapa: critério ativo → coluna → seta indicativa
+  // Sem esse feedback visual, quando os dados de todos os alunos empatam
+  // (comum no começo do curso: qTotal=0, taxa=null, etc.), o professor troca
+  // de critério e a tela parece não reagir. A seta prova que o sort rodou.
+  const _labelOrd = {
+    qTotal_desc: 'Mais questões', qTotal_asc: 'Menos questões',
+    taxa_desc: 'Maior % acerto', taxa_asc: 'Menor % acerto',
+    sem_desc: 'Mais semanas', rev_desc: 'Mais revisões',
+    ultima_desc: 'Atividade recente', ultima_asc: 'Atividade antiga',
+    nome_asc: 'Nome A→Z'
+  };
+  const _colOrd = { // qual coluna corresponde a qual critério
+    qTotal_desc:'q', qTotal_asc:'q', taxa_desc:'t', taxa_asc:'t',
+    sem_desc:'s', rev_desc:'r', ultima_desc:'u', ultima_asc:'u', nome_asc:'n'
+  };
+  const _seta = (col) => {
+    if (_colOrd[sort] !== col) return '';
+    const desc = /desc$/.test(sort);
+    return `<span style="color:var(--radix-cyan,#22d3ee);margin-left:4px;font-weight:900;">${desc ? '↓' : '↑'}</span>`;
+  };
+  const _thAtivo = (col) => _colOrd[sort] === col
+    ? 'background:rgba(34,211,238,0.10);color:var(--radix-cyan,#0891b2);'
+    : '';
+
   cont.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:8px 12px;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.22);border-radius:8px;font-size:12.5px;color:var(--radix-text-2,#374151);">
+      <span style="font-weight:700;color:var(--radix-cyan,#0891b2);">Ordenado por:</span>
+      <b>${_labelOrd[sort] || sort}</b>
+      <span style="color:var(--radix-text-muted,#6b7280);">·</span>
+      <span>${linhas.length} ${linhas.length === 1 ? 'aluno' : 'alunos'}</span>
+      ${linhas.length > 0 && linhas.every(l => l.qTotal === 0 && l.taxa == null && l.semIniciadas === 0 && l.revFeitas === 0) ? `
+        <span style="margin-left:auto;color:var(--radix-warning,#b45309);font-size:11.5px;">
+          ⚠ Todos os alunos empatam nesse critério — ordem final segue tiebreaker por nome
+        </span>
+      ` : ''}
+    </div>
     <div class="met-tabela-wrap">
       <table class="met-tabela">
         <thead>
           <tr>
-            <th class="met-col-nome">Aluno</th>
+            <th class="met-col-nome" style="${_thAtivo('n')}">Aluno${_seta('n')}</th>
             <th>Turma</th>
-            <th class="met-num" title="Questões respondidas no banco">Q resp.</th>
-            <th class="met-num" title="% de acerto nas questões respondidas">% acerto</th>
-            <th class="met-num" title="Semanas marcadas como Em estudo ou Concluído">Semanas</th>
+            <th class="met-num" style="${_thAtivo('q')}" title="Questões respondidas no banco">Q resp.${_seta('q')}</th>
+            <th class="met-num" style="${_thAtivo('t')}" title="% de acerto nas questões respondidas">% acerto${_seta('t')}</th>
+            <th class="met-num" style="${_thAtivo('s')}" title="Semanas marcadas como Em estudo ou Concluído">Semanas${_seta('s')}</th>
             <th class="met-num" title="Horas registradas no campo ET">ET (h)</th>
             <th class="met-num" title="Questões feitas no registro de estudo (sala+casa)">Q estudo</th>
-            <th class="met-num" title="Revisões marcadas como feitas / total previsto">Revisões</th>
+            <th class="met-num" style="${_thAtivo('r')}" title="Revisões marcadas como feitas / total previsto">Revisões${_seta('r')}</th>
             <th class="met-num" title="Caderno de erros: resolvidos / total"><span style="display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>Erros</span></th>
-            <th class="met-num" title="Dias desde a última atividade">Última</th>
+            <th class="met-num" style="${_thAtivo('u')}" title="Dias desde a última atividade">Última${_seta('u')}</th>
           </tr>
         </thead>
         <tbody>
