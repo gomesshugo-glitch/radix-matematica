@@ -6375,29 +6375,7 @@ function _materiaisDaSemanaPraAluno(sem, todos) {
   }
   // Integral
   const diretos = arr.filter(m => m.cronograma === 'integral' && m.semana_numero === sem.n);
-  // (B) materiais do REGULAR herdados. Aulas que compartilham o MESMO TEMA
-  //     (ex.: "Geometria Espacial I" e "II", ambas geo-espacial; "Plana I" e "II")
-  //     não podem ser distinguidas só pelo tema — isso fazia as duas semanas
-  //     mostrarem TODOS os materiais das duas. Então casamos primeiro pela(s)
-  //     semana(s) regular(es) de MESMO TÍTULO; só se nenhuma bater caímos no tema.
-  let porRegular = [];
-  if (sem.temaId) {
-    const norm = s => String(s || '').trim().toLowerCase();
-    const semsMesmoTitulo = (CRONOGRAMA_2026 || [])
-      .filter(s => s.titulo && sem.titulo && norm(s.titulo) === norm(sem.titulo))
-      .map(s => s.n);
-    if (semsMesmoTitulo.length > 0) {
-      const setN = new Set(semsMesmoTitulo);
-      porRegular = arr.filter(m =>
-        (m.cronograma || 'regular') === 'regular' && setN.has(m.semana_numero)
-      );
-    } else {
-      porRegular = arr.filter(m =>
-        (m.cronograma || 'regular') === 'regular' &&
-        _temaDoMaterial(m) === sem.temaId
-      );
-    }
-  }
+  const porRegular = _materiaisRegularHerdadosDaSemanaIntegral(sem, arr);
   // Dedup por id (caso algum material apareça nos 2 conjuntos por acaso)
   const seen = new Set();
   return [...diretos, ...porRegular].filter(m => {
@@ -6405,6 +6383,30 @@ function _materiaisDaSemanaPraAluno(sem, todos) {
     seen.add(m.id);
     return true;
   });
+}
+
+// Materiais do REGULAR que uma semana do INTEGRAL herda (via mapeamento por
+// tema). NÃO inclui os materiais exclusivos do Integral — só a parte herdada.
+// (B) Aulas que compartilham o MESMO TEMA (ex.: "Geometria Espacial I" e "II",
+//     ambas geo-espacial; "Plana I" e "II") não podem ser distinguidas só pelo
+//     tema — isso fazia as duas semanas mostrarem TODOS os materiais das duas.
+//     Então casamos primeiro pela(s) semana(s) regular(es) de MESMO TÍTULO; só
+//     se nenhuma bater caímos no tema.
+function _materiaisRegularHerdadosDaSemanaIntegral(sem, todos) {
+  if (!sem || !sem.temaId) return [];
+  const arr = todos || [];
+  const norm = s => String(s || '').trim().toLowerCase();
+  const semsMesmoTitulo = (CRONOGRAMA_2026 || [])
+    .filter(s => s.titulo && sem.titulo && norm(s.titulo) === norm(sem.titulo))
+    .map(s => s.n);
+  if (semsMesmoTitulo.length > 0) {
+    const setN = new Set(semsMesmoTitulo);
+    return arr.filter(m => (m.cronograma || 'regular') === 'regular' && setN.has(m.semana_numero));
+  }
+  return arr.filter(m =>
+    (m.cronograma || 'regular') === 'regular' &&
+    _temaDoMaterial(m) === sem.temaId
+  );
 }
 
 // Técnicas de estudo que o aluno pode marcar
@@ -16105,13 +16107,19 @@ async function renderGerenciarMateriais() {
       // TODOS os módulos/semanas mesmo sem material — senão a aba fica em branco e
       // o professor não tem onde clicar pra adicionar.
       if (matsDesseModulo.length === 0 && cronoEdit !== 'integral') return '';
+      // Integral: quantos materiais do Regular este módulo herda (só visíveis).
+      const herdadosModulo = cronoEdit === 'integral'
+        ? semanas.reduce((acc, s) => acc + _materiaisRegularHerdadosDaSemanaIntegral(s, materiaisCache).filter(m => m.visivel !== false).length, 0)
+        : 0;
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};margin-bottom:18px;">
           <div class="cron-modulo-header">
             <div class="cron-modulo-numero">${mod.numero}</div>
             <div class="cron-modulo-info">
               <h3>${mod.nome}</h3>
-              <p>${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'material' : 'materiais'}</p>
+              <p>${cronoEdit === 'integral'
+                ? `${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'exclusivo' : 'exclusivos'} · ${herdadosModulo} do Regular`
+                : `${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'material' : 'materiais'}`}</p>
             </div>
           </div>
           <div style="padding:10px 14px;">
@@ -16120,6 +16128,13 @@ async function renderGerenciarMateriais() {
               const matsDestaSem = matsDoCrono
                 .filter(mat => mat.semana_numero === sem.n)
                 .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+              // Integral: materiais do Regular herdados por esta semana (só visíveis,
+              // read-only aqui — a gestão deles é na aba Regular).
+              const herdados = cronoEdit === 'integral'
+                ? _materiaisRegularHerdadosDaSemanaIntegral(sem, materiaisCache)
+                    .filter(m => m.visivel !== false)
+                    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+                : [];
               // Sempre mostra a semana, mesmo sem materiais — pra ter onde clicar pra adicionar.
               return `
                 <div class="gerencia-semana">
@@ -16156,6 +16171,30 @@ async function renderGerenciarMateriais() {
                       `;
                     }).join('')}
                   </div>
+                  ${herdados.length > 0 ? `
+                    <div style="margin:2px 10px 4px;padding:8px 10px;background:rgba(34,211,238,0.06);border:1px dashed rgba(34,211,238,0.45);border-radius:8px;">
+                      <div style="font-size:10.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--radix-cyan,#0891b2);margin-bottom:6px;">
+                        ↩ Herdados do Regular · ${herdados.length} ${herdados.length === 1 ? 'material' : 'materiais'}
+                        <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:0.75;">— os alunos do Integral já recebem estes automaticamente</span>
+                      </div>
+                      ${herdados.map(mat => {
+                        const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
+                        const tipoLabel = { aula_youtube: 'Vídeo-aula', pdf: 'PDF', link_externo: 'Link' }[mat.tipo];
+                        return `
+                          <div class="gerencia-mat-item" style="opacity:0.92;">
+                            <span class="gerencia-mat-ico">${ico}</span>
+                            <div class="gerencia-mat-info">
+                              <div class="gerencia-mat-titulo">${mat.titulo}</div>
+                              <div class="gerencia-mat-tipo">${tipoLabel}${mat.duracao_min ? ' · ' + mat.duracao_min + ' min' : ''} · <span style="color:var(--radix-cyan,#0891b2);font-weight:700;">do Regular</span></div>
+                            </div>
+                            <div class="gerencia-mat-acoes">
+                              <span style="font-size:10px;color:var(--radix-gray-light);white-space:nowrap;">gerenciar na aba Regular</span>
+                            </div>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  ` : ''}
                 </div>
               `;
             }).join('')}
@@ -17255,11 +17294,11 @@ function renderCronograma(focoN) {
 
   const isProf = !!(state.usuario && state.usuario.perfil === 'professor');
   const tipoUser = (typeof getCronogramaTipo === 'function') ? getCronogramaTipo() : 'regular';
-  const podeAlternar = isProf || tipoUser === 'integral';
-  // Normaliza a visão ativa (state._cronoView). Só professor e aluno do Integral
-  // podem alternar; os demais ficam no seu próprio cronograma.
+  const podeAlternar = isProf;  // SÓ o professor alterna; o aluno vê sempre o seu
+  // O aluno nunca escolhe o cronograma: fica travado no da própria turma (a turma
+  // Integral só vê o Integral; as demais só o Regular). Só o professor alterna.
   if (!podeAlternar) {
-    state._cronoView = 'regular';
+    state._cronoView = tipoUser;
   } else if (state._cronoView !== 'regular' && state._cronoView !== 'integral') {
     state._cronoView = tipoUser;
   }
