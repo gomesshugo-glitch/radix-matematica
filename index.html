@@ -6323,11 +6323,20 @@ function getCronogramaTipo() {
   const turma = state && state.usuario && state.usuario.turma;
   return turma === TURMA_INTEGRAL ? 'integral' : 'regular';
 }
-function getCronogramaAtivo() {
-  return getCronogramaTipo() === 'integral' ? CRONOGRAMA_INTEGRAL_2026 : CRONOGRAMA_2026;
+function getCronogramaAtivo(tipo) {
+  const t = tipo || getCronogramaTipo();
+  return t === 'integral' ? CRONOGRAMA_INTEGRAL_2026 : CRONOGRAMA_2026;
 }
-function getModulosCronograma() {
-  return getCronogramaTipo() === 'integral' ? MODULOS_INTEGRAL : MODULOS;
+function getModulosCronograma(tipo) {
+  const t = tipo || getCronogramaTipo();
+  return t === 'integral' ? MODULOS_INTEGRAL : MODULOS;
+}
+// Tipo de cronograma das telas de VISUALIZAÇÃO/EDIÇÃO (independente do
+// mapeamento de materiais). Professor e aluno do Integral podem alternar a
+// visão via state._cronoView; os demais veem sempre o seu próprio cronograma.
+function getCronogramaViewTipo() {
+  const t = state && state._cronoView;
+  return (t === 'regular' || t === 'integral') ? t : getCronogramaTipo();
 }
 
 // =========================================================
@@ -16092,7 +16101,10 @@ async function renderGerenciarMateriais() {
     ${cronoModulos.map(mod => {
       const semanas = semanasPorMod[mod.id] || [];
       const matsDesseModulo = matsDoCrono.filter(mat => mat.modulo_id === mod.id || (mat.semana_numero !== null && semanas.some(s => s.n === mat.semana_numero)));
-      if (matsDesseModulo.length === 0) return '';
+      // No Regular escondemos módulos vazios (tela curada). No Integral mostramos
+      // TODOS os módulos/semanas mesmo sem material — senão a aba fica em branco e
+      // o professor não tem onde clicar pra adicionar.
+      if (matsDesseModulo.length === 0 && cronoEdit !== 'integral') return '';
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};margin-bottom:18px;">
           <div class="cron-modulo-header">
@@ -16471,13 +16483,17 @@ async function carregarCronogramaCustom() {
   cronogramaCustom = data || [];
 }
 
-function getCronogramaMerged() {
-  // Mescla o cronograma ATIVO do aluno (regular ou integral) com customizações
-  // editadas pelo professor. Pra integral, getCronogramaAtivo() retorna
-  // CRONOGRAMA_INTEGRAL_2026; senão, CRONOGRAMA_2026.
-  const baseArr = (typeof getCronogramaAtivo === 'function') ? getCronogramaAtivo() : CRONOGRAMA_2026;
+function getCronogramaMerged(tipo) {
+  // Mescla o cronograma ATIVO (regular ou integral) com as customizações do
+  // professor. `tipo` define qual base usar; se omitido, usa o do usuário.
+  // As customizações são filtradas pelo MESMO tipo — assim editar uma semana do
+  // Integral não afeta a mesma semana do Regular (e vice-versa).
+  const t = tipo || getCronogramaTipo();
+  const baseArr = (typeof getCronogramaAtivo === 'function') ? getCronogramaAtivo(t) : CRONOGRAMA_2026;
   const base = baseArr.map(s => ({ ...s }));
-  cronogramaCustom.forEach(c => {
+  cronogramaCustom
+    .filter(c => (c.cronograma || 'regular') === t)
+    .forEach(c => {
     if (c.removida) {
       // Semana original marcada como cancelada → marca um flag
       const sem = base.find(x => x.n === c.semana_numero);
@@ -16511,19 +16527,39 @@ async function renderEditarCronograma() {
   state.view = 'editar-cronograma';
   await carregarCronogramaCustom();
   const main = document.getElementById('main-content');
-  const merged = getCronogramaMerged();
+
+  // Aba ativa do professor: 'regular' (default) ou 'integral'. Isolada do
+  // cronograma do usuário logado — o professor vê e edita os dois lados.
+  if (state._cronoEditTab !== 'integral') state._cronoEditTab = 'regular';
+  const tipoEdit = state._cronoEditTab;
+  const ehIntegral = tipoEdit === 'integral';
+  const merged = getCronogramaMerged(tipoEdit);
+  const modsEdit = getModulosCronograma(tipoEdit);
 
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Editar Cronograma</div>
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Editar Cronograma${ehIntegral ? ' (Integral)' : ''}</div>
     <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Editar Cronograma 2026</h2>
+
+    <!-- Tabs Regular / Integral -->
+    <div style="display:flex;gap:8px;margin:6px 0 12px;padding:4px;background:var(--radix-surface-2,#f3f4f6);border-radius:10px;width:max-content;max-width:100%;">
+      <button class="${!ehIntegral ? 'btn btn-success' : 'btn btn-secondary'}"
+              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;"
+              onclick="state._cronoEditTab='regular';renderEditarCronograma();">Cronograma Regular</button>
+      <button class="${ehIntegral ? 'btn btn-success' : 'btn btn-secondary'}"
+              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;${ehIntegral ? 'background:linear-gradient(135deg,#7e22ce,#a855f7);border-color:#7e22ce;' : ''}"
+              onclick="state._cronoEditTab='integral';renderEditarCronograma();">⚡ Integral</button>
+    </div>
+
     <p style="color:var(--radix-gray-light);margin-bottom:16px;font-size:14px;">
-      Você pode editar título, data, tema ou cancelar qualquer semana. Aulas extras adicionadas aqui aparecem no cronograma dos alunos.
+      ${ehIntegral
+        ? 'Planejamento completo do <strong>Curso Integral</strong> (Turma 05). Edições aqui aparecem só pros alunos do Integral.'
+        : 'Planejamento do <strong>Curso Regular</strong>. Edite título, data, tema ou cancele qualquer semana. Aulas extras aparecem no cronograma dos alunos.'}
     </p>
     <div style="margin-bottom:16px;">
       <button class="btn btn-success" style="display:inline-flex;align-items:center;gap:6px;" onclick="abrirNovaAulaExtra()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Nova aula extra</button>
     </div>
 
-    ${MODULOS.map(mod => {
+    ${modsEdit.map(mod => {
       const semanas = merged.filter(s => s.moduloId === mod.id);
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
@@ -16565,13 +16601,16 @@ function abrirNovaAulaExtra() {
 }
 
 function editarSemanaCrono(n, customId) {
-  const s = getCronogramaMerged().find(x => x.n === n);
+  const tipo = (state._cronoEditTab === 'integral') ? 'integral' : 'regular';
+  const s = getCronogramaMerged(tipo).find(x => x.n === n);
   abrirEditorCrono(s, customId);
 }
 
 function abrirEditorCrono(semana, customId) {
   const isNova = !semana;
-  const nextN = Math.max(...getCronogramaMerged().map(x=>x.n)) + 1;
+  const tipo = (state._cronoEditTab === 'integral') ? 'integral' : 'regular';
+  const modsEdit = getModulosCronograma(tipo);
+  const nextN = Math.max(...getCronogramaMerged(tipo).map(x=>x.n)) + 1;
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalCrono()">
       <div class="modal" style="max-width:560px;">
@@ -16583,7 +16622,7 @@ function abrirEditorCrono(semana, customId) {
         <div class="form-group">
           <label>Módulo</label>
           <select id="crono-mod">
-            ${MODULOS.map(m => `<option value="${m.id}" ${(!isNova && semana.moduloId===m.id) ? 'selected' : ''}>Módulo ${m.numero} - ${m.nome}</option>`).join('')}
+            ${modsEdit.map(m => `<option value="${m.id}" ${(!isNova && semana.moduloId===m.id) ? 'selected' : ''}>Módulo ${m.numero} - ${m.nome}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -16598,9 +16637,9 @@ function abrirEditorCrono(semana, customId) {
           <label>Tema vinculado (opcional)</label>
           <select id="crono-tema">
             <option value="">— sem tema —</option>
-            ${MODULOS.map(mod => `
+            ${modsEdit.map(mod => `
               <optgroup label="Módulo ${mod.numero}">
-                ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return `<option value="${tid}" ${(!isNova && semana.temaId===tid)?'selected':''}>${t.nome}</option>`; }).join('')}
+                ${mod.temas.map(tid => { const t = TEMAS.find(x=>x.id===tid); return t ? `<option value="${tid}" ${(!isNova && semana.temaId===tid)?'selected':''}>${t.nome}</option>` : ''; }).join('')}
               </optgroup>
             `).join('')}
           </select>
@@ -16648,7 +16687,10 @@ async function salvarCronoSemana(customId, isNova) {
 
   if (!titulo) { alert('Título é obrigatório'); return; }
 
+  const cronoTipo = (state._cronoEditTab === 'integral') ? 'integral' : 'regular';
   const payload = { semana_numero: n, modulo_id: moduloId, titulo, data_inicio, tema_id, tipo, observacao, removida: false };
+  // Só o Integral precisa do discriminador (o Regular fica no default do banco).
+  if (cronoTipo === 'integral') payload.cronograma = 'integral';
 
   let res;
   if (customId) {
@@ -16656,9 +16698,19 @@ async function salvarCronoSemana(customId, isNova) {
   } else {
     res = await sb.from('cronograma_custom').insert(payload);
   }
-  if (res.error) { alert('Erro: ' + res.error.message); return; }
+  if (res.error) { alert(_erroCronoMsg(res.error)); return; }
   fecharModalCrono();
   renderEditarCronograma();
+}
+
+// Mensagem de erro amigável: se a coluna `cronograma` ainda não existe, orienta
+// rodar a migração; senão mostra o erro cru.
+function _erroCronoMsg(err) {
+  const m = (err && err.message) || '';
+  if (/cronograma/i.test(m) && /(column|does not exist|schema cache)/i.test(m)) {
+    return 'Pra editar o cronograma Integral, rode antes o SQL_cronograma_custom_tipo.sql no Supabase (ele adiciona a coluna "cronograma"). O cronograma Regular continua funcionando normalmente.';
+  }
+  return 'Erro: ' + m;
 }
 
 async function excluirAulaExtra(customId) {
@@ -16669,16 +16721,24 @@ async function excluirAulaExtra(customId) {
 
 async function cancelarSemana(n) {
   if (!confirm('Cancelar essa semana? Ela aparecerá riscada no cronograma dos alunos.')) return;
-  const mod = CRONOGRAMA_2026.find(s => s.n === n)?.moduloId || 'm1';
-  const titulo = CRONOGRAMA_2026.find(s => s.n === n)?.titulo || '';
-  await sb.from('cronograma_custom').upsert({
-    semana_numero: n, modulo_id: mod, titulo, removida: true
-  }, { onConflict: 'id' });
+  const cronoTipo = (state._cronoEditTab === 'integral') ? 'integral' : 'regular';
+  const semBase = getCronogramaAtivo(cronoTipo).find(s => s.n === n);
+  const mod = (semBase && semBase.moduloId) || (cronoTipo === 'integral' ? 'mi1' : 'm1');
+  const titulo = (semBase && semBase.titulo) || '';
+  const payload = { semana_numero: n, modulo_id: mod, titulo, removida: true };
+  if (cronoTipo === 'integral') payload.cronograma = 'integral';
+  const res = await sb.from('cronograma_custom').upsert(payload, { onConflict: 'id' });
+  if (res.error) { alert(_erroCronoMsg(res.error)); return; }
   renderEditarCronograma();
 }
 
 async function reativarSemana(n) {
-  await sb.from('cronograma_custom').delete().eq('semana_numero', n).eq('removida', true);
+  const cronoTipo = (state._cronoEditTab === 'integral') ? 'integral' : 'regular';
+  let q = sb.from('cronograma_custom').delete().eq('semana_numero', n).eq('removida', true);
+  // Escopo por cronograma só no Integral (o Regular preserva o comportamento
+  // antigo e não depende da coluna nova).
+  if (cronoTipo === 'integral') q = q.eq('cronograma', 'integral');
+  await q;
   renderEditarCronograma();
 }
 
@@ -17193,43 +17253,60 @@ function renderCronograma(focoN) {
   state.view = 'cronograma';
   const main = document.getElementById('main-content');
 
-  const merged = getCronogramaMerged();
-  // Calcula progresso geral
-  let totalSemanas = 0, concluidas = 0, emEstudo = 0;
-  merged.forEach(s => {
-    if (s.tipo === 'recesso' || s.cancelada) return;
-    totalSemanas++;
-    const st = statusDaSemana(s.n);
-    if (st === 'concluido') concluidas++;
-    else if (st === 'em_estudo') emEstudo++;
-  });
-  const pctConcluido = Math.round((concluidas / totalSemanas) * 100);
+  const isProf = !!(state.usuario && state.usuario.perfil === 'professor');
+  const tipoUser = (typeof getCronogramaTipo === 'function') ? getCronogramaTipo() : 'regular';
+  const podeAlternar = isProf || tipoUser === 'integral';
+  // Normaliza a visão ativa (state._cronoView). Só professor e aluno do Integral
+  // podem alternar; os demais ficam no seu próprio cronograma.
+  if (!podeAlternar) {
+    state._cronoView = 'regular';
+  } else if (state._cronoView !== 'regular' && state._cronoView !== 'integral') {
+    state._cronoView = tipoUser;
+  }
+  const tipoView = state._cronoView;
+  const ehIntegral = tipoView === 'integral';
+  // Progresso pessoal só faz sentido quando o ALUNO vê o SEU próprio cronograma.
+  // Professor (sem progresso) e aluno espiando o outro track veem só o
+  // planejamento (cards limpos, sem status/estatística).
+  const mostrarProgresso = !isProf && tipoView === tipoUser;
 
-  // Agrupa semanas por modulo (usa MODULOS do cronograma ATIVO — regular ou integral)
-  const modsAtivos = getModulosCronograma();
+  const merged = getCronogramaMerged(tipoView);
+  const modsAtivos = getModulosCronograma(tipoView);
   const semanasPorMod = {};
   modsAtivos.forEach(m => semanasPorMod[m.id] = []);
   merged.forEach(s => { if (semanasPorMod[s.moduloId]) semanasPorMod[s.moduloId].push(s); });
 
-  // Badge "INTEGRAL" no header pra aluno saber qual versão está vendo
-  const ehIntegral = (typeof getCronogramaTipo === 'function') && getCronogramaTipo() === 'integral';
+  // Contagens: progresso (aluno) e panorama do plano
+  let totalSemanas = 0, concluidas = 0, emEstudo = 0, totalAulas = 0;
+  merged.forEach(s => {
+    if (s.tipo === 'recesso' || s.cancelada) return;
+    totalSemanas++;
+    if (s.temaId) totalAulas++;
+    if (mostrarProgresso) {
+      const st = statusDaSemana(s.n);
+      if (st === 'concluido') concluidas++;
+      else if (st === 'em_estudo') emEstudo++;
+    }
+  });
+  const pctConcluido = totalSemanas ? Math.round((concluidas / totalSemanas) * 100) : 0;
+
   const badgeIntegral = ehIntegral
     ? '<span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#7e22ce,#a855f7);color:#fff;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.06em;vertical-align:middle;margin-left:10px;">⚡ INTEGRAL</span>'
     : '';
 
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Cronograma 2026${ehIntegral ? ' (Integral)' : ''}</div>
+  // Toggle Regular ⇄ Integral (professor + aluno do Integral)
+  const toggleView = podeAlternar ? `
+    <div style="display:flex;gap:8px;margin:0 0 14px;padding:4px;background:var(--radix-surface-2,#f3f4f6);border-radius:10px;width:max-content;max-width:100%;">
+      <button class="${!ehIntegral ? 'btn btn-success' : 'btn btn-secondary'}"
+              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;"
+              onclick="state._cronoView='regular';renderCronograma();">Regular</button>
+      <button class="${ehIntegral ? 'btn btn-success' : 'btn btn-secondary'}"
+              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;${ehIntegral ? 'background:linear-gradient(135deg,#7e22ce,#a855f7);border-color:#7e22ce;' : ''}"
+              onclick="state._cronoView='integral';renderCronograma();">⚡ Integral</button>
+    </div>` : '';
 
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-      <h2 class="section-title" style="margin:0;"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cronograma 2026 — Matemática${badgeIntegral}</h2>
-      <button class="btn btn-secondary" onclick="baixarPDFProgressoTudo()"
-              title="Baixa um PDF com TODOS os seus registros de progresso (resumo + semana a semana). Útil pra revisar e montar estratégia de estudo."
-              style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:13px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Baixar relatório completo (PDF)
-      </button>
-    </div>
-
+  // Resumo: barra de progresso (aluno no próprio) OU panorama do plano
+  const resumoHtml = mostrarProgresso ? `
     <div class="cronograma-resumo">
       <div class="cron-resumo-info">
         <div class="cron-resumo-numero">${concluidas} / ${totalSemanas}</div>
@@ -17239,12 +17316,35 @@ function renderCronograma(focoN) {
       <div class="cron-progress-bar">
         <div class="cron-progress-fill" style="width: ${pctConcluido}%;"></div>
       </div>
+    </div>` : `
+    <div class="cronograma-resumo">
+      <div class="cron-resumo-info">
+        <div class="cron-resumo-numero">${totalAulas}</div>
+        <div class="cron-resumo-label">aulas planejadas · ${modsAtivos.length} módulos</div>
+        <div class="cron-resumo-sub">${ehIntegral ? 'Curso Integral (Turma 05)' : 'Curso Regular'} — planejamento anual 2026</div>
+      </div>
+    </div>`;
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Cronograma 2026${ehIntegral ? ' (Integral)' : ''}</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+      <h2 class="section-title" style="margin:0;"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cronograma 2026 — Matemática${badgeIntegral}</h2>
+      ${mostrarProgresso ? `<button class="btn btn-secondary" onclick="baixarPDFProgressoTudo()"
+              title="Baixa um PDF com TODOS os seus registros de progresso (resumo + semana a semana). Útil pra revisar e montar estratégia de estudo."
+              style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:13px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar relatório completo (PDF)
+      </button>` : ''}
     </div>
+
+    ${toggleView}
+    ${resumoHtml}
 
     ${modsAtivos.map(mod => {
       const semanas = semanasPorMod[mod.id] || [];
-      const semOk = semanas.filter(s => s.tipo !== 'recesso' && statusDaSemana(s.n) === 'concluido').length;
       const semTotal = semanas.filter(s => s.tipo !== 'recesso').length;
+      const semOk = mostrarProgresso ? semanas.filter(s => s.tipo !== 'recesso' && statusDaSemana(s.n) === 'concluido').length : 0;
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
           <div class="cron-modulo-header">
@@ -17253,10 +17353,10 @@ function renderCronograma(focoN) {
               <h3>${mod.nome}</h3>
               <p>${mod.subtitulo}</p>
             </div>
-            <div class="cron-modulo-stats">${semOk}/${semTotal}</div>
+            <div class="cron-modulo-stats">${mostrarProgresso ? semOk + '/' + semTotal : semTotal + (semTotal === 1 ? ' aula' : ' aulas')}</div>
           </div>
           <div class="cron-semanas-grid">
-            ${semanas.map(s => renderSemanaCard(s)).join('')}
+            ${semanas.map(s => renderSemanaCard(s, mostrarProgresso)).join('')}
           </div>
         </div>
       `;
@@ -17276,15 +17376,32 @@ function renderCronograma(focoN) {
   }
 }
 
-function renderSemanaCard(s) {
-  const st = statusDaSemana(s.n);
-  const stats = statsDaSemana(s);
-  const stIcon = { 'nao_iniciado': '⚪', 'em_estudo': '🟡', 'concluido': '✅' }[st];
-  const stLabel = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' }[st];
+function renderSemanaCard(s, mostrarProgresso) {
+  if (mostrarProgresso === undefined) mostrarProgresso = true;
   const tipoBadge = s.tipo === 'simulado' ? '<span class="cron-tipo simulado-tipo">SIMULADO</span>' :
                     s.tipo === 'recesso'  ? '<span class="cron-tipo recesso-tipo">RECESSO</span>' :
                     s.tipo === 'revisao'  ? '<span class="cron-tipo revisao-tipo">REVISÃO</span>' :
                     s.tipo === 'evento'   ? '<span class="cron-tipo evento-tipo">EVENTO</span>' : '';
+
+  // Modo PLANEJAMENTO (professor ou aluno espiando o outro track): card limpo,
+  // sem progresso pessoal, sem badges e não-clicável (não marca progresso).
+  if (!mostrarProgresso) {
+    return `
+      <div class="cron-semana nao_iniciado" id="cron-sem-${s.n}" style="position:relative;cursor:default;">
+        <div class="cron-semana-topo">
+          <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
+          <div class="cron-semana-meta">
+            <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
+            <div class="cron-semana-titulo">${s.titulo}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const st = statusDaSemana(s.n);
+  const stats = statsDaSemana(s);
+  const stIcon = { 'nao_iniciado': '⚪', 'em_estudo': '🟡', 'concluido': '✅' }[st];
+  const stLabel = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' }[st];
   const podeMarcar = s.tipo !== 'recesso';
 
   // Badge de revisões urgentes (hoje + atrasadas) DESTA semana
