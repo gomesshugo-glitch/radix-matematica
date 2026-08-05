@@ -6422,6 +6422,50 @@ const TECNICAS_ESTUDO = [
 ];
 
 // =========================================================
+// SIMULADOS EXTERNOS — bancas e áreas ENEM
+// Alunos registram manualmente notas de simulados externos
+// (Evolucional, SAS, Somos, ENEM anteriores etc.) pra ver evolução.
+// =========================================================
+const BANCAS_SIMULADO = [
+  { id: 'enem',        nome: 'ENEM',        cor: '#dc2626' },
+  { id: 'evolucional', nome: 'Evolucional', cor: '#0891b2' },
+  { id: 'sas',         nome: 'SAS',         cor: '#7e22ce' },
+  { id: 'somos',       nome: 'Somos',       cor: '#f59e0b' },
+  { id: 'bernoulli',   nome: 'Bernoulli',   cor: '#10b981' },
+  { id: 'anglo',       nome: 'Anglo',       cor: '#3b82f6' },
+  { id: 'poliedro',    nome: 'Poliedro',    cor: '#ec4899' },
+  { id: 'outro',       nome: 'Outro',       cor: '#6b7280' },
+];
+// Escape HTML de verdade (preserva o conteúdo em vez de remover caracteres).
+// Usar SEMPRE que texto do usuário for interpolado em HTML — dentro de
+// <textarea>/<div> ou em atributos value="". Remover chars (o que era feito
+// antes) corrompia o dado: "3 > 2" virava "3  2" e o save regravava assim.
+function _escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function bancaPorId(id) { return BANCAS_SIMULADO.find(b => b.id === id) || null; }
+function bancaLabel(sim) {
+  if (!sim) return '—';
+  if (sim.banca === 'outro' && sim.banca_outro) return sim.banca_outro;
+  const b = bancaPorId(sim.banca);
+  return b ? b.nome : (sim.banca || '—');
+}
+
+const AREAS_ENEM = [
+  { id: 'mat',  nome: 'Matemática',  cor: '#0891b2', qMax: 45 },
+  { id: 'ling', nome: 'Linguagens',  cor: '#f59e0b', qMax: 45 },
+  { id: 'hum',  nome: 'Humanas',     cor: '#7e22ce', qMax: 45 },
+  { id: 'nat',  nome: 'Natureza',    cor: '#10b981', qMax: 45 },
+  { id: 'red',  nome: 'Redação',     cor: '#dc2626', qMax: null }, // só nota
+];
+
+// =========================================================
 // CADERNO DE ERROS — categorias e prioridades
 // =========================================================
 // SVGs (feather-style) usados nos cards de categoria — mais profissional que emoji
@@ -6877,7 +6921,7 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos(), carregarCadernoErros()]);
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos(), carregarCadernoErros(), carregarSimuladosExternos()]);
   carregarListaLocal();
   carregarListasSalvas();
 
@@ -8530,6 +8574,11 @@ function renderDashboardAluno() {
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
             <span>Histórico</span>
             <small>Simulados feitos</small>
+          </div>
+          <div class="dash-atalho" onclick="renderMeusSimulados()" style="position:relative;">
+            <div class="dash-atalho-icon" style="background:rgba(34,211,238,.14);color:#0891b2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+            <span>Meus simulados</span>
+            <small>${(state.simuladosExternos || []).length > 0 ? (state.simuladosExternos.length + ' registrado' + (state.simuladosExternos.length === 1 ? '' : 's')) : 'Registre notas externas'}</small>
           </div>
         </div>
       </div>
@@ -10868,6 +10917,47 @@ function _statusDaQuestao(q, idxResp) {
   return x.corretas > 0 ? 'acertei' : 'errei';
 }
 
+// Aplica os filtros ativos do Banco de Questões, podendo PULAR um deles.
+// Usado pra contagem facetada: o contador de "Dificuldade" precisa refletir
+// prova/semana/tema/status já escolhidos, mas NÃO a própria dificuldade —
+// senão os outros níveis mostrariam sempre 0.
+// pular: string ou array — 'dificuldade' | 'prova' | 'status' | 'semana' | 'tema'
+function _questoesComFiltros(pularArg) {
+  const _p = Array.isArray(pularArg) ? pularArg : [pularArg];
+  const pular = (k) => _p.indexOf(k) !== -1;
+  const sideTemas = (state._sideTemasAtivos instanceof Set) ? state._sideTemasAtivos : new Set();
+  const difAtual     = state._difAtual || '';
+  const provaAtual   = state._provaAtual || '';
+  const statusAtual  = state._statusRespAtual || '';
+  const semanaFiltro = state._semanaFiltro || '';
+  const buscaEl = document.getElementById('filtro-busca');
+  const termo = _normBusca(buscaEl ? buscaEl.value : (state._qbkBusca || ''));
+
+  let qs = (state.questoes || []).slice();
+
+  if (!pular('tema') && sideTemas.size > 0) {
+    qs = qs.filter(q => sideTemas.has(q.tema));
+  }
+  if (!pular('semana') && semanaFiltro) {
+    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+    const sem = merged.find(s => String(s.n) === String(semanaFiltro));
+    const temaDaSemana = sem && sem.temaId;
+    qs = temaDaSemana ? qs.filter(q => q.tema === temaDaSemana) : [];
+  }
+  if (!pular('prova') && provaAtual) {
+    qs = qs.filter(q => _provaBase(q.prova || '') === provaAtual);
+  }
+  if (!pular('dificuldade') && difAtual) {
+    qs = qs.filter(q => q.dificuldade === difAtual);
+  }
+  if (!pular('status') && statusAtual) {
+    const idx = _idxRespostasPorQuestao();
+    qs = qs.filter(q => _statusDaQuestao(q, idx) === statusAtual);
+  }
+  if (termo) qs = qs.filter(q => questaoCasaBusca(q, termo));
+  return qs;
+}
+
 // Renderiza a tela inteira de questões (separado de abrirTema pra permitir
 // re-render parcial sem perder estado quando trocam módulo/dificuldade/etc.)
 function renderTelaQuestoes() {
@@ -10884,38 +10974,50 @@ function renderTelaQuestoes() {
   // Árvore de temas começa toda COLAPSADA (o aluno abre o módulo que quiser).
   // Se chegou via um tema específico (atalho do dashboard), o abrirTema já abre só aquele módulo.
 
-  // Conta por dificuldade (escopo: temas selecionados, se houver)
+  // === CONTAGEM FACETADA ===
+  // Cada contador aplica TODOS os outros filtros ativos, menos o próprio.
+  // Sem isso, filtrar por prova mantinha "Fácil 170 / Média 911" (números
+  // globais) em vez dos números daquela prova. Bug reportado em 24/06.
+
+  // Dificuldade: respeita tema + semana + prova + status + busca
+  const baseDif = _questoesComFiltros('dificuldade');
   const cntPorDif = { facil: 0, media: 0, dificil: 0 };
-  (state.questoes || []).forEach(q => {
-    if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
+  baseDif.forEach(q => {
     if (q.dificuldade && cntPorDif[q.dificuldade] != null) cntPorDif[q.dificuldade]++;
   });
 
-  // Provas disponíveis (escopo: temas selecionados)
+  // Provas: respeita tema + semana + dificuldade + status + busca
   // Agrupa variações "(adaptada)" na prova-base (ex.: "ENEM 2022 (adaptada)" → "ENEM 2022")
+  const baseProva = _questoesComFiltros('prova');
   const cntPorProva = new Map();
-  (state.questoes || []).forEach(q => {
+  baseProva.forEach(q => {
     if (!q.prova) return;
-    if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
     const base = _provaBase(q.prova);
     cntPorProva.set(base, (cntPorProva.get(base) || 0) + 1);
   });
+  // Garante que a prova atualmente selecionada continue na lista mesmo que
+  // os outros filtros zerem a contagem dela (senão o select "perde" a opção).
+  if (provaAtual && !cntPorProva.has(provaAtual)) cntPorProva.set(provaAtual, 0);
   const provas = [...cntPorProva.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
 
-  // Conta por status — escopo: temas selecionados
+  // Status: respeita tema + semana + prova + dificuldade + busca
+  const baseStatus = _questoesComFiltros('status');
   const cntStatus = { nao_feita: 0, acertei: 0, errei: 0 };
-  (state.questoes || []).forEach(q => {
-    if (state._sideTemasAtivos.size > 0 && !state._sideTemasAtivos.has(q.tema)) return;
+  baseStatus.forEach(q => {
     cntStatus[_statusDaQuestao(q, idxResp)]++;
   });
 
   // Semanas do curso disponíveis pra filtro (só as que têm temaId, ou seja, aula real).
   const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
   const semanaAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  // Contagem por semana também é facetada: respeita prova + dificuldade + status
+  // + busca. Pula 'semana' (óbvio) e 'tema' (semana JÁ define o tema — se
+  // considerasse a seleção da sidebar, toda semana de outro tema mostraria 0).
+  const baseSemana = _questoesComFiltros(['semana', 'tema']);
   const semanasFiltraveis = cronoMerged
     .filter(s => s.temaId && !s.cancelada)
     .map(s => {
-      const cnt = (state.questoes || []).filter(q => q.tema === s.temaId).length;
+      const cnt = baseSemana.filter(q => q.tema === s.temaId).length;
       return { ...s, _cnt: cnt };
     });
   const semanaFiltro = state._semanaFiltro || '';
@@ -10940,6 +11042,7 @@ function renderTelaQuestoes() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input type="text" id="filtro-busca" class="qbk-busca"
              placeholder="Buscar no texto da questão ou alternativas…"
+             value="${_escHtml(state._qbkBusca || '')}"
              oninput="agendarFiltrarQuestoes()">
     </div>
 
@@ -11038,11 +11141,20 @@ function renderTelaQuestoes() {
 
 // Renderiza a árvore de módulos > temas pra sidebar
 function renderTreeTemas() {
+  // Contagem facetada: os números de cada tema respeitam prova + semana +
+  // dificuldade + status + busca já escolhidos, mas NÃO a seleção de temas
+  // (senão temas não marcados mostrariam sempre 0 e sumiriam da árvore).
+  const baseTema = (typeof _questoesComFiltros === 'function')
+    ? _questoesComFiltros('tema')
+    : (state.questoes || []);
+  // Fallback: se os filtros zeraram tudo, conta sobre o banco inteiro pra
+  // a árvore não ficar vazia e travar o aluno sem como voltar.
+  const fonte = baseTema.length > 0 ? baseTema : (state.questoes || []);
   return MODULOS.map(mod => {
     const temasDoMod = (mod.temas || []).map(tid => {
       const t = TEMAS.find(x => x.id === tid);
       if (!t) return null;
-      const cnt = (state.questoes || []).filter(q => q.tema === tid).length;
+      const cnt = fonte.filter(q => q.tema === tid).length;
       return { ...t, cnt };
     }).filter(Boolean).filter(t => t.cnt > 0);
     if (temasDoMod.length === 0) return '';
@@ -11324,6 +11436,7 @@ function limparTodosFiltros() {
   // Compat: zera legados se ainda existirem em algum lugar
   state._modAtual = null;
   state._temaSubAtual = '';
+  state._qbkBusca = '';
   const buscaEl = document.getElementById('filtro-busca');
   if (buscaEl) buscaEl.value = '';
   renderTelaQuestoes();
@@ -11332,6 +11445,10 @@ function limparTodosFiltros() {
 // Debounce leve para não re-renderizar a cada tecla quando o aluno digita rápido.
 let _filtroQDebounce = null;
 function agendarFiltrarQuestoes() {
+  // Persiste o termo em state ANTES do debounce — assim se o aluno trocar de
+  // filtro (que re-renderiza a tela toda) a busca digitada não se perde.
+  const el = document.getElementById('filtro-busca');
+  if (el) state._qbkBusca = el.value;
   if (_filtroQDebounce) clearTimeout(_filtroQDebounce);
   _filtroQDebounce = setTimeout(() => { _filtroQDebounce = null; filtrarQuestoes(); }, 180);
 }
@@ -11340,7 +11457,8 @@ const QBK_POR_PAGINA = 20;
 
 function filtrarQuestoes() {
   const buscaEl = document.getElementById('filtro-busca');
-  const termo = _normBusca(buscaEl ? buscaEl.value : '');
+  if (buscaEl) state._qbkBusca = buscaEl.value; // mantém em state pra sobreviver a re-render
+  const termo = _normBusca(buscaEl ? buscaEl.value : (state._qbkBusca || ''));
   const difAtual     = state._difAtual || '';
   const provaAtual   = state._provaAtual || '';
   const statusAtual  = state._statusRespAtual || '';
@@ -12480,9 +12598,34 @@ async function salvarQuestao(idEdicao, modo) {
     renderGerenciarQuestoes();
   } catch (e) {
     console.error('Erro ao salvar questão:', e);
-    alert('Erro ao salvar: ' + (e.message || JSON.stringify(e)) +
-          '\n\n(Confira se está logado como professor — RLS.)');
+    const dup = _msgDupQuestao(e);
+    alert(dup
+      ? '⚠️ ' + dup
+      : 'Erro ao salvar: ' + (e.message || JSON.stringify(e)) +
+        '\n\n(Confira se está logado como professor — RLS.)');
   }
+}
+
+// ===== Anti-duplicata — tradução amigável dos bloqueios do banco =====
+// O banco recusa questão repetida por 2 caminhos (ambos abortam a transação):
+//   • questao_versao.hash_norm  -> enunciado idêntico (duplicata EXATA)
+//   • ux_questao_prova_numero   -> mesma prova + mesmo número
+// Aqui detectamos o erro (código 23505 / "duplicate key") e dizemos qual é.
+function _dupInfoQuestao(err) {
+  const m = ((err && (err.message || err.details || err.hint)) || '') + '';
+  const code = err && err.code;
+  const ehUnique = code === '23505' || /duplicate key|violates unique/i.test(m);
+  if (!ehUnique) return { dup: false, tipo: null };
+  if (/ux_questao_prova_numero/i.test(m)) return { dup: true, tipo: 'prova' };
+  if (/hash_norm/i.test(m))               return { dup: true, tipo: 'exata' };
+  return { dup: true, tipo: 'exata' };  // unique genérico → trata como duplicata
+}
+function _msgDupQuestao(err) {
+  const info = _dupInfoQuestao(err);
+  if (!info.dup) return null;
+  return info.tipo === 'prova'
+    ? 'Essa questão já está no banco (mesma prova e mesmo número) — não foi duplicada.'
+    : 'Essa questão já está no banco (enunciado idêntico) — não foi duplicada.';
 }
 
 let _radixRenderingGer = false;
@@ -13212,7 +13355,7 @@ async function publicarImportSelecionados() {
   const msg = document.getElementById('rev-lote-msg');
   const setM = (t, c) => { if (msg) { msg.textContent = t; msg.style.color = c || 'var(--radix-text-muted)'; } };
 
-  let okN = 0; const erros = [];
+  let okN = 0; const erros = []; const dupes = [];
   for (let i = 0; i < publicaveis.length; i++) {
     const { id, payload } = publicaveis[i];
     setM(`Publicando ${i + 1}/${publicaveis.length} (item #${id})…`);
@@ -13222,7 +13365,13 @@ async function publicarImportSelecionados() {
       if (error) throw error;
       okN++;
     } catch (e) {
-      erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+      // Duplicata é PULADA (o banco já tinha), não é "falha".
+      const info = _dupInfoQuestao(e);
+      if (info.dup) {
+        dupes.push('#' + id + (info.tipo === 'prova' ? ' (mesma prova/nº)' : ' (enunciado idêntico)'));
+      } else {
+        erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+      }
     }
     // Pequeno delay pra não martelar a RPC nem o Postgres
     if (i < publicaveis.length - 1) await new Promise(r => setTimeout(r, 150));
@@ -13235,14 +13384,16 @@ async function publicarImportSelecionados() {
   } catch (e) { /* não bloqueia o resumo */ }
 
   state._revSel = new Set();
-  setM(`Publicação em lote concluída: ${okN} ok, ${erros.length} falha(s).`,
+  setM(`Lote concluído: ${okN} ok · ${dupes.length} pulada(s) · ${erros.length} falha(s).`,
        erros.length ? 'var(--radix-red)' : 'var(--radix-success)');
 
   alert(
     `Publicação em lote concluída.\n\n` +
     `✅ Publicadas: ${okN}\n` +
+    (dupes.length ? `⏭ Puladas (já estavam no banco): ${dupes.length}\n` : '') +
     (jaPub.length ? `⏭ Ignoradas (já publicadas): ${jaPub.length}\n` : '') +
     (bloqueados.length ? `⛔ Ignoradas (erros críticos): ${bloqueados.length}\n` : '') +
+    (dupes.length ? `\nDuplicatas puladas:\n${dupes.slice(0, 12).join('\n')}${dupes.length > 12 ? `\n… e mais ${dupes.length - 12}` : ''}\n` : '') +
     (erros.length ? `\nFalhas no envio:\n${erros.slice(0, 12).join('\n')}` : '')
   );
   renderRevisarImportacoes();
@@ -14000,7 +14151,8 @@ async function salvarRevisaoItem(id, publicar) {
     renderRevisarImportacoes();
   } catch (e) {
     console.error('Erro na revisão:', e);
-    setM('Erro: ' + (e.message || JSON.stringify(e)), 'var(--radix-red)');
+    const dup = _msgDupQuestao(e);
+    setM(dup ? '⚠️ ' + dup : ('Erro: ' + (e.message || JSON.stringify(e))), 'var(--radix-red)');
   }
 }
 
@@ -14020,7 +14172,10 @@ async function publicarImportItem(id) {
     renderRevisarImportacoes();
   } catch (e) {
     console.error('Erro ao publicar:', e);
-    alert('Erro ao publicar: ' + (e.message || JSON.stringify(e)) + '\n(RLS / duplicata exata?)');
+    const dup = _msgDupQuestao(e);
+    alert(dup
+      ? '⚠️ ' + dup
+      : 'Erro ao publicar: ' + (e.message || JSON.stringify(e)) + '\n(Confira se está logado como professor — RLS.)');
   }
 }
 
@@ -17716,6 +17871,435 @@ async function carregarCadernoErros() {
     return;
   }
   state.cadernoErros = data || [];
+}
+
+// Carrega simulados externos do aluno (bancas Evolucional, SAS, Somos, ENEM antigos etc.).
+// Ordenados do mais recente pro mais antigo (usado direto na tela + gráfico).
+async function carregarSimuladosExternos() {
+  state.simuladosExternos = [];
+  if (!state.usuario?.id) return;
+  const { data, error } = await sb.from('simulado_externo')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .order('data_realizacao', { ascending: false });
+  if (error) {
+    if (/relation|table|does not exist/i.test(error.message || '')) {
+      console.warn('[simulado_externo] Tabela nao existe — rodar SQL_simulado_externo.sql no Supabase.');
+    } else {
+      console.warn('[simulado_externo] Erro carregando:', error.message);
+    }
+    return;
+  }
+  state.simuladosExternos = data || [];
+}
+
+// =========================================================
+// TELA "MEUS SIMULADOS" (aluno)
+// =========================================================
+async function renderMeusSimulados() {
+  state.view = 'meus-simulados';
+  if (!state.simuladosExternos) await carregarSimuladosExternos();
+  const main = document.getElementById('main-content');
+  const sims = (state.simuladosExternos || []).slice(); // já vem ordenado DESC
+  const total = sims.length;
+
+  // KPIs no topo
+  const totalMat = sims.filter(s => s.tri_mat != null).length;
+  const mediaMatTri = totalMat > 0
+    ? Math.round(sims.filter(s => s.tri_mat != null).reduce((a, s) => a + Number(s.tri_mat), 0) / totalMat)
+    : null;
+  const ultimo = sims[0] || null;
+  const bancaMaisRecente = ultimo ? bancaLabel(ultimo) : '—';
+  const dataMaisRecente = ultimo ? new Date(ultimo.data_realizacao).toLocaleDateString('pt-BR') : '—';
+
+  // Modo do gráfico: 'tri' (default) ou 'acertos'. Nem toda banca entrega TRI —
+  // o aluno alterna e vê a evolução no dado que ele tem.
+  // Se nunca definido, escolhe automaticamente o modo que TEM dados.
+  if (!state._simGraficoModo) {
+    const algumTri = sims.some(s => AREAS_ENEM.some(a => s['tri_' + a.id] != null));
+    state._simGraficoModo = algumTri ? 'tri' : 'acertos';
+  }
+  const modoGraf = state._simGraficoModo === 'acertos' ? 'acertos' : 'tri';
+  const prefixo = modoGraf === 'tri' ? 'tri_' : 'acertos_';
+  const areasDoModo = modoGraf === 'tri' ? AREAS_ENEM : AREAS_ENEM.filter(a => a.qMax); // redação não tem acertos
+  const temDadosNoModo = sims.some(s => areasDoModo.some(a => s[prefixo + a.id] != null));
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Meus Simulados</div>
+    <h2 class="section-title">
+      <span class="section-title-accent"></span>
+      <span class="st-ico success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span>
+      Meus Simulados
+    </h2>
+    <p style="color:var(--radix-gray-light);font-size:13px;margin-top:-6px;margin-bottom:14px;">
+      Registre aqui as notas dos simulados que você fez em bancas externas (Evolucional, SAS, Somos, ENEM antigos etc.) e acompanhe sua evolução.
+    </p>
+
+    <!-- KPIs -->
+    <div class="stats-grid" style="margin-bottom:18px;">
+      <div class="stat-card"><div class="label">Simulados registrados</div><div class="value">${total}</div></div>
+      <div class="stat-card"><div class="label">Média TRI (Matemática)</div><div class="value" style="color:var(--radix-cyan);">${mediaMatTri != null ? mediaMatTri : '—'}</div></div>
+      <div class="stat-card"><div class="label">Último simulado</div><div class="value" style="font-size:14px;">${bancaMaisRecente}<br><small style="color:var(--radix-text-muted);font-weight:400;">${dataMaisRecente}</small></div></div>
+    </div>
+
+    <!-- Ações -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button class="btn" style="background:var(--radix-cyan);color:#0e1a36;font-weight:800;padding:10px 18px;display:inline-flex;align-items:center;gap:6px;" onclick="abrirModalSimulado(null)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo simulado
+      </button>
+    </div>
+
+    ${total === 0 ? `
+      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface-2, #fff);border:1px dashed var(--radix-line, #e5e7eb);border-radius:14px;color:var(--radix-text-muted);">
+        <div style="font-size:44px;margin-bottom:10px;">📊</div>
+        <p style="margin:0 0 6px;font-weight:700;color:var(--radix-text);">Nenhum simulado registrado ainda</p>
+        <p style="margin:0;font-size:13px;">Clique em <b>Novo simulado</b> pra adicionar o primeiro e começar a acompanhar sua evolução.</p>
+      </div>
+    ` : `
+      <!-- Gráfico de evolução (TRI ou Acertos — nem toda banca entrega TRI) -->
+      <div style="background:var(--radix-surface-2, #fff);border:1px solid var(--radix-line, #e5e7eb);border-radius:14px;padding:16px 18px;margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+          <span style="font-size:13.5px;font-weight:700;color:var(--radix-text);">📈 Evolução</span>
+          <div style="display:flex;gap:4px;padding:3px;background:var(--radix-bg-2,#f3f4f6);border-radius:8px;">
+            <button onclick="state._simGraficoModo='tri';renderMeusSimulados();"
+                    style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='tri'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+              Nota TRI
+            </button>
+            <button onclick="state._simGraficoModo='acertos';renderMeusSimulados();"
+                    style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='acertos'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+              Acertos
+            </button>
+          </div>
+        </div>
+        ${temDadosNoModo ? `
+          <div style="position:relative;height:280px;">
+            <canvas id="chart-sim-ext"></canvas>
+          </div>
+          <div style="font-size:11.5px;color:var(--radix-text-muted);text-align:right;margin-top:6px;">
+            Ordem cronológica · escala ${modoGraf === 'tri' ? '0–1000 (TRI)' : '0–45 (acertos)'}
+          </div>
+        ` : `
+          <div style="padding:36px 20px;text-align:center;color:var(--radix-text-muted);font-size:13px;">
+            Nenhum simulado tem ${modoGraf === 'tri' ? 'nota TRI' : 'número de acertos'} preenchido ainda.<br>
+            <small style="opacity:.8;">Troque pro outro modo acima ou edite um simulado pra preencher.</small>
+          </div>
+        `}
+      </div>
+
+      <!-- Lista de simulados -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${sims.map(s => _renderCardSimulado(s)).join('')}
+      </div>
+    `}
+  `;
+
+  // Sobe pra topo (herda scroll da tela anterior senão)
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+
+  // Renderiza o gráfico se tiver dados no modo escolhido
+  if (total > 0 && temDadosNoModo) setTimeout(() => _renderGraficoSimulados(sims, modoGraf), 30);
+}
+
+function _renderCardSimulado(s) {
+  const banca = bancaPorId(s.banca) || { nome: s.banca, cor: '#6b7280' };
+  const bancaTxt = bancaLabel(s);
+  const dataFmt = new Date(s.data_realizacao).toLocaleDateString('pt-BR');
+  const nome = s.nome_simulado ? `<span style="color:var(--radix-text-muted);">— ${_escHtml(s.nome_simulado)}</span>` : '';
+  // Notas por área
+  const linhas = AREAS_ENEM.map(a => {
+    const tri = s['tri_' + a.id];
+    const acertos = a.qMax ? s['acertos_' + a.id] : null;
+    const temTri = tri != null;
+    const temAc = acertos != null;
+    if (!temTri && !temAc) return null;
+    return `
+      <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${a.cor};flex-shrink:0;"></span>
+        <span style="min-width:96px;color:var(--radix-text-2);font-weight:600;">${a.nome}</span>
+        ${temTri ? `<span style="font-weight:800;color:${a.cor};min-width:70px;">${Number(tri).toFixed(1)} TRI</span>` : '<span style="min-width:70px;color:var(--radix-text-muted);">—</span>'}
+        ${a.qMax ? (temAc ? `<span style="color:var(--radix-text-muted);font-size:11.5px;">· ${acertos}/${a.qMax} acertos</span>` : '') : ''}
+      </div>`;
+  }).filter(Boolean).join('');
+
+  const obsHtml = s.observacoes ? `<div style="margin-top:8px;padding:8px 10px;background:var(--radix-bg-2,#f9fafb);border-radius:6px;font-size:12px;color:var(--radix-text-2);white-space:pre-wrap;">${_escHtml(s.observacoes)}</div>` : '';
+
+  return `
+    <div style="background:var(--radix-surface, #fff);border:1px solid var(--radix-line, #e5e7eb);border-left:4px solid ${banca.cor};border-radius:12px;padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+        <span style="display:inline-flex;align-items:center;gap:6px;background:${banca.cor}22;color:${banca.cor};padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.03em;">
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${banca.cor};"></span>
+          ${bancaTxt.toUpperCase()}
+        </span>
+        <span style="font-size:12.5px;color:var(--radix-text-muted);">${dataFmt}</span>
+        ${nome}
+        <span style="flex:1;"></span>
+        <button class="btn-icon" title="Editar" onclick="abrirModalSimulado(${s.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+        </button>
+        <button class="btn-icon danger" title="Excluir" onclick="excluirSimulado(${s.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+      ${linhas || '<div style="color:var(--radix-text-muted);font-size:12px;font-style:italic;">Nenhuma nota preenchida.</div>'}
+      ${obsHtml}
+    </div>`;
+}
+
+// Modal de novo/editar simulado externo
+// simId = null → novo; simId = <id> → editar existente
+function abrirModalSimulado(simId) {
+  const existente = simId != null ? (state.simuladosExternos || []).find(s => s.id === simId) : null;
+  const isNovo = !existente;
+  // Fecha modal anterior se houver
+  const old = document.getElementById('modal-simulado'); if (old) old.remove();
+
+  const dataDef = existente ? existente.data_realizacao : new Date().toISOString().slice(0, 10);
+  const bancaSel = existente ? existente.banca : 'enem';
+  const bancaOutro = existente?.banca_outro || '';
+  const nomeSim = existente?.nome_simulado || '';
+  const obs = existente?.observacoes || '';
+
+  // Gera os inputs das 5 áreas (TRI + acertos)
+  const areasHtml = AREAS_ENEM.map(a => {
+    const tri = existente ? (existente['tri_' + a.id] ?? '') : '';
+    const ac  = a.qMax && existente ? (existente['acertos_' + a.id] ?? '') : '';
+    return `
+      <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:8px;align-items:center;padding:8px 10px;background:${a.cor}0d;border-left:3px solid ${a.cor};border-radius:6px;margin-bottom:6px;">
+        <label style="font-size:12.5px;font-weight:700;color:${a.cor};">${a.nome}</label>
+        <div>
+          <input type="number" id="sim-tri-${a.id}" min="0" max="1000" step="0.1"
+                 placeholder="Nota TRI (0-1000)"
+                 value="${tri}"
+                 style="width:100%;padding:6px 10px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:6px;font-size:12.5px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);">
+        </div>
+        <div>
+          ${a.qMax ? `
+            <input type="number" id="sim-ac-${a.id}" min="0" max="${a.qMax}" step="1"
+                   placeholder="Acertos (0-${a.qMax})"
+                   value="${ac}"
+                   style="width:100%;padding:6px 10px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:6px;font-size:12.5px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);">
+          ` : `<span style="font-size:11px;color:var(--radix-text-muted);font-style:italic;">Só nota (sem acertos)</span>`}
+        </div>
+      </div>`;
+  }).join('');
+
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalSimulado()">
+      <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto;">
+        <h2 style="margin:0 0 4px;">${isNovo ? '➕ Novo simulado' : '✏️ Editar simulado'}</h2>
+        <p style="font-size:12.5px;color:var(--radix-text-muted);margin:0 0 16px;">
+          Preencha o que a banca disponibilizou — <b>todos os campos de nota/acertos são opcionais</b>.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="form-group" style="margin:0;">
+            <label>Data do simulado</label>
+            <input type="date" id="sim-data" value="${dataDef}" required>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Banca</label>
+            <select id="sim-banca" onchange="_simToggleOutro()">
+              ${BANCAS_SIMULADO.map(b => `<option value="${b.id}" ${bancaSel === b.id ? 'selected' : ''}>${b.nome}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" id="sim-outro-wrap" style="display:${bancaSel === 'outro' ? 'block' : 'none'};margin-bottom:12px;">
+          <label>Nome da banca (banca "Outro")</label>
+          <input type="text" id="sim-outro" value="${_escHtml(bancaOutro)}" placeholder="Ex: Kuadro, Fatorial, etc." maxlength="60">
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Nome/edição do simulado (opcional)</label>
+          <input type="text" id="sim-nome" value="${_escHtml(nomeSim)}" placeholder="Ex: Simulado 3 · SAS 2026 · ENEM 2023" maxlength="120">
+        </div>
+
+        <label style="display:block;font-weight:700;font-size:13px;margin:8px 0 6px;color:var(--radix-text);">Notas por área</label>
+        ${areasHtml}
+
+        <div class="form-group" style="margin-top:12px;margin-bottom:14px;">
+          <label>Observações (opcional)</label>
+          <textarea id="sim-obs" rows="2" placeholder="Como foi a prova, o que estudar depois...">${_escHtml(obs)}</textarea>
+        </div>
+
+        <p id="sim-msg" style="font-size:12.5px;min-height:16px;margin:0 0 10px;color:var(--radix-coral);"></p>
+
+        <div class="modal-acoes">
+          <button class="btn btn-secondary" onclick="fecharModalSimulado()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarSimulado(${existente?.id ?? 'null'})">${isNovo ? 'Salvar' : 'Salvar alterações'}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-simulado">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+
+function fecharModalSimulado() {
+  const m = document.getElementById('modal-simulado');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+// Mostra/esconde o campo "Nome da banca" quando escolhe "Outro"
+function _simToggleOutro() {
+  const sel = document.getElementById('sim-banca');
+  const wrap = document.getElementById('sim-outro-wrap');
+  if (!sel || !wrap) return;
+  wrap.style.display = (sel.value === 'outro') ? 'block' : 'none';
+}
+
+// Lê um input numérico. Vazio → null. Fora do range → null (com msg de erro).
+function _simLerNum(id, min, max) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const raw = String(el.value || '').trim();
+  if (!raw) return null;
+  const v = Number(raw.replace(',', '.'));
+  if (!Number.isFinite(v)) return NaN;
+  if (v < min || v > max) return NaN;
+  return v;
+}
+
+async function salvarSimulado(simId) {
+  const setMsg = (t, cor) => {
+    const el = document.getElementById('sim-msg');
+    if (el) { el.textContent = t || ''; el.style.color = cor || 'var(--radix-coral)'; }
+  };
+  setMsg('');
+
+  const data = (document.getElementById('sim-data').value || '').trim();
+  if (!data) { setMsg('Escolha a data do simulado.'); return; }
+
+  const banca = document.getElementById('sim-banca').value;
+  if (!BANCAS_SIMULADO.some(b => b.id === banca)) { setMsg('Banca inválida.'); return; }
+  const banca_outro = (document.getElementById('sim-outro')?.value || '').trim() || null;
+  if (banca === 'outro' && !banca_outro) { setMsg('Digite o nome da banca "Outro".'); return; }
+
+  const nome = (document.getElementById('sim-nome').value || '').trim() || null;
+  const obs = (document.getElementById('sim-obs').value || '').trim() || null;
+
+  // Notas TRI (0-1000)
+  const notas = {};
+  for (const a of AREAS_ENEM) {
+    const v = _simLerNum('sim-tri-' + a.id, 0, 1000);
+    if (Number.isNaN(v)) { setMsg(`Nota TRI de ${a.nome} inválida (0-1000).`); return; }
+    notas['tri_' + a.id] = v;
+  }
+  // Acertos (0-qMax)
+  const acs = {};
+  for (const a of AREAS_ENEM) {
+    if (!a.qMax) continue;
+    const v = _simLerNum('sim-ac-' + a.id, 0, a.qMax);
+    if (Number.isNaN(v)) { setMsg(`Acertos de ${a.nome} inválidos (0-${a.qMax}).`); return; }
+    acs['acertos_' + a.id] = v == null ? null : Math.round(v);
+  }
+
+  const payload = {
+    aluno_id: state.usuario.id,
+    data_realizacao: data,
+    banca,
+    banca_outro: banca === 'outro' ? banca_outro : null,
+    nome_simulado: nome,
+    observacoes: obs,
+    ...notas,
+    ...acs
+  };
+
+  try {
+    let res;
+    if (simId) {
+      // Não sobrescreve aluno_id em update (RLS já cobre)
+      const upd = { ...payload }; delete upd.aluno_id;
+      res = await sb.from('simulado_externo').update(upd).eq('id', simId);
+    } else {
+      res = await sb.from('simulado_externo').insert(payload);
+    }
+    if (res.error) throw res.error;
+    await carregarSimuladosExternos();
+    fecharModalSimulado();
+    if (state.view === 'meus-simulados') renderMeusSimulados();
+  } catch (e) {
+    console.error('[salvarSimulado] falhou:', e);
+    const msg = e?.message || String(e);
+    if (/relation|does not exist/i.test(msg)) {
+      setMsg('A tabela `simulado_externo` ainda não existe. Peça pro professor rodar SQL_simulado_externo.sql.');
+    } else {
+      setMsg('Erro ao salvar: ' + msg);
+    }
+  }
+}
+
+async function excluirSimulado(simId) {
+  const s = (state.simuladosExternos || []).find(x => x.id === simId);
+  if (!s) return;
+  const label = bancaLabel(s) + ' · ' + new Date(s.data_realizacao).toLocaleDateString('pt-BR');
+  if (!confirm(`Excluir esse simulado?\n\n${label}\n\nNão dá pra desfazer.`)) return;
+  try {
+    const { error } = await sb.from('simulado_externo').delete().eq('id', simId);
+    if (error) throw error;
+    await carregarSimuladosExternos();
+    if (state.view === 'meus-simulados') renderMeusSimulados();
+  } catch (e) {
+    console.error('[excluirSimulado] falhou:', e);
+    alert('Erro ao excluir: ' + (e?.message || e));
+  }
+}
+
+// Gráfico de linha da evolução por área (Chart.js já carregado no app)
+function _renderGraficoSimulados(sims, modo) {
+  const el = document.getElementById('chart-sim-ext');
+  if (!el || !window.Chart) return;
+  // modo: 'tri' (0-1000, inclui Redação) ou 'acertos' (0-45, sem Redação)
+  const ehTri = modo !== 'acertos';
+  const prefixo = ehTri ? 'tri_' : 'acertos_';
+  const areas = ehTri ? AREAS_ENEM : AREAS_ENEM.filter(a => a.qMax);
+  const yMax = ehTri ? 1000 : 45;
+  const yStep = ehTri ? 200 : 9;
+
+  // Inverte pra ficar cronológico ASC
+  const cron = sims.slice().reverse();
+  const labels = cron.map(s => new Date(s.data_realizacao).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+  // Só inclui a série da área se ela tiver ao menos 1 ponto — evita legenda poluída
+  const datasets = areas.map(a => {
+    const dados = cron.map(s => s[prefixo + a.id] != null ? Number(s[prefixo + a.id]) : null);
+    if (dados.every(v => v == null)) return null;
+    return {
+      label: a.nome,
+      data: dados,
+      borderColor: a.cor,
+      backgroundColor: a.cor + '22',
+      tension: 0.25,
+      spanGaps: true,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      borderWidth: 2
+    };
+  }).filter(Boolean);
+
+  // Destrói instância anterior se houver
+  try { const ant = Chart.getChart(el); if (ant) ant.destroy(); } catch(_) {}
+  new Chart(el, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => {
+          if (c.parsed.y == null) return `${c.dataset.label}: —`;
+          return ehTri
+            ? `${c.dataset.label}: ${Number(c.parsed.y).toFixed(1)} TRI`
+            : `${c.dataset.label}: ${c.parsed.y}/45 acertos`;
+        } } }
+      },
+      scales: {
+        y: { min: 0, max: yMax, ticks: { stepSize: yStep, font: { size: 11 } } },
+        x: { ticks: { font: { size: 11 } } }
+      }
+    }
+  });
 }
 
 // Helpers
