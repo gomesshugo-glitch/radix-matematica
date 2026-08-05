@@ -8539,10 +8539,15 @@ function renderDashboardAluno() {
             <span>Vídeo-aulas</span>
             <small>Aulas e materiais</small>
           </div>
-          <div class="dash-atalho" onclick="abrirSimuladoConfig()">
+          <div class="dash-atalho" onclick="renderSimulados()">
             <div class="dash-atalho-icon icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-            <span>Simulado</span>
-            <small>15 ou 45 questões</small>
+            <span>Simulados</span>
+            <small>${(() => {
+              const nExt = (state.simuladosExternos || []).length;
+              const nPlat = (state.historicoSimulados || []).filter(h => h.aluno === state.usuario.nome).length;
+              const tot = nExt + nPlat;
+              return tot > 0 ? `Fazer · ${tot} registrado${tot === 1 ? '' : 's'}` : 'Fazer e registrar notas';
+            })()}</small>
           </div>
           <div class="dash-atalho" onclick="abrirTema('')">
             <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
@@ -8569,16 +8574,6 @@ function renderDashboardAluno() {
             <div class="dash-atalho-icon" style="background:rgba(168,85,247,.14);color:#7e22ce;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
             <span>Caderno de erros</span>
             <small>Anote e revise</small>
-          </div>
-          <div class="dash-atalho" onclick="renderHistoricoSimulados()">
-            <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg></div>
-            <span>Histórico</span>
-            <small>Simulados feitos</small>
-          </div>
-          <div class="dash-atalho" onclick="renderMeusSimulados()" style="position:relative;">
-            <div class="dash-atalho-icon" style="background:rgba(34,211,238,.14);color:#0891b2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
-            <span>Meus simulados</span>
-            <small>${(state.simuladosExternos || []).length > 0 ? (state.simuladosExternos.length + ' registrado' + (state.simuladosExternos.length === 1 ? '' : 's')) : 'Registre notas externas'}</small>
           </div>
         </div>
       </div>
@@ -12375,14 +12370,13 @@ async function abrirMateriaisDaSemana(semanaNum) {
   }, 250);
 }
 
-function renderHistoricoSimulados() {
-  state.view = 'historico';
-  const meus = state.historicoSimulados.filter(h => h.aluno === state.usuario.nome);
-  const main = document.getElementById('main-content');
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Histórico</div>
-    <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></span>Histórico de Simulados</h2>
-    ${meus.length === 0 ? '<p style="text-align:center;color:var(--radix-gray-light);padding:32px;">Você ainda não fez nenhum simulado.</p>' : `
+// Tabela dos simulados feitos DENTRO da plataforma.
+// Virou helper que retorna HTML — o hub de Simulados (renderSimulados)
+// injeta isso na aba "Da plataforma". Antes era uma tela própria.
+function _htmlHistoricoPlataforma() {
+  const meus = (state.historicoSimulados || []).filter(h => h.aluno === state.usuario.nome);
+  return `
+    ${meus.length === 0 ? '<p style="text-align:center;color:var(--radix-gray-light);padding:32px;">Você ainda não fez nenhum simulado na plataforma.</p>' : `
       <table>
         <thead>
           <tr><th>Data</th><th>Questões</th><th>Acertos</th><th>%</th><th>Tempo</th></tr>
@@ -17896,12 +17890,21 @@ async function carregarSimuladosExternos() {
 // =========================================================
 // TELA "MEUS SIMULADOS" (aluno)
 // =========================================================
-async function renderMeusSimulados() {
+// Aliases de compatibilidade — os 3 menus de simulado viraram um hub só.
+async function renderMeusSimulados()      { return renderSimulados('externos'); }
+async function renderHistoricoSimulados() { return renderSimulados('plataforma'); }
+
+// Hub unificado de Simulados. aba: 'externos' (default) | 'plataforma'
+async function renderSimulados(aba) {
   state.view = 'meus-simulados';
+  state._simAba = (aba === 'plataforma') ? 'plataforma' : (aba || state._simAba || 'externos');
+  const abaAtiva = state._simAba;
   if (!state.simuladosExternos) await carregarSimuladosExternos();
   const main = document.getElementById('main-content');
   const sims = (state.simuladosExternos || []).slice(); // já vem ordenado DESC
   const total = sims.length;
+  // Simulados feitos DENTRO da plataforma
+  const daPlataforma = (state.historicoSimulados || []).filter(h => h.aluno === state.usuario.nome);
 
   // KPIs no topo
   const totalMat = sims.filter(s => s.tri_mat != null).length;
@@ -17925,14 +17928,45 @@ async function renderMeusSimulados() {
   const temDadosNoModo = sims.some(s => areasDoModo.some(a => s[prefixo + a.id] != null));
 
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Meus Simulados</div>
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Simulados</div>
     <h2 class="section-title">
       <span class="section-title-accent"></span>
       <span class="st-ico success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span>
-      Meus Simulados
+      Simulados
     </h2>
-    <p style="color:var(--radix-gray-light);font-size:13px;margin-top:-6px;margin-bottom:14px;">
-      Registre aqui as notas dos simulados que você fez em bancas externas (Evolucional, SAS, Somos, ENEM antigos etc.) e acompanhe sua evolução.
+
+    <!-- Ações principais -->
+    <div style="display:flex;gap:10px;margin:0 0 14px;flex-wrap:wrap;">
+      <button class="btn" style="background:var(--radix-grad-brand,linear-gradient(135deg,#22d3ee,#3b82f6));color:#0e1a36;font-weight:800;padding:10px 18px;display:inline-flex;align-items:center;gap:6px;" onclick="abrirSimuladoConfig()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>
+        Fazer simulado agora
+      </button>
+      <button class="btn btn-secondary" style="padding:10px 18px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" onclick="abrirModalSimulado(null)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar nota externa
+      </button>
+    </div>
+
+    <!-- Abas -->
+    <div style="display:flex;gap:4px;padding:4px;background:var(--radix-bg-2,#f3f4f6);border-radius:10px;width:max-content;max-width:100%;margin-bottom:16px;">
+      <button onclick="renderSimulados('externos')"
+              style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='externos'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+        Bancas externas${total > 0 ? ` (${total})` : ''}
+      </button>
+      <button onclick="renderSimulados('plataforma')"
+              style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='plataforma'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+        Feitos na plataforma${daPlataforma.length > 0 ? ` (${daPlataforma.length})` : ''}
+      </button>
+    </div>
+
+    ${abaAtiva === 'plataforma' ? `
+      <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
+        Simulados que você respondeu aqui na plataforma, com correção automática.
+      </p>
+      ${_htmlHistoricoPlataforma()}
+    ` : `
+    <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
+      Notas dos simulados que você fez em bancas externas (Evolucional, SAS, Somos, ENEM antigos etc.).
     </p>
 
     <!-- KPIs -->
@@ -17942,19 +17976,11 @@ async function renderMeusSimulados() {
       <div class="stat-card"><div class="label">Último simulado</div><div class="value" style="font-size:14px;">${bancaMaisRecente}<br><small style="color:var(--radix-text-muted);font-weight:400;">${dataMaisRecente}</small></div></div>
     </div>
 
-    <!-- Ações -->
-    <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <button class="btn" style="background:var(--radix-cyan);color:#0e1a36;font-weight:800;padding:10px 18px;display:inline-flex;align-items:center;gap:6px;" onclick="abrirModalSimulado(null)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Novo simulado
-      </button>
-    </div>
-
     ${total === 0 ? `
       <div style="text-align:center;padding:48px 24px;background:var(--radix-surface-2, #fff);border:1px dashed var(--radix-line, #e5e7eb);border-radius:14px;color:var(--radix-text-muted);">
         <div style="font-size:44px;margin-bottom:10px;">📊</div>
         <p style="margin:0 0 6px;font-weight:700;color:var(--radix-text);">Nenhum simulado registrado ainda</p>
-        <p style="margin:0;font-size:13px;">Clique em <b>Novo simulado</b> pra adicionar o primeiro e começar a acompanhar sua evolução.</p>
+        <p style="margin:0;font-size:13px;">Clique em <b>Registrar nota externa</b> pra adicionar o primeiro e começar a acompanhar sua evolução.</p>
       </div>
     ` : `
       <!-- Gráfico de evolução (TRI ou Acertos — nem toda banca entrega TRI) -->
@@ -17992,13 +18018,16 @@ async function renderMeusSimulados() {
         ${sims.map(s => _renderCardSimulado(s)).join('')}
       </div>
     `}
+    `}
   `;
 
   // Sobe pra topo (herda scroll da tela anterior senão)
   try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
 
-  // Renderiza o gráfico se tiver dados no modo escolhido
-  if (total > 0 && temDadosNoModo) setTimeout(() => _renderGraficoSimulados(sims, modoGraf), 30);
+  // Renderiza o gráfico se tiver dados no modo escolhido (só na aba de externos)
+  if (abaAtiva === 'externos' && total > 0 && temDadosNoModo) {
+    setTimeout(() => _renderGraficoSimulados(sims, modoGraf), 30);
+  }
 }
 
 function _renderCardSimulado(s) {
