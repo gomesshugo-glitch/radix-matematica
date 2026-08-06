@@ -17993,6 +17993,16 @@ async function renderSimulados(aba) {
   const areasDoModo = modoGraf === 'tri' ? AREAS_ENEM : AREAS_ENEM.filter(a => a.qMax); // redação não tem acertos
   const temDadosNoModo = sims.some(s => areasDoModo.some(a => s[prefixo + a.id] != null));
 
+  // Visão do gráfico: 'geral' (todas as áreas juntas) ou 'areas' (um mini-gráfico
+  // por área, cada um com a linha tracejada da meta). Separar assim evita poluir
+  // o gráfico geral com 5 linhas de meta sobrepostas.
+  const visaoGraf = state._simGraficoVisao === 'areas' ? 'areas' : 'geral';
+  // Só faz sentido oferecer "por área" se houver meta definida em alguma área
+  const temAlgumaMeta = !!(state.metaAluno && areasDoModo.some(a => {
+    const campo = modoGraf === 'tri' ? ('meta_tri_' + a.id) : ('meta_acertos_' + a.id);
+    return state.metaAluno[campo] != null;
+  }));
+
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Simulados</div>
     <h2 class="section-title">
@@ -18057,28 +18067,51 @@ async function renderSimulados(aba) {
       <div style="background:var(--radix-surface-2, #fff);border:1px solid var(--radix-line, #e5e7eb);border-radius:14px;padding:16px 18px;margin-bottom:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
           <span style="font-size:13.5px;font-weight:700;color:var(--radix-text);">📈 Evolução</span>
-          <div style="display:flex;gap:4px;padding:3px;background:var(--radix-bg-2,#f3f4f6);border-radius:8px;">
-            <button onclick="state._simGraficoModo='tri';renderMeusSimulados();"
-                    style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='tri'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-              Nota TRI
-            </button>
-            <button onclick="state._simGraficoModo='acertos';renderMeusSimulados();"
-                    style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='acertos'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-              Acertos
-            </button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <!-- Visão: geral (todas juntas) ou por área (com a meta) -->
+            <div style="display:flex;gap:4px;padding:3px;background:var(--radix-bg-2,#f3f4f6);border-radius:8px;">
+              <button onclick="state._simGraficoVisao='geral';renderMeusSimulados();"
+                      style="padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${visaoGraf==='geral'?'background:var(--radix-surface,#fff);color:var(--radix-text,#111);box-shadow:0 1px 3px rgba(0,0,0,.12);':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+                Visão geral
+              </button>
+              <button onclick="state._simGraficoVisao='areas';renderMeusSimulados();"
+                      title="${temAlgumaMeta ? 'Um gráfico por área, com a linha da sua meta' : 'Defina sua meta na aba 🎯 pra ver a linha de referência'}"
+                      style="padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${visaoGraf==='areas'?'background:var(--radix-surface,#fff);color:var(--radix-text,#111);box-shadow:0 1px 3px rgba(0,0,0,.12);':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+                Por área${temAlgumaMeta ? ' 🎯' : ''}
+              </button>
+            </div>
+            <!-- Métrica: TRI ou acertos -->
+            <div style="display:flex;gap:4px;padding:3px;background:var(--radix-bg-2,#f3f4f6);border-radius:8px;">
+              <button onclick="state._simGraficoModo='tri';renderMeusSimulados();"
+                      style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='tri'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+                Nota TRI
+              </button>
+              <button onclick="state._simGraficoModo='acertos';renderMeusSimulados();"
+                      style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='acertos'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+                Acertos
+              </button>
+            </div>
           </div>
         </div>
-        ${temDadosNoModo ? `
+        ${!temDadosNoModo ? `
+          <div style="padding:36px 20px;text-align:center;color:var(--radix-text-muted);font-size:13px;">
+            Nenhum simulado tem ${modoGraf === 'tri' ? 'nota TRI' : 'número de acertos'} preenchido ainda.<br>
+            <small style="opacity:.8;">Troque pro outro modo acima ou edite um simulado pra preencher.</small>
+          </div>
+        ` : visaoGraf === 'areas' ? `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;">
+            ${_htmlCardsPorArea(sims, modoGraf)}
+          </div>
+          <div style="font-size:11.5px;color:var(--radix-text-muted);text-align:right;margin-top:8px;">
+            ${temAlgumaMeta ? 'Linha tracejada = sua meta · ' : ''}escala ${modoGraf === 'tri' ? '0–1000 (TRI)' : '0–45 (acertos)'}
+          </div>
+        ` : `
           <div style="position:relative;height:280px;">
             <canvas id="chart-sim-ext"></canvas>
           </div>
           <div style="font-size:11.5px;color:var(--radix-text-muted);text-align:right;margin-top:6px;">
             Ordem cronológica · escala ${modoGraf === 'tri' ? '0–1000 (TRI)' : '0–45 (acertos)'}
-          </div>
-        ` : `
-          <div style="padding:36px 20px;text-align:center;color:var(--radix-text-muted);font-size:13px;">
-            Nenhum simulado tem ${modoGraf === 'tri' ? 'nota TRI' : 'número de acertos'} preenchido ainda.<br>
-            <small style="opacity:.8;">Troque pro outro modo acima ou edite um simulado pra preencher.</small>
+            ${temAlgumaMeta ? ' · <b>Veja "Por área"</b> pra comparar com sua meta' : ''}
           </div>
         `}
       </div>
@@ -18094,10 +18127,129 @@ async function renderSimulados(aba) {
   // Sobe pra topo (herda scroll da tela anterior senão)
   try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
 
-  // Renderiza o gráfico se tiver dados no modo escolhido (só na aba de externos)
+  // Renderiza os gráficos se tiver dados no modo escolhido (só na aba de externos)
   if (abaAtiva === 'externos' && total > 0 && temDadosNoModo) {
-    setTimeout(() => _renderGraficoSimulados(sims, modoGraf), 30);
+    if (visaoGraf === 'areas') {
+      setTimeout(() => _renderGraficosPorArea(sims, modoGraf), 30);
+    } else {
+      setTimeout(() => _renderGraficoSimulados(sims, modoGraf), 30);
+    }
   }
+}
+
+// Cards (HTML) dos mini-gráficos por área. O canvas de cada um é preenchido
+// depois por _renderGraficosPorArea. Small multiples: cada card tem só a linha
+// da própria área + a linha tracejada da meta — sem disputa visual.
+function _htmlCardsPorArea(sims, modo) {
+  const ehTri = modo !== 'acertos';
+  const prefixo = ehTri ? 'tri_' : 'acertos_';
+  const campoMeta = ehTri ? 'meta_tri_' : 'meta_acertos_';
+  const areas = ehTri ? AREAS_ENEM : AREAS_ENEM.filter(a => a.qMax);
+  const meta = state.metaAluno;
+
+  return areas.map(a => {
+    const valores = sims.map(s => s[prefixo + a.id]).filter(v => v != null).map(Number);
+    if (valores.length === 0) return ''; // área sem nenhum dado — não mostra card
+
+    const melhorV = Math.max(...valores);
+    // sims vem DESC (mais recente primeiro) — o último registrado é o [0]
+    const ultimoRaw = sims.find(s => s[prefixo + a.id] != null);
+    const ultimoV = ultimoRaw ? Number(ultimoRaw[prefixo + a.id]) : null;
+    const metaV = meta ? meta[campoMeta + a.id] : null;
+
+    const fmt = (v) => ehTri ? Number(v).toFixed(1) : String(v);
+    let rodape;
+    if (metaV != null) {
+      const falta = Math.max(0, Number(metaV) - melhorV);
+      const bateu = melhorV >= Number(metaV);
+      rodape = bateu
+        ? `<span style="color:#10b981;font-weight:700;">✓ meta batida</span> <span style="color:var(--radix-text-muted);">(meta ${fmt(metaV)})</span>`
+        : `<span style="color:var(--radix-text-muted);">meta ${fmt(metaV)} ·</span> <span style="color:var(--radix-coral);font-weight:700;">faltam ${fmt(falta)}</span>`;
+    } else {
+      rodape = `<span style="color:var(--radix-text-muted);">melhor ${fmt(melhorV)}${ultimoV != null ? ` · último ${fmt(ultimoV)}` : ''}</span>`;
+    }
+
+    return `
+      <div style="background:var(--radix-surface,#fff);border:1px solid var(--radix-line,#e5e7eb);border-top:3px solid ${a.cor};border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+          <span style="font-size:12.5px;font-weight:800;color:${a.cor};">${a.nome}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--radix-text);">${fmt(melhorV)}</span>
+        </div>
+        <div style="position:relative;height:110px;">
+          <canvas id="chart-area-${a.id}"></canvas>
+        </div>
+        <div style="font-size:11px;margin-top:6px;text-align:center;">${rodape}</div>
+      </div>`;
+  }).join('');
+}
+
+// Desenha os mini-gráficos. Um Chart por área, com _refLinePlugin na meta.
+function _renderGraficosPorArea(sims, modo) {
+  if (!window.Chart) return;
+  const ehTri = modo !== 'acertos';
+  const prefixo = ehTri ? 'tri_' : 'acertos_';
+  const campoMeta = ehTri ? 'meta_tri_' : 'meta_acertos_';
+  const areas = ehTri ? AREAS_ENEM : AREAS_ENEM.filter(a => a.qMax);
+  const meta = state.metaAluno;
+  const cron = sims.slice().reverse(); // cronológico ASC
+  const labels = cron.map(s => new Date(s.data_realizacao).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+
+  areas.forEach(a => {
+    const el = document.getElementById('chart-area-' + a.id);
+    if (!el) return; // área sem card (sem dados)
+    const dados = cron.map(s => s[prefixo + a.id] != null ? Number(s[prefixo + a.id]) : null);
+    const metaV = meta ? meta[campoMeta + a.id] : null;
+
+    // Escala: aperta em torno dos dados+meta pra a variação ficar visível.
+    // Um mini-gráfico 0-1000 achataria tudo numa linha reta.
+    const validos = dados.filter(v => v != null);
+    const pontos = metaV != null ? validos.concat([Number(metaV)]) : validos;
+    const maxTeto = ehTri ? 1000 : (a.qMax || 45);
+    let lo = Math.min(...pontos), hi = Math.max(...pontos);
+    const folga = Math.max((hi - lo) * 0.25, ehTri ? 40 : 3);
+    lo = Math.max(0, Math.floor(lo - folga));
+    hi = Math.min(maxTeto, Math.ceil(hi + folga));
+    if (hi - lo < (ehTri ? 60 : 4)) hi = Math.min(maxTeto, lo + (ehTri ? 60 : 4)); // evita faixa degenerada
+
+    try { const ant = Chart.getChart(el); if (ant) ant.destroy(); } catch (_) {}
+    new Chart(el, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: a.nome,
+          data: dados,
+          borderColor: a.cor,
+          backgroundColor: a.cor + '1f',
+          fill: true,
+          tension: 0.25,
+          spanGaps: true,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: c => c.parsed.y == null ? '—'
+                : (ehTri ? `${Number(c.parsed.y).toFixed(1)} TRI` : `${c.parsed.y} acertos`)
+            }
+          }
+        },
+        scales: {
+          y: { min: lo, max: hi, ticks: { maxTicksLimit: 4, font: { size: 9 } } },
+          x: { ticks: { maxTicksLimit: 4, font: { size: 9 } } }
+        }
+      },
+      // Linha tracejada da meta — só se o aluno definiu meta pra essa área
+      plugins: metaV != null ? [_refLinePlugin('y', Number(metaV), '#dc2626')] : []
+    });
+  });
 }
 
 // Aba "Minha meta": compara a meta definida com o MELHOR resultado já obtido
