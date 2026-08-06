@@ -6921,7 +6921,7 @@ async function carregarDados() {
 }
 
 async function carregarDadosAluno() {
-  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos(), carregarCadernoErros(), carregarSimuladosExternos()]);
+  await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos(), carregarCadernoErros(), carregarSimuladosExternos(), carregarMetaAluno()]);
   carregarListaLocal();
   carregarListasSalvas();
 
@@ -11815,11 +11815,13 @@ function abrirSimuladoConfig() {
     <div class="config-box">
       <div class="form-group">
         <label>Número de questões</label>
-        <select id="sim-num">
+        <select id="sim-num" onchange="_sugerirTempoSimulado()">
           <option value="5">5 questões</option>
           <option value="10" selected>10 questões</option>
           <option value="15">15 questões</option>
           <option value="20">20 questões</option>
+          <option value="30">30 questões</option>
+          <option value="45">45 questões (prova completa do ENEM)</option>
         </select>
       </div>
       <div class="form-group">
@@ -11828,8 +11830,14 @@ function abrirSimuladoConfig() {
           <option value="10">10 minutos</option>
           <option value="20" selected>20 minutos</option>
           <option value="30">30 minutos</option>
+          <option value="45">45 minutos</option>
           <option value="60">60 minutos</option>
+          <option value="90">1h30</option>
+          <option value="120">2h</option>
+          <option value="150">2h30 (ritmo do ENEM)</option>
+          <option value="180">3h</option>
         </select>
+        <small id="sim-tempo-dica" style="display:block;margin-top:4px;font-size:11.5px;color:var(--radix-text-muted);"></small>
       </div>
       <div class="form-group">
         <label>Temas (deixe vazio para todos)</label>
@@ -11857,6 +11865,25 @@ function abrirSimuladoConfig() {
       <button class="btn btn-success" style="width:100%;padding:14px;" onclick="iniciarSimulado()">Iniciar Simulado</button>
     </div>
   `;
+  _sugerirTempoSimulado();
+}
+
+// Ajusta o tempo sugerido conforme o número de questões.
+// Base: ritmo do ENEM em Matemática ≈ 3,3 min/questão (45 questões em 2h30).
+function _sugerirTempoSimulado() {
+  const selNum = document.getElementById('sim-num');
+  const selTempo = document.getElementById('sim-tempo');
+  const dica = document.getElementById('sim-tempo-dica');
+  if (!selNum || !selTempo) return;
+  const n = parseInt(selNum.value, 10) || 10;
+  const ideal = Math.round(n * 3.3);
+  // Escolhe a opção disponível mais próxima do tempo ideal (sem ficar abaixo)
+  const opcoes = [...selTempo.options].map(o => parseInt(o.value, 10)).sort((a, b) => a - b);
+  const escolhida = opcoes.find(v => v >= ideal) ?? opcoes[opcoes.length - 1];
+  selTempo.value = String(escolhida);
+  if (dica) {
+    dica.textContent = `Ritmo do ENEM pra ${n} ${n === 1 ? 'questão' : 'questões'}: ~${ideal} min (≈3,3 min por questão). Você pode ajustar.`;
+  }
 }
 
 function toggleModulo(modId, btn) {
@@ -17887,6 +17914,42 @@ async function carregarSimuladosExternos() {
   state.simuladosExternos = data || [];
 }
 
+// Carrega a meta do aluno (1 linha por aluno). null se ainda não definiu.
+async function carregarMetaAluno() {
+  state.metaAluno = null;
+  if (!state.usuario?.id) return;
+  const { data, error } = await sb.from('meta_aluno')
+    .select('*')
+    .eq('aluno_id', state.usuario.id)
+    .maybeSingle();
+  if (error) {
+    if (/relation|table|does not exist/i.test(error.message || '')) {
+      console.warn('[meta_aluno] Tabela nao existe — rodar SQL_meta_aluno.sql no Supabase.');
+    } else {
+      console.warn('[meta_aluno] Erro carregando:', error.message);
+    }
+    return;
+  }
+  state.metaAluno = data || null;
+}
+
+// Melhor resultado do aluno em cada área, considerando todos os simulados
+// externos registrados. Retorna { tri: {mat: 720, ...}, acertos: {mat: 32, ...} }.
+// Usa o MELHOR (não a média) porque é o que mostra o potencial já alcançado.
+function _melhorPorArea() {
+  const sims = state.simuladosExternos || [];
+  const out = { tri: {}, acertos: {} };
+  AREAS_ENEM.forEach(a => {
+    const tris = sims.map(s => s['tri_' + a.id]).filter(v => v != null).map(Number);
+    if (tris.length) out.tri[a.id] = Math.max(...tris);
+    if (a.qMax) {
+      const acs = sims.map(s => s['acertos_' + a.id]).filter(v => v != null).map(Number);
+      if (acs.length) out.acertos[a.id] = Math.max(...acs);
+    }
+  });
+  return out;
+}
+
 // =========================================================
 // TELA "MEUS SIMULADOS" (aluno)
 // =========================================================
@@ -17897,9 +17960,12 @@ async function renderHistoricoSimulados() { return renderSimulados('plataforma')
 // Hub unificado de Simulados. aba: 'externos' (default) | 'plataforma'
 async function renderSimulados(aba) {
   state.view = 'meus-simulados';
-  state._simAba = (aba === 'plataforma') ? 'plataforma' : (aba || state._simAba || 'externos');
+  const abasValidas = ['externos', 'plataforma', 'metas'];
+  state._simAba = abasValidas.includes(aba) ? aba
+                : (abasValidas.includes(state._simAba) ? state._simAba : 'externos');
   const abaAtiva = state._simAba;
   if (!state.simuladosExternos) await carregarSimuladosExternos();
+  if (state.metaAluno === undefined) await carregarMetaAluno();
   const main = document.getElementById('main-content');
   const sims = (state.simuladosExternos || []).slice(); // já vem ordenado DESC
   const total = sims.length;
@@ -17957,9 +18023,13 @@ async function renderSimulados(aba) {
               style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='plataforma'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
         Feitos na plataforma${daPlataforma.length > 0 ? ` (${daPlataforma.length})` : ''}
       </button>
+      <button onclick="renderSimulados('metas')"
+              style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='metas'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
+        🎯 Minha meta
+      </button>
     </div>
 
-    ${abaAtiva === 'plataforma' ? `
+    ${abaAtiva === 'metas' ? _htmlMinhaMeta() : abaAtiva === 'plataforma' ? `
       <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
         Simulados que você respondeu aqui na plataforma, com correção automática.
       </p>
@@ -18030,6 +18100,131 @@ async function renderSimulados(aba) {
   }
 }
 
+// Aba "Minha meta": compara a meta definida com o MELHOR resultado já obtido
+// nos simulados registrados e mostra quanto falta em cada área.
+function _htmlMinhaMeta() {
+  const meta = state.metaAluno;
+  const temSimulado = (state.simuladosExternos || []).length > 0;
+
+  if (!meta) {
+    return `
+      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface-2, #fff);border:1px dashed var(--radix-line, #e5e7eb);border-radius:14px;color:var(--radix-text-muted);">
+        <div style="font-size:44px;margin-bottom:10px;">🎯</div>
+        <p style="margin:0 0 6px;font-weight:700;color:var(--radix-text);">Você ainda não definiu sua meta</p>
+        <p style="margin:0 0 16px;font-size:13px;">Diga qual curso você quer e quanto precisa tirar em cada área.<br>A plataforma calcula sozinha o quanto falta.</p>
+        <button class="btn" style="background:var(--radix-cyan);color:#0e1a36;font-weight:800;padding:10px 20px;" onclick="abrirModalMeta()">
+          Definir minha meta
+        </button>
+      </div>`;
+  }
+
+  const melhor = _melhorPorArea();
+
+  // Uma linha por área com barra de progresso
+  const linhas = AREAS_ENEM.map(a => {
+    const metaTri = meta['meta_tri_' + a.id];
+    const metaAc  = a.qMax ? meta['meta_acertos_' + a.id] : null;
+    if (metaTri == null && metaAc == null) return null;
+
+    const blocos = [];
+
+    // Bloco TRI
+    if (metaTri != null) {
+      const atual = melhor.tri[a.id];
+      const temAtual = atual != null;
+      const pct = temAtual ? Math.min(100, Math.round((atual / metaTri) * 100)) : 0;
+      const falta = temAtual ? Math.max(0, Number(metaTri) - Number(atual)) : Number(metaTri);
+      const bateu = temAtual && Number(atual) >= Number(metaTri);
+      blocos.push(`
+        <div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:4px;">
+            <span style="color:var(--radix-text-muted);">Nota TRI</span>
+            <span style="font-weight:700;color:${bateu ? '#10b981' : 'var(--radix-text)'};">
+              ${temAtual ? Number(atual).toFixed(1) : '—'} <span style="color:var(--radix-text-muted);font-weight:500;">/ ${Number(metaTri).toFixed(1)}</span>
+              ${bateu ? ' ✓' : (temAtual ? ` <span style="color:var(--radix-coral);">faltam ${falta.toFixed(1)}</span>` : '')}
+            </span>
+          </div>
+          <div style="height:8px;background:var(--radix-bg-2,#e5e7eb);border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${bateu ? '#10b981' : a.cor};border-radius:999px;transition:width .3s;"></div>
+          </div>
+        </div>`);
+    }
+
+    // Bloco Acertos
+    if (metaAc != null) {
+      const atual = melhor.acertos[a.id];
+      const temAtual = atual != null;
+      const pct = temAtual ? Math.min(100, Math.round((atual / metaAc) * 100)) : 0;
+      const falta = temAtual ? Math.max(0, Number(metaAc) - Number(atual)) : Number(metaAc);
+      const bateu = temAtual && Number(atual) >= Number(metaAc);
+      blocos.push(`
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:4px;">
+            <span style="color:var(--radix-text-muted);">Acertos</span>
+            <span style="font-weight:700;color:${bateu ? '#10b981' : 'var(--radix-text)'};">
+              ${temAtual ? atual : '—'} <span style="color:var(--radix-text-muted);font-weight:500;">/ ${metaAc}</span>
+              ${bateu ? ' ✓' : (temAtual ? ` <span style="color:var(--radix-coral);">${falta} a mais</span>` : '')}
+            </span>
+          </div>
+          <div style="height:8px;background:var(--radix-bg-2,#e5e7eb);border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${bateu ? '#10b981' : a.cor};border-radius:999px;transition:width .3s;"></div>
+          </div>
+        </div>`);
+    }
+
+    return `
+      <div style="background:var(--radix-surface, #fff);border:1px solid var(--radix-line, #e5e7eb);border-left:4px solid ${a.cor};border-radius:12px;padding:14px 16px;">
+        <div style="font-weight:800;font-size:13.5px;color:${a.cor};margin-bottom:10px;">${a.nome}</div>
+        ${blocos.join('')}
+      </div>`;
+  }).filter(Boolean).join('');
+
+  // Média projetada (só das áreas com meta TRI e resultado)
+  const comAmbos = AREAS_ENEM.filter(a => meta['meta_tri_' + a.id] != null && melhor.tri[a.id] != null);
+  const mediaAtual = comAmbos.length
+    ? (comAmbos.reduce((s, a) => s + Number(melhor.tri[a.id]), 0) / comAmbos.length)
+    : null;
+  const corteOk = meta.nota_corte != null && mediaAtual != null && mediaAtual >= Number(meta.nota_corte);
+
+  return `
+    <!-- Cabeçalho da meta -->
+    <div style="background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(59,130,246,.06));border:1px solid rgba(34,211,238,.30);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11.5px;color:var(--radix-text-muted);font-weight:700;letter-spacing:.05em;">MEU OBJETIVO</div>
+          <div style="font-size:19px;font-weight:800;color:var(--radix-text);margin-top:2px;">${meta.objetivo ? _escHtml(meta.objetivo) : 'Sem nome definido'}</div>
+          ${meta.nota_corte != null ? `
+            <div style="font-size:12.5px;color:var(--radix-text-2);margin-top:4px;">
+              Nota de corte: <b>${Number(meta.nota_corte).toFixed(1)}</b>
+              ${mediaAtual != null ? ` · Sua média atual: <b style="color:${corteOk ? '#10b981' : 'var(--radix-coral)'};">${mediaAtual.toFixed(1)}</b>${corteOk ? ' ✓' : ` (faltam ${(Number(meta.nota_corte) - mediaAtual).toFixed(1)})`}` : ''}
+            </div>
+          ` : ''}
+        </div>
+        <button class="btn btn-secondary" style="padding:7px 14px;font-size:12.5px;" onclick="abrirModalMeta()">Editar meta</button>
+      </div>
+    </div>
+
+    ${!temSimulado ? `
+      <div style="padding:12px 14px;background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.4);border-radius:10px;font-size:12.5px;color:var(--radix-text);margin-bottom:14px;">
+        ⚠️ Você ainda não registrou nenhum simulado. Cadastre um na aba <b>Bancas externas</b> pra ver quanto falta pra sua meta.
+      </div>
+    ` : `
+      <p style="font-size:12.5px;color:var(--radix-text-muted);margin:0 0 12px;">
+        Comparando com o seu <b>melhor resultado</b> em cada área, entre os ${(state.simuladosExternos||[]).length} simulados registrados.
+      </p>
+    `}
+
+    ${linhas ? `
+      <div style="display:flex;flex-direction:column;gap:10px;">${linhas}</div>
+    ` : `
+      <div style="padding:32px;text-align:center;color:var(--radix-text-muted);font-size:13px;background:var(--radix-surface-2,#fff);border:1px dashed var(--radix-line,#e5e7eb);border-radius:12px;">
+        Sua meta está criada mas sem nenhuma área preenchida.<br>
+        <button class="btn btn-secondary" style="margin-top:12px;padding:8px 16px;font-size:12.5px;" onclick="abrirModalMeta()">Preencher metas por área</button>
+      </div>
+    `}
+  `;
+}
+
 function _renderCardSimulado(s) {
   const banca = bancaPorId(s.banca) || { nome: s.banca, cor: '#6b7280' };
   const bancaTxt = bancaLabel(s);
@@ -18073,6 +18268,124 @@ function _renderCardSimulado(s) {
       ${linhas || '<div style="color:var(--radix-text-muted);font-size:12px;font-style:italic;">Nenhuma nota preenchida.</div>'}
       ${obsHtml}
     </div>`;
+}
+
+// Modal de definir/editar a meta do aluno
+function abrirModalMeta() {
+  const m = state.metaAluno || {};
+  const old = document.getElementById('modal-meta'); if (old) old.remove();
+
+  const areasHtml = AREAS_ENEM.map(a => {
+    const tri = m['meta_tri_' + a.id] ?? '';
+    const ac  = a.qMax ? (m['meta_acertos_' + a.id] ?? '') : '';
+    return `
+      <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:8px;align-items:center;padding:8px 10px;background:${a.cor}0d;border-left:3px solid ${a.cor};border-radius:6px;margin-bottom:6px;">
+        <label style="font-size:12.5px;font-weight:700;color:${a.cor};">${a.nome}</label>
+        <div>
+          <input type="number" id="meta-tri-${a.id}" min="0" max="1000" step="0.1"
+                 placeholder="Meta TRI" value="${tri}"
+                 style="width:100%;padding:6px 10px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:6px;font-size:12.5px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);">
+        </div>
+        <div>
+          ${a.qMax ? `
+            <input type="number" id="meta-ac-${a.id}" min="0" max="${a.qMax}" step="1"
+                   placeholder="Meta acertos (0-${a.qMax})" value="${ac}"
+                   style="width:100%;padding:6px 10px;border:1px solid var(--radix-line-2,#e5e7eb);border-radius:6px;font-size:12.5px;background:var(--radix-surface,#fff);color:var(--radix-text,#111);">
+          ` : `<span style="font-size:11px;color:var(--radix-text-muted);font-style:italic;">Só nota</span>`}
+        </div>
+      </div>`;
+  }).join('');
+
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModalMeta()">
+      <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto;">
+        <h2 style="margin:0 0 4px;">🎯 Minha meta</h2>
+        <p style="font-size:12.5px;color:var(--radix-text-muted);margin:0 0 16px;">
+          Diga onde você quer chegar. A plataforma compara com seus simulados e mostra <b>quanto falta em cada área</b>. Preencha só o que fizer sentido pra você.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 160px;gap:12px;margin-bottom:14px;">
+          <div class="form-group" style="margin:0;">
+            <label>Curso / objetivo</label>
+            <input type="text" id="meta-objetivo" value="${_escHtml(m.objetivo || '')}" placeholder="Ex: Medicina — UFRN" maxlength="120">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Nota de corte</label>
+            <input type="number" id="meta-corte" min="0" max="1000" step="0.1" value="${m.nota_corte ?? ''}" placeholder="Ex: 780">
+          </div>
+        </div>
+
+        <label style="display:block;font-weight:700;font-size:13px;margin:8px 0 6px;color:var(--radix-text);">Metas por área</label>
+        ${areasHtml}
+
+        <p id="meta-msg" style="font-size:12.5px;min-height:16px;margin:10px 0 0;color:var(--radix-coral);"></p>
+
+        <div class="modal-acoes">
+          ${state.metaAluno ? `<button class="btn btn-danger" style="margin-right:auto;" onclick="excluirMeta()">Excluir meta</button>` : ''}
+          <button class="btn btn-secondary" onclick="fecharModalMeta()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarMeta()">Salvar meta</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="modal-meta">${html}</div>`);
+  document.body.classList.add('modal-open');
+}
+
+function fecharModalMeta() {
+  const m = document.getElementById('modal-meta');
+  if (m) m.remove();
+  document.body.classList.remove('modal-open');
+}
+
+async function salvarMeta() {
+  const setMsg = (t) => { const el = document.getElementById('meta-msg'); if (el) el.textContent = t || ''; };
+  setMsg('');
+
+  const objetivo = (document.getElementById('meta-objetivo').value || '').trim() || null;
+  const corte = _simLerNum('meta-corte', 0, 1000);
+  if (Number.isNaN(corte)) { setMsg('Nota de corte inválida (0-1000).'); return; }
+
+  const payload = { aluno_id: state.usuario.id, objetivo, nota_corte: corte };
+
+  for (const a of AREAS_ENEM) {
+    const v = _simLerNum('meta-tri-' + a.id, 0, 1000);
+    if (Number.isNaN(v)) { setMsg(`Meta TRI de ${a.nome} inválida (0-1000).`); return; }
+    payload['meta_tri_' + a.id] = v;
+    if (!a.qMax) continue;
+    const ac = _simLerNum('meta-ac-' + a.id, 0, a.qMax);
+    if (Number.isNaN(ac)) { setMsg(`Meta de acertos de ${a.nome} inválida (0-${a.qMax}).`); return; }
+    payload['meta_acertos_' + a.id] = ac == null ? null : Math.round(ac);
+  }
+
+  try {
+    const { error } = await sb.from('meta_aluno').upsert(payload, { onConflict: 'aluno_id' });
+    if (error) throw error;
+    await carregarMetaAluno();
+    fecharModalMeta();
+    if (state.view === 'meus-simulados') renderSimulados('metas');
+  } catch (e) {
+    console.error('[salvarMeta] falhou:', e);
+    const msg = e?.message || String(e);
+    if (/relation|does not exist/i.test(msg)) {
+      setMsg('A tabela `meta_aluno` ainda não existe. Peça pro professor rodar SQL_meta_aluno.sql.');
+    } else {
+      setMsg('Erro ao salvar: ' + msg);
+    }
+  }
+}
+
+async function excluirMeta() {
+  if (!confirm('Excluir sua meta?\n\nOs simulados registrados continuam salvos — só o objetivo é apagado.')) return;
+  try {
+    const { error } = await sb.from('meta_aluno').delete().eq('aluno_id', state.usuario.id);
+    if (error) throw error;
+    state.metaAluno = null;
+    fecharModalMeta();
+    if (state.view === 'meus-simulados') renderSimulados('metas');
+  } catch (e) {
+    console.error('[excluirMeta] falhou:', e);
+    alert('Erro ao excluir: ' + (e?.message || e));
+  }
 }
 
 // Modal de novo/editar simulado externo
