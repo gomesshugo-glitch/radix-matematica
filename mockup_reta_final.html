@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOCKUP · Revisão Final ENEM 2026 — Radix Matemática</title>
+<style>
+  :root {
+    --bg: #0e1a36;
+    --bg-2: #16244a;
+    --surface: #1a2b52;
+    --surface-2: #223464;
+    --line: #2e4275;
+    --line-2: #3a5089;
+    --text: #eef2fb;
+    --text-2: #c6d2ec;
+    --muted: #8fa3cc;
+    --cyan: #22d3ee;
+    --cyan-press: #0fb8d4;
+    --coral: #ff7a5c;
+    --red: #f87171;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --grad: linear-gradient(135deg, #22d3ee, #3b82f6);
+    --r: 14px;
+    --shadow: 0 10px 30px -18px rgba(0,0,0,.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding-bottom: 90px;
+    -webkit-font-smoothing: antialiased;
+  }
+  body.modal-aberto { overflow: hidden; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  .h-page { font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
+  .h-sec  { font-size: 15px; font-weight: 800; margin-bottom: 12px; display:flex; align-items:center; gap:8px; }
+  .h-sec .ic { color: var(--cyan); display:inline-flex; }
+  .h-sec .lado { margin-left:auto; display:inline-flex; align-items:center; gap:8px; font-weight:500; }
+  .txt-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .txt-mini { font-size: 11.5px; color: var(--muted); }
+
+  :focus { outline: none; }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ---------- barra demo ---------- */
+  .demo {
+    background: #241c47; border-bottom: 1px solid #4c3d8f;
+    padding: 8px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12px; color: #b9aef0;
+  }
+  .demo b { letter-spacing: .08em; }
+  .demo select, .demo button {
+    background: var(--surface); color: var(--text-2);
+    border: 1px solid var(--line-2); border-radius: 7px;
+    padding: 6px 10px; font-size: 12px; min-height: 32px;
+  }
+  .demo button:hover { border-color: var(--coral); color: var(--coral); }
+
+  /* ---------- header ---------- */
+  .top {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(14,26,54,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-in {
+    max-width: 760px; margin: 0 auto; padding: 9px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 800; }
+  /* Slot da marca — na integração, substituir o span .logo por <img> da Radix */
+  .logo {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--grad);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #06121f; font-size: 16px; font-weight: 800; flex-shrink: 0;
+  }
+  .brand small { color: var(--cyan); font-weight: 700; }
+  .count-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--line-2);
+    border-radius: 999px; padding: 6px 13px; font-size: 12px; color: var(--text-2);
+    white-space: nowrap;
+  }
+  .count-pill b { color: var(--coral); font-size: 14px; }
+
+  section { margin-top: 26px; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 18px;
+  }
+
+  /* ---------- próximo passo ---------- */
+  .next {
+    background: linear-gradient(160deg, rgba(34,211,238,.13), rgba(59,130,246,.05) 60%);
+    border: 1px solid rgba(34,211,238,.35);
+    border-radius: 16px; padding: 20px 18px; box-shadow: var(--shadow);
+  }
+  .next .tag-topo { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; color: var(--cyan); }
+  .next h2 { font-size: 19px; margin: 8px 0 3px; line-height: 1.3; }
+  .next .infos { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-2); margin: 8px 0 4px; }
+  .next .infos span { display: inline-flex; align-items: center; gap: 5px; }
+  .next .just {
+    font-size: 12.5px; color: var(--muted); border-left: 3px solid var(--line-2);
+    padding-left: 10px; margin: 10px 0 16px; line-height: 1.45;
+  }
+  .next .acts { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 10px; min-height: 44px;
+    padding: 11px 20px; font-size: 14px; font-weight: 800;
+    transition: transform .12s, box-shadow .12s, background .12s;
+  }
+  .btn-pri { background: var(--grad); color: #06121f; }
+  .btn-pri:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px -10px rgba(34,211,238,.55); }
+  .btn-pri:active { transform: translateY(0); background: var(--cyan-press); }
+  .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--line-2); }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(248,113,113,.5); }
+  .btn-danger:hover { border-color: var(--red); background: rgba(248,113,113,.08); }
+  .btn-sm { min-height: 36px; padding: 7px 14px; font-size: 12.5px; border-radius: 8px; }
+
+  /* ---------- progresso ---------- */
+  .prog-big { display: flex; align-items: center; gap: 16px; }
+  .prog-ring { flex-shrink: 0; position: relative; width: 72px; height: 72px; }
+  .prog-ring svg { transform: rotate(-90deg); }
+  .prog-ring .pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+  }
+  .prog-info { flex: 1; min-width: 0; }
+  .prog-info .lin { font-size: 13.5px; font-weight: 700; }
+  .prog-info .det { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* ---------- agenda ---------- */
+  .dia-grupo { margin-top: 16px; }
+  .dia-head {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;
+    font-size: 12px; font-weight: 800; letter-spacing: .07em; color: var(--muted);
+  }
+  .dia-head.hoje { color: var(--cyan); }
+  .dia-head .data { font-weight: 500; letter-spacing: 0; }
+  .atv {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+  }
+  .atv.done { opacity: .62; }
+  .atv.done .t { text-decoration: line-through; }
+  .atv .chk {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    border: 2px solid var(--line-2); background: transparent;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: transparent; transition: all .12s; padding: 0;
+  }
+  .atv .chk[aria-checked="true"] { background: var(--green); border-color: var(--green); color: #06121f; }
+  .atv .chk:hover { border-color: var(--green); }
+  .atv .body { flex: 1; min-width: 0; }
+  .atv .t { font-size: 13.5px; font-weight: 700; line-height: 1.35; }
+  .atv .m { font-size: 11.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .pri {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .06em;
+    padding: 2px 7px; border-radius: 5px; white-space: nowrap;
+  }
+  .pri-3 { background: rgba(248,113,113,.15); color: var(--red); }
+  .pri-2 { background: rgba(251,191,36,.13); color: var(--amber); }
+  .pri-1 { background: rgba(52,211,153,.14); color: var(--green); }
+  .pri-g { background: rgba(167,139,250,.16); color: #b9aef0; }
+  .pri-auto { background: rgba(34,211,238,.13); color: var(--cyan); cursor: help; }
+  .atv .mover {
+    background: var(--bg-2); color: var(--muted); border: 1px solid var(--line);
+    border-radius: 7px; font-size: 11px; padding: 6px 6px; min-height: 32px; max-width: 74px;
+  }
+  .atv-vazia {
+    border: 1px dashed var(--line-2); border-radius: 12px; padding: 16px;
+    text-align: center; font-size: 12.5px; color: var(--muted);
+  }
+  .fora-item {
+    border: 1px dashed var(--line-2); border-radius: 12px; padding: 12px 14px;
+    font-size: 12.5px; color: var(--muted); margin-bottom: 8px; line-height: 1.5;
+  }
+  .fora-item b { color: var(--text-2); }
+  details.concl { margin-top: 16px; }
+  details.concl summary {
+    cursor: pointer; font-size: 12px; font-weight: 800; letter-spacing: .07em;
+    color: var(--muted); list-style: none; display: flex; align-items: center; gap: 6px;
+    min-height: 44px;
+  }
+  details.concl summary::-webkit-details-marker { display: none; }
+  details.concl summary .chev { transition: transform .15s; display: inline-flex; }
+  details.concl[open] summary .chev { transform: rotate(90deg); }
+
+  /* ---------- mini ---------- */
+  .mini {
+    background: var(--surface-2); border: 1px solid var(--line-2);
+    border-radius: 12px; padding: 14px; margin-top: 16px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .mini .ic { color: var(--cyan); display: inline-flex; }
+  .mini .inf { flex: 1; min-width: 170px; }
+  .mini .t { font-weight: 800; font-size: 13.5px; }
+  .mini .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .mini-res {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(52,211,153,.10); border: 1px solid rgba(52,211,153,.35);
+    border-radius: 10px; padding: 8px 12px;
+  }
+  .mini-res b { color: var(--green); font-size: 15px; }
+
+  /* ---------- diagnóstico / stats ---------- */
+  .diag { border-left: 3px solid var(--cyan); padding-left: 14px; margin-top: 16px; }
+  .diag .linha, .stats-linha { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .stat { background: var(--bg-2); border-radius: 9px; padding: 9px 13px; min-width: 90px; flex: 1; }
+  .stat .v { font-size: 16px; font-weight: 800; }
+  .stat .l { font-size: 10px; color: var(--muted); letter-spacing: .05em; margin-top: 1px; }
+  .diag .rec { font-size: 12.5px; color: var(--text-2); margin-top: 10px; line-height: 1.5; }
+
+  /* ---------- evolução ---------- */
+  .evo { display: flex; align-items: flex-end; gap: 8px; height: 130px; margin-top: 26px; position: relative; }
+  .evo .meta-line { position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(52,211,153,.55); pointer-events: none; }
+  .evo .meta-line small { position: absolute; right: 0; top: -16px; font-size: 10px; color: var(--green); font-weight: 700; }
+  .evo-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+  .evo-bar { width: 100%; max-width: 44px; border-radius: 6px 6px 0 0; background: var(--grad); min-height: 4px; }
+  .evo-bar.off { background: var(--bg-2); border: 1px dashed var(--line-2); }
+  .evo-v { font-size: 11px; font-weight: 800; color: var(--cyan); }
+  .evo-l { font-size: 10px; color: var(--muted); }
+
+  /* ---------- timeline ---------- */
+  .tl { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; scroll-snap-type: x proximity; }
+  .tl::-webkit-scrollbar { height: 5px; }
+  .tl::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
+  .tl-item {
+    scroll-snap-align: start; min-width: 116px; text-align: left;
+    background: var(--surface); border: 1.5px solid var(--line);
+    border-radius: 11px; padding: 10px 11px; color: var(--text-2);
+  }
+  .tl-item:hover { border-color: var(--cyan); }
+  .tl-item .n { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; color: var(--muted); display:flex; justify-content: space-between; gap: 6px; }
+  .tl-item .d { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+  .tl-item .bar { display:block; height: 5px; background: var(--bg-2); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+  .tl-item .bar i { display: block; height: 100%; background: var(--grad); border-radius: 99px; }
+  .tl-item.atual { border-color: var(--cyan); background: rgba(34,211,238,.07); }
+  .tl-item.atual .n { color: var(--cyan); }
+  .tl-item.sel { box-shadow: 0 0 0 3px rgba(34,211,238,.18); }
+  .status-txt { font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+  .tl-prova {
+    min-width: 84px; border: 1.5px dashed var(--red); border-radius: 11px;
+    padding: 10px 11px; text-align: center; color: var(--red);
+    font-size: 10.5px; font-weight: 800; display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  }
+  .tl-prova small { color: var(--muted); font-weight: 500; }
+
+  .perfil-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .perfil-grid .stat { flex: 1; min-width: 110px; }
+
+  /* ---------- questionário ---------- */
+  .q-progress { display: flex; align-items: center; gap: 10px; margin: 18px 0 8px; }
+  .q-progress .bar { flex: 1; height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
+  .q-progress .bar i { display: block; height: 100%; background: var(--grad); border-radius: 99px; transition: width .25s; }
+  .q-progress .lbl { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .q-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 20px; margin-top: 10px; }
+  .q-card h2 { font-size: 17px; margin-bottom: 6px; }
+  .q-hint { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
+  .q-erro { color: var(--red); font-size: 12.5px; min-height: 18px; margin-top: 10px; }
+  .q-nav { display: flex; gap: 10px; margin-top: 18px; }
+  .q-nav .esp { flex: 1; }
+
+  .opt-grid { display: flex; flex-wrap: wrap; gap: 9px; }
+  .opt {
+    background: var(--surface-2); color: var(--text-2);
+    border: 1.5px solid var(--line-2); border-radius: 10px;
+    padding: 11px 16px; font-size: 13.5px; font-weight: 600; min-height: 44px;
+  }
+  .opt[aria-pressed="true"] { background: rgba(34,211,238,.14); border-color: var(--cyan); color: var(--cyan); }
+  .campo { margin-bottom: 14px; }
+  .campo label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .campo select, .campo input {
+    width: 100%; max-width: 240px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--line-2); border-radius: 9px;
+    padding: 11px 12px; font-size: 14px; min-height: 44px;
+  }
+  .busca-tema { width: 100%; margin-bottom: 12px; }
+  .busca-tema input {
+    width: 100%; background: var(--bg-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px;
+    font-size: 13px; min-height: 44px;
+  }
+  .tema-linha {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 11px 0; border-bottom: 1px solid var(--line);
+  }
+  .tema-linha:last-child { border-bottom: none; }
+  .tema-linha .nome { flex: 1; min-width: 150px; font-size: 13.5px; font-weight: 600; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg button {
+    background: var(--bg-2); color: var(--muted);
+    border: 1.5px solid var(--line); font-size: 11px; font-weight: 700;
+    padding: 8px 10px; min-height: 44px; border-radius: 8px;
+  }
+  .seg button[aria-pressed="true"].sd { background: rgba(248,113,113,.16); border-color: var(--red); color: var(--red); }
+  .seg button[aria-pressed="true"].sr { background: rgba(251,191,36,.14); border-color: var(--amber); color: var(--amber); }
+  .seg button[aria-pressed="true"].sf { background: rgba(52,211,153,.15); border-color: var(--green); color: var(--green); }
+  .seg button[aria-pressed="true"].sn { background: var(--surface-2); border-color: var(--line-2); color: var(--text-2); }
+  .resumo-grid { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .resumo-grid .stat { flex: 1; min-width: 104px; }
+
+  /* ---------- toast ---------- */
+  #toasts { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: 8px; width: min(92vw, 420px); }
+  .toast {
+    background: var(--surface-2); border: 1px solid var(--line-2);
+    border-left: 4px solid var(--cyan);
+    border-radius: 11px; padding: 12px 15px; font-size: 13px;
+    box-shadow: var(--shadow); animation: toastIn .22s ease-out;
+  }
+  .toast.ok { border-left-color: var(--green); }
+  .toast.marco { border-left-color: var(--coral); }
+  .toast b { display: block; margin-bottom: 2px; }
+  .toast small { color: var(--muted); }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- modal ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(6,12,28,.72); z-index: 80;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal {
+    position: relative;
+    background: var(--surface); border: 1px solid var(--line-2);
+    border-radius: 16px; padding: 20px; width: min(94vw, 470px);
+    max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow);
+  }
+  .modal h3 { font-size: 16px; margin-bottom: 4px; padding-right: 36px; }
+  .modal .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
+  .modal .fechar-x {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; border-radius: 9px;
+    background: transparent; border: 1px solid transparent; color: var(--muted);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .modal .fechar-x:hover { color: var(--text); border-color: var(--line-2); }
+  .stepper { display: flex; align-items: center; gap: 10px; }
+  .stepper button {
+    width: 44px; height: 44px; border-radius: 9px;
+    background: var(--bg-2); border: 1px solid var(--line-2); color: var(--text);
+    font-size: 18px; font-weight: 800;
+  }
+  .stepper .val { min-width: 52px; text-align: center; font-size: 18px; font-weight: 800; }
+
+  /* ---------- bottom nav ---------- */
+  .bnav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: rgba(14,26,54,.96); backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bnav button {
+    background: none; border: none; color: var(--muted);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 700; min-width: 64px; min-height: 48px; border-radius: 9px;
+  }
+  .bnav button:hover, .bnav button.on { color: var(--cyan); }
+  @media (min-width: 768px) { .bnav { display: none; } body { padding-bottom: 60px; } }
+
+  footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 34px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo" role="region" aria-label="Controles de demonstração">
+  <b>MOCKUP</b>
+  <label for="demo-data">Simular data:</label>
+  <select id="demo-data" onchange="app.render()">
+    <option value="2026-08-10">Antes do início (10/08)</option>
+    <option value="2026-09-30" selected>Semana 1 · quarta (30/09)</option>
+    <option value="2026-10-14">Semana 3 · quarta (14/10)</option>
+    <option value="2026-10-17">Semana 3 · sábado — dia do mini (17/10)</option>
+    <option value="2026-11-10">Semana 7 · entre as provas (10/11)</option>
+    <option value="2026-11-20">Depois da prova (20/11)</option>
+  </select>
+  <button type="button" onclick="app.demoExemplo()">Carregar dados de exemplo</button>
+  <button type="button" onclick="app.resetar()">Zerar tudo</button>
+</div>
+
+<header class="top" id="app-top">
+  <div class="top-in">
+    <div class="brand">
+      <!-- Slot da marca: na integração, trocar por <img src="logo-radix.svg" alt="Radix" style="height:30px"> -->
+      <span class="logo" aria-hidden="true">&radic;</span>
+      <span id="brand-txt"></span>
+    </div>
+    <div class="count-pill" id="pill-contagem"></div>
+  </div>
+</header>
+
+<main class="wrap" id="root"></main>
+
+<nav class="bnav" id="bnav" aria-label="Navegação rápida">
+  <button type="button" data-alvo="sec-next" onclick="app.navTo(this)"><span class="ic" data-ic="target"></span>Hoje</button>
+  <button type="button" data-alvo="sec-agenda" onclick="app.navTo(this)"><span class="ic" data-ic="cal"></span>Plano</button>
+  <button type="button" data-alvo="sec-evo" onclick="app.navTo(this)"><span class="ic" data-ic="chart"></span>Evolução</button>
+  <button type="button" data-alvo="sec-perfil" onclick="app.navTo(this)"><span class="ic" data-ic="user"></span>Perfil</button>
+</nav>
+
+<div id="toasts" aria-live="polite"></div>
+<div id="modal-root"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   CONFIG — fonte única de edição, datas e parâmetros.
+   Nenhum ano ou data deve existir fora deste objeto.
+   ============================================================ */
+const CONFIG = {
+  PRODUTO: 'Revisão Final',
+  EDICAO: 'ENEM 2026',
+  PROVA1: '2026-11-08',                 // 1º dia de prova
+  PROVA2: '2026-11-15',                 // dia de Matemática
+  INICIO: '2026-09-28',                 // segunda da Semana 1
+  ALUNO: 'Ana Clara',                   // no app real: state.usuario.nome
+  MIN_QUESTAO: 4,                       // minutos por questão (resolver + corrigir)
+  MIN_VIDEO: 25,
+  MIN_MINI: 50,
+  MINI_QTDE: 15, MINI_POR_TEMA: 3,
+  AMOSTRA_MIN_Q: 10,                    // reclassificação: mínimo de questões...
+  AMOSTRA_MIN_FONTES: 2                 // ...ou mínimo de avaliações distintas
+};
+
+/* ============================================================
+   ÍCONES SVG (stroke, padrão do app)
+   ============================================================ */
+const IC = {
+  play:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+  book:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  clock: '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  check: '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  target:'<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  chart: '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
+  cal:   '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  user:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  chev:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  edit:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',
+  flag:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+  x:     '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  refresh:'<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>'
+};
+function ic(nome, tam) { return (IC[nome] || '').replace(/ICS/g, tam || 16); }
+
+/* ============================================================
+   TEMAS + ROTEIRO (grade 2025 mantida)
+   ============================================================ */
+const AREAS = [
+  { id:'num',  nome:'Números e Aritmética' },
+  { id:'alg',  nome:'Álgebra e Funções' },
+  { id:'geo',  nome:'Geometria' },
+  { id:'dados',nome:'Contagem, Probabilidade e Estatística' }
+];
+const TEMAS = [
+  { id:'sist-numeracao',   nome:'Sistema Métrico',              area:'num',  video:true  },
+  { id:'operacoes',        nome:'Problemas com as 4 Operações', area:'num',  video:true  },
+  { id:'multiplos',        nome:'Múltiplos e Divisores',        area:'num',  video:true  },
+  { id:'logica',           nome:'Noções de Lógica',             area:'num',  video:false },
+  { id:'conjuntos',        nome:'Conjuntos Numéricos',          area:'num',  video:true  },
+  { id:'potencias',        nome:'Potenciação e Radiciação',     area:'num',  video:true  },
+  { id:'razao-proporcao',  nome:'Razão e Proporção',            area:'num',  video:true  },
+  { id:'porcentagem',      nome:'Porcentagem',                  area:'num',  video:true  },
+  { id:'financeira',       nome:'Matemática Financeira',        area:'num',  video:true  },
+  { id:'fun-1grau',        nome:'Função do 1º grau',            area:'alg',  video:true  },
+  { id:'fun-2grau',        nome:'Função Quadrática',            area:'alg',  video:true  },
+  { id:'exponencial',      nome:'Função Exponencial',           area:'alg',  video:true  },
+  { id:'logaritmica',      nome:'Logaritmos',                   area:'alg',  video:true  },
+  { id:'fun-trig',         nome:'Funções Trigonométricas',      area:'alg',  video:true  },
+  { id:'pa',               nome:'Progressão Aritmética',        area:'alg',  video:true  },
+  { id:'pg',               nome:'Progressão Geométrica',        area:'alg',  video:true  },
+  { id:'sistemas-lineares',nome:'Sistemas Lineares',            area:'alg',  video:true  },
+  { id:'matrizes',         nome:'Matrizes',                     area:'alg',  video:true  },
+  { id:'geo-plana',        nome:'Geometria Plana',              area:'geo',  video:true  },
+  { id:'geo-espacial',     nome:'Geometria Espacial',           area:'geo',  video:true  },
+  { id:'geo-analitica',    nome:'Geometria Analítica',          area:'geo',  video:true  },
+  { id:'trigonometria',    nome:'Trigonometria no Triângulo',   area:'geo',  video:true  },
+  { id:'combinatoria',     nome:'Análise Combinatória',         area:'dados',video:true  },
+  { id:'probabilidade',    nome:'Probabilidade',                area:'dados',video:true  },
+  { id:'estatistica',      nome:'Estatística',                  area:'dados',video:true  },
+  { id:'interp-graficos',  nome:'Gráficos e Tabelas',           area:'dados',video:false }
+];
+const T = id => TEMAS.find(t => t.id === id);
+
+const SEMANAS = [
+  { n:1, ini:'2026-09-28', temas:['financeira','sistemas-lineares','matrizes','potencias'],          geo:{id:'geo-plana',s:'I'} },
+  { n:2, ini:'2026-10-05', temas:['pg','trigonometria','logica','conjuntos'],                        geo:{id:'geo-espacial',s:'I'} },
+  { n:3, ini:'2026-10-12', temas:['pa','multiplos','fun-trig','exponencial'],                        geo:{id:'geo-analitica',s:'I'} },
+  { n:4, ini:'2026-10-19', temas:['fun-2grau','combinatoria','fun-1grau','logaritmica'],             geo:{id:'geo-plana',s:'II'} },
+  { n:5, ini:'2026-10-26', temas:['probabilidade','porcentagem','interp-graficos','sist-numeracao'], geo:{id:'geo-analitica',s:'II'} },
+  { n:6, ini:'2026-11-02', temas:['estatistica','combinatoria','razao-proporcao','porcentagem'],     geo:{id:'geo-espacial',s:'II'} },
+  { n:7, ini:'2026-11-09', temas:['operacoes','probabilidade','razao-proporcao','estatistica'],      geo:{id:'geo-espacial',s:'III'}, dias:6 }
+];
+
+const dt = s => new Date(s + 'T12:00:00');
+function addDias(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function fmtCurto(d) { return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }); }
+function fmtSemDia(d) { return d.toLocaleDateString('pt-BR', { weekday:'short' }).replace('.','').toUpperCase(); }
+function rotSemana(s) { return fmtCurto(dt(s.ini)) + ' a ' + fmtCurto(addDias(dt(s.ini), (s.dias || 7) - 1)); }
+function esc(x) {
+  return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============================================================
+   ESTADO — schema espelha as futuras tabelas do Supabase:
+     perfil → revisao_perfil    (1 linha por aluno)
+     ov     → revisao_progresso (aluno, semana, atividade_key, dia, feito_em, acertos, total)
+     minis  → revisao_mini      (aluno, semana, acertos_por_tema JSONB, total, feito_em)
+     planos → revisao_plano     (aluno, semana, criado_em, budget, itens JSONB)
+              — snapshot congelado da dose no momento da 1ª ação da semana
+   ============================================================ */
+const KEY = 'mockup_revisao_final_v3';
+const app = {
+  perfil: null, ov: {}, minis: {}, planos: {},
+  semanaSel: null,
+  qStep: 0, _qTemp: null, _editando: false,
+
+  carregar() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        this.perfil = d.perfil||null; this.ov = d.ov||{}; this.minis = d.minis||{}; this.planos = d.planos||{};
+      }
+    } catch(e) {}
+  },
+  salvar() {
+    try { localStorage.setItem(KEY, JSON.stringify({ v:3, perfil:this.perfil, ov:this.ov, minis:this.minis, planos:this.planos })); } catch(e) {}
+  },
+  resetar() {
+    if (!confirm('Zerar todos os dados do mockup?')) return;
+    this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
+    this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false;
+    localStorage.removeItem(KEY);
+    this.render();
+  },
+  demoExemplo() {
+    const dif = {};
+    ['financeira','exponencial','probabilidade'].forEach(id => dif[id] = -1);
+    ['pa','geo-plana','porcentagem','fun-2grau'].forEach(id => dif[id] = 2);
+    ['operacoes','razao-proporcao','multiplos'].forEach(id => dif[id] = 1);
+    ['matrizes','logica'].forEach(id => dif[id] = 9);
+    this.perfil = { acertos: 2, dif, horasDia: 1.5, diasSemana: 5, meta: 28 };
+    this.ov = {}; this.minis = {}; this.planos = {};
+    const self = this;
+    [1,2].forEach(n => {
+      self.congelarSemana(n);                    // congela ANTES de marcar (regra real)
+      const dose = self.planos[n];
+      dose.itens.forEach((it, i) => {
+        const fraco = it.temaId === 'financeira' || it.temaId === 'sistemas-lineares';
+        self.ov[it.key] = { dia: it.diaDefault, done: '2026-10-0' + (1 + (i % 7)) + 'T20:00:00',
+          hits: it.tipo==='q' ? Math.max(0, Math.round(it.questoes * (fraco ? 0.35 : 0.85))) : null,
+          total: it.tipo==='q' ? it.questoes : null };
+      });
+    });
+    this.minis[1] = { porTema: { financeira:1, 'sistemas-lineares':1, matrizes:2, potencias:3, 'geo-plana':2 }, total:9,  em:'2026-10-03T18:00:00' };
+    this.minis[2] = { porTema: { pg:2, trigonometria:2, logica:2, conjuntos:3, 'geo-espacial':2 },              total:11, em:'2026-10-10T18:00:00' };
+    this.semanaSel = null; this._editando = false; this._qTemp = null;
+    this.salvar();
+    this.render();
+    this.toast('ok', 'Dados de exemplo carregados', 'Semanas 1 e 2 com histórico: Financeira fraca (reclassificada para cima), Potenciação forte (reclassificada para baixo).');
+  },
+
+  hoje() { return dt(document.getElementById('demo-data').value); },
+  semanaAtualN() {
+    const h = this.hoje();
+    for (const s of SEMANAS) {
+      if (h >= dt(s.ini) && h <= addDias(dt(s.ini), (s.dias||7) - 1)) return s.n;
+    }
+    return null;
+  },
+  posProva() { return this.hoje() > dt(CONFIG.PROVA2); },
+
+  /* ============================================================
+     MOTOR — amostra, reclassificação bidirecional e dosagem rígida
+     ============================================================ */
+  amostraTema(temaId) {
+    let hits = 0, total = 0, fontes = 0;
+    for (const k in this.ov) {
+      const o = this.ov[k];
+      if (k.split(':')[1] === temaId && o.done && o.total) { hits += o.hits||0; total += o.total; fontes++; }
+    }
+    for (const n in this.minis) {
+      const m = this.minis[n];
+      if (m.porTema && m.porTema[temaId] != null) { hits += m.porTema[temaId]; total += CONFIG.MINI_POR_TEMA; fontes++; }
+    }
+    return { hits, total, fontes };
+  },
+  // Reclassificação BIDIRECIONAL: com amostra confiável, o desempenho manda —
+  // inclusive rebaixando um "tenho dificuldade" declarado quando o aluno prova domínio.
+  efDif(temaId) {
+    const declRaw = (this.perfil && this.perfil.dif[temaId]) || 0;   // -1 | 0 | 1 | 2 | 9
+    const decl = declRaw === -1 ? -1 : declRaw === 1 ? 1 : 0;
+    const a = this.amostraTema(temaId);
+    const amostraOk = a.total >= CONFIG.AMOSTRA_MIN_Q || a.fontes >= CONFIG.AMOSTRA_MIN_FONTES;
+    if (amostraOk && a.total > 0) {
+      const pct = a.hits / a.total;
+      const v = pct < 0.5 ? -1 : pct < 0.8 ? 0 : 1;
+      return { v, auto: v !== decl, pct, amostra: a.total };
+    }
+    return { v: decl, auto: false };
+  },
+
+  // Dosagem com TETO RÍGIDO: totalMin <= budget, sempre.
+  // Prioridade de alocação: dificuldade > geometria > dose padrão > domínio.
+  dosarSemana(sem) {
+    const p = this.perfil;
+    const nDias = sem.dias || 7;
+    const diasEstudo = Math.max(1, Math.min(p.diasSemana, nDias - 1));
+    const budget = Math.round(p.horasDia * 60 * p.diasSemana);
+    const avisos = [], fora = [];
+
+    const base = sem.temas.map(id => {
+      const ef = this.efDif(id);
+      return { temaId:id, nome:T(id).nome, ef, geo:false };
+    });
+    const efG = this.efDif(sem.geo.id);
+    base.push({ temaId:sem.geo.id, nome:T(sem.geo.id).nome + ' ' + sem.geo.s, ef:efG, geo:true });
+    base.forEach(b => {
+      b.peso = b.ef.v===-1 ? 3 : b.ef.v===1 ? 1 : 2;
+      if (b.geo) b.peso = Math.max(b.peso, 2);
+      b.rank = b.ef.v===-1 ? 4 : b.geo ? 3 : b.peso===2 ? 2 : 1;   // ordem de alocação
+    });
+    base.sort((a,b) => b.rank - a.rank);
+
+    // mini é a âncora — só sai se nem ele couber
+    let temMini = true;
+    let restante = budget - CONFIG.MIN_MINI;
+    if (restante < 0) {
+      temMini = false; restante = budget;
+      avisos.push('Seu tempo semanal não cobre nem o mini-simulado (' + CONFIG.MIN_MINI + ' min). Amplie a disponibilidade no perfil.');
+    }
+
+    // vídeos: só dificuldade efetiva, em ordem de prioridade, e só se sobrar
+    // espaço para o vídeo + ao menos 2 questões de prática do próprio tema
+    base.forEach(b => { b.video = false; b.questoes = 0; });
+    for (const b of base) {
+      if (b.ef.v === -1 && T(b.temaId).video && restante >= CONFIG.MIN_VIDEO + 2*CONFIG.MIN_QUESTAO) {
+        b.video = true; restante -= CONFIG.MIN_VIDEO;
+      }
+    }
+
+    // questões: floor proporcional (sem mínimo forçado) + sobra distribuída
+    // 1 questão por vez em ordem de prioridade — nunca ultrapassa o restante
+    const somaP = base.reduce((s,b)=>s+b.peso, 0);
+    base.forEach(b => { b.questoes = Math.floor((restante * b.peso / somaP) / CONFIG.MIN_QUESTAO); });
+    let usado = base.reduce((s,b)=>s+b.questoes, 0) * CONFIG.MIN_QUESTAO;
+    let i = 0, guard = 1000;
+    while (restante - usado >= CONFIG.MIN_QUESTAO && guard-- > 0) {
+      base[i % base.length].questoes++;
+      usado += CONFIG.MIN_QUESTAO;
+      i++;
+    }
+
+    base.forEach(b => {
+      if (b.questoes === 0 && !b.video) {
+        fora.push({ nome: b.nome, motivo: temMini
+          ? 'Este tema será contemplado apenas no mini-simulado porque seu orçamento semanal foi totalmente distribuído entre as prioridades mais altas.'
+          : 'Sem tempo disponível para este tema nesta semana.' });
+      }
+    });
+
+    const itens = [];
+    base.forEach(b => {
+      if (b.video) itens.push({ key:'s'+sem.n+':'+b.temaId+':v', temaId:b.temaId, tipo:'v',
+        titulo:'Assistir vídeo-aula — ' + b.nome, min:CONFIG.MIN_VIDEO, questoes:0,
+        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v });
+      if (b.questoes > 0) itens.push({ key:'s'+sem.n+':'+b.temaId+':q', temaId:b.temaId, tipo:'q', questoes:b.questoes,
+        titulo:'Resolver ' + b.questoes + ' questões — ' + b.nome, min:b.questoes*CONFIG.MIN_QUESTAO,
+        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v });
+    });
+    itens.forEach((it, idx) => { it.diaDefault = idx % diasEstudo; });
+
+    const totalMin = itens.reduce((s,it)=>s+it.min, 0) + (temMini ? CONFIG.MIN_MINI : 0);
+    return { budget, totalMin, itens, avisos, fora, diasEstudo, temMini, congelado:false };
+  },
+
+  /* ---------- congelamento ---------- */
+  congelarSemana(n) {
+    if (this.planos[n]) return;
+    const sem = SEMANAS.find(s => s.n === n);
+    const d = this.dosarSemana(sem);
+    d.congelado = true;
+    d.criadoEm = new Date().toISOString();
+    this.planos[n] = d;
+  },
+  dosePara(sem) { return this.planos[sem.n] || this.dosarSemana(sem); },
+  recalcularSemana(n) {
+    if (!this.planos[n]) return;
+    if (!confirm('Recalcular a Semana ' + n + ' com o seu perfil e desempenho atuais?\n\n' +
+      'As doses das atividades pendentes serão refeitas. Atividades já concluídas continuam registradas, ' +
+      'mas os números de questões pendentes podem mudar.')) return;
+    delete this.planos[n];
+    this.congelarSemana(n);
+    this.salvar();
+    this.render();
+    this.toast('ok', 'Semana ' + n + ' recalculada', 'Doses atualizadas com o seu perfil e desempenho de agora.');
+  },
+
+  diaDe(it) {
+    const o = this.ov[it.key];
+    return (o && o.dia != null) ? o.dia : it.diaDefault;
+  },
+  feito(key) { const o = this.ov[key]; return !!(o && o.done); },
+
+  /* ============================================================
+     AÇÕES
+     ============================================================ */
+  navTo(btn) {
+    const el = document.getElementById(btn.dataset.alvo);
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    document.querySelectorAll('.bnav button').forEach(b => b.classList.toggle('on', b === btn));
+  },
+  toast(tipo, titulo, corpo) {
+    const box = document.getElementById('toasts');
+    const el = document.createElement('div');
+    el.className = 'toast ' + (tipo||'');
+    el.innerHTML = '<b>' + esc(titulo) + '</b>' + (corpo ? '<small>' + esc(corpo) + '</small>' : '');
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  },
+  demoAbrir(temaId) {
+    this.toast('', 'Demonstração', 'No app real: abre o banco de questões filtrado em "' + (T(temaId)||{nome:'?'}).nome + '".');
+  },
+
+  concluir(key) {
+    const n = parseInt(key.slice(1));
+    if (this.feito(key)) {   // desfazer
+      const o = this.ov[key]; o.done = null; o.hits = null; o.total = null;
+      this.salvar(); this.render();
+      return;
+    }
+    this.congelarSemana(n);   // 1ª ação da semana congela o plano
+    const sem = SEMANAS.find(s => s.n === n);
+    const it = this.dosePara(sem).itens.find(x => x.key === key);
+    if (it && it.tipo === 'q') { this.modalAcertos(it); return; }
+    this._marcar(key, null, null);
+  },
+  _marcar(key, hits, total) {
+    const n = parseInt(key.slice(1));
+    this.congelarSemana(n);
+    const o = this.ov[key] || (this.ov[key] = {});
+    o.done = new Date().toISOString();
+    if (hits != null) { o.hits = hits; o.total = total; }
+    this.salvar();
+    this.fecharModal();
+    this.render();
+    const prox = this.proximaAtividade(n);
+    if (!prox && !this.minis[n]) this.toast('ok', 'Atividade concluída', 'Falta só o mini-simulado para fechar a semana.');
+    else if (prox) this.toast('ok', 'Atividade concluída', 'Próxima sugestão: ' + prox.titulo);
+    else this.celebrarSemana(n);
+  },
+
+  /* ---------- modal genérico acessível ---------- */
+  _modalPrev: null, _modalKeyFn: null,
+  abrirModal(html) {
+    this._modalPrev = document.activeElement;
+    const root = document.getElementById('modal-root');
+    root.innerHTML = html;
+    document.body.classList.add('modal-aberto');
+    const box = root.querySelector('.modal');
+    const focaveis = () => Array.prototype.filter.call(
+      box.querySelectorAll('button, [href], input, select, textarea'),
+      el => !el.disabled && el.offsetParent !== null);
+    const fs = focaveis();
+    if (fs.length) fs[0].focus();
+    const self = this;
+    this._modalKeyFn = function(e) {
+      if (e.key === 'Escape') { self.fecharModal(); return; }
+      if (e.key === 'Tab') {
+        const f = focaveis();
+        if (!f.length) return;
+        const first = f[0], last = f[f.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', this._modalKeyFn);
+  },
+  fecharModal() {
+    if (this._modalKeyFn) { document.removeEventListener('keydown', this._modalKeyFn); this._modalKeyFn = null; }
+    document.getElementById('modal-root').innerHTML = '';
+    document.body.classList.remove('modal-aberto');
+    if (this._modalPrev && this._modalPrev.focus) { try { this._modalPrev.focus(); } catch(e) {} }
+    this._modalPrev = null;
+  },
+  _xFechar() {
+    return '<button type="button" class="fechar-x" aria-label="Fechar" onclick="app.fecharModal()">' + ic('x',16) + '</button>';
+  },
+
+  /* ---------- registro de acertos (sem indução) ---------- */
+  _hitsTmp: null, _hitsMax: 0, _hitsKey: '',
+  modalAcertos(it) {
+    this._hitsTmp = null; this._hitsMax = it.questoes; this._hitsKey = it.key;
+    this.abrirModal(
+      '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-label="Registrar acertos">' + this._xFechar() +
+      '<h3>Quantas você acertou?</h3>' +
+      '<p class="sub">' + esc(it.titulo) + ' · o resultado alimenta o ajuste automático das próximas semanas. Se ainda não corrigiu, conclua sem registrar.</p>' +
+      '<div class="stepper">' +
+        '<button type="button" aria-label="Diminuir" onclick="app._stepHits(-1)">&minus;</button>' +
+        '<span class="val" id="hits-val" aria-live="polite">&mdash;</span>' +
+        '<button type="button" aria-label="Aumentar" onclick="app._stepHits(1)">+</button>' +
+        '<span class="txt-mini" id="hits-de">de ' + it.questoes + ' questões</span>' +
+      '</div>' +
+      '<div class="q-nav">' +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="app._marcar(app._hitsKey, null, null)">Concluir sem registrar</button>' +
+        '<span class="esp"></span>' +
+        '<button type="button" class="btn btn-pri btn-sm" id="hits-salvar" disabled onclick="app._marcar(app._hitsKey, app._hitsTmp, app._hitsMax)">Salvar</button>' +
+      '</div></div></div>'
+    );
+  },
+  _stepHits(d) {
+    if (this._hitsTmp == null) this._hitsTmp = (d > 0 ? 1 : 0);
+    else this._hitsTmp = Math.min(this._hitsMax, Math.max(0, this._hitsTmp + d));
+    document.getElementById('hits-val').textContent = this._hitsTmp;
+    document.getElementById('hits-de').textContent = this._hitsTmp + ' de ' + this._hitsMax + ' questões';
+    document.getElementById('hits-salvar').disabled = false;
+  },
+
+  moverDia(key, dia) {
+    const n = parseInt(key.slice(1));
+    this.congelarSemana(n);
+    const o = this.ov[key] || (this.ov[key] = {});
+    o.dia = parseInt(dia);
+    this.salvar(); this.render();
+  },
+
+  /* ---------- mini-simulado: registrar, ver, editar, excluir ---------- */
+  _miniTmp: {},
+  modalMini(n) {
+    const sem = SEMANAS.find(s => s.n === n);
+    const lista = sem.temas.concat([sem.geo.id]);
+    const existente = this.minis[n];
+    this._miniTmp = {};
+    lista.forEach(id => { this._miniTmp[id] = existente ? (existente.porTema[id] != null ? existente.porTema[id] : null) : null; });
+    const self = this;
+    this.abrirModal(
+      '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-label="' + (existente ? 'Editar' : 'Registrar') + ' mini-simulado">' + this._xFechar() +
+      '<h3>' + (existente ? 'Resultado do mini · Semana ' + n : 'Mini-simulado da Semana ' + n) + '</h3>' +
+      '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema. ' + (existente ? 'Ajuste o que precisar — o diagnóstico e a evolução recalculam na hora.' : 'Registre seus acertos por tema (0 a ' + CONFIG.MINI_POR_TEMA + ').') + '</p>' +
+      lista.map(id =>
+        '<div class="tema-linha"><span class="nome">' + esc(T(id).nome) + '</span>' +
+        '<div class="seg" role="group" aria-label="Acertos em ' + esc(T(id).nome) + '">' +
+        [0,1,2,3].map(v => {
+          const on = self._miniTmp[id] === v;
+          return '<button type="button" class="' + (on?'sf':'sn') + '" aria-pressed="' + on + '" data-mini="' + id + '" data-v="' + v + '" onclick="app._miniSet(this)">' + v + '</button>';
+        }).join('') + '</div></div>'
+      ).join('') +
+      '<p class="q-erro" id="mini-erro" aria-live="polite"></p>' +
+      '<div class="q-nav">' +
+        (existente ? '<button type="button" class="btn btn-danger btn-sm" onclick="app.excluirMini(' + n + ')">Excluir lançamento</button>' : '') +
+        '<span class="esp"></span>' +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="app.fecharModal()">Cancelar</button>' +
+        '<button type="button" class="btn btn-pri btn-sm" onclick="app.salvarMini(' + n + ')">' + (existente ? 'Salvar alterações' : 'Salvar resultado') + '</button>' +
+      '</div></div></div>'
+    );
+  },
+  _miniSet(btn) {
+    const id = btn.getAttribute('data-mini'), v = parseInt(btn.getAttribute('data-v'));
+    this._miniTmp[id] = v;
+    document.querySelectorAll('[data-mini="' + id + '"]').forEach(b => {
+      const on = parseInt(b.getAttribute('data-v')) === v;
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.className = on ? 'sf' : 'sn';
+    });
+  },
+  salvarMini(n) {
+    const faltam = Object.keys(this._miniTmp).filter(id => this._miniTmp[id] == null);
+    if (faltam.length) {
+      document.getElementById('mini-erro').textContent = 'Preencha os acertos de: ' + faltam.map(id => T(id).nome).join(', ') + '.';
+      return;
+    }
+    this.congelarSemana(n);
+    let total = 0; Object.keys(this._miniTmp).forEach(id => { total += this._miniTmp[id]; });
+    this.minis[n] = { porTema: Object.assign({}, this._miniTmp), total, em: new Date().toISOString() };
+    this.salvar();
+    this.fecharModal();
+    this.render();
+    const dose = this.dosePara(SEMANAS[n-1]);
+    const tudoFeito = dose.itens.every(it => this.feito(it.key));
+    if (tudoFeito) this.celebrarSemana(n);
+    else this.toast('ok', 'Mini-simulado registrado', total + '/' + CONFIG.MINI_QTDE + ' acertos. Diagnóstico atualizado na seção Evolução.');
+  },
+  excluirMini(n) {
+    if (!confirm('Excluir o lançamento do mini-simulado da Semana ' + n + '?\n\nO diagnóstico e o gráfico de evolução serão recalculados.')) return;
+    delete this.minis[n];
+    this.salvar();
+    this.fecharModal();
+    this.render();
+    this.toast('', 'Lançamento excluído', 'Você pode registrar o mini da Semana ' + n + ' novamente quando quiser.');
+  },
+  celebrarSemana(n) {
+    this.toast('marco', 'Semana ' + n + ' concluída', (7-n) > 0 ? 'Faltam ' + (7-n) + ' semanas. Constância vence talento.' : 'Revisão completa. Agora é prova.');
+  },
+
+  proximaAtividade(n) {
+    const sem = SEMANAS.find(s => s.n === n);
+    if (!sem || !this.perfil) return null;
+    const dose = this.dosePara(sem);
+    const idxHoje = Math.floor((this.hoje() - dt(sem.ini)) / 86400000);
+    const pend = dose.itens.filter(it => !this.feito(it.key));
+    if (!pend.length) return null;
+    const self = this;
+    const doDia = pend.filter(it => self.diaDe(it) <= idxHoje).sort((a,b)=>self.diaDe(a)-self.diaDe(b) || b.peso-a.peso);
+    if (doDia.length) return doDia[0];
+    return pend.slice().sort((a,b)=>self.diaDe(a)-self.diaDe(b) || b.peso-a.peso)[0];
+  },
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  render() {
+    document.getElementById('brand-txt').innerHTML = esc(CONFIG.PRODUTO) + ' <small>' + esc(CONFIG.EDICAO) + '</small>';
+    this.renderContagem();
+    const root = document.getElementById('root');
+    if (!this.perfil || this._editando) root.innerHTML = this.htmlQuest();
+    else if (this.posProva()) root.innerHTML = this.htmlPosProva();
+    else root.innerHTML = this.htmlPlano();
+    window.scrollTo(0, 0);
+  },
+  renderContagem() {
+    const el = document.getElementById('pill-contagem');
+    const dias = Math.ceil((dt(CONFIG.PROVA2) - this.hoje()) / 86400000);
+    if (dias >= 0) {
+      el.innerHTML = ic('flag', 13) + ' Faltam <b>' + dias + '</b> dias para Matemática';
+      el.setAttribute('aria-label', 'Faltam ' + dias + ' dias para a prova de Matemática, em ' + fmtCurto(dt(CONFIG.PROVA2)));
+    } else {
+      el.innerHTML = ic('check', 13) + ' Prova concluída';
+      el.setAttribute('aria-label', 'Prova concluída');
+    }
+  },
+
+  /* ---------------- QUESTIONÁRIO ---------------- */
+  qPassos() { return ['Seu nível', 'Seu tempo', 'Números', 'Álgebra', 'Geometria', 'Dados', 'Sua meta', 'Resumo']; },
+  htmlQuest() {
+    if (!this._qTemp) {
+      this._qTemp = this.perfil ? JSON.parse(JSON.stringify(this.perfil))
+                                : { acertos:null, dif:{}, horasDia:null, diasSemana:null, meta:null };
+    }
+    const passos = this.qPassos();
+    const st = this.qStep;
+    const pct = Math.round(st / (passos.length-1) * 100);
+    let corpo = '';
+    if (st === 0) corpo = this.qNivel();
+    else if (st === 1) corpo = this.qTempo();
+    else if (st >= 2 && st <= 5) corpo = this.qArea(AREAS[st-2]);
+    else if (st === 6) corpo = this.qMeta();
+    else corpo = this.qResumo();
+    return (
+      '<div style="margin-top:20px;">' +
+      '<div class="h-page">' + esc(CONFIG.PRODUTO) + ' <span style="color:var(--cyan);">' + esc(CONFIG.EDICAO) + '</span></div>' +
+      '<p class="txt-sub" style="margin-top:4px;">Sete semanas, um plano só seu. Suas respostas definem a dose de cada assunto — e você pode reajustar quando quiser.</p>' +
+      '<div class="q-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso do questionário">' +
+        '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+        '<span class="lbl">Etapa ' + (st+1) + ' de ' + passos.length + ' · ' + esc(passos[st]) + '</span>' +
+      '</div>' +
+      '<div class="q-card">' + corpo +
+        '<p class="q-erro" id="q-erro" aria-live="polite"></p>' +
+        '<div class="q-nav">' +
+          (st > 0
+            ? '<button type="button" class="btn btn-ghost" onclick="app.qVoltar()">Voltar</button>'
+            : (this.perfil ? '<button type="button" class="btn btn-ghost" onclick="app._editando=false;app._qTemp=null;app.qStep=0;app.render()">Cancelar</button>' : '')) +
+          '<span class="esp"></span>' +
+          (st < passos.length-1
+            ? '<button type="button" class="btn btn-pri" onclick="app.qAvancar()">Continuar</button>'
+            : '<button type="button" class="btn btn-pri" onclick="app.qConcluir()">' + (this.perfil ? 'Recalcular meu plano' : 'Criar meu roteiro') + '</button>') +
+        '</div>' +
+      '</div></div>'
+    );
+  },
+  qNivel() {
+    const faixas = ['Menos de 10','10 a 15','15 a 20','20 a 25','25 a 30','Mais de 30'];
+    const sel = this._qTemp.acertos;
+    return '<h2>Nos últimos simulados, quantas das 45 questões de Matemática você acerta?</h2>' +
+      '<p class="q-hint">Média dos 2 ou 3 últimos. Se nunca contou, estime com sinceridade — isso calibra a sua meta.</p>' +
+      '<div class="opt-grid" role="group" aria-label="Faixa de acertos">' +
+      faixas.map((f,i) =>
+        '<button type="button" class="opt" data-acertos="' + i + '" aria-pressed="' + (sel===i) + '" onclick="app.qSetAcertos(this)">' + f + '</button>'
+      ).join('') + '</div>';
+  },
+  qSetAcertos(btn) {
+    this._qTemp.acertos = parseInt(btn.getAttribute('data-acertos'));
+    document.querySelectorAll('[data-acertos]').forEach(b => b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
+  },
+  qTempo() {
+    const q = this._qTemp;
+    const horas = [[0.5,'30 minutos'],[1,'1 hora'],[1.5,'1h30'],[2,'2 horas'],[3,'3 horas'],[4,'4 horas ou mais']];
+    return '<h2>Quanto tempo você consegue dedicar à Matemática?</h2>' +
+      '<p class="q-hint">Conte só o que você cumpre de verdade. O plano é montado dentro desse orçamento — melhor um plano curto e cumprido do que um longo e abandonado.</p>' +
+      '<div class="campo"><label for="q-horas">Horas por dia</label>' +
+      '<select id="q-horas"><option value="">Escolha</option>' +
+      horas.map(o => '<option value="' + o[0] + '"' + (q.horasDia==o[0]?' selected':'') + '>' + o[1] + '</option>').join('') +
+      '</select></div>' +
+      '<div class="campo"><label for="q-dias">Dias por semana</label>' +
+      '<select id="q-dias"><option value="">Escolha</option>' +
+      [2,3,4,5,6].map(d => '<option value="' + d + '"' + (q.diasSemana==d?' selected':'') + '>' + d + ' dias</option>').join('') +
+      '</select></div>';
+  },
+  qArea(area) {
+    const q = this._qTemp;
+    const doGrupo = TEMAS.filter(t => t.area === area.id);
+    const self = this;
+    return '<h2>' + esc(area.nome) + '</h2>' +
+      '<p class="q-hint"><b>Tenho dificuldade</b> = mais tempo e vídeo-aula · <b>Regular</b> = dose padrão · <b>Domino</b> = manutenção leve · <b>Não sei</b> = dose padrão agora, e o seu desempenho ajusta depois.</p>' +
+      '<div class="busca-tema"><input type="search" id="q-busca" placeholder="Buscar assunto em qualquer área…" aria-label="Buscar assunto" oninput="app.qBusca(this.value)"></div>' +
+      '<div id="q-lista-temas">' + doGrupo.map(t => self.qTemaLinha(t, q.dif[t.id]||0)).join('') + '</div>';
+  },
+  qTemaLinha(t, v) {
+    const ops = [[-1,'Tenho dificuldade','sd'],[2,'Regular','sr'],[1,'Domino','sf'],[9,'Não sei','sn']];
+    return '<div class="tema-linha"><span class="nome">' + esc(t.nome) + '</span>' +
+      '<div class="seg" role="group" aria-label="' + esc(t.nome) + '">' +
+      ops.map(o =>
+        '<button type="button" class="' + o[2] + '" data-seg="' + t.id + '" data-v="' + o[0] + '" aria-pressed="' + (v===o[0]) + '" onclick="app.qSeg(this)">' + o[1] + '</button>'
+      ).join('') + '</div></div>';
+  },
+  qSeg(btn) {
+    const id = btn.getAttribute('data-seg'), v = parseInt(btn.getAttribute('data-v'));
+    const atual = this._qTemp.dif[id]||0;
+    this._qTemp.dif[id] = (atual === v) ? 0 : v;
+    const alvo = this._qTemp.dif[id];
+    document.querySelectorAll('[data-seg="' + id + '"]').forEach(b =>
+      b.setAttribute('aria-pressed', parseInt(b.getAttribute('data-v')) === alvo ? 'true' : 'false'));
+  },
+  qBusca(txt) {
+    const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    const q = norm((txt||'').trim());
+    const box = document.getElementById('q-lista-temas');
+    const self = this;
+    if (!q) {
+      const area = AREAS[this.qStep-2];
+      box.innerHTML = TEMAS.filter(t=>t.area===area.id).map(t=>self.qTemaLinha(t, self._qTemp.dif[t.id]||0)).join('');
+      return;
+    }
+    const m = TEMAS.filter(t => norm(t.nome).indexOf(q) !== -1);
+    box.innerHTML = m.length
+      ? '<p class="txt-mini" style="margin-bottom:6px;">Mostrando resultados de todas as áreas:</p>' + m.map(t=>self.qTemaLinha(t, self._qTemp.dif[t.id]||0)).join('')
+      : '<div class="atv-vazia">Nenhum assunto encontrado.</div>';
+  },
+  qMeta() {
+    const q = this._qTemp;
+    return '<h2>Qual a sua meta de acertos?</h2>' +
+      '<p class="q-hint">Das 45 questões de Matemática. Cada mini-simulado será comparado com esse alvo.</p>' +
+      '<div class="campo"><label for="q-meta">Meta de acertos (1 a 45)</label>' +
+      '<input type="number" id="q-meta" min="1" max="45" value="' + (q.meta == null ? '' : q.meta) + '" oninput="app.qAvaliaMeta()"></div>' +
+      '<p class="q-erro" id="q-meta-aviso" aria-live="polite" style="color:var(--text-2);"></p>';
+  },
+  qAvaliaMeta() {
+    const el = document.getElementById('q-meta-aviso');
+    const meta = parseInt(document.getElementById('q-meta').value);
+    const q = this._qTemp;
+    if (!el) return;
+    if (!meta || q.acertos==null) { el.textContent=''; return; }
+    const atual = [7,12.5,17.5,22.5,27.5,33][q.acertos];
+    const g = meta - atual;
+    if (g <= 0) el.innerHTML = '<span style="color:var(--green);">Você já está nesse nível — considere mirar um pouco mais alto.</span>';
+    else if (g <= 7) el.innerHTML = '<span style="color:var(--green);">Meta realista: +' + Math.round(g) + ' acertos em 7 semanas dirigidas é factível.</span>';
+    else if (g <= 12) el.innerHTML = '<span style="color:var(--amber);">Meta ambiciosa (+' + Math.round(g) + '). Possível, mas exige cumprir o plano à risca.</span>';
+    else el.innerHTML = '<span style="color:var(--red);">+' + Math.round(g) + ' acertos em 7 semanas é improvável. Sugestão: mire ' + Math.round(atual+10) + ' e reajuste se evoluir rápido.</span>';
+  },
+  qResumo() {
+    const q = this._qTemp;
+    const cont = { d:0, r:0, f:0 };
+    TEMAS.forEach(t => { const v = q.dif[t.id]||0; if (v===-1) cont.d++; else if (v===2) cont.r++; else if (v===1) cont.f++; });
+    const semAval = TEMAS.length - cont.d - cont.r - cont.f;
+    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','mais de 30'];
+    const temPlanos = Object.keys(this.planos).length > 0;
+    return '<h2>Confira antes de criar o roteiro</h2>' +
+      '<div class="resumo-grid">' +
+      '<div class="stat"><div class="v">' + faixas[q.acertos] + '</div><div class="l">ACERTOS HOJE</div></div>' +
+      '<div class="stat"><div class="v">' + q.meta + '/45</div><div class="l">META</div></div>' +
+      '<div class="stat"><div class="v">' + (q.horasDia*q.diasSemana).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '</div>' +
+      '<div class="resumo-grid">' +
+      '<div class="stat"><div class="v" style="color:var(--red);">' + cont.d + '</div><div class="l">COM DIFICULDADE</div></div>' +
+      '<div class="stat"><div class="v" style="color:var(--amber);">' + cont.r + '</div><div class="l">REGULARES</div></div>' +
+      '<div class="stat"><div class="v" style="color:var(--green);">' + cont.f + '</div><div class="l">DOMINADOS</div></div>' +
+      '<div class="stat"><div class="v">' + semAval + '</div><div class="l">SEM AVALIAÇÃO</div></div>' +
+      '</div>' +
+      '<p class="q-hint">Assuntos com dificuldade recebem vídeo-aula e mais questões. Conforme você registra resultados, o plano reclassifica os temas sozinho.' +
+      (temPlanos ? ' <b>Semanas já iniciadas mantêm o plano congelado</b> — para aplicar o novo perfil nelas, use o botão Recalcular na agenda da semana.' : '') + '</p>';
+  },
+  qColeta() {
+    const st = this.qStep;
+    if (st === 1) {
+      const h = document.getElementById('q-horas'), d = document.getElementById('q-dias');
+      if (h) this._qTemp.horasDia = parseFloat(h.value) || null;
+      if (d) this._qTemp.diasSemana = parseInt(d.value) || null;
+    }
+    if (st === 6) {
+      const m = document.getElementById('q-meta');
+      if (m) this._qTemp.meta = parseInt(m.value) || null;
+    }
+  },
+  qValida() {
+    const st = this.qStep, q = this._qTemp;
+    if (st === 0 && q.acertos == null) return 'Escolha uma faixa de acertos para continuar.';
+    if (st === 1 && (!q.horasDia || !q.diasSemana)) return 'Informe horas por dia e dias por semana.';
+    if (st === 6 && (!q.meta || q.meta < 1 || q.meta > 45)) return 'Defina uma meta entre 1 e 45.';
+    return null;
+  },
+  qAvancar() {
+    this.qColeta();
+    const erro = this.qValida();
+    if (erro) { document.getElementById('q-erro').textContent = erro; return; }
+    this.qStep++; this.render();
+  },
+  qVoltar() { this.qColeta(); this.qStep--; this.render(); },
+  qConcluir() {
+    this.qColeta();
+    const erro = this.qValida();
+    if (erro) { document.getElementById('q-erro').textContent = erro; return; }
+    this.perfil = this._qTemp;
+    this._qTemp = null; this.qStep = 0; this._editando = false;
+    this.salvar(); this.render();
+    this.toast('ok', 'Roteiro atualizado', 'Semanas futuras recalculadas. Semanas já iniciadas mantêm o plano congelado.');
+  },
+
+  /* ---------------- PLANO ---------------- */
+  primeiroNome() { return String(CONFIG.ALUNO || '').split(' ')[0]; },
+  htmlPlano() {
+    const atualN = this.semanaAtualN();
+    const antes = this.hoje() < dt(SEMANAS[0].ini);
+    const selN = this.semanaSel || atualN || 1;
+    const sem = SEMANAS.find(s => s.n === selN);
+    const dose = this.dosePara(sem);
+    return (
+      this.htmlSaudacao(atualN, antes, sem) +
+      (antes ? this.htmlPre() : '') +
+      '<section id="sec-next">' + this.htmlNext(sem, dose, atualN, antes) + '</section>' +
+      '<section id="sec-prog">' + this.htmlProgresso(sem, dose) + '</section>' +
+      '<section id="sec-agenda">' + this.htmlAgenda(sem, dose, atualN) + '</section>' +
+      '<section id="sec-evo">' + this.htmlEvolucao() + '</section>' +
+      '<section id="sec-semanas">' + this.htmlTimeline(atualN, selN) + '</section>' +
+      '<section id="sec-perfil">' + this.htmlPerfil() + '</section>' +
+      '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>'
+    );
+  },
+  htmlSaudacao(atualN, antes, sem) {
+    const ctx = antes
+      ? 'Seu roteiro está pronto. A Semana 1 abre em ' + fmtCurto(dt(SEMANAS[0].ini)) + '.'
+      : (atualN && sem.n === atualN)
+        ? 'Semana ' + atualN + ' de 7 · ' + rotSemana(sem)
+        : 'Você está vendo a Semana ' + sem.n + ' · ' + rotSemana(sem);
+    return '<div style="margin-top:22px;"><div class="h-page">Olá, ' + esc(this.primeiroNome()) + '</div>' +
+      '<p class="txt-sub" style="margin-top:3px;">' + ctx + '</p></div>';
+  },
+  htmlPre() {
+    return '<section><div class="panel" style="border-color:rgba(251,191,36,.4);">' +
+      '<p style="font-size:13px;line-height:1.55;"><b>A revisão começa em ' + fmtCurto(dt(CONFIG.INICIO)) + '.</b> ' +
+      'Até lá, siga o cronograma normal do curso. Quando a Semana 1 abrir, o seu primeiro passo aparece aqui automaticamente.</p></div></section>';
+  },
+  htmlNext(sem, dose, atualN, antes) {
+    if (antes) {
+      return '<div class="next"><span class="tag-topo">ENQUANTO A REVISÃO NÃO COMEÇA</span>' +
+        '<h2>Seu plano da Semana 1 já está montado</h2>' +
+        '<p class="just">Explore a agenda abaixo para ver como as suas respostas viraram doses de estudo. Dá para reajustar o perfil quantas vezes quiser até lá.</p></div>';
+    }
+    const prox = this.proximaAtividade(sem.n);
+    const miniOk = !!this.minis[sem.n];
+    if (!prox && miniOk) {
+      return '<div class="next"><span class="tag-topo">SEMANA CONCLUÍDA</span>' +
+        '<h2>Você fechou a Semana ' + sem.n + '</h2>' +
+        '<p class="just">Veja o diagnóstico do mini na seção Evolução, ou navegue para a próxima semana na linha do tempo.</p></div>';
+    }
+    if (!prox) {
+      return '<div class="next"><span class="tag-topo">SEU PRÓXIMO PASSO</span>' +
+        '<h2>Mini-simulado da Semana ' + sem.n + '</h2>' +
+        '<div class="infos"><span>' + ic('clock',14) + ' ~' + CONFIG.MIN_MINI + ' min</span><span>' + ic('book',14) + ' ' + CONFIG.MINI_QTDE + ' questões · ' + CONFIG.MINI_POR_TEMA + ' por tema</span></div>' +
+        '<p class="just">Todas as atividades da semana foram concluídas — o mini fecha o ciclo e mede a sua evolução real.</p>' +
+        '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>' +
+        '<button type="button" class="btn btn-ghost" onclick="app.toast(\'\',\'Demonstração\',\'No app real: inicia o mini-simulado cronometrado na plataforma.\')">Fazer na plataforma</button></div></div>';
+    }
+    const just = prox.auto
+      ? (prox.efv === -1
+          ? 'Ajustado pelo seu desempenho — seus registros neste tema ficaram abaixo de 50%, então a dose aumentou.'
+          : 'Ajustado pelo seu desempenho — seus registros mostram evolução, então a dose foi reduzida para manutenção.')
+      : prox.efv === -1 ? 'Prioridade alta — você marcou dificuldade neste tema.'
+      : prox.geo ? 'Geometria da semana — presença fixa no roteiro: toda semana tem uma.'
+      : prox.efv === 1 ? 'Manutenção leve — você domina este tema; é só não perder o ritmo.'
+      : 'Dose padrão desta semana.';
+    return '<div class="next"><span class="tag-topo">SEU PRÓXIMO PASSO</span>' +
+      '<h2>' + esc(prox.titulo) + '</h2>' +
+      '<div class="infos"><span>' + ic('clock',14) + ' ~' + prox.min + ' min</span>' +
+      '<span>' + ic(prox.tipo==='v'?'play':'book',14) + ' ' + (prox.tipo==='v'?'Vídeo-aula':'Questões no banco') + '</span></div>' +
+      '<p class="just">' + just + '</p>' +
+      '<div class="acts">' +
+      '<button type="button" class="btn btn-pri" onclick="app.demoAbrir(\'' + prox.temaId + '\')">Começar agora</button>' +
+      '<button type="button" class="btn btn-ghost" onclick="app.concluir(\'' + prox.key + '\')">Marcar concluída</button>' +
+      '</div></div>';
+  },
+  htmlProgresso(sem, dose) {
+    const feitoMin = dose.itens.filter(it=>this.feito(it.key)).reduce((s,it)=>s+it.min,0) + (dose.temMini && this.minis[sem.n] ? CONFIG.MIN_MINI : 0);
+    const pct = dose.totalMin ? Math.round(feitoMin / dose.totalMin * 100) : 0;
+    const r = 30, c = Math.round(2*Math.PI*r*100)/100;
+    const hF = Math.floor(feitoMin/60), mF = feitoMin%60;
+    const hT = Math.floor(dose.totalMin/60), mT = dose.totalMin%60;
+    return '<div class="panel"><div class="prog-big">' +
+      '<div class="prog-ring" role="img" aria-label="Progresso da semana: ' + pct + ' por cento">' +
+        '<svg width="72" height="72" aria-hidden="true"><defs><linearGradient id="gradp"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>' +
+        '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="#16244a" stroke-width="7"/>' +
+        '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="url(#gradp)" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + (c*(1-pct/100)) + '"/></svg>' +
+        '<span class="pct">' + pct + '%</span></div>' +
+      '<div class="prog-info" aria-live="polite">' +
+        '<div class="lin">Progresso da Semana ' + sem.n + '</div>' +
+        '<div class="det">' + hF + 'h' + String(mF).padStart(2,'0') + ' de ' + hT + 'h' + String(mT).padStart(2,'0') + ' estimadas · ponderado pelo tempo de cada atividade</div>' +
+        (dose.avisos.length ? '<div class="det" style="color:var(--amber);margin-top:5px;">' + esc(dose.avisos[0]) + '</div>' : '') +
+      '</div></div></div>';
+  },
+  htmlAgenda(sem, dose, atualN) {
+    const hoje = this.hoje();
+    const idxHoje = Math.floor((hoje - dt(sem.ini)) / 86400000);
+    const nDias = (sem.dias||7);
+    const ehAtual = sem.n === atualN;
+    const self = this;
+
+    const diasSel = (it) => {
+      let ops = '';
+      const teto = Math.min(dose.diasEstudo + 2, nDias - 1);
+      for (let d = 0; d < teto; d++) {
+        ops += '<option value="' + d + '"' + (self.diaDe(it)===d?' selected':'') + '>' + fmtSemDia(addDias(dt(sem.ini), d)) + '</option>';
+      }
+      return '<select class="mover" aria-label="Mover atividade de dia" onchange="app.moverDia(\'' + it.key + '\', this.value)">' + ops + '</select>';
+    };
+    const linha = (it, atrasada) => {
+      const done = self.feito(it.key);
+      const o = self.ov[it.key] || {};
+      const priCls = it.geo ? 'pri-g' : ('pri-' + it.peso);
+      const priTxt = it.geo ? 'GEOMETRIA' : (it.peso===3 ? 'PRIORIDADE ALTA' : it.peso===2 ? 'DOSE PADRÃO' : 'MANUTENÇÃO');
+      const autoTitle = it.efv === -1
+        ? 'Seus registros neste tema ficaram abaixo de 50% de acerto — a dose aumentou automaticamente.'
+        : 'Seus registros neste tema passaram de 80% de acerto — a dose caiu para manutenção.';
+      return '<div class="atv' + (done?' done':'') + '">' +
+        '<button type="button" class="chk" role="checkbox" aria-checked="' + done + '" aria-label="' + (done?'Desfazer conclusão de ':'Concluir ') + esc(it.titulo) + '" onclick="app.concluir(\'' + it.key + '\')">' + ic('check',14) + '</button>' +
+        '<div class="body"><div class="t">' + esc(it.titulo) + '</div>' +
+        '<div class="m"><span class="pri ' + priCls + '">' + priTxt + '</span>' +
+        (it.auto ? '<span class="pri pri-auto" title="' + autoTitle + '">AJUSTADO PELO SEU DESEMPENHO</span>' : '') +
+        '<span>~' + it.min + ' min</span>' +
+        (atrasada && !done ? '<span style="color:var(--amber);font-weight:700;">planejada para ' + fmtSemDia(addDias(dt(sem.ini), self.diaDe(it))) + '</span>' : '') +
+        (done && o.total ? '<span style="color:var(--green);font-weight:700;">' + o.hits + '/' + o.total + ' acertos</span>' : '') +
+        (!done ? '<button type="button" class="btn btn-ghost btn-sm" style="min-height:30px;padding:4px 10px;font-size:11px;" onclick="app.demoAbrir(\'' + it.temaId + '\')">Abrir</button>' : '') +
+        '</div></div>' +
+        (!done ? diasSel(it) : '') +
+        '</div>';
+    };
+
+    let html = '<div class="h-sec"><span class="ic">' + ic('cal',16) + '</span>Agenda da semana' +
+      (dose.congelado
+        ? '<span class="lado"><span class="txt-mini">plano fixado em ' + fmtCurto(new Date(dose.criadoEm)) + '</span>' +
+          '<button type="button" class="btn btn-ghost btn-sm" onclick="app.recalcularSemana(' + sem.n + ')">' + ic('refresh',12) + ' Recalcular</button></span>'
+        : '') +
+      '</div>';
+
+    const pendHoje = [], proximas = [], feitas = [];
+    dose.itens.forEach(it => {
+      if (self.feito(it.key)) feitas.push(it);
+      else if (ehAtual && self.diaDe(it) <= idxHoje) pendHoje.push(it);
+      else proximas.push(it);
+    });
+
+    if (ehAtual) {
+      html += '<div class="dia-grupo"><div class="dia-head hoje">HOJE <span class="data">· ' + fmtSemDia(hoje) + ' ' + fmtCurto(hoje) + '</span></div>';
+      html += pendHoje.length
+        ? pendHoje.sort((a,b)=>self.diaDe(a)-self.diaDe(b)||b.peso-a.peso).map(it => linha(it, self.diaDe(it) < idxHoje)).join('')
+        : '<div class="atv-vazia">Nada pendente para hoje. Adiante uma atividade das próximas ou descanse — constância também é recuperação.</div>';
+      html += '</div>';
+    }
+    if (proximas.length) {
+      html += '<div class="dia-grupo"><div class="dia-head">' + (ehAtual ? 'PRÓXIMAS' : 'ATIVIDADES DA SEMANA') + '</div>';
+      const grupos = {};
+      proximas.forEach(it => { const d = self.diaDe(it); (grupos[d]=grupos[d]||[]).push(it); });
+      Object.keys(grupos).map(Number).sort((a,b)=>a-b).forEach(d => {
+        html += '<div class="txt-mini" style="margin:8px 0 5px;font-weight:700;">' + fmtSemDia(addDias(dt(sem.ini), d)) + ' ' + fmtCurto(addDias(dt(sem.ini), d)) + '</div>';
+        html += grupos[d].sort((a,b)=>b.peso-a.peso).map(it => linha(it, false)).join('');
+      });
+      html += '</div>';
+    }
+    if (dose.fora.length) {
+      html += '<div class="dia-grupo"><div class="dia-head">FORA DO ORÇAMENTO DESTA SEMANA</div>' +
+        dose.fora.map(f => '<div class="fora-item"><b>' + esc(f.nome) + '</b> — ' + esc(f.motivo) + '</div>').join('') +
+        '</div>';
+    }
+    // mini-simulado
+    if (dose.temMini) {
+      const mini = this.minis[sem.n];
+      const sab = addDias(dt(sem.ini), nDias >= 7 ? 5 : nDias - 1);
+      html += '<div class="mini"><span class="ic">' + ic('clock',22) + '</span>' +
+        '<div class="inf"><div class="t">Mini-simulado · fecha a semana</div>' +
+        '<div class="s">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema · ~' + CONFIG.MIN_MINI + ' min · sugerido para ' + fmtSemDia(sab) + ' ' + fmtCurto(sab) + '</div></div>' +
+        (mini
+          ? '<div class="mini-res"><b>' + mini.total + '/' + CONFIG.MINI_QTDE + '</b>' +
+            '<button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + sem.n + ')">Ver / editar</button></div>'
+          : '<button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>') +
+        '</div>';
+    }
+    if (feitas.length) {
+      html += '<details class="concl"><summary><span class="chev">' + ic('chev',13) + '</span>CONCLUÍDAS (' + feitas.length + ')</summary>' +
+        feitas.map(it => linha(it, false)).join('') + '</details>';
+    }
+    return html;
+  },
+  htmlEvolucao() {
+    const metaMini = Math.round(this.perfil.meta / 3);
+    const regs = SEMANAS.map(s => this.minis[s.n] ? this.minis[s.n].total : null);
+    const tem = regs.some(v => v != null);
+    let corpo;
+    if (!tem) {
+      corpo = '<div class="atv-vazia">Os resultados dos seus mini-simulados vão aparecer aqui, comparados com a sua meta (' + metaMini + '/' + CONFIG.MINI_QTDE + ' por mini).</div>';
+    } else {
+      const metaPct = Math.min(100, metaMini / CONFIG.MINI_QTDE * 100);
+      const descr = SEMANAS.map((s,i)=>regs[i]!=null?('Semana '+s.n+': '+regs[i]+' de '+CONFIG.MINI_QTDE+'. '):'').join('');
+      corpo = '<div class="evo" role="img" aria-label="Gráfico de barras dos mini-simulados. ' + descr + 'Meta: ' + metaMini + ' de ' + CONFIG.MINI_QTDE + '.">' +
+        '<div class="meta-line" style="bottom:' + metaPct + '%;"><small>meta ' + metaMini + '</small></div>' +
+        SEMANAS.map((s,i) => {
+          const v = regs[i];
+          return '<div class="evo-col">' +
+            (v!=null ? '<span class="evo-v">' + v + '</span>' : '') +
+            '<div class="evo-bar' + (v==null?' off':'') + '" style="height:' + (v!=null ? Math.max(6, v/CONFIG.MINI_QTDE*100) : 24) + '%;"></div>' +
+            '<span class="evo-l">S' + s.n + '</span></div>';
+        }).join('') + '</div>' +
+        '<table class="sr-only"><caption>Acertos por mini-simulado</caption><tbody><tr>' + SEMANAS.map(s=>'<th scope="col">Semana '+s.n+'</th>').join('') + '</tr><tr>' +
+        regs.map(v=>'<td>'+(v==null?'sem registro':v+' de '+CONFIG.MINI_QTDE)+'</td>').join('') + '</tr></tbody></table>';
+    }
+    let diag = '';
+    const feitosN = SEMANAS.map(s=>s.n).filter(n=>this.minis[n]);
+    const ultimoN = feitosN.length ? feitosN[feitosN.length-1] : null;
+    if (ultimoN) {
+      const m = this.minis[ultimoN];
+      const pares = Object.keys(m.porTema).map(id => [id, m.porTema[id]]);
+      const melhor = pares.slice().sort((a,b)=>b[1]-a[1])[0];
+      const pior = pares.slice().sort((a,b)=>a[1]-b[1])[0];
+      const pct = Math.round(m.total / CONFIG.MINI_QTDE * 100);
+      const delta = m.total - metaMini;
+      const reaparece = SEMANAS.find(s => s.n > ultimoN && (s.temas.indexOf(pior[0]) !== -1 || s.geo.id === pior[0]));
+      const rec = pior[1] >= 3 ? 'Desempenho sólido em todos os temas — mantenha o ritmo na próxima semana.'
+        : reaparece
+          ? 'Reforce ' + T(pior[0]).nome + ': ele volta na Semana ' + reaparece.n + ', e o plano aumentará a dose se o desempenho continuar baixo.'
+          : 'Reserve uns 30 minutos extras para ' + T(pior[0]).nome + ' na próxima semana — ele não volta no roteiro fixo.';
+      diag = '<div class="diag"><b style="font-size:13px;">Diagnóstico · mini da Semana ' + ultimoN + '</b>' +
+        '<div class="linha">' +
+        '<div class="stat"><div class="v">' + pct + '%</div><div class="l">ACERTOS</div></div>' +
+        '<div class="stat"><div class="v" style="color:var(--green);">' + esc(T(melhor[0]).nome) + '</div><div class="l">MELHOR · ' + melhor[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div>' +
+        '<div class="stat"><div class="v" style="color:var(--red);">' + esc(T(pior[0]).nome) + '</div><div class="l">ATENÇÃO · ' + pior[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div>' +
+        '<div class="stat"><div class="v" style="color:' + (delta>=0?'var(--green)':'var(--amber)') + ';">' + (delta>=0?'+':'') + delta + '</div><div class="l">VS. META</div></div>' +
+        '</div><p class="rec">' + rec + '</p>' +
+        '<div style="margin-top:8px;"><button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + ultimoN + ')">Ver / editar lançamento</button></div>' +
+        '</div>';
+    }
+    return '<div class="panel"><div class="h-sec"><span class="ic">' + ic('chart',16) + '</span>Evolução até a prova</div>' + corpo + diag + '</div>';
+  },
+  htmlTimeline(atualN, selN) {
+    const self = this;
+    const btns = SEMANAS.map(s => {
+      const dose = self.dosePara(s);
+      const feitoMin = dose.itens.filter(it=>self.feito(it.key)).reduce((x,it)=>x+it.min,0) + (dose.temMini && self.minis[s.n]?CONFIG.MIN_MINI:0);
+      const pct = dose.totalMin ? Math.round(feitoMin/dose.totalMin*100) : 0;
+      const status = pct >= 100 ? 'CONCLUÍDA' : (s.n === atualN ? 'ATUAL' : (pct > 0 ? pct + '%' : ''));
+      const corSt = pct>=100 ? 'var(--green)' : (s.n===atualN ? 'var(--cyan)' : 'var(--muted)');
+      return '<button type="button" class="tl-item' + (s.n===atualN?' atual':'') + (s.n===selN?' sel':'') + '"' +
+        ' aria-pressed="' + (s.n===selN) + '"' + (s.n===atualN ? ' aria-current="date"' : '') +
+        ' aria-label="Semana ' + s.n + ', ' + rotSemana(s) + (status ? ', ' + status.toLowerCase() : '') + '"' +
+        ' onclick="app.semanaSel=' + s.n + ';app.render()">' +
+        '<span class="n">SEMANA ' + s.n + (status ? ' <span class="status-txt" style="color:' + corSt + ';">' + status + '</span>' : '') + '</span>' +
+        '<span class="d">' + rotSemana(s) + '</span>' +
+        '<span class="bar"><i style="width:' + pct + '%;"></i></span></button>';
+    }).join('');
+    return '<div class="h-sec"><span class="ic">' + ic('flag',16) + '</span>As 7 semanas</div>' +
+      '<div class="tl" role="group" aria-label="Navegar entre as semanas">' + btns +
+      '<div class="tl-prova">PROVA<small>' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '</small></div></div>' +
+      '<p class="txt-mini">A Semana 7 acontece entre os dois domingos de prova — os temas de maior incidência ficam para o fim, frescos na memória.</p>';
+  },
+  htmlPerfil() {
+    const p = this.perfil;
+    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','mais de 30'];
+    return '<div class="panel"><div class="h-sec"><span class="ic">' + ic('user',16) + '</span>Seu perfil de estudo</div>' +
+      '<div class="perfil-grid">' +
+      '<div class="stat"><div class="v">' + faixas[p.acertos] + '</div><div class="l">PONTO DE PARTIDA</div></div>' +
+      '<div class="stat"><div class="v">' + p.meta + '/45</div><div class="l">META</div></div>' +
+      '<div class="stat"><div class="v">' + (p.horasDia*p.diasSemana).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '</div>' +
+      '<p class="txt-sub" style="margin:10px 0 14px;">Mudou a rotina ou evoluiu mais rápido? Reajuste — as semanas futuras recalculam na hora; semanas já iniciadas mantêm o plano fixado.</p>' +
+      '<button type="button" class="btn btn-ghost" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render()">' + ic('edit',14) + ' Reajustar meu perfil</button></div>';
+  },
+
+  /* ---------------- PÓS-PROVA ---------------- */
+  htmlPosProva() {
+    let minF=0, minT=0, atvF=0, atvT=0, minisFeitos=0;
+    const self = this;
+    SEMANAS.forEach(s => {
+      const d = self.dosePara(s);
+      minT += d.totalMin;
+      d.itens.forEach(it => { atvT++; if (self.feito(it.key)) { atvF++; minF += it.min; } });
+      if (d.temMini) { atvT++; if (self.minis[s.n]) { atvF++; minF += CONFIG.MIN_MINI; minisFeitos++; } }
+    });
+    const hF = Math.floor(minF/60), mF = minF%60;
+    const comAmostra = TEMAS.map(t => ({ t, a: self.amostraTema(t.id) })).filter(x => x.a.total >= 4);
+    comAmostra.sort((x,y) => (y.a.hits/y.a.total) - (x.a.hits/x.a.total));
+    const melhor = comAmostra[0], pior = comAmostra[comAmostra.length-1];
+    return (
+      '<div style="margin-top:22px;"><div class="h-page">Você chegou ao fim, ' + esc(this.primeiroNome()) + '</div>' +
+      '<p class="txt-sub" style="margin-top:3px;">As provas foram em ' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '. A revisão cumpriu o papel dela — agora é esperar o resultado com a consciência tranquila de quem trabalhou.</p></div>' +
+      '<section id="sec-next"><div class="next"><span class="tag-topo">RESUMO DA SUA REVISÃO</span>' +
+      '<h2>7 semanas em números</h2>' +
+      '<div class="stats-linha">' +
+      '<div class="stat"><div class="v">' + hF + 'h' + String(mF).padStart(2,'0') + '</div><div class="l">TEMPO ESTUDADO</div></div>' +
+      '<div class="stat"><div class="v">' + atvF + '/' + atvT + '</div><div class="l">ATIVIDADES</div></div>' +
+      '<div class="stat"><div class="v">' + minisFeitos + '/7</div><div class="l">MINI-SIMULADOS</div></div>' +
+      '</div>' +
+      (melhor && pior && melhor !== pior ?
+        '<div class="stats-linha">' +
+        '<div class="stat"><div class="v" style="color:var(--green);">' + esc(melhor.t.nome) + '</div><div class="l">MELHOR DESEMPENHO · ' + Math.round(melhor.a.hits/melhor.a.total*100) + '%</div></div>' +
+        '<div class="stat"><div class="v" style="color:var(--red);">' + esc(pior.t.nome) + '</div><div class="l">MAIOR DESAFIO · ' + Math.round(pior.a.hits/pior.a.total*100) + '%</div></div>' +
+        '</div>' : '') +
+      '</div></section>' +
+      '<section id="sec-evo">' + this.htmlEvolucao() + '</section>' +
+      '<section id="sec-agenda">' + this.htmlTimeline(null, this.semanaSel || 7) + '</section>' +
+      '<section id="sec-perfil"><div class="panel"><p class="txt-sub">Quer revisitar alguma semana? Toque nela na linha do tempo acima. Os registros ficam guardados.</p></div></section>' +
+      '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>'
+    );
+  }
+};
+
+document.querySelectorAll('.bnav [data-ic]').forEach(el => { el.innerHTML = ic(el.getAttribute('data-ic'), 18); });
+app.carregar();
+app.render();
+</script>
+</body>
+</html>
