@@ -384,8 +384,9 @@
   <b>MOCKUP</b>
   <label for="demo-data">Simular data:</label>
   <select id="demo-data" onchange="app.render()">
+    <option value="real" selected>Hoje (data real)</option>
     <option value="2026-08-10">Antes do início (10/08)</option>
-    <option value="2026-09-30" selected>Semana 1 · quarta (30/09)</option>
+    <option value="2026-09-30">Semana 1 · quarta (30/09)</option>
     <option value="2026-10-14">Semana 3 · quarta (14/10)</option>
     <option value="2026-10-17">Semana 3 · sábado — dia do mini (17/10)</option>
     <option value="2026-11-10">Semana 7 · entre as provas (10/11)</option>
@@ -576,7 +577,10 @@ const app = {
     this.toast('ok', 'Dados de exemplo carregados', 'Semanas 1 e 2 com histórico: Financeira fraca (reclassificada para cima), Potenciação forte (reclassificada para baixo).');
   },
 
-  hoje() { return dt(document.getElementById('demo-data').value); },
+  hoje() {
+    const v = document.getElementById('demo-data').value;
+    return v === 'real' ? new Date() : dt(v);
+  },
   semanaAtualN() {
     const h = this.hoje();
     for (const s of SEMANAS) {
@@ -986,9 +990,9 @@ const app = {
     );
   },
   qNivel() {
-    const faixas = ['Menos de 10','10 a 15','15 a 20','20 a 25','25 a 30','Mais de 30'];
+    const faixas = ['Menos de 10','10 a 15','15 a 20','20 a 25','25 a 30','30 a 35','35 a 40','Acima de 40'];
     const sel = this._qTemp.acertos;
-    return '<h2>Nos últimos simulados, quantas das 45 questões de Matemática você acerta?</h2>' +
+    return '<h2>Nos últimos simulados, quantas das 45 questões de Matemática você acertou?</h2>' +
       '<p class="q-hint">Média dos 2 ou 3 últimos. Se nunca contou, estime com sinceridade — isso calibra a sua meta.</p>' +
       '<div class="opt-grid" role="group" aria-label="Faixa de acertos">' +
       faixas.map((f,i) =>
@@ -1002,7 +1006,7 @@ const app = {
   qTempo() {
     const q = this._qTemp;
     const horas = [[0.5,'30 minutos'],[1,'1 hora'],[1.5,'1h30'],[2,'2 horas'],[3,'3 horas'],[4,'4 horas ou mais']];
-    return '<h2>Quanto tempo você consegue dedicar à Matemática?</h2>' +
+    return '<h2>Quanto tempo você consegue dedicar ao estudo da Matemática?</h2>' +
       '<p class="q-hint">Conte só o que você cumpre de verdade. O plano é montado dentro desse orçamento — melhor um plano curto e cumprido do que um longo e abandonado.</p>' +
       '<div class="campo"><label for="q-horas">Horas por dia</label>' +
       '<select id="q-horas"><option value="">Escolha</option>' +
@@ -1067,7 +1071,7 @@ const app = {
     const q = this._qTemp;
     if (!el) return;
     if (!meta || q.acertos==null) { el.textContent=''; return; }
-    const atual = [7,12.5,17.5,22.5,27.5,33][q.acertos];
+    const atual = [7,12.5,17.5,22.5,27.5,32.5,37.5,42][q.acertos];
     const g = meta - atual;
     if (g <= 0) el.innerHTML = '<span style="color:var(--green);">Você já está nesse nível — considere mirar um pouco mais alto.</span>';
     else if (g <= 7) el.innerHTML = '<span style="color:var(--green);">Meta realista: +' + Math.round(g) + ' acertos em 7 semanas dirigidas é factível.</span>';
@@ -1079,7 +1083,7 @@ const app = {
     const cont = { d:0, r:0, f:0 };
     TEMAS.forEach(t => { const v = q.dif[t.id]||0; if (v===-1) cont.d++; else if (v===2) cont.r++; else if (v===1) cont.f++; });
     const semAval = TEMAS.length - cont.d - cont.r - cont.f;
-    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','mais de 30'];
+    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','30–35','35–40','acima de 40'];
     const temPlanos = Object.keys(this.planos).length > 0;
     return '<h2>Confira antes de criar o roteiro</h2>' +
       '<div class="resumo-grid">' +
@@ -1387,7 +1391,7 @@ const app = {
   },
   htmlPerfil() {
     const p = this.perfil;
-    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','mais de 30'];
+    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','30–35','35–40','acima de 40'];
     return '<div class="panel"><div class="h-sec"><span class="ic">' + ic('user',16) + '</span>Seu perfil de estudo</div>' +
       '<div class="perfil-grid">' +
       '<div class="stat"><div class="v">' + faixas[p.acertos] + '</div><div class="l">PONTO DE PARTIDA</div></div>' +
