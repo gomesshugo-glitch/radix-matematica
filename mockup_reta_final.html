@@ -508,6 +508,7 @@ const SEMANAS = [
   { n:7, ini:'2026-11-09', temas:['operacoes','probabilidade','razao-proporcao','estatistica'],      geo:{id:'geo-espacial',s:'III'}, dias:6 }
 ];
 
+const DIAS_SEMANA = ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
 const dt = s => new Date(s + 'T12:00:00');
 function addDias(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 function fmtCurto(d) { return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }); }
@@ -537,6 +538,10 @@ const app = {
       if (raw) {
         const d = JSON.parse(raw);
         this.perfil = d.perfil||null; this.ov = d.ov||{}; this.minis = d.minis||{}; this.planos = d.planos||{};
+        if (this.perfil && !this.perfil.dias) {
+          const nd = Math.min(this.perfil.diasSemana || 5, 7);
+          this.perfil.dias = []; for (let i = 0; i < nd; i++) this.perfil.dias.push(i);
+        }
       }
     } catch(e) {}
   },
@@ -556,7 +561,7 @@ const app = {
     ['pa','geo-plana','porcentagem','fun-2grau'].forEach(id => dif[id] = 2);
     ['operacoes','razao-proporcao','multiplos'].forEach(id => dif[id] = 1);
     ['matrizes','logica'].forEach(id => dif[id] = 9);
-    this.perfil = { acertos: 2, dif, horasDia: 1.5, diasSemana: 5, meta: 28 };
+    this.perfil = { acertos: 2, dif, horasDia: 1.5, dias: [0,1,2,3,5], meta: 28 };
     this.ov = {}; this.minis = {}; this.planos = {};
     const self = this;
     [1,2].forEach(n => {
@@ -625,8 +630,10 @@ const app = {
   dosarSemana(sem) {
     const p = this.perfil;
     const nDias = sem.dias || 7;
-    const diasEstudo = Math.max(1, Math.min(p.diasSemana, nDias - 1));
-    const budget = Math.round(p.horasDia * 60 * p.diasSemana);
+    // dias REAIS marcados pelo aluno (0=SEG … 6=DOM), restritos aos que existem na semana
+    let diasAtivos = (p.dias && p.dias.length ? p.dias.slice() : [0,1,2,3,4]).sort((a,b)=>a-b).filter(d => d < nDias);
+    if (!diasAtivos.length) diasAtivos = [nDias - 1];   // ex.: só DOM na Semana 7 (6 dias) -> SÁB
+    const budget = Math.round(p.horasDia * 60 * (p.dias && p.dias.length ? p.dias.length : 5));
     const avisos = [], fora = [];
 
     const base = sem.temas.map(id => {
@@ -688,10 +695,10 @@ const app = {
         titulo:'Resolver ' + b.questoes + ' questões — ' + b.nome, min:b.questoes*CONFIG.MIN_QUESTAO,
         peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v });
     });
-    itens.forEach((it, idx) => { it.diaDefault = idx % diasEstudo; });
+    itens.forEach((it, idx) => { it.diaDefault = diasAtivos[idx % diasAtivos.length]; });
 
     const totalMin = itens.reduce((s,it)=>s+it.min, 0) + (temMini ? CONFIG.MIN_MINI : 0);
-    return { budget, totalMin, itens, avisos, fora, diasEstudo, temMini, congelado:false };
+    return { budget, totalMin, itens, avisos, fora, diasAtivos, temMini, congelado:false };
   },
 
   /* ---------- congelamento ---------- */
@@ -956,7 +963,7 @@ const app = {
   htmlQuest() {
     if (!this._qTemp) {
       this._qTemp = this.perfil ? JSON.parse(JSON.stringify(this.perfil))
-                                : { acertos:null, dif:{}, horasDia:null, diasSemana:null, meta:null };
+                                : { acertos:null, dif:{}, horasDia:null, dias:[], meta:null };
     }
     const passos = this.qPassos();
     const st = this.qStep;
@@ -1012,10 +1019,31 @@ const app = {
       '<select id="q-horas"><option value="">Escolha</option>' +
       horas.map(o => '<option value="' + o[0] + '"' + (q.horasDia==o[0]?' selected':'') + '>' + o[1] + '</option>').join('') +
       '</select></div>' +
-      '<div class="campo"><label for="q-dias">Dias por semana</label>' +
-      '<select id="q-dias"><option value="">Escolha</option>' +
-      [2,3,4,5,6].map(d => '<option value="' + d + '"' + (q.diasSemana==d?' selected':'') + '>' + d + ' dias</option>').join('') +
-      '</select></div>';
+      '<div class="campo"><label>Em quais dias da semana você estuda Matemática?</label>' +
+      '<div class="seg" role="group" aria-label="Dias de estudo" style="gap:6px;">' +
+      DIAS_SEMANA.map((nome, i) =>
+        '<button type="button" class="sf" data-dia="' + i + '" aria-pressed="' + ((q.dias||[]).indexOf(i) !== -1) + '" onclick="app.qDia(this)" style="min-width:52px;">' + nome + '</button>'
+      ).join('') + '</div>' +
+      '<p class="txt-mini" id="q-dias-info" style="margin-top:8px;">' +
+      ((q.dias||[]).length ? this._diasResumoTxt(q) : 'Marque todos os dias que você realmente consegue estudar — o plano distribui as atividades exatamente neles.') +
+      '</p></div>';
+  },
+  qDia(btn) {
+    const i = parseInt(btn.getAttribute('data-dia'));
+    const q = this._qTemp;
+    q.dias = q.dias || [];
+    const pos = q.dias.indexOf(i);
+    if (pos === -1) q.dias.push(i); else q.dias.splice(pos, 1);
+    q.dias.sort((a,b)=>a-b);
+    btn.setAttribute('aria-pressed', pos === -1 ? 'true' : 'false');
+    const info = document.getElementById('q-dias-info');
+    if (info) info.textContent = q.dias.length ? this._diasResumoTxt(q) : 'Marque ao menos um dia de estudo.';
+  },
+  _diasResumoTxt(q) {
+    const el = document.getElementById('q-horas');
+    const h = (el && parseFloat(el.value)) || q.horasDia;
+    const base = q.dias.length + (q.dias.length === 1 ? ' dia' : ' dias') + ' por semana';
+    return h ? base + ' · ' + (h * q.dias.length).toFixed(1).replace('.', ',') + 'h de estudo semanal' : base;
   },
   qArea(area) {
     const q = this._qTemp;
@@ -1089,7 +1117,8 @@ const app = {
       '<div class="resumo-grid">' +
       '<div class="stat"><div class="v">' + faixas[q.acertos] + '</div><div class="l">ACERTOS HOJE</div></div>' +
       '<div class="stat"><div class="v">' + q.meta + '/45</div><div class="l">META</div></div>' +
-      '<div class="stat"><div class="v">' + (q.horasDia*q.diasSemana).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat"><div class="v">' + (q.horasDia*q.dias.length).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat"><div class="v" style="font-size:12.5px;line-height:1.9;">' + q.dias.map(function(i){ return DIAS_SEMANA[i]; }).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div>' +
       '</div>' +
       '<div class="resumo-grid">' +
       '<div class="stat"><div class="v" style="color:var(--red);">' + cont.d + '</div><div class="l">COM DIFICULDADE</div></div>' +
@@ -1103,9 +1132,8 @@ const app = {
   qColeta() {
     const st = this.qStep;
     if (st === 1) {
-      const h = document.getElementById('q-horas'), d = document.getElementById('q-dias');
+      const h = document.getElementById('q-horas');
       if (h) this._qTemp.horasDia = parseFloat(h.value) || null;
-      if (d) this._qTemp.diasSemana = parseInt(d.value) || null;
     }
     if (st === 6) {
       const m = document.getElementById('q-meta');
@@ -1115,7 +1143,7 @@ const app = {
   qValida() {
     const st = this.qStep, q = this._qTemp;
     if (st === 0 && q.acertos == null) return 'Escolha uma faixa de acertos para continuar.';
-    if (st === 1 && (!q.horasDia || !q.diasSemana)) return 'Informe horas por dia e dias por semana.';
+    if (st === 1 && (!q.horasDia || !(q.dias && q.dias.length))) return 'Informe as horas por dia e marque ao menos um dia de estudo.';
     if (st === 6 && (!q.meta || q.meta < 1 || q.meta > 45)) return 'Defina uma meta entre 1 e 45.';
     return null;
   },
@@ -1235,11 +1263,13 @@ const app = {
     const self = this;
 
     const diasSel = (it) => {
+      const marcados = (dose.diasAtivos && dose.diasAtivos.length ? dose.diasAtivos : [0,1,2,3,4]).filter(d => d < nDias);
+      const atual = self.diaDe(it);
+      const lista = marcados.indexOf(atual) === -1 ? marcados.concat([atual]).sort((a,b)=>a-b) : marcados;
       let ops = '';
-      const teto = Math.min(dose.diasEstudo + 2, nDias - 1);
-      for (let d = 0; d < teto; d++) {
-        ops += '<option value="' + d + '"' + (self.diaDe(it)===d?' selected':'') + '>' + fmtSemDia(addDias(dt(sem.ini), d)) + '</option>';
-      }
+      lista.forEach(d => {
+        ops += '<option value="' + d + '"' + (atual===d?' selected':'') + '>' + fmtSemDia(addDias(dt(sem.ini), d)) + '</option>';
+      });
       return '<select class="mover" aria-label="Mover atividade de dia" onchange="app.moverDia(\'' + it.key + '\', this.value)">' + ops + '</select>';
     };
     const linha = (it, atrasada) => {
@@ -1396,7 +1426,8 @@ const app = {
       '<div class="perfil-grid">' +
       '<div class="stat"><div class="v">' + faixas[p.acertos] + '</div><div class="l">PONTO DE PARTIDA</div></div>' +
       '<div class="stat"><div class="v">' + p.meta + '/45</div><div class="l">META</div></div>' +
-      '<div class="stat"><div class="v">' + (p.horasDia*p.diasSemana).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat"><div class="v">' + (p.horasDia*p.dias.length).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat"><div class="v" style="font-size:12.5px;line-height:1.9;">' + p.dias.map(function(i){ return DIAS_SEMANA[i]; }).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div>' +
       '</div>' +
       '<p class="txt-sub" style="margin:10px 0 14px;">Mudou a rotina ou evoluiu mais rápido? Reajuste — as semanas futuras recalculam na hora; semanas já iniciadas mantêm o plano fixado.</p>' +
       '<button type="button" class="btn btn-ghost" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render()">' + ic('edit',14) + ' Reajustar meu perfil</button></div>';
