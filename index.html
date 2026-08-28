@@ -13260,7 +13260,7 @@ async function gerarResolucaoLote() {
       if (e2) throw e2;
       okN++;
     } catch (e) {
-      erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+      erros.push('#' + id + ': ' + (await radixErroEdge(e)));
     }
   }
   const frescas = await carregarQuestoesDoBanco();
@@ -13327,7 +13327,7 @@ async function gerarResolucaoLoteRevisao() {
       if (e2) throw e2;
       okN++;
     } catch (e) {
-      erros.push('#' + id + ': ' + (e.message || JSON.stringify(e)));
+      erros.push('#' + id + ': ' + (await radixErroEdge(e)));
     }
   }
   state._revSel = new Set();
@@ -13496,8 +13496,7 @@ async function gerarResolucaoIApublicada(id) {
     setM('✓ Rascunho gerado. Revise e edite antes de salvar.', 'var(--radix-success)');
   } catch (e) {
     console.error('Erro IA:', e);
-    setM('Erro ao gerar: ' + (e.message || JSON.stringify(e)) +
-         ' — confira a Edge Function/credito.', 'var(--radix-red)');
+    setM('Erro ao gerar: ' + (await radixErroEdge(e)), 'var(--radix-red)');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✨ Gerar com IA'; }
   }
@@ -14075,6 +14074,25 @@ function fecharModalRev() {
 
 // ===== GERAÇÃO DE RESOLUÇÃO COM IA (rascunho — nunca publica/aprova sozinha) =====
 // Chama a Edge Function 'gerar-resolucao' (a chave da IA fica no servidor, NUNCA aqui).
+
+// O supabase-js engole o corpo da resposta e devolve so "non-2xx status code".
+// Este helper abre o Response e extrai a mensagem real da funcao (401 "Nao autenticado",
+// 403 "Apenas professor pode gerar resolucao", 502 "Falha na IA: ...").
+async function radixErroEdge(e) {
+  try {
+    if (e && e.context && typeof e.context.json === 'function') {
+      const body = await e.context.clone().json();
+      const detalhe = body && (body.error || body.message);
+      if (detalhe) return detalhe + ' (HTTP ' + (e.context.status || '?') + ')';
+    }
+    if (e && e.context && typeof e.context.text === 'function') {
+      const txt = await e.context.clone().text();
+      if (txt) return txt + ' (HTTP ' + (e.context.status || '?') + ')';
+    }
+  } catch (_) { /* corpo nao era JSON legivel */ }
+  return (e && e.message) || JSON.stringify(e);
+}
+
 async function gerarResolucaoIA(id) {
   const btn = document.getElementById('rv-ia-btn');
   const msg = document.getElementById('rv-msg');
@@ -14112,8 +14130,7 @@ async function gerarResolucaoIA(id) {
     setM('✓ Rascunho gerado pela IA. Revise e edite antes de salvar.', 'var(--radix-success)');
   } catch (e) {
     console.error('Erro IA:', e);
-    setM('Erro ao gerar com IA: ' + (e.message || JSON.stringify(e)) +
-         ' — confira se a Edge Function "gerar-resolucao" está publicada.', 'var(--radix-red)');
+    setM('Erro ao gerar com IA: ' + (await radixErroEdge(e)), 'var(--radix-red)');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✨ Gerar resolução com IA'; }
   }
