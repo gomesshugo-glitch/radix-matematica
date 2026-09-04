@@ -16018,8 +16018,7 @@ function renderLinhaMaterial(m) {
   } else {
     tipoCls = 'tipo-link';
     tipoSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
-    const urlEsc = String(m.url || '').replace(/'/g, "\\'");
-    acaoFn = `window.open('${urlEsc}','_blank')`;
+    acaoFn = `abrirMaterialLink(${m.id})`;
     acaoSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
     acaoTitle = 'Abrir link';
   }
@@ -16093,6 +16092,37 @@ function filtrarMateriais() {
   if (inp) state._matBusca = inp.value;
   const cont = document.getElementById('vmod-lista');
   if (cont) cont.innerHTML = renderListaModulos();
+}
+
+// ===== URL do material: link assinado de curta duração =====
+// O bucket 'Materiais' é PRIVADO. Nada de link permanente: cada clique gera
+// uma URL assinada válida por 1h, que expira depois. Assim o PDF repassado
+// no WhatsApp não abre para quem não é aluno — e ninguém contorna a marca
+// d'água baixando o arquivo cru direto do bucket.
+// Materiais antigos seguem funcionando: a URL é regerada do storage_path.
+const MATERIAL_URL_TTL = 3600; // segundos
+
+async function urlMaterial(mat) {
+  if (!mat) return null;
+  // Link externo (YouTube, site, drive): não passa pelo nosso storage.
+  if (!mat.storage_path) return mat.url || null;
+  const { data, error } = await sb.storage
+    .from('Materiais')
+    .createSignedUrl(mat.storage_path, MATERIAL_URL_TTL);
+  if (error || !data || !data.signedUrl) {
+    console.warn('[material] falha ao assinar URL:', error && error.message);
+    return mat.url || null; // fallback: material antigo com URL pública salva
+  }
+  return data.signedUrl;
+}
+
+// Abre material de link externo (usado pelos cards da lista)
+async function abrirMaterialLink(matId) {
+  const mat = materiaisCache.find(m => m.id === matId);
+  if (!mat) { alert('Material não encontrado'); return; }
+  const url = await urlMaterial(mat);
+  if (!url) { alert('Material sem link disponível.'); return; }
+  window.open(url, '_blank');
 }
 
 // ===== Player de vídeo protegido (sem link clicável para o YouTube) =====
@@ -16174,12 +16204,14 @@ async function baixarPDFComMarcaDagua(matId) {
     // Tentar via fetch padrão
     let pdfBytes;
     try {
-      const resp = await fetch(mat.url, { mode: 'cors' });
+      const urlAssinada = await urlMaterial(mat);
+      if (!urlAssinada) throw new Error('não foi possível gerar o link do arquivo');
+      const resp = await fetch(urlAssinada, { mode: 'cors' });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       pdfBytes = await resp.arrayBuffer();
     } catch (fetchErr) {
       console.error('Erro ao fetch PDF:', fetchErr);
-      alert('Erro ao baixar PDF do servidor: ' + fetchErr.message + '\n\nVerifique se o bucket "Materiais" está como Public no Supabase.');
+      alert('Erro ao baixar PDF do servidor: ' + fetchErr.message + '\n\nTente novamente. Se persistir, avise o professor (o link pode ter expirado).');
       return;
     }
 
@@ -16557,7 +16589,7 @@ function abrirModalMaterial(material, tipo) {
         ` : tipo === 'pdf' ? `
           <div class="form-group">
             <label>Arquivo PDF</label>
-            ${material ? `<p style="font-size:13px;">Atual: <a href="${material.url}" target="_blank">${material.storage_path || material.url}</a></p>` : ''}
+            ${material ? `<p style="font-size:13px;">Atual: <span style="opacity:.75">${material.storage_path || material.url || '(sem arquivo)'}</span></p>` : ''}
             <input type="file" id="mat-arquivo" accept="application/pdf">
             <small style="color:var(--radix-gray-light);font-size:12px;">Max 50 MB. Será disponibilizado com marca d'água do aluno no download.</small>
           </div>
@@ -16633,7 +16665,9 @@ async function salvarMaterial(matId, tipo) {
       const { error: upErr } = await sb.storage.from('Materiais').upload(storage_path, file, { contentType: 'application/pdf' });
       btn.disabled = false; btn.textContent = oldT;
       if (upErr) { alert('Erro no upload: ' + upErr.message); return; }
-      url = sb.storage.from('Materiais').getPublicUrl(storage_path).data.publicUrl;
+      // Bucket privado: NÃO guardamos URL permanente. O link é assinado a
+      // cada acesso por urlMaterial(); persistimos apenas o storage_path.
+      url = '';
     }
   } else {
     url = document.getElementById('mat-url').value.trim();
