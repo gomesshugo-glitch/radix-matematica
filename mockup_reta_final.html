@@ -5,376 +5,353 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MOCKUP · Revisão Final ENEM 2026 — Radix Matemática</title>
 <style>
+  /* =====================================================================
+     DESIGN TOKENS — identidade Radix (azul profundo · ciano · coral)
+     3 níveis de superfície + 1 de destaque. Bordas só onde separam função;
+     profundidade vem de contraste, sombra e espaçamento.
+     ===================================================================== */
   :root {
-    --bg: #0e1a36;
-    --bg-2: #16244a;
-    --surface: #1a2b52;
-    --surface-2: #223464;
-    --line: #2e4275;
-    --line-2: #3a5089;
-    --text: #eef2fb;
-    --text-2: #c6d2ec;
-    --muted: #8fa3cc;
-    --cyan: #22d3ee;
-    --cyan-press: #0fb8d4;
-    --coral: #ff7a5c;
-    --red: #f87171;
-    --green: #34d399;
-    --amber: #fbbf24;
-    --grad: linear-gradient(135deg, #22d3ee, #3b82f6);
-    --r: 14px;
-    --shadow: 0 10px 30px -18px rgba(0,0,0,.6);
+    --bg:#0b1530; --bg-deep:#08112a;
+    --s1:#131f42; --s2:#1a2a55; --s3:#223768;
+    --line:rgba(120,150,220,.14); --line-2:rgba(120,150,220,.28);
+    --text:#f1f4fc; --text-2:#c9d3ee; --muted:#8ea2cc;
+    --cyan:#22d3ee; --cyan-2:#67e8f9; --blue:#3b82f6; --coral:#ff7a5c;
+    --red:#fb7185; --green:#34d399; --amber:#fbbf24; --violet:#a78bfa;
+    --grad:linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%);
+    --r-sm:8px; --r:12px; --r-lg:16px; --r-xl:20px;
+    --sh-1:0 1px 2px rgba(0,0,0,.25),0 6px 18px -10px rgba(0,0,0,.6);
+    --sh-2:0 2px 6px rgba(0,0,0,.3),0 18px 40px -18px rgba(0,0,0,.7);
+    --sh-glow:0 0 0 1px rgba(34,211,238,.35),0 18px 48px -18px rgba(34,211,238,.45);
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px;
+    --fs-xs:12px; --fs-sm:14px; --fs-md:16px; --fs-lg:18px; --fs-xl:22px; --fs-2xl:28px;
+    --lh:1.55; --dur:.16s; --nav-h:64px;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh; padding-bottom: 90px;
-    -webkit-font-smoothing: antialiased;
-  }
-  body.modal-aberto { overflow: hidden; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-md);line-height:var(--lh);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(var(--nav-h) + 24px);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body.modal-aberto{overflow:hidden}
+  img,svg{max-width:100%}
+  button{font-family:inherit;font-size:inherit;cursor:pointer;color:inherit}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input{font-family:inherit;font-size:var(--fs-md)}
+  :focus{outline:none}
+  :focus-visible{outline:2px solid var(--cyan-2);outline-offset:2px;border-radius:var(--r-sm)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
-  .h-page { font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
-  .h-sec  { font-size: 15px; font-weight: 800; margin-bottom: 12px; display:flex; align-items:center; gap:8px; }
-  .h-sec .ic { color: var(--cyan); display:inline-flex; }
-  .h-sec .lado { margin-left:auto; display:inline-flex; align-items:center; gap:8px; font-weight:500; }
-  .txt-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
-  .txt-mini { font-size: 11.5px; color: var(--muted); }
+  /* ---------- tipografia ---------- */
+  .h1{font-size:var(--fs-2xl);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+  .h2{font-size:var(--fs-xl);font-weight:800;letter-spacing:-.01em;line-height:1.25}
+  .h3{font-size:var(--fs-lg);font-weight:700;line-height:1.3}
+  .eyebrow{font-size:var(--fs-xs);font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+  .sub{font-size:var(--fs-sm);color:var(--muted);line-height:var(--lh)}
+  .meta{font-size:var(--fs-xs);color:var(--muted)}
+  .txt-2{color:var(--text-2)}
+  .sec-title{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-lg);font-weight:800;margin-bottom:var(--sp-3)}
+  .sec-title .ic{color:var(--cyan);display:inline-flex}
+  .sec-title .lado{margin-left:auto;display:inline-flex;align-items:center;gap:var(--sp-2);font-weight:500;font-size:var(--fs-sm);flex-wrap:wrap;justify-content:flex-end}
 
-  :focus { outline: none; }
-  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
-  .sr-only {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-  }
-  button { font-family: inherit; cursor: pointer; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
+  /* ---------- superfícies ---------- */
+  .card{background:var(--s1);border-radius:var(--r-lg);padding:var(--sp-5);box-shadow:var(--sh-1)}
+  .card-2{background:var(--s2);border-radius:var(--r);padding:var(--sp-4)}
+  .divider{height:1px;background:var(--line);margin:var(--sp-4) 0}
+
+  /* ---------- botões ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);border:none;border-radius:var(--r);min-height:44px;padding:10px 18px;font-size:var(--fs-sm);font-weight:700;white-space:nowrap;transition:transform var(--dur),box-shadow var(--dur),background var(--dur),border-color var(--dur),color var(--dur)}
+  .btn-pri{background:var(--grad);color:#061125;box-shadow:0 6px 18px -8px rgba(34,211,238,.6)}
+  .btn-pri:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 26px -8px rgba(34,211,238,.7)}
+  .btn-pri:active:not(:disabled){transform:translateY(0) scale(.99);filter:brightness(.95)}
+  .btn-sec{background:var(--s3);color:var(--text);border:1px solid var(--line-2)}
+  .btn-sec:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan-2)}
+  .btn-ghost{background:transparent;color:var(--text-2);border:1px solid transparent}
+  .btn-ghost:hover:not(:disabled){background:rgba(120,150,220,.1);color:var(--text)}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(251,113,133,.45)}
+  .btn-danger:hover{background:rgba(251,113,133,.1);border-color:var(--red)}
+  .btn-sm{min-height:40px;padding:8px 14px;font-size:var(--fs-sm);border-radius:var(--r-sm)}
+  .btn-block{width:100%}
+  .btn .ic{display:inline-flex}
+
+  /* ---------- chips / tooltips ---------- */
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;line-height:1.4}
+  .chip-alta{background:rgba(251,113,133,.16);color:#fda4af}
+  .chip-padrao{background:rgba(251,191,36,.14);color:#fcd34d}
+  .chip-leve{background:rgba(52,211,153,.14);color:#6ee7b7}
+  .chip-geo{background:rgba(167,139,250,.16);color:#c4b5fd}
+  .chip-neutro{background:rgba(120,150,220,.14);color:var(--text-2)}
+  .chip-ok{background:rgba(52,211,153,.16);color:var(--green)}
+  .chip-atraso{background:rgba(251,191,36,.16);color:var(--amber)}
+  .chip-cyan{background:rgba(34,211,238,.14);color:var(--cyan-2)}
+  .tip{position:relative;cursor:help}
+  .tip::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);width:max-content;max-width:260px;background:#0a1330;color:var(--text-2);font-size:var(--fs-xs);font-weight:500;line-height:1.45;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line-2);box-shadow:var(--sh-2);opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity var(--dur),transform var(--dur);z-index:30;white-space:normal}
+  .tip:hover::after,.tip:focus-visible::after{opacity:1;transform:none}
 
   /* ---------- barra demo ---------- */
-  .demo {
-    background: #241c47; border-bottom: 1px solid #4c3d8f;
-    padding: 8px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    font-size: 12px; color: #b9aef0;
-  }
-  .demo b { letter-spacing: .08em; }
-  .demo select, .demo button {
-    background: var(--surface); color: var(--text-2);
-    border: 1px solid var(--line-2); border-radius: 7px;
-    padding: 6px 10px; font-size: 12px; min-height: 32px;
-  }
-  .demo button:hover { border-color: var(--coral); color: var(--coral); }
+  .demo{background:#1d1741;border-bottom:1px solid #3b2f7a;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--fs-xs);color:#c4b8f7}
+  .demo b{letter-spacing:.1em}
+  .demo select,.demo button{background:var(--s2);color:var(--text-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 10px;font-size:var(--fs-xs);min-height:36px}
+  .demo button:hover{border-color:var(--coral);color:var(--coral)}
 
-  /* ---------- header ---------- */
-  .top {
-    position: sticky; top: 0; z-index: 40;
-    background: rgba(14,26,54,.92); backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .top-in {
-    max-width: 760px; margin: 0 auto; padding: 9px 16px;
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  }
-  .brand { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 800; }
-  /* Marca: radical Radix em SVG (mesmo path do header do app) sobre o gradiente da casa */
-  .logo {
-    width: 30px; height: 30px; border-radius: 8px; background: var(--grad);
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .brand small { color: var(--cyan); font-weight: 700; }
-  .count-pill {
-    display: inline-flex; align-items: center; gap: 7px;
-    background: var(--surface); border: 1px solid var(--line-2);
-    border-radius: 999px; padding: 6px 13px; font-size: 12px; color: var(--text-2);
-    white-space: nowrap;
-  }
-  .count-pill b { color: var(--coral); font-size: 14px; }
+  /* ---------- header + nav desktop ---------- */
+  .top{position:sticky;top:0;z-index:40;background:rgba(11,21,48,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:var(--sp-4)}
+  .brand{display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);font-weight:800;white-space:nowrap}
+  .logo{width:34px;height:34px;border-radius:10px;background:var(--grad);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px -4px rgba(34,211,238,.6)}
+  .brand small{color:var(--cyan);font-weight:700}
+  .dnav{display:none;margin-left:auto;gap:4px}
+  .dnav button{background:none;border:none;color:var(--muted);font-size:var(--fs-sm);font-weight:700;padding:8px 14px;border-radius:999px;min-height:40px;transition:background var(--dur),color var(--dur)}
+  .dnav button:hover{color:var(--text);background:rgba(120,150,220,.1)}
+  .dnav button.on{color:var(--cyan-2);background:rgba(34,211,238,.12)}
+  .count-pill{display:inline-flex;align-items:center;gap:7px;background:var(--s2);border-radius:999px;padding:8px 14px;font-size:var(--fs-xs);color:var(--text-2);white-space:nowrap;margin-left:auto}
+  .count-pill b{color:var(--coral);font-size:var(--fs-md)}
+  .dnav ~ .count-pill{margin-left:0}
 
-  section { margin-top: 26px; }
-  .panel {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--r); padding: 18px;
-  }
+  /* ---------- layout ---------- */
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+  .layout{display:grid;grid-template-columns:1fr;gap:var(--sp-6);align-items:start}
+  .col-main{min-width:0}
+  .col-side{min-width:0;display:none}
+  .col-side .stack{position:sticky;top:72px;display:flex;flex-direction:column;gap:var(--sp-4)}
+  section{scroll-margin-top:76px}
+  .stack-v>*+*{margin-top:var(--sp-6)}
+  .only-mobile{display:block}
+  footer{text-align:center;color:var(--muted);font-size:var(--fs-xs);margin-top:var(--sp-8);padding-bottom:var(--sp-4)}
 
-  /* ---------- próximo passo ---------- */
-  .next {
-    background: linear-gradient(160deg, rgba(34,211,238,.13), rgba(59,130,246,.05) 60%);
-    border: 1px solid rgba(34,211,238,.35);
-    border-radius: 16px; padding: 20px 18px; box-shadow: var(--shadow);
-  }
-  .next .tag-topo { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; color: var(--cyan); }
-  .next h2 { font-size: 19px; margin: 8px 0 3px; line-height: 1.3; }
-  .next .infos { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-2); margin: 8px 0 4px; }
-  .next .infos span { display: inline-flex; align-items: center; gap: 5px; }
-  .next .just {
-    font-size: 12.5px; color: var(--muted); border-left: 3px solid var(--line-2);
-    padding-left: 10px; margin: 10px 0 16px; line-height: 1.45;
-  }
-  .next .acts { display: flex; gap: 10px; flex-wrap: wrap; }
+  /* ---------- bottom nav (celular/tablet) ---------- */
+  .bnav{position:fixed;left:0;right:0;bottom:0;z-index:60;height:calc(var(--nav-h) + env(safe-area-inset-bottom));background:rgba(8,17,42,.95);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:stretch;padding:0 4px env(safe-area-inset-bottom)}
+  .bnav button{flex:1;background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:var(--fs-xs);font-weight:700;min-height:48px;border-radius:var(--r);position:relative}
+  .bnav button .ic{display:inline-flex;transition:transform var(--dur)}
+  .bnav button.on{color:var(--cyan-2)}
+  .bnav button.on::before{content:'';position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--grad)}
+  .bnav button.on .ic{transform:translateY(-1px)}
 
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    border: none; border-radius: 10px; min-height: 44px;
-    padding: 11px 20px; font-size: 14px; font-weight: 800;
-    transition: transform .12s, box-shadow .12s, background .12s;
-  }
-  .btn-pri { background: var(--grad); color: #06121f; }
-  .btn-pri:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px -10px rgba(34,211,238,.55); }
-  .btn-pri:active { transform: translateY(0); background: var(--cyan-press); }
-  .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--line-2); }
-  .btn-ghost:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
-  .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(248,113,113,.5); }
-  .btn-danger:hover { border-color: var(--red); background: rgba(248,113,113,.08); }
-  .btn-sm { min-height: 36px; padding: 7px 14px; font-size: 12.5px; border-radius: 8px; }
+  /* ---------- saudação ---------- */
+  .greet{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin-top:var(--sp-5)}
+  .greet .sub{margin-top:2px}
+  .aviso{border-left:3px solid var(--amber);background:rgba(251,191,36,.07);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-sm);font-size:var(--fs-sm);line-height:var(--lh)}
+  .aviso b{color:var(--text)}
 
-  /* ---------- progresso ---------- */
-  .prog-big { display: flex; align-items: center; gap: 16px; }
-  .prog-ring { flex-shrink: 0; position: relative; width: 72px; height: 72px; }
-  .prog-ring svg { transform: rotate(-90deg); }
-  .prog-ring .pct {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 800;
-  }
-  .prog-info { flex: 1; min-width: 0; }
-  .prog-info .lin { font-size: 13.5px; font-weight: 700; }
-  .prog-info .det { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  /* ---------- PRÓXIMO PASSO (hero) ---------- */
+  .next{position:relative;overflow:hidden;background:linear-gradient(150deg,#16305e 0%,#111f47 55%,#0f1a3d 100%);border-radius:var(--r-xl);padding:var(--sp-6);box-shadow:var(--sh-glow)}
+  .next::before{content:'';position:absolute;inset:0;background:radial-gradient(600px 200px at 100% 0%,rgba(34,211,238,.18),transparent 60%);pointer-events:none}
+  .next>*{position:relative}
+  .next h2{font-size:var(--fs-xl);margin:var(--sp-2) 0 var(--sp-1);line-height:1.25}
+  .next .infos{display:flex;gap:var(--sp-4);flex-wrap:wrap;font-size:var(--fs-sm);color:var(--text-2);margin:var(--sp-2) 0}
+  .next .infos span{display:inline-flex;align-items:center;gap:6px}
+  .next .just{font-size:var(--fs-sm);color:var(--text-2);border-left:3px solid var(--cyan);padding:2px 0 2px var(--sp-3);margin:var(--sp-4) 0 var(--sp-5);line-height:var(--lh)}
+  .next .acts{display:flex;gap:var(--sp-3);flex-wrap:wrap}
+  .next.done{box-shadow:var(--sh-1);background:linear-gradient(150deg,#12304a,#111f47)}
+  .next.quiet{box-shadow:var(--sh-1)}
+
+  /* ---------- resumo da semana ---------- */
+  .resumo{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-4);align-items:center}
+  .ring{position:relative;width:84px;height:84px;flex-shrink:0}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);font-weight:800}
+  .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-2) var(--sp-3)}
+  .kpi{min-width:0}
+  .kpi .v{font-size:var(--fs-md);font-weight:800;line-height:1.2}
+  .kpi .l{font-size:var(--fs-xs);color:var(--muted);margin-top:1px}
+  .resumo-foot{grid-column:1/-1;display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;font-size:var(--fs-sm);color:var(--text-2);padding-top:var(--sp-3);border-top:1px solid var(--line)}
+  .resumo-foot .chip{margin-left:auto}
 
   /* ---------- agenda ---------- */
-  .dia-grupo { margin-top: 16px; }
-  .dia-head {
-    display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;
-    font-size: 12px; font-weight: 800; letter-spacing: .07em; color: var(--muted);
-  }
-  .dia-head.hoje { color: var(--cyan); }
-  .dia-head .data { font-weight: 500; letter-spacing: 0; }
-  .atv {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
-  }
-  .atv.done { opacity: .62; }
-  .atv.done .t { text-decoration: line-through; }
-  .atv .chk {
-    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
-    border: 2px solid var(--line-2); background: transparent;
-    display: inline-flex; align-items: center; justify-content: center;
-    color: transparent; transition: all .12s; padding: 0;
-  }
-  .atv .chk[aria-checked="true"] { background: var(--green); border-color: var(--green); color: #06121f; }
-  .atv .chk:hover { border-color: var(--green); }
-  .atv .body { flex: 1; min-width: 0; }
-  .atv .t { font-size: 13.5px; font-weight: 700; line-height: 1.35; }
-  .atv .m { font-size: 11.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .pri {
-    font-size: 9.5px; font-weight: 800; letter-spacing: .06em;
-    padding: 2px 7px; border-radius: 5px; white-space: nowrap;
-  }
-  .pri-3 { background: rgba(248,113,113,.15); color: var(--red); }
-  .pri-2 { background: rgba(251,191,36,.13); color: var(--amber); }
-  .pri-1 { background: rgba(52,211,153,.14); color: var(--green); }
-  .pri-g { background: rgba(167,139,250,.16); color: #b9aef0; }
-  .pri-auto { background: rgba(34,211,238,.13); color: var(--cyan); cursor: help; }
-  .atv .mover {
-    background: var(--bg-2); color: var(--muted); border: 1px solid var(--line);
-    border-radius: 7px; font-size: 11px; padding: 6px 6px; min-height: 32px; max-width: 74px;
-  }
-  .atv-vazia {
-    border: 1px dashed var(--line-2); border-radius: 12px; padding: 16px;
-    text-align: center; font-size: 12.5px; color: var(--muted);
-  }
-  .fora-item {
-    border: 1px dashed var(--line-2); border-radius: 12px; padding: 12px 14px;
-    font-size: 12.5px; color: var(--muted); margin-bottom: 8px; line-height: 1.5;
-  }
-  .fora-item b { color: var(--text-2); }
-  details.concl { margin-top: 16px; }
-  details.concl summary {
-    cursor: pointer; font-size: 12px; font-weight: 800; letter-spacing: .07em;
-    color: var(--muted); list-style: none; display: flex; align-items: center; gap: 6px;
-    min-height: 44px;
-  }
-  details.concl summary::-webkit-details-marker { display: none; }
-  details.concl summary .chev { transition: transform .15s; display: inline-flex; }
-  details.concl[open] summary .chev { transform: rotate(90deg); }
+  .grupo{margin-top:var(--sp-5)}
+  .grupo-h{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2);font-size:var(--fs-xs);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .grupo-h.hoje{color:var(--cyan-2)}
+  .grupo-h.atraso{color:var(--amber)}
+  .grupo-h .n{background:rgba(120,150,220,.16);color:var(--text-2);border-radius:999px;padding:1px 8px;font-size:var(--fs-xs);letter-spacing:0}
+  .dia-lbl{font-size:var(--fs-xs);font-weight:700;color:var(--muted);margin:var(--sp-3) 0 var(--sp-2);letter-spacing:.04em}
+  .atv{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"chk body" "acts acts";gap:var(--sp-3) var(--sp-3);background:var(--s1);border-radius:var(--r-lg);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--sh-1);border-left:3px solid transparent;transition:background var(--dur),transform var(--dur),opacity var(--dur)}
+  .atv:hover{background:#15234b}
+  .atv.late{border-left-color:var(--amber)}
+  .atv.done{opacity:.66;border-left-color:var(--green)}
+  .atv.done .atv-titulo{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.35)}
+  .atv.flash{animation:flashOk .55s ease-out}
+  @keyframes flashOk{0%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}100%{box-shadow:0 0 0 14px rgba(52,211,153,0)}}
+  .chk{grid-area:chk;width:44px;height:44px;border-radius:12px;flex-shrink:0;border:2px solid var(--line-2);background:var(--s2);display:inline-flex;align-items:center;justify-content:center;color:transparent;transition:all var(--dur);padding:0;align-self:start}
+  .chk:hover{border-color:var(--green)}
+  .chk[aria-checked="true"]{background:var(--green);border-color:var(--green);color:#052e1f}
+  .atv-body{grid-area:body;min-width:0}
+  .atv-top{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .atv-titulo{font-size:var(--fs-md);font-weight:800;line-height:1.3;margin:3px 0 4px;color:var(--text)}
+  .atv-meta{display:flex;align-items:center;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;font-size:var(--fs-sm);color:var(--muted)}
+  .atv-meta .ok{color:var(--green);font-weight:700}
+  .atv-acts{grid-area:acts;display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
+  .atv-acts .btn{flex:1 1 160px}
+  .reag{display:inline-flex;align-items:center;gap:6px;flex:1 1 160px}
+  .reag select{width:100%;background:var(--s2);color:var(--text-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:9px 10px;min-height:40px;font-size:var(--fs-sm)}
+  .vazio{border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:var(--sp-5);text-align:center;font-size:var(--fs-sm);color:var(--muted);line-height:var(--lh)}
+  .vazio b{color:var(--text-2)}
+  .fora{border:1px dashed var(--line-2);border-radius:var(--r);padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);color:var(--muted);margin-bottom:var(--sp-2);line-height:var(--lh)}
+  .fora b{color:var(--text-2)}
+  details.concl{margin-top:var(--sp-4)}
+  details.concl summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:var(--sp-2);min-height:44px;font-size:var(--fs-xs);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  details.concl summary::-webkit-details-marker{display:none}
+  details.concl summary .chev{display:inline-flex;transition:transform var(--dur)}
+  details.concl[open] summary .chev{transform:rotate(90deg)}
+  .mini{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic inf" "act act";gap:var(--sp-3);background:linear-gradient(135deg,var(--s2),var(--s1));border-radius:var(--r-lg);padding:var(--sp-4);margin-top:var(--sp-5);box-shadow:var(--sh-1)}
+  .mini .ic{grid-area:ic;color:var(--cyan);display:inline-flex;width:44px;height:44px;border-radius:12px;background:rgba(34,211,238,.12);align-items:center;justify-content:center}
+  .mini .inf{grid-area:inf;min-width:0}
+  .mini .t{font-weight:800;font-size:var(--fs-md)}
+  .mini .s{font-size:var(--fs-sm);color:var(--muted);margin-top:2px}
+  .mini .act{grid-area:act;display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap}
+  .mini-res{display:inline-flex;align-items:center;gap:var(--sp-3);background:rgba(52,211,153,.1);border-radius:var(--r);padding:8px 12px}
+  .mini-res b{color:var(--green);font-size:var(--fs-lg)}
 
-  /* ---------- mini ---------- */
-  .mini {
-    background: var(--surface-2); border: 1px solid var(--line-2);
-    border-radius: 12px; padding: 14px; margin-top: 16px;
-    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  }
-  .mini .ic { color: var(--cyan); display: inline-flex; }
-  .mini .inf { flex: 1; min-width: 170px; }
-  .mini .t { font-weight: 800; font-size: 13.5px; }
-  .mini .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .mini-res {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: rgba(52,211,153,.10); border: 1px solid rgba(52,211,153,.35);
-    border-radius: 10px; padding: 8px 12px;
-  }
-  .mini-res b { color: var(--green); font-size: 15px; }
-
-  /* ---------- diagnóstico / stats ---------- */
-  .diag { border-left: 3px solid var(--cyan); padding-left: 14px; margin-top: 16px; }
-  .diag .linha, .stats-linha { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-  .stat { background: var(--bg-2); border-radius: 9px; padding: 9px 13px; min-width: 90px; flex: 1; }
-  .stat .v { font-size: 16px; font-weight: 800; }
-  .stat .l { font-size: 10px; color: var(--muted); letter-spacing: .05em; margin-top: 1px; }
-  .diag .rec { font-size: 12.5px; color: var(--text-2); margin-top: 10px; line-height: 1.5; }
+  /* ---------- abas ---------- */
+  .tabs{display:flex;gap:4px;background:var(--s1);border-radius:999px;padding:4px;box-shadow:var(--sh-1);margin-bottom:var(--sp-4);overflow-x:auto}
+  .tabs button{flex:1;background:none;border:none;color:var(--muted);font-size:var(--fs-sm);font-weight:700;padding:10px 14px;border-radius:999px;min-height:44px;white-space:nowrap;transition:background var(--dur),color var(--dur)}
+  .tabs button[aria-selected="true"]{background:var(--s3);color:var(--text)}
+  .tabs button:hover{color:var(--text)}
+  .tabpanel[hidden]{display:none}
 
   /* ---------- evolução ---------- */
-  .evo { display: flex; align-items: flex-end; gap: 8px; height: 130px; margin-top: 26px; position: relative; }
-  .evo .meta-line { position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(52,211,153,.55); pointer-events: none; }
-  .evo .meta-line small { position: absolute; right: 0; top: -16px; font-size: 10px; color: var(--green); font-weight: 700; }
-  .evo-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
-  .evo-bar { width: 100%; max-width: 44px; border-radius: 6px 6px 0 0; background: var(--grad); min-height: 4px; }
-  .evo-bar.off { background: var(--bg-2); border: 1px dashed var(--line-2); }
-  .evo-v { font-size: 11px; font-weight: 800; color: var(--cyan); }
-  .evo-l { font-size: 10px; color: var(--muted); }
+  .evo{display:flex;align-items:flex-end;gap:var(--sp-2);height:150px;margin-top:var(--sp-6);position:relative;padding-top:var(--sp-4)}
+  .evo .meta-line{position:absolute;left:0;right:0;border-top:2px dashed rgba(52,211,153,.6);pointer-events:none}
+  .evo .meta-line small{position:absolute;right:0;top:-18px;font-size:var(--fs-xs);color:var(--green);font-weight:700}
+  .evo-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;background:none;border:none;border-radius:var(--r-sm);padding:0 2px;min-width:0}
+  .evo-col:hover .evo-bar{filter:brightness(1.15)}
+  .evo-col[aria-pressed="true"] .evo-l{color:var(--cyan-2);font-weight:800}
+  .evo-bar{width:100%;max-width:46px;border-radius:6px 6px 0 0;background:var(--grad);min-height:4px;transition:height .3s}
+  .evo-bar.atual{background:linear-gradient(180deg,var(--coral),#f59e0b)}
+  .evo-bar.off{background:transparent;border:1px dashed var(--line-2)}
+  .evo-bar.sel{outline:2px solid var(--cyan-2);outline-offset:2px}
+  .evo-v{font-size:var(--fs-xs);font-weight:800;color:var(--text)}
+  .evo-l{font-size:var(--fs-xs);color:var(--muted)}
+  .legenda{display:flex;gap:var(--sp-4);flex-wrap:wrap;font-size:var(--fs-xs);color:var(--muted);margin-top:var(--sp-3)}
+  .legenda i{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+  .diag{border-left:3px solid var(--cyan);padding-left:var(--sp-4);margin-top:var(--sp-5)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--sp-2);margin-top:var(--sp-3)}
+  .stat{background:var(--s2);border-radius:var(--r-sm);padding:10px 12px;min-width:0}
+  .stat .v{font-size:var(--fs-md);font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+  .stat .l{font-size:var(--fs-xs);color:var(--muted);letter-spacing:.05em;margin-top:2px}
+  .stat.pos .v{color:var(--green)} .stat.neg .v{color:var(--red)} .stat.warn .v{color:var(--amber)}
+  .rec{font-size:var(--fs-sm);color:var(--text-2);margin-top:var(--sp-3);line-height:var(--lh)}
 
-  /* ---------- timeline ---------- */
-  .tl { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; scroll-snap-type: x proximity; }
-  .tl::-webkit-scrollbar { height: 5px; }
-  .tl::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
-  .tl-item {
-    scroll-snap-align: start; min-width: 116px; text-align: left;
-    background: var(--surface); border: 1.5px solid var(--line);
-    border-radius: 11px; padding: 10px 11px; color: var(--text-2);
-  }
-  .tl-item:hover { border-color: var(--cyan); }
-  .tl-item .n { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; color: var(--muted); display:flex; justify-content: space-between; gap: 6px; }
-  .tl-item .d { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
-  .tl-item .bar { display:block; height: 5px; background: var(--bg-2); border-radius: 99px; margin-top: 8px; overflow: hidden; }
-  .tl-item .bar i { display: block; height: 100%; background: var(--grad); border-radius: 99px; }
-  .tl-item.atual { border-color: var(--cyan); background: rgba(34,211,238,.07); }
-  .tl-item.atual .n { color: var(--cyan); }
-  .tl-item.sel { box-shadow: 0 0 0 3px rgba(34,211,238,.18); }
-  .status-txt { font-size: 9px; font-weight: 800; letter-spacing: .06em; }
-  .tl-prova {
-    min-width: 84px; border: 1.5px dashed var(--red); border-radius: 11px;
-    padding: 10px 11px; text-align: center; color: var(--red);
-    font-size: 10.5px; font-weight: 800; display: flex; flex-direction: column; justify-content: center; gap: 3px;
-  }
-  .tl-prova small { color: var(--muted); font-weight: 500; }
-
-  .perfil-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-  .perfil-grid .stat { flex: 1; min-width: 110px; }
+  /* ---------- linha do tempo ---------- */
+  .tl{display:flex;gap:var(--sp-2);overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x proximity}
+  .tl::-webkit-scrollbar{height:6px} .tl::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
+  .tl-item{scroll-snap-align:start;min-width:132px;text-align:left;background:var(--s1);border:2px solid transparent;border-radius:var(--r);padding:10px 12px;color:var(--text-2);box-shadow:var(--sh-1);transition:border-color var(--dur),transform var(--dur)}
+  .tl-item:hover{transform:translateY(-1px)}
+  .tl-item .n{font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between;gap:6px;align-items:center}
+  .tl-item .d{font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
+  .tl-item .bar{display:block;height:5px;background:var(--s3);border-radius:99px;margin-top:8px;overflow:hidden}
+  .tl-item .bar i{display:block;height:100%;background:var(--grad);border-radius:99px}
+  .tl-item.atual{background:rgba(34,211,238,.08)} .tl-item.atual .n{color:var(--cyan-2)}
+  .tl-item.done .n{color:var(--green)} .tl-item.done .bar i{background:var(--green)}
+  .tl-item.futura{opacity:.7}
+  .tl-item.sel{border-color:var(--cyan)}
+  .st{font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;padding:1px 6px;border-radius:999px;background:rgba(120,150,220,.14)}
+  .tl-prova{min-width:96px;border:2px dashed rgba(251,113,133,.6);border-radius:var(--r);padding:10px 12px;text-align:center;color:var(--red);font-size:var(--fs-xs);font-weight:800;display:flex;flex-direction:column;justify-content:center;gap:3px}
+  .tl-prova small{color:var(--muted);font-weight:500}
+  .tl-mini{display:flex;gap:6px;align-items:center}
+  .tl-mini button{flex:1;height:34px;border-radius:var(--r-sm);border:2px solid transparent;background:var(--s2);color:var(--muted);font-size:var(--fs-xs);font-weight:800}
+  .tl-mini button.done{background:rgba(52,211,153,.18);color:var(--green)}
+  .tl-mini button.atual{background:rgba(34,211,238,.16);color:var(--cyan-2)}
+  .tl-mini button.sel{border-color:var(--cyan)}
 
   /* ---------- questionário ---------- */
-  .q-progress { display: flex; align-items: center; gap: 10px; margin: 18px 0 8px; }
-  .q-progress .bar { flex: 1; height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
-  .q-progress .bar i { display: block; height: 100%; background: var(--grad); border-radius: 99px; transition: width .25s; }
-  .q-progress .lbl { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
-  .q-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 20px; margin-top: 10px; }
-  .q-card h2 { font-size: 17px; margin-bottom: 6px; }
-  .q-hint { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
-  .q-erro { color: var(--red); font-size: 12.5px; min-height: 18px; margin-top: 10px; }
-  .q-nav { display: flex; gap: 10px; margin-top: 18px; }
-  .q-nav .esp { flex: 1; }
+  .q-wrap{max-width:720px;margin:var(--sp-5) auto 0}
+  .q-progress{display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-4) 0 var(--sp-3)}
+  .q-progress .bar{flex:1;height:8px;background:var(--s2);border-radius:99px;overflow:hidden}
+  .q-progress .bar i{display:block;height:100%;background:var(--grad);border-radius:99px;transition:width .3s}
+  .q-progress .lbl{font-size:var(--fs-sm);color:var(--text-2);white-space:nowrap;font-weight:700}
+  .q-card{background:var(--s1);border-radius:var(--r-xl);padding:var(--sp-6);box-shadow:var(--sh-2);position:relative}
+  .q-card h2{font-size:var(--fs-xl);margin-bottom:var(--sp-2);line-height:1.3}
+  .q-hint{font-size:var(--fs-sm);color:var(--muted);line-height:1.6;margin-bottom:var(--sp-4)}
+  .q-hint b{color:var(--text-2)}
+  .q-erro{color:var(--red);font-size:var(--fs-sm);min-height:20px;margin-top:var(--sp-2)}
+  .q-nav{display:flex;gap:var(--sp-3);margin-top:var(--sp-4);position:sticky;bottom:calc(var(--nav-h) + 8px);background:var(--s1);padding:var(--sp-3) 0 0;border-top:1px solid var(--line);z-index:5}
+  .q-nav .esp{flex:1}
+  .opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:var(--sp-2)}
+  .opt{background:var(--s2);color:var(--text-2);border:2px solid transparent;border-radius:var(--r);padding:12px 14px;font-size:var(--fs-sm);font-weight:700;min-height:48px;transition:all var(--dur)}
+  .opt:hover{background:var(--s3)}
+  .opt[aria-pressed="true"]{background:rgba(34,211,238,.14);border-color:var(--cyan);color:var(--cyan-2)}
+  .campo{margin-bottom:var(--sp-4)}
+  .campo label,.campo .lbl{display:block;font-size:var(--fs-sm);color:var(--text-2);margin-bottom:6px;font-weight:600}
+  .campo select,.campo input{width:100%;max-width:280px;background:var(--s2);color:var(--text);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:11px 12px;min-height:46px}
+  .area-head{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-3)}
+  .area-head .contador{margin-left:auto;font-size:var(--fs-sm);color:var(--text-2);font-weight:700}
+  .acoes-rapidas{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-3)}
+  .busca{position:relative;margin-bottom:var(--sp-3)}
+  .busca input{width:100%;background:var(--s2);color:var(--text);border:1px solid var(--line-2);border-radius:var(--r);padding:11px 12px 11px 40px;min-height:46px}
+  .busca .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);display:inline-flex}
+  .tema{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;padding:var(--sp-3) 0;border-bottom:1px solid var(--line)}
+  .tema:last-child{border-bottom:none}
+  .tema .nome{flex:1 1 180px;font-size:var(--fs-md);font-weight:600;min-width:0}
+  .tema .nome small{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:500}
+  .tema.outra{background:rgba(167,139,250,.06);border-left:3px solid var(--violet);padding-left:var(--sp-3);border-radius:var(--r-sm)}
+  .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .seg button{background:var(--s2);color:var(--muted);border:2px solid transparent;font-size:var(--fs-xs);font-weight:700;padding:8px 10px;min-height:44px;border-radius:var(--r-sm);flex:1 1 auto;transition:all var(--dur)}
+  .seg button:hover{color:var(--text)}
+  .seg button[aria-pressed="true"].sd{background:rgba(251,113,133,.16);border-color:var(--red);color:#fda4af}
+  .seg button[aria-pressed="true"].sr{background:rgba(251,191,36,.14);border-color:var(--amber);color:#fcd34d}
+  .seg button[aria-pressed="true"].sf{background:rgba(52,211,153,.15);border-color:var(--green);color:#6ee7b7}
+  .seg button[aria-pressed="true"].sn{background:var(--s3);border-color:var(--line-2);color:var(--text)}
+  .resumo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sp-2);margin:var(--sp-3) 0}
 
-  .opt-grid { display: flex; flex-wrap: wrap; gap: 9px; }
-  .opt {
-    background: var(--surface-2); color: var(--text-2);
-    border: 1.5px solid var(--line-2); border-radius: 10px;
-    padding: 11px 16px; font-size: 13.5px; font-weight: 600; min-height: 44px;
-  }
-  .opt[aria-pressed="true"] { background: rgba(34,211,238,.14); border-color: var(--cyan); color: var(--cyan); }
-  .campo { margin-bottom: 14px; }
-  .campo label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
-  .campo select, .campo input {
-    width: 100%; max-width: 240px;
-    background: var(--surface-2); color: var(--text);
-    border: 1px solid var(--line-2); border-radius: 9px;
-    padding: 11px 12px; font-size: 14px; min-height: 44px;
-  }
-  .busca-tema { width: 100%; margin-bottom: 12px; }
-  .busca-tema input {
-    width: 100%; background: var(--bg-2); color: var(--text);
-    border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px;
-    font-size: 13px; min-height: 44px;
-  }
-  .tema-linha {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    padding: 11px 0; border-bottom: 1px solid var(--line);
-  }
-  .tema-linha:last-child { border-bottom: none; }
-  .tema-linha .nome { flex: 1; min-width: 150px; font-size: 13.5px; font-weight: 600; }
-  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
-  .seg button {
-    background: var(--bg-2); color: var(--muted);
-    border: 1.5px solid var(--line); font-size: 11px; font-weight: 700;
-    padding: 8px 10px; min-height: 44px; border-radius: 8px;
-  }
-  .seg button[aria-pressed="true"].sd { background: rgba(248,113,113,.16); border-color: var(--red); color: var(--red); }
-  .seg button[aria-pressed="true"].sr { background: rgba(251,191,36,.14); border-color: var(--amber); color: var(--amber); }
-  .seg button[aria-pressed="true"].sf { background: rgba(52,211,153,.15); border-color: var(--green); color: var(--green); }
-  .seg button[aria-pressed="true"].sn { background: var(--surface-2); border-color: var(--line-2); color: var(--text-2); }
-  .resumo-grid { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
-  .resumo-grid .stat { flex: 1; min-width: 104px; }
+  /* ---------- toasts / modal / celebração / skeleton ---------- */
+  #toasts{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px);transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;width:min(92vw,440px)}
+  .toast{background:#0f1a3d;border-left:4px solid var(--cyan);border-radius:var(--r);padding:12px 16px;font-size:var(--fs-sm);box-shadow:var(--sh-2);animation:toastIn .22s ease-out}
+  .toast.ok{border-left-color:var(--green)} .toast.marco{border-left-color:var(--coral)} .toast.erro{border-left-color:var(--red)}
+  .toast b{display:block;margin-bottom:2px} .toast small{color:var(--muted);font-size:var(--fs-xs)}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .overlay{position:fixed;inset:0;background:rgba(4,9,24,.72);backdrop-filter:blur(3px);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal{position:relative;background:var(--s1);border-radius:var(--r-xl);padding:var(--sp-6);width:min(94vw,500px);max-height:88vh;overflow-y:auto;box-shadow:var(--sh-2);animation:toastIn .2s ease-out}
+  .modal h3{font-size:var(--fs-lg);margin-bottom:4px;padding-right:40px}
+  .modal .sub{margin-bottom:var(--sp-4)}
+  .modal .q-nav{position:static;border:none;padding-top:var(--sp-4)}
+  .fechar-x{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:10px;background:transparent;border:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center}
+  .fechar-x:hover{color:var(--text);background:rgba(120,150,220,.12)}
+  .stepper{display:flex;align-items:center;gap:var(--sp-3)}
+  .stepper button{width:48px;height:48px;border-radius:var(--r);background:var(--s2);border:1px solid var(--line-2);color:var(--text);font-size:22px;font-weight:800}
+  .stepper .val{min-width:56px;text-align:center;font-size:var(--fs-2xl);font-weight:800}
+  .celebra{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(4,9,24,.7);backdrop-filter:blur(4px);animation:toastIn .25s ease-out}
+  .celebra .box{text-align:center;padding:var(--sp-8);max-width:360px}
+  .celebra .anel{width:96px;height:96px;margin:0 auto var(--sp-4);border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#061125;box-shadow:0 0 0 12px rgba(34,211,238,.15),0 0 0 26px rgba(34,211,238,.06);animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+  .skel{background:linear-gradient(90deg,var(--s1) 25%,var(--s2) 50%,var(--s1) 75%);background-size:200% 100%;border-radius:var(--r);animation:shimmer 1.2s infinite;min-height:18px}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-  /* ---------- toast ---------- */
-  #toasts { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: 8px; width: min(92vw, 420px); }
-  .toast {
-    background: var(--surface-2); border: 1px solid var(--line-2);
-    border-left: 4px solid var(--cyan);
-    border-radius: 11px; padding: 12px 15px; font-size: 13px;
-    box-shadow: var(--shadow); animation: toastIn .22s ease-out;
-  }
-  .toast.ok { border-left-color: var(--green); }
-  .toast.marco { border-left-color: var(--coral); }
-  .toast b { display: block; margin-bottom: 2px; }
-  .toast small { color: var(--muted); }
-  @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-  /* ---------- modal ---------- */
-  .overlay {
-    position: fixed; inset: 0; background: rgba(6,12,28,.72); z-index: 80;
-    display: flex; align-items: center; justify-content: center; padding: 16px;
-  }
-  .modal {
-    position: relative;
-    background: var(--surface); border: 1px solid var(--line-2);
-    border-radius: 16px; padding: 20px; width: min(94vw, 470px);
-    max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow);
-  }
-  .modal h3 { font-size: 16px; margin-bottom: 4px; padding-right: 36px; }
-  .modal .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
-  .modal .fechar-x {
-    position: absolute; top: 12px; right: 12px;
-    width: 36px; height: 36px; border-radius: 9px;
-    background: transparent; border: 1px solid transparent; color: var(--muted);
-    display: inline-flex; align-items: center; justify-content: center;
-  }
-  .modal .fechar-x:hover { color: var(--text); border-color: var(--line-2); }
-  .stepper { display: flex; align-items: center; gap: 10px; }
-  .stepper button {
-    width: 44px; height: 44px; border-radius: 9px;
-    background: var(--bg-2); border: 1px solid var(--line-2); color: var(--text);
-    font-size: 18px; font-weight: 800;
-  }
-  .stepper .val { min-width: 52px; text-align: center; font-size: 18px; font-weight: 800; }
+  /* ---------- utilitários (substituem estilos inline repetidos) ---------- */
+  .m-0{margin:0}.mt-6{margin-top:6px}.mt-8{margin-top:8px}.mt-10{margin-top:10px}.mt-20{margin-top:20px}.mb-6{margin-bottom:6px}.mb-8{margin-bottom:8px}
+  .my-a{margin:14px 0 16px}.my-b{margin:8px 0 12px}.my-c{margin:24px 0 12px}
+  .c-green{color:var(--green)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}.c-coral{color:var(--coral)}.c-text2{color:var(--text-2)}
+  .kpis-2{grid-template-columns:1fr 1fr}.v-dias{font-size:var(--fs-sm);line-height:1.7}.btn-inline{min-height:32px;padding:2px 8px}
+  .svg-defs{position:absolute;width:0;height:0}.skel-a{height:140px;margin-bottom:16px}.skel-b{height:90px;margin-bottom:16px}.skel-c{height:72px;margin-bottom:10px}.skel-d{height:72px}
+  .n-ok{background:rgba(52,211,153,.16)!important;color:var(--green)!important}
+  @media (max-width:520px){.sec-title{flex-wrap:wrap}.sec-title .lado{margin-left:0;width:100%;justify-content:flex-start}}
 
-  /* ---------- bottom nav ---------- */
-  .bnav {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-    background: rgba(14,26,54,.96); backdrop-filter: blur(8px);
-    border-top: 1px solid var(--line);
-    display: flex; justify-content: space-around; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  /* ---------- breakpoints ---------- */
+  @media (max-width:400px){
+    :root{--fs-2xl:24px;--fs-xl:20px}
+    .card,.next,.q-card{padding:var(--sp-4)}
+    .kpis{grid-template-columns:1fr 1fr}
+    .ring{width:72px;height:72px}
+    .tabs button{padding:10px 8px;font-size:13px}
+    .atv-acts .btn,.reag{flex-basis:100%}
   }
-  .bnav button {
-    background: none; border: none; color: var(--muted);
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    font-size: 10px; font-weight: 700; min-width: 64px; min-height: 48px; border-radius: 9px;
+  @media (min-width:768px){
+    .atv{grid-template-columns:auto 1fr auto;grid-template-areas:"chk body acts";align-items:center}
+    .atv-acts{flex-direction:column;align-items:stretch;min-width:190px}
+    .atv-acts .btn,.reag{flex:0 0 auto}
+    .mini{grid-template-columns:auto 1fr auto;grid-template-areas:"ic inf act";align-items:center}
+    .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
   }
-  .bnav button:hover, .bnav button.on { color: var(--cyan); }
-  @media (min-width: 768px) { .bnav { display: none; } body { padding-bottom: 60px; } }
-
-  footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 34px; }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
-    html { scroll-behavior: auto; }
+  @media (min-width:1024px){
+    body{padding-bottom:var(--sp-8)}
+    .bnav{display:none}
+    .dnav{display:flex}
+    .layout{grid-template-columns:minmax(0,1fr) 340px}
+    .col-side{display:block}
+    .only-mobile{display:none}
+    #toasts{bottom:24px}
+    .q-nav{bottom:8px}
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto}
   }
 </style>
 </head>
@@ -383,7 +360,7 @@
 <div class="demo" role="region" aria-label="Controles de demonstração">
   <b>MOCKUP</b>
   <label for="demo-data">Simular data:</label>
-  <select id="demo-data" onchange="app.render()">
+  <select id="demo-data" onchange="app.render({modo:'tela'})">
     <option value="real" selected>Hoje (data real)</option>
     <option value="2026-08-10">Antes do início (10/08)</option>
     <option value="2026-09-30">Semana 1 · quarta (30/09)</option>
@@ -399,9 +376,15 @@
 <header class="top" id="app-top">
   <div class="top-in">
     <div class="brand">
-      <span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 32 32" fill="none" stroke="#06121f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18 L8 18 L13 27 L19 6 L30 6"/></svg></span>
+      <span class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="#06121f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18 L8 18 L13 27 L19 6 L30 6"/></svg></span>
       <span id="brand-txt"></span>
     </div>
+    <nav class="dnav" id="dnav" aria-label="Seções">
+      <button type="button" data-alvo="sec-next" onclick="app.navTo('sec-next')">Hoje</button>
+      <button type="button" data-alvo="sec-agenda" onclick="app.navTo('sec-agenda')">Plano</button>
+      <button type="button" data-alvo="sec-mais" data-tab="evo" onclick="app.navTo('sec-mais','evo')">Evolução</button>
+      <button type="button" data-alvo="sec-mais" data-tab="perfil" onclick="app.navTo('sec-mais','perfil')">Perfil</button>
+    </nav>
     <div class="count-pill" id="pill-contagem"></div>
   </div>
 </header>
@@ -409,14 +392,16 @@
 <main class="wrap" id="root"></main>
 
 <nav class="bnav" id="bnav" aria-label="Navegação rápida">
-  <button type="button" data-alvo="sec-next" onclick="app.navTo(this)"><span class="ic" data-ic="target"></span>Hoje</button>
-  <button type="button" data-alvo="sec-agenda" onclick="app.navTo(this)"><span class="ic" data-ic="cal"></span>Plano</button>
-  <button type="button" data-alvo="sec-evo" onclick="app.navTo(this)"><span class="ic" data-ic="chart"></span>Evolução</button>
-  <button type="button" data-alvo="sec-perfil" onclick="app.navTo(this)"><span class="ic" data-ic="user"></span>Perfil</button>
+  <button type="button" data-alvo="sec-next" onclick="app.navTo('sec-next')"><span class="ic" data-ic="target"></span>Hoje</button>
+  <button type="button" data-alvo="sec-agenda" onclick="app.navTo('sec-agenda')"><span class="ic" data-ic="cal"></span>Plano</button>
+  <button type="button" data-alvo="sec-mais" data-tab="evo" onclick="app.navTo('sec-mais','evo')"><span class="ic" data-ic="chart"></span>Evolução</button>
+  <button type="button" data-alvo="sec-mais" data-tab="perfil" onclick="app.navTo('sec-mais','perfil')"><span class="ic" data-ic="user"></span>Perfil</button>
 </nav>
 
-<div id="toasts" aria-live="polite"></div>
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
+<div id="sr-status" class="sr-only" aria-live="polite"></div>
 <div id="modal-root"></div>
+<div id="celebra-root"></div>
 
 <script>
 'use strict';
@@ -454,6 +439,9 @@ const IC = {
   chev:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
   edit:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',
   flag:  '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+  search:'<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  alert: '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  trophy:'<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a1 1 0 0 0-1 1 4 4 0 0 0 4 4M17 6h3a1 1 0 0 1 1 1 4 4 0 0 1-4 4"/></svg>',
   x:     '<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
   refresh:'<svg width="ICS" height="ICS" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>'
 };
@@ -468,35 +456,50 @@ const AREAS = [
   { id:'geo',  nome:'Geometria' },
   { id:'dados',nome:'Contagem, Probabilidade e Estatística' }
 ];
+// inc = média de questões desse assunto por prova do ENEM.
+// FONTE: levantamento do Prof. Hugo, prova a prova, ENEM 2009-2025 (17 provas),
+// planilha "Medidas de Tendencia Central e Dispersão ENEM.xlsx". Soma ≈ 45.
+// Alimenta o peso da distribuição: assunto que cai mais recebe mais questões.
 const TEMAS = [
-  { id:'sist-numeracao',   nome:'Sistema Métrico',              area:'num',  video:true  },
-  { id:'operacoes',        nome:'Problemas com as 4 Operações', area:'num',  video:true  },
-  { id:'multiplos',        nome:'Múltiplos e Divisores',        area:'num',  video:true  },
-  { id:'logica',           nome:'Noções de Lógica',             area:'num',  video:false },
-  { id:'conjuntos',        nome:'Conjuntos Numéricos',          area:'num',  video:true  },
-  { id:'potencias',        nome:'Potenciação e Radiciação',     area:'num',  video:true  },
-  { id:'razao-proporcao',  nome:'Razão e Proporção',            area:'num',  video:true  },
-  { id:'porcentagem',      nome:'Porcentagem',                  area:'num',  video:true  },
-  { id:'financeira',       nome:'Matemática Financeira',        area:'num',  video:true  },
-  { id:'fun-1grau',        nome:'Função do 1º grau',            area:'alg',  video:true  },
-  { id:'fun-2grau',        nome:'Função Quadrática',            area:'alg',  video:true  },
-  { id:'exponencial',      nome:'Função Exponencial',           area:'alg',  video:true  },
-  { id:'logaritmica',      nome:'Logaritmos',                   area:'alg',  video:true  },
-  { id:'fun-trig',         nome:'Funções Trigonométricas',      area:'alg',  video:true  },
-  { id:'pa',               nome:'Progressão Aritmética',        area:'alg',  video:true  },
-  { id:'pg',               nome:'Progressão Geométrica',        area:'alg',  video:true  },
-  { id:'sistemas-lineares',nome:'Sistemas Lineares',            area:'alg',  video:true  },
-  { id:'matrizes',         nome:'Matrizes',                     area:'alg',  video:true  },
-  { id:'geo-plana',        nome:'Geometria Plana',              area:'geo',  video:true  },
-  { id:'geo-espacial',     nome:'Geometria Espacial',           area:'geo',  video:true  },
-  { id:'geo-analitica',    nome:'Geometria Analítica',          area:'geo',  video:true  },
-  { id:'trigonometria',    nome:'Trigonometria no Triângulo',   area:'geo',  video:true  },
-  { id:'combinatoria',     nome:'Análise Combinatória',         area:'dados',video:true  },
-  { id:'probabilidade',    nome:'Probabilidade',                area:'dados',video:true  },
-  { id:'estatistica',      nome:'Estatística',                  area:'dados',video:true  },
-  { id:'interp-graficos',  nome:'Gráficos e Tabelas',           area:'dados',video:false }
+  { id:'sist-numeracao',   nome:'Sistema Métrico',              area:'num',  video:true  , inc:2.12 },
+  { id:'operacoes',        nome:'Problemas com as 4 Operações', area:'num',  video:true  , inc:1.62 },
+  { id:'multiplos',        nome:'Múltiplos e Divisores',        area:'num',  video:true  , inc:0.56 },
+  { id:'logica',           nome:'Noções de Lógica',             area:'num',  video:false , inc:0.75 },
+  { id:'conjuntos',        nome:'Conjuntos Numéricos',          area:'num',  video:true  , inc:0.25 },
+  { id:'potencias',        nome:'Potenciação e Radiciação',     area:'num',  video:true  , inc:0.44 },
+  { id:'razao-proporcao',  nome:'Razão e Proporção',            area:'num',  video:true  , inc:6.88 },
+  { id:'porcentagem',      nome:'Porcentagem',                  area:'num',  video:true  , inc:3.56 },
+  { id:'financeira',       nome:'Matemática Financeira',        area:'num',  video:true  , inc:0.19 },
+  { id:'fun-1grau',        nome:'Função do 1º grau',            area:'alg',  video:true  , inc:1.38 },
+  { id:'fun-2grau',        nome:'Função Quadrática',            area:'alg',  video:true  , inc:0.88 },
+  { id:'exponencial',      nome:'Função Exponencial',           area:'alg',  video:true  , inc:0.19 },
+  { id:'logaritmica',      nome:'Logaritmos',                   area:'alg',  video:true  , inc:0.94 },
+  { id:'fun-trig',         nome:'Funções Trigonométricas',      area:'alg',  video:true  , inc:0.56 },
+  { id:'pa',               nome:'Progressão Aritmética',        area:'alg',  video:true  , inc:0.62 },
+  { id:'pg',               nome:'Progressão Geométrica',        area:'alg',  video:true  , inc:0.31 },
+  { id:'sistemas-lineares',nome:'Sistemas Lineares',            area:'alg',  video:true  , inc:0.31 },
+  { id:'matrizes',         nome:'Matrizes',                     area:'alg',  video:true  , inc:0.25 },
+  { id:'geo-plana',        nome:'Geometria Plana',              area:'geo',  video:true  , inc:4.12 },
+  { id:'geo-espacial',     nome:'Geometria Espacial',           area:'geo',  video:true  , inc:5 },
+  { id:'geo-analitica',    nome:'Geometria Analítica',          area:'geo',  video:true  , inc:1.06 },
+  { id:'trigonometria',    nome:'Trigonometria no Triângulo',   area:'geo',  video:true  , inc:0.56 },
+  { id:'combinatoria',     nome:'Análise Combinatória',         area:'dados',video:true  , inc:1.75 },
+  { id:'probabilidade',    nome:'Probabilidade',                area:'dados',video:true  , inc:2.62 },
+  { id:'estatistica',      nome:'Estatística',                  area:'dados',video:true  , inc:5.44 },
+  { id:'interp-graficos',  nome:'Gráficos e Tabelas',           area:'dados',video:false , inc:1.81 }
 ];
 const T = id => TEMAS.find(t => t.id === id);
+// Faixa de incidência -> multiplicador do peso e rótulo para o aluno
+const INC_ALTA = 3.0, INC_MEDIA = 1.5;
+function faixaInc(temaId) {
+  const t = T(temaId);
+  const v = (t && t.inc) || 1;
+  // Multiplicadores calibrados para NUNCA inverter a dificuldade:
+  // difícil×1,0 (=3) > regular×1,4 (=2,8) > regular×1,15 (=2,3) > regular (=2) > domina×1,4 (=1,4)
+  if (v >= INC_ALTA)  return { mult:1.4,  rotulo:'ALTA INCIDÊNCIA',  v };
+  if (v >= INC_MEDIA) return { mult:1.15, rotulo:'MÉDIA INCIDÊNCIA', v };
+  return { mult:1.0, rotulo:null, v };
+}
 
 const SEMANAS = [
   { n:1, ini:'2026-09-28', temas:['financeira','sistemas-lineares','matrizes','potencias'],          geo:{id:'geo-plana',s:'I'} },
@@ -509,6 +512,7 @@ const SEMANAS = [
 ];
 
 const DIAS_SEMANA = ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
+const DIAS_LONGOS = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
 const dt = s => new Date(s + 'T12:00:00');
 function addDias(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 function fmtCurto(d) { return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }); }
@@ -548,13 +552,6 @@ const app = {
   salvar() {
     try { localStorage.setItem(KEY, JSON.stringify({ v:3, perfil:this.perfil, ov:this.ov, minis:this.minis, planos:this.planos })); } catch(e) {}
   },
-  resetar() {
-    if (!confirm('Zerar todos os dados do mockup?')) return;
-    this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
-    this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false;
-    localStorage.removeItem(KEY);
-    this.render();
-  },
   demoExemplo() {
     const dif = {};
     ['financeira','exponencial','probabilidade'].forEach(id => dif[id] = -1);
@@ -578,7 +575,7 @@ const app = {
     this.minis[2] = { porTema: { pg:2, trigonometria:2, logica:2, conjuntos:3, 'geo-espacial':2 },              total:11, em:'2026-10-10T18:00:00' };
     this.semanaSel = null; this._editando = false; this._qTemp = null;
     this.salvar();
-    this.render();
+    this.renderComCarregamento('Montando o plano de exemplo…', 450);
     this.toast('ok', 'Dados de exemplo carregados', 'Semanas 1 e 2 com histórico: Financeira fraca (reclassificada para cima), Potenciação forte (reclassificada para baixo).');
   },
 
@@ -633,7 +630,10 @@ const app = {
     // dias REAIS marcados pelo aluno (0=SEG … 6=DOM), restritos aos que existem na semana
     let diasAtivos = (p.dias && p.dias.length ? p.dias.slice() : [0,1,2,3,4]).sort((a,b)=>a-b).filter(d => d < nDias);
     if (!diasAtivos.length) diasAtivos = [nDias - 1];   // ex.: só DOM na Semana 7 (6 dias) -> SÁB
-    const budget = Math.round(p.horasDia * 60 * (p.dias && p.dias.length ? p.dias.length : 5));
+    // Orçamento pelos dias que REALMENTE existem na semana. Sem isso, quem
+    // marca domingo recebia na Semana 7 (que acaba no sábado da prova) uma
+    // carga de 7 dias para caber em 6.
+    const budget = Math.round(p.horasDia * 60 * diasAtivos.length);
     const avisos = [], fora = [];
 
     const base = sem.temas.map(id => {
@@ -643,11 +643,19 @@ const app = {
     const efG = this.efDif(sem.geo.id);
     base.push({ temaId:sem.geo.id, nome:T(sem.geo.id).nome + ' ' + sem.geo.s, ef:efG, geo:true });
     base.forEach(b => {
-      b.peso = b.ef.v===-1 ? 3 : b.ef.v===1 ? 1 : 2;
+      // peso = dificuldade x incidência no ENEM.
+      // Dificuldade continua mandando (3/2/1); a incidência modula em até 40%,
+      // então um assunto que cai muito ganha mais questões que um raro de
+      // mesma dificuldade — sem inverter a prioridade de quem tem dificuldade.
+      const pesoDif = b.ef.v===-1 ? 3 : b.ef.v===1 ? 1 : 2;
+      b.inc = faixaInc(b.temaId);
+      b.peso = pesoDif * b.inc.mult;
       if (b.geo) b.peso = Math.max(b.peso, 2);
-      b.rank = b.ef.v===-1 ? 4 : b.geo ? 3 : b.peso===2 ? 2 : 1;   // ordem de alocação
+      // desempate na alocação: dificuldade > geometria > incidência > domínio
+      b.rank = b.ef.v===-1 ? 4 : b.geo ? 3 : (b.inc.mult > 1 ? 2.5 : 2);
+      if (b.ef.v===1 && !b.geo) b.rank = 1;
     });
-    base.sort((a,b) => b.rank - a.rank);
+    base.sort((a,b) => (b.rank - a.rank) || (b.inc.v - a.inc.v));
 
     // mini é a âncora — só sai se nem ele couber
     let temMini = true;
@@ -690,10 +698,10 @@ const app = {
     base.forEach(b => {
       if (b.video) itens.push({ key:'s'+sem.n+':'+b.temaId+':v', temaId:b.temaId, tipo:'v',
         titulo:'Assistir vídeo-aula — ' + b.nome, min:CONFIG.MIN_VIDEO, questoes:0,
-        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v });
+        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v, inc:b.inc });
       if (b.questoes > 0) itens.push({ key:'s'+sem.n+':'+b.temaId+':q', temaId:b.temaId, tipo:'q', questoes:b.questoes,
         titulo:'Resolver ' + b.questoes + ' questões — ' + b.nome, min:b.questoes*CONFIG.MIN_QUESTAO,
-        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v });
+        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v, inc:b.inc });
     });
     itens.forEach((it, idx) => { it.diaDefault = diasAtivos[idx % diasAtivos.length]; });
 
@@ -711,17 +719,6 @@ const app = {
     this.planos[n] = d;
   },
   dosePara(sem) { return this.planos[sem.n] || this.dosarSemana(sem); },
-  recalcularSemana(n) {
-    if (!this.planos[n]) return;
-    if (!confirm('Recalcular a Semana ' + n + ' com o seu perfil e desempenho atuais?\n\n' +
-      'As doses das atividades pendentes serão refeitas. Atividades já concluídas continuam registradas, ' +
-      'mas os números de questões pendentes podem mudar.')) return;
-    delete this.planos[n];
-    this.congelarSemana(n);
-    this.salvar();
-    this.render();
-    this.toast('ok', 'Semana ' + n + ' recalculada', 'Doses atualizadas com o seu perfil e desempenho de agora.');
-  },
 
   diaDe(it) {
     const o = this.ov[it.key];
@@ -732,11 +729,6 @@ const app = {
   /* ============================================================
      AÇÕES
      ============================================================ */
-  navTo(btn) {
-    const el = document.getElementById(btn.dataset.alvo);
-    if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
-    document.querySelectorAll('.bnav button').forEach(b => b.classList.toggle('on', b === btn));
-  },
   toast(tipo, titulo, corpo) {
     const box = document.getElementById('toasts');
     const el = document.createElement('div');
@@ -753,7 +745,8 @@ const app = {
     const n = parseInt(key.slice(1));
     if (this.feito(key)) {   // desfazer
       const o = this.ov[key]; o.done = null; o.hits = null; o.total = null;
-      this.salvar(); this.render();
+      this.salvar(); this.render({ foco: 'chk:' + key });
+      this.anunciar('Conclusão desfeita.');
       return;
     }
     this.congelarSemana(n);   // 1ª ação da semana congela o plano
@@ -770,7 +763,7 @@ const app = {
     if (hits != null) { o.hits = hits; o.total = total; }
     this.salvar();
     this.fecharModal();
-    this.render();
+    this.render({ foco: 'chk:' + key, flash: key });
     const prox = this.proximaAtividade(n);
     if (!prox && !this.minis[n]) this.toast('ok', 'Atividade concluída', 'Falta só o mini-simulado para fechar a semana.');
     else if (prox) this.toast('ok', 'Atividade concluída', 'Próxima sugestão: ' + prox.titulo);
@@ -785,6 +778,7 @@ const app = {
     root.innerHTML = html;
     document.body.classList.add('modal-aberto');
     const box = root.querySelector('.modal');
+    if (!box) return;
     const focaveis = () => Array.prototype.filter.call(
       box.querySelectorAll('button, [href], input, select, textarea'),
       el => !el.disabled && el.offsetParent !== null);
@@ -820,8 +814,8 @@ const app = {
     this._hitsTmp = null; this._hitsMax = it.questoes; this._hitsKey = it.key;
     this.abrirModal(
       '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
-      '<div class="modal" role="dialog" aria-modal="true" aria-label="Registrar acertos">' + this._xFechar() +
-      '<h3>Quantas você acertou?</h3>' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">' + this._xFechar() +
+      '<h3 id="modal-titulo">Quantas você acertou?</h3>' +
       '<p class="sub">' + esc(it.titulo) + ' · o resultado alimenta o ajuste automático das próximas semanas. Se ainda não corrigiu, conclua sem registrar.</p>' +
       '<div class="stepper">' +
         '<button type="button" aria-label="Diminuir" onclick="app._stepHits(-1)">&minus;</button>' +
@@ -849,7 +843,8 @@ const app = {
     this.congelarSemana(n);
     const o = this.ov[key] || (this.ov[key] = {});
     o.dia = parseInt(dia);
-    this.salvar(); this.render();
+    this.salvar(); this.render({ foco: 'reag:' + key });
+    this.anunciar('Atividade reagendada para ' + DIAS_LONGOS[o.dia] + '.');
   },
 
   /* ---------- mini-simulado: registrar, ver, editar, excluir ---------- */
@@ -863,8 +858,8 @@ const app = {
     const self = this;
     this.abrirModal(
       '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
-      '<div class="modal" role="dialog" aria-modal="true" aria-label="' + (existente ? 'Editar' : 'Registrar') + ' mini-simulado">' + this._xFechar() +
-      '<h3>' + (existente ? 'Resultado do mini · Semana ' + n : 'Mini-simulado da Semana ' + n) + '</h3>' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">' + this._xFechar() +
+      '<h3 id="modal-titulo">' + (existente ? 'Resultado do mini · Semana ' + n : 'Mini-simulado da Semana ' + n) + '</h3>' +
       '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema. ' + (existente ? 'Ajuste o que precisar — o diagnóstico e a evolução recalculam na hora.' : 'Registre seus acertos por tema (0 a ' + CONFIG.MINI_POR_TEMA + ').') + '</p>' +
       lista.map(id =>
         '<div class="tema-linha"><span class="nome">' + esc(T(id).nome) + '</span>' +
@@ -903,22 +898,11 @@ const app = {
     this.minis[n] = { porTema: Object.assign({}, this._miniTmp), total, em: new Date().toISOString() };
     this.salvar();
     this.fecharModal();
-    this.render();
+    this.render({ foco: 'mini:' + n });
     const dose = this.dosePara(SEMANAS[n-1]);
     const tudoFeito = dose.itens.every(it => this.feito(it.key));
     if (tudoFeito) this.celebrarSemana(n);
     else this.toast('ok', 'Mini-simulado registrado', total + '/' + CONFIG.MINI_QTDE + ' acertos. Diagnóstico atualizado na seção Evolução.');
-  },
-  excluirMini(n) {
-    if (!confirm('Excluir o lançamento do mini-simulado da Semana ' + n + '?\n\nO diagnóstico e o gráfico de evolução serão recalculados.')) return;
-    delete this.minis[n];
-    this.salvar();
-    this.fecharModal();
-    this.render();
-    this.toast('', 'Lançamento excluído', 'Você pode registrar o mini da Semana ' + n + ' novamente quando quiser.');
-  },
-  celebrarSemana(n) {
-    this.toast('marco', 'Semana ' + n + ' concluída', (7-n) > 0 ? 'Faltam ' + (7-n) + ' semanas. Constância vence talento.' : 'Revisão completa. Agora é prova.');
   },
 
   proximaAtividade(n) {
@@ -935,106 +919,224 @@ const app = {
   },
 
   /* ============================================================
-     RENDER
+     RENDER — troca de tela leva ao topo; ação local preserva
+     rolagem e devolve o foco ao controle acionado
      ============================================================ */
-  render() {
-    document.getElementById('brand-txt').innerHTML = esc(CONFIG.PRODUTO) + ' <small>' + esc(CONFIG.EDICAO) + '</small>';
+  _tela: null, _uiTab: 'evo', _evoSel: null, _obs: null,
+  render(opts) {
+    opts = opts || {};
+    const brand = document.getElementById('brand-txt');
+    if (brand) brand.innerHTML = esc(CONFIG.PRODUTO) + ' <small>' + esc(CONFIG.EDICAO) + '</small>';
     this.renderContagem();
     const root = document.getElementById('root');
-    if (!this.perfil || this._editando) root.innerHTML = this.htmlQuest();
-    else if (this.posProva()) root.innerHTML = this.htmlPosProva();
-    else root.innerHTML = this.htmlPlano();
-    window.scrollTo(0, 0);
-  },
-  renderContagem() {
-    const el = document.getElementById('pill-contagem');
-    const dias = Math.ceil((dt(CONFIG.PROVA2) - this.hoje()) / 86400000);
-    if (dias >= 0) {
-      el.innerHTML = ic('flag', 13) + ' Faltam <b>' + dias + '</b> dias para Matemática';
-      el.setAttribute('aria-label', 'Faltam ' + dias + ' dias para a prova de Matemática, em ' + fmtCurto(dt(CONFIG.PROVA2)));
-    } else {
-      el.innerHTML = ic('check', 13) + ' Prova concluída';
-      el.setAttribute('aria-label', 'Prova concluída');
+    const y = (typeof window !== 'undefined' && window.scrollY) || 0;
+    let tela = (!this.perfil || this._editando) ? 'quest' : (this.posProva() ? 'pos' : 'plano');
+    const mudouTela = tela !== this._tela; this._tela = tela;
+    root.innerHTML = tela === 'quest' ? this.htmlQuest() : tela === 'pos' ? this.htmlPosProva() : this.htmlPlano();
+    this._posRender();
+    if (mudouTela || opts.modo === 'tela') window.scrollTo(0, 0);
+    else if (opts.scrollPara) {
+      const el = document.getElementById(opts.scrollPara);
+      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else window.scrollTo(0, y);
+    if (opts.foco && document.querySelector) {
+      const el = document.querySelector('[data-foco="' + opts.foco + '"]');
+      if (el && el.focus) {
+        const det = el.closest ? el.closest('details') : null;   // item concluído vai para 'Concluídas' (recolhido)
+        if (det && !det.open) det.open = true;
+        try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+      }
+    }
+    if (opts.flash && document.querySelector) {
+      const card = document.querySelector('[data-atv="' + opts.flash + '"]');
+      if (card && card.classList) card.classList.add('flash');
     }
   },
+  renderComCarregamento(msg, ms) {
+    const root = document.getElementById('root');
+    root.innerHTML = '<div class="q-wrap" role="status" aria-live="polite"><p class="sub my-c">' + esc(msg) + '</p>' +
+      '<div class="skel skel-a"></div><div class="skel skel-b"></div>' +
+      '<div class="skel skel-c"></div><div class="skel skel-d"></div></div>';
+    const self = this;
+    setTimeout(function () { self._tela = null; self.render({ modo: 'tela' }); }, ms || 400);
+  },
+  _posRender() {
+    if (typeof IntersectionObserver === 'undefined' || !document.querySelectorAll) return;
+    if (this._obs) this._obs.disconnect();
+    const self = this;
+    const secs = ['sec-next', 'sec-agenda', 'sec-mais'].map(id => document.getElementById(id)).filter(Boolean);
+    if (!secs.length) { this._navAtiva(null); return; }
+    this._obs = new IntersectionObserver(function (entries) {
+      let melhor = null;
+      entries.forEach(e => { if (e.isIntersecting && (!melhor || e.intersectionRatio > melhor.intersectionRatio)) melhor = e; });
+      if (melhor) self._navAtiva(melhor.target.id);
+    }, { rootMargin: '-35% 0px -55% 0px', threshold: [0, .2, .5, 1] });
+    secs.forEach(s => this._obs.observe(s));
+    this._navAtiva(secs[0].id);
+  },
+  _navAtiva(id, tab) {
+    if (!document.querySelectorAll) return;
+    const t = tab || this._uiTab;
+    document.querySelectorAll('.bnav button, .dnav button').forEach(b => {
+      const on = !!id && b.getAttribute('data-alvo') === id && (!b.getAttribute('data-tab') || b.getAttribute('data-tab') === t);
+      b.classList.toggle('on', on);
+    });
+  },
+  navTo(alvo, tab) {
+    if (tab) this.setTab(tab);
+    const el = document.getElementById(alvo);
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this._navAtiva(alvo, tab);
+  },
+  setTab(tab) {
+    this._uiTab = tab;
+    if (!document.querySelectorAll) return;
+    document.querySelectorAll('[data-tabbtn]').forEach(b => {
+      const on = b.getAttribute('data-tabbtn') === tab;
+      b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll('[data-tabpanel]').forEach(p => { p.hidden = p.getAttribute('data-tabpanel') !== tab; });
+  },
+  anunciar(msg) { const el = document.getElementById('sr-status'); if (el) el.textContent = msg; },
+  renderContagem() {
+    const el = document.getElementById('pill-contagem');
+    if (!el) return;
+    const dias = Math.ceil((dt(CONFIG.PROVA2) - this.hoje()) / 86400000);
+    if (dias > 0) {
+      el.innerHTML = ic('flag', 13) + ' Faltam <b>' + dias + '</b> ' + (dias === 1 ? 'dia' : 'dias') + ' para Matemática';
+      el.setAttribute('aria-label', 'Faltam ' + dias + ' dias para a prova de Matemática, em ' + fmtCurto(dt(CONFIG.PROVA2)));
+    } else if (dias === 0) { el.innerHTML = ic('flag', 13) + ' <b>Hoje</b> é dia de prova'; el.setAttribute('aria-label', 'Hoje é dia de prova'); }
+    else { el.innerHTML = ic('check', 13) + ' Prova concluída'; el.setAttribute('aria-label', 'Prova concluída'); }
+  },
 
-  /* ---------------- QUESTIONÁRIO ---------------- */
+  /* ---------- confirmação própria (substitui confirm nativo) ---------- */
+  _confirmCb: null,
+  confirmar(o, cb) {
+    this._confirmCb = cb;
+    this.abrirModal(
+      '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
+      '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modal-titulo" aria-describedby="modal-desc">' + this._xFechar() +
+      '<h3 id="modal-titulo">' + esc(o.titulo) + '</h3>' +
+      '<p class="sub" id="modal-desc">' + o.texto + '</p>' +
+      '<div class="q-nav"><span class="esp"></span>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="app.fecharModal()">' + esc(o.cancelar || 'Cancelar') + '</button>' +
+      '<button type="button" class="btn ' + (o.perigo ? 'btn-danger' : 'btn-pri') + ' btn-sm" onclick="app._confirmarOk()">' + esc(o.ok || 'Confirmar') + '</button>' +
+      '</div></div></div>');
+  },
+  _confirmarOk() { const cb = this._confirmCb; this._confirmCb = null; this.fecharModal(); if (cb) cb(); },
+  resetar(confirmado) {
+    const self = this;
+    if (!confirmado) return this.confirmar({ titulo: 'Zerar todos os dados?', perigo: true, ok: 'Zerar tudo',
+      texto: 'Perfil, atividades concluídas, mini-simulados e planos congelados serão apagados deste navegador. Não dá para desfazer.' }, () => self.resetar(true));
+    this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
+    this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false; this._evoSel = null;
+    try { localStorage.removeItem(KEY); } catch (e) { this.toast('erro', 'Não consegui limpar o armazenamento', 'Verifique as permissões do navegador.'); }
+    this.render({ modo: 'tela' });
+    this.toast('', 'Dados zerados', 'Comece pelo questionário para montar um novo roteiro.');
+  },
+  recalcularSemana(n, confirmado) {
+    if (!this.planos[n]) return;
+    const self = this;
+    if (!confirmado) return this.confirmar({ titulo: 'Recalcular a Semana ' + n + '?', ok: 'Recalcular',
+      texto: 'As cargas das atividades <b>pendentes</b> serão refeitas com o seu perfil e desempenho atuais. O que você já concluiu continua registrado, mas os números de questões pendentes podem mudar.' }, () => self.recalcularSemana(n, true));
+    delete this.planos[n];
+    this.congelarSemana(n);
+    this.salvar();
+    this.render({ scrollPara: 'sec-agenda' });
+    this.toast('ok', 'Semana ' + n + ' recalculada', 'Cargas atualizadas com o seu perfil e desempenho de agora.');
+  },
+  excluirMini(n, confirmado) {
+    const self = this;
+    if (!confirmado) return this.confirmar({ titulo: 'Excluir o mini da Semana ' + n + '?', perigo: true, ok: 'Excluir',
+      texto: 'O lançamento sai do histórico e o diagnóstico e o gráfico de evolução são recalculados. Você pode registrar de novo depois.' }, () => self.excluirMini(n, true));
+    delete this.minis[n];
+    if (this._evoSel === n) this._evoSel = null;
+    this.salvar();
+    this.render({ foco: 'mini:' + n });
+    this.toast('', 'Lançamento excluído', 'Você pode registrar o mini da Semana ' + n + ' novamente quando quiser.');
+  },
+  celebrarSemana(n) {
+    const root = document.getElementById('celebra-root');
+    const restam = 7 - n;
+    const msg = restam > 0 ? 'Faltam ' + restam + (restam === 1 ? ' semana' : ' semanas') + '. Constância vence talento.' : 'Revisão completa. Agora é prova.';
+    if (root) {
+      root.innerHTML = '<div class="celebra" role="status" aria-live="assertive"><div class="box">' +
+        '<div class="anel">' + ic('trophy', 44) + '</div>' +
+        '<div class="h2">Semana ' + n + ' concluída</div><p class="sub mt-8">' + esc(msg) + '</p></div></div>';
+      setTimeout(() => { root.innerHTML = ''; }, 2300);
+    }
+    this.toast('marco', 'Semana ' + n + ' concluída', msg);
+  },
+
+  /* ============================================================
+     QUESTIONÁRIO — 8 etapas, progresso claro, atalhos por área
+     ============================================================ */
   qPassos() { return ['Seu nível', 'Seu tempo', 'Números', 'Álgebra', 'Geometria', 'Dados', 'Sua meta', 'Resumo']; },
   htmlQuest() {
     if (!this._qTemp) {
       this._qTemp = this.perfil ? JSON.parse(JSON.stringify(this.perfil))
-                                : { acertos:null, dif:{}, horasDia:null, dias:[], meta:null };
+                                : { acertos: null, dif: {}, horasDia: null, dias: [], meta: null };
     }
-    const passos = this.qPassos();
-    const st = this.qStep;
-    const pct = Math.round(st / (passos.length-1) * 100);
+    const passos = this.qPassos(), st = this.qStep;
+    const pct = Math.round(st / (passos.length - 1) * 100);
+    const faltam = passos.length - 1 - st;
     let corpo = '';
     if (st === 0) corpo = this.qNivel();
     else if (st === 1) corpo = this.qTempo();
-    else if (st >= 2 && st <= 5) corpo = this.qArea(AREAS[st-2]);
+    else if (st >= 2 && st <= 5) corpo = this.qArea(AREAS[st - 2]);
     else if (st === 6) corpo = this.qMeta();
     else corpo = this.qResumo();
-    return (
-      '<div style="margin-top:20px;">' +
-      '<div class="h-page">' + esc(CONFIG.PRODUTO) + ' <span style="color:var(--cyan);">' + esc(CONFIG.EDICAO) + '</span></div>' +
-      '<p class="txt-sub" style="margin-top:4px;">Sete semanas, um plano só seu. Suas respostas definem a dose de cada assunto — e você pode reajustar quando quiser.</p>' +
+    return '<div class="q-wrap">' +
+      '<span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span>' +
+      '<div class="h1 mt-6">' + (this.perfil ? 'Reajustar meu perfil' : 'Vamos montar o seu roteiro') + '</div>' +
+      '<p class="sub mt-6">Sete semanas, um plano só seu. Leva uns 3 minutos e você pode reajustar quando quiser.</p>' +
       '<div class="q-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso do questionário">' +
         '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
-        '<span class="lbl">Etapa ' + (st+1) + ' de ' + passos.length + ' · ' + esc(passos[st]) + '</span>' +
-      '</div>' +
+        '<span class="lbl">' + (faltam === 0 ? 'Última etapa' : 'Etapa ' + (st + 1) + ' de ' + passos.length) + '</span></div>' +
       '<div class="q-card">' + corpo +
         '<p class="q-erro" id="q-erro" aria-live="polite"></p>' +
         '<div class="q-nav">' +
-          (st > 0
-            ? '<button type="button" class="btn btn-ghost" onclick="app.qVoltar()">Voltar</button>'
-            : (this.perfil ? '<button type="button" class="btn btn-ghost" onclick="app._editando=false;app._qTemp=null;app.qStep=0;app.render()">Cancelar</button>' : '')) +
+          (st > 0 ? '<button type="button" class="btn btn-ghost" onclick="app.qVoltar()">Voltar</button>'
+                  : (this.perfil ? '<button type="button" class="btn btn-ghost" onclick="app._editando=false;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">Cancelar</button>' : '')) +
           '<span class="esp"></span>' +
-          (st < passos.length-1
+          (st < passos.length - 1
             ? '<button type="button" class="btn btn-pri" onclick="app.qAvancar()">Continuar</button>'
             : '<button type="button" class="btn btn-pri" onclick="app.qConcluir()">' + (this.perfil ? 'Recalcular meu plano' : 'Criar meu roteiro') + '</button>') +
-        '</div>' +
-      '</div></div>'
-    );
+        '</div></div></div>';
   },
   qNivel() {
-    const faixas = ['Menos de 10','10 a 15','15 a 20','20 a 25','25 a 30','30 a 35','35 a 40','Acima de 40'];
+    const faixas = ['Menos de 10', '10 a 15', '15 a 20', '20 a 25', '25 a 30', '30 a 35', '35 a 40', 'Acima de 40'];
     const sel = this._qTemp.acertos;
     return '<h2>Nos últimos simulados, quantas das 45 questões de Matemática você acertou?</h2>' +
-      '<p class="q-hint">Média dos 2 ou 3 últimos. Se nunca contou, estime com sinceridade — isso calibra a sua meta.</p>' +
+      '<p class="q-hint">Média dos 2 ou 3 últimos. Se nunca contou, estime com sinceridade: isso calibra a sua meta.</p>' +
       '<div class="opt-grid" role="group" aria-label="Faixa de acertos">' +
-      faixas.map((f,i) =>
-        '<button type="button" class="opt" data-acertos="' + i + '" aria-pressed="' + (sel===i) + '" onclick="app.qSetAcertos(this)">' + f + '</button>'
-      ).join('') + '</div>';
+      faixas.map((f, i) => '<button type="button" class="opt" data-acertos="' + i + '" aria-pressed="' + (sel === i) + '" onclick="app.qSetAcertos(this)">' + f + '</button>').join('') + '</div>';
   },
   qSetAcertos(btn) {
     this._qTemp.acertos = parseInt(btn.getAttribute('data-acertos'));
-    document.querySelectorAll('[data-acertos]').forEach(b => b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
+    document.querySelectorAll('[data-acertos]').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+    const e = document.getElementById('q-erro'); if (e) e.textContent = '';
   },
   qTempo() {
     const q = this._qTemp;
-    const horas = [[0.5,'30 minutos'],[1,'1 hora'],[1.5,'1h30'],[2,'2 horas'],[3,'3 horas'],[4,'4 horas ou mais']];
+    const horas = [[0.5, '30 minutos'], [1, '1 hora'], [1.5, '1h30'], [2, '2 horas'], [3, '3 horas'], [4, '4 horas ou mais']];
     return '<h2>Quanto tempo você consegue dedicar ao estudo da Matemática?</h2>' +
-      '<p class="q-hint">Conte só o que você cumpre de verdade. O plano é montado dentro desse orçamento — melhor um plano curto e cumprido do que um longo e abandonado.</p>' +
-      '<div class="campo"><label for="q-horas">Horas por dia</label>' +
-      '<select id="q-horas"><option value="">Escolha</option>' +
-      horas.map(o => '<option value="' + o[0] + '"' + (q.horasDia==o[0]?' selected':'') + '>' + o[1] + '</option>').join('') +
-      '</select></div>' +
-      '<div class="campo"><label>Em quais dias da semana você estuda Matemática?</label>' +
-      '<div class="seg" role="group" aria-label="Dias de estudo" style="gap:6px;">' +
-      DIAS_SEMANA.map((nome, i) =>
-        '<button type="button" class="sf" data-dia="' + i + '" aria-pressed="' + ((q.dias||[]).indexOf(i) !== -1) + '" onclick="app.qDia(this)" style="min-width:52px;">' + nome + '</button>'
-      ).join('') + '</div>' +
-      '<p class="txt-mini" id="q-dias-info" style="margin-top:8px;">' +
-      ((q.dias||[]).length ? this._diasResumoTxt(q) : 'Marque todos os dias que você realmente consegue estudar — o plano distribui as atividades exatamente neles.') +
-      '</p></div>';
+      '<p class="q-hint">Conte só o que você cumpre de verdade. O plano é montado dentro desse tempo: melhor um plano curto e cumprido do que um longo e abandonado.</p>' +
+      '<div class="campo"><label for="q-horas">Horas por dia</label><select id="q-horas" onchange="app.qHorasMudou()"><option value="">Escolha</option>' +
+      horas.map(o => '<option value="' + o[0] + '"' + (q.horasDia == o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></div>' +
+      '<div class="campo"><span class="lbl" id="lbl-dias">Em quais dias da semana você estuda Matemática?</span>' +
+      '<div class="seg" role="group" aria-labelledby="lbl-dias">' +
+      DIAS_SEMANA.map((nome, i) => '<button type="button" class="sf" data-dia="' + i + '" aria-pressed="' + ((q.dias || []).indexOf(i) !== -1) + '" aria-label="' + DIAS_LONGOS[i] + '" onclick="app.qDia(this)">' + nome + '</button>').join('') +
+      '</div><p class="meta" id="q-dias-info" style="margin-top:8px" aria-live="polite">' +
+      ((q.dias || []).length ? this._diasResumoTxt(q) : 'Marque todos os dias em que você realmente consegue estudar. O plano distribui as atividades exatamente neles.') + '</p></div>';
   },
+  qHorasMudou() { const q = this._qTemp; const el = document.getElementById('q-horas'); q.horasDia = parseFloat(el.value) || null; const info = document.getElementById('q-dias-info'); if (info && (q.dias || []).length) info.textContent = this._diasResumoTxt(q); },
   qDia(btn) {
-    const i = parseInt(btn.getAttribute('data-dia'));
-    const q = this._qTemp;
+    const i = parseInt(btn.getAttribute('data-dia')), q = this._qTemp;
     q.dias = q.dias || [];
     const pos = q.dias.indexOf(i);
     if (pos === -1) q.dias.push(i); else q.dias.splice(pos, 1);
-    q.dias.sort((a,b)=>a-b);
+    q.dias.sort((a, b) => a - b);
     btn.setAttribute('aria-pressed', pos === -1 ? 'true' : 'false');
     const info = document.getElementById('q-dias-info');
     if (info) info.textContent = q.dias.length ? this._diasResumoTxt(q) : 'Marque ao menos um dia de estudo.';
@@ -1046,99 +1148,100 @@ const app = {
     return h ? base + ' · ' + (h * q.dias.length).toFixed(1).replace('.', ',') + 'h de estudo semanal' : base;
   },
   qArea(area) {
-    const q = this._qTemp;
+    const q = this._qTemp, self = this;
     const doGrupo = TEMAS.filter(t => t.area === area.id);
-    const self = this;
-    return '<h2>' + esc(area.nome) + '</h2>' +
-      '<p class="q-hint"><b>Tenho dificuldade</b> = mais tempo e vídeo-aula · <b>Regular</b> = dose padrão · <b>Domino</b> = manutenção leve · <b>Não sei</b> = dose padrão agora, e o seu desempenho ajusta depois.</p>' +
-      '<div class="busca-tema"><input type="search" id="q-busca" placeholder="Buscar assunto em qualquer área…" aria-label="Buscar assunto" oninput="app.qBusca(this.value)"></div>' +
-      '<div id="q-lista-temas">' + doGrupo.map(t => self.qTemaLinha(t, q.dif[t.id]||0)).join('') + '</div>';
+    const avaliados = doGrupo.filter(t => (q.dif[t.id] || 0) !== 0).length;
+    return '<div class="area-head"><h2 class="m-0">' + esc(area.nome) + '</h2><span class="contador" id="q-contador" aria-live="polite">' + avaliados + ' de ' + doGrupo.length + ' avaliados</span></div>' +
+      '<p class="q-hint">Você <b>não precisa avaliar todos</b>: o que ficar em branco entra com carga padrão e o seu desempenho ajusta depois. ' +
+      '<b>Tenho dificuldade</b> = mais tempo e vídeo-aula · <b>Regular</b> = carga padrão · <b>Domino</b> = só manutenção · <b>Não sei</b> = carga padrão por enquanto. ' +
+      'Entre dois assuntos de mesma dificuldade, o que <b>cai mais no ENEM</b> recebe mais questões.</p>' +
+      '<div class="acoes-rapidas"><button type="button" class="btn btn-sec btn-sm" onclick="app.qAplicarTodos(\'' + area.id + '\', 2)">Restantes = Regular</button>' +
+      '<button type="button" class="btn btn-sec btn-sm" onclick="app.qAplicarTodos(\'' + area.id + '\', 9)">Restantes = Não sei</button></div>' +
+      '<div class="busca"><span class="ic">' + ic('search', 16) + '</span><input type="search" id="q-busca" placeholder="Buscar assunto em qualquer área" aria-label="Buscar assunto em qualquer área" oninput="app.qBusca(this.value)"></div>' +
+      '<div id="q-lista-temas">' + doGrupo.map(t => self.qTemaLinha(t, q.dif[t.id] || 0, false)).join('') + '</div>';
   },
-  qTemaLinha(t, v) {
-    const ops = [[-1,'Tenho dificuldade','sd'],[2,'Regular','sr'],[1,'Domino','sf'],[9,'Não sei','sn']];
-    return '<div class="tema-linha"><span class="nome">' + esc(t.nome) + '</span>' +
+  qTemaLinha(t, v, outraArea) {
+    const ops = [[-1, 'Tenho dificuldade', 'sd'], [2, 'Regular', 'sr'], [1, 'Domino', 'sf'], [9, 'Não sei', 'sn']];
+    const areaNome = outraArea ? (AREAS.find(a => a.id === t.area) || {}).nome : null;
+    return '<div class="tema' + (outraArea ? ' outra' : '') + '"><span class="nome">' + esc(t.nome) + (areaNome ? '<small>Área: ' + esc(areaNome) + '</small>' : '') + '</span>' +
       '<div class="seg" role="group" aria-label="' + esc(t.nome) + '">' +
-      ops.map(o =>
-        '<button type="button" class="' + o[2] + '" data-seg="' + t.id + '" data-v="' + o[0] + '" aria-pressed="' + (v===o[0]) + '" onclick="app.qSeg(this)">' + o[1] + '</button>'
-      ).join('') + '</div></div>';
+      ops.map(o => '<button type="button" class="' + o[2] + '" data-seg="' + t.id + '" data-v="' + o[0] + '" aria-pressed="' + (v === o[0]) + '" onclick="app.qSeg(this)">' + o[1] + '</button>').join('') + '</div></div>';
   },
   qSeg(btn) {
     const id = btn.getAttribute('data-seg'), v = parseInt(btn.getAttribute('data-v'));
-    const atual = this._qTemp.dif[id]||0;
+    const atual = this._qTemp.dif[id] || 0;
     this._qTemp.dif[id] = (atual === v) ? 0 : v;
     const alvo = this._qTemp.dif[id];
-    document.querySelectorAll('[data-seg="' + id + '"]').forEach(b =>
-      b.setAttribute('aria-pressed', parseInt(b.getAttribute('data-v')) === alvo ? 'true' : 'false'));
+    document.querySelectorAll('[data-seg="' + id + '"]').forEach(b => b.setAttribute('aria-pressed', parseInt(b.getAttribute('data-v')) === alvo ? 'true' : 'false'));
+    this._qContador();
+  },
+  _qContador() {
+    const el = document.getElementById('q-contador'); if (!el) return;
+    const area = AREAS[this.qStep - 2]; if (!area) return;
+    const doGrupo = TEMAS.filter(t => t.area === area.id);
+    el.textContent = doGrupo.filter(t => (this._qTemp.dif[t.id] || 0) !== 0).length + ' de ' + doGrupo.length + ' avaliados';
+  },
+  qAplicarTodos(areaId, valor) {
+    const q = this._qTemp;
+    TEMAS.filter(t => t.area === areaId && !(q.dif[t.id] || 0)).forEach(t => { q.dif[t.id] = valor; });
+    const busca = document.getElementById('q-busca'); if (busca) busca.value = '';
+    this.qBusca('');
+    this._qContador();
+    this.anunciar('Assuntos restantes marcados como ' + (valor === 2 ? 'Regular' : 'Não sei') + '.');
   },
   qBusca(txt) {
-    const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-    const q = norm((txt||'').trim());
-    const box = document.getElementById('q-lista-temas');
-    const self = this;
-    if (!q) {
-      const area = AREAS[this.qStep-2];
-      box.innerHTML = TEMAS.filter(t=>t.area===area.id).map(t=>self.qTemaLinha(t, self._qTemp.dif[t.id]||0)).join('');
-      return;
-    }
+    const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const q = norm((txt || '').trim()), self = this;
+    const box = document.getElementById('q-lista-temas'); if (!box) return;
+    const area = AREAS[this.qStep - 2];
+    if (!q) { box.innerHTML = TEMAS.filter(t => t.area === area.id).map(t => self.qTemaLinha(t, self._qTemp.dif[t.id] || 0, false)).join(''); return; }
     const m = TEMAS.filter(t => norm(t.nome).indexOf(q) !== -1);
     box.innerHTML = m.length
-      ? '<p class="txt-mini" style="margin-bottom:6px;">Mostrando resultados de todas as áreas:</p>' + m.map(t=>self.qTemaLinha(t, self._qTemp.dif[t.id]||0)).join('')
-      : '<div class="atv-vazia">Nenhum assunto encontrado.</div>';
+      ? '<p class="meta mb-8">Resultados em todas as áreas. Os de outra área aparecem destacados.</p>' + m.map(t => self.qTemaLinha(t, self._qTemp.dif[t.id] || 0, t.area !== area.id)).join('')
+      : '<div class="vazio">Nenhum assunto encontrado para <b>' + esc(txt) + '</b>.</div>';
   },
   qMeta() {
     const q = this._qTemp;
     return '<h2>Qual a sua meta de acertos?</h2>' +
       '<p class="q-hint">Das 45 questões de Matemática. Cada mini-simulado será comparado com esse alvo.</p>' +
-      '<div class="campo"><label for="q-meta">Meta de acertos (1 a 45)</label>' +
-      '<input type="number" id="q-meta" min="1" max="45" value="' + (q.meta == null ? '' : q.meta) + '" oninput="app.qAvaliaMeta()"></div>' +
-      '<p class="q-erro" id="q-meta-aviso" aria-live="polite" style="color:var(--text-2);"></p>';
+      '<div class="campo"><label for="q-meta">Meta de acertos (1 a 45)</label><input type="number" id="q-meta" inputmode="numeric" min="1" max="45" value="' + (q.meta == null ? '' : q.meta) + '" oninput="app.qAvaliaMeta()"></div>' +
+      '<p class="q-erro" id="q-meta-aviso" aria-live="polite" style="color:var(--text-2)"></p>';
   },
   qAvaliaMeta() {
-    const el = document.getElementById('q-meta-aviso');
+    const el = document.getElementById('q-meta-aviso'), q = this._qTemp;
     const meta = parseInt(document.getElementById('q-meta').value);
-    const q = this._qTemp;
     if (!el) return;
-    if (!meta || q.acertos==null) { el.textContent=''; return; }
-    const atual = [7,12.5,17.5,22.5,27.5,32.5,37.5,42][q.acertos];
-    const g = meta - atual;
-    if (g <= 0) el.innerHTML = '<span style="color:var(--green);">Você já está nesse nível — considere mirar um pouco mais alto.</span>';
-    else if (g <= 7) el.innerHTML = '<span style="color:var(--green);">Meta realista: +' + Math.round(g) + ' acertos em 7 semanas dirigidas é factível.</span>';
-    else if (g <= 12) el.innerHTML = '<span style="color:var(--amber);">Meta ambiciosa (+' + Math.round(g) + '). Possível, mas exige cumprir o plano à risca.</span>';
-    else el.innerHTML = '<span style="color:var(--red);">+' + Math.round(g) + ' acertos em 7 semanas é improvável. Sugestão: mire ' + Math.round(atual+10) + ' e reajuste se evoluir rápido.</span>';
+    if (!meta || q.acertos == null) { el.textContent = ''; return; }
+    const atual = [7, 12.5, 17.5, 22.5, 27.5, 32.5, 37.5, 42][q.acertos], g = meta - atual;
+    if (g <= 0) el.innerHTML = '<span class="c-green">Você já está nesse nível. Considere mirar um pouco mais alto.</span>';
+    else if (g <= 7) el.innerHTML = '<span class="c-green">Meta realista: +' + Math.round(g) + ' acertos em 7 semanas dirigidas é factível.</span>';
+    else if (g <= 12) el.innerHTML = '<span class="c-amber">Meta ambiciosa (+' + Math.round(g) + '). Possível, mas exige cumprir o plano à risca.</span>';
+    else el.innerHTML = '<span class="c-red">+' + Math.round(g) + ' acertos em 7 semanas é improvável. Sugestão: mire ' + Math.round(atual + 10) + ' e reajuste se evoluir rápido.</span>';
   },
   qResumo() {
-    const q = this._qTemp;
-    const cont = { d:0, r:0, f:0 };
-    TEMAS.forEach(t => { const v = q.dif[t.id]||0; if (v===-1) cont.d++; else if (v===2) cont.r++; else if (v===1) cont.f++; });
-    const semAval = TEMAS.length - cont.d - cont.r - cont.f;
-    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','30–35','35–40','acima de 40'];
+    const q = this._qTemp, cont = { d: 0, r: 0, f: 0, n: 0 };
+    TEMAS.forEach(t => { const v = q.dif[t.id] || 0; if (v === -1) cont.d++; else if (v === 2) cont.r++; else if (v === 1) cont.f++; else if (v === 9) cont.n++; });
+    const semAval = TEMAS.length - cont.d - cont.r - cont.f - cont.n;
+    const faixas = ['menos de 10', '10–15', '15–20', '20–25', '25–30', '30–35', '35–40', 'acima de 40'];
     const temPlanos = Object.keys(this.planos).length > 0;
     return '<h2>Confira antes de criar o roteiro</h2>' +
       '<div class="resumo-grid">' +
       '<div class="stat"><div class="v">' + faixas[q.acertos] + '</div><div class="l">ACERTOS HOJE</div></div>' +
       '<div class="stat"><div class="v">' + q.meta + '/45</div><div class="l">META</div></div>' +
-      '<div class="stat"><div class="v">' + (q.horasDia*q.dias.length).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
-      '<div class="stat"><div class="v" style="font-size:12.5px;line-height:1.9;">' + q.dias.map(function(i){ return DIAS_SEMANA[i]; }).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div>' +
-      '</div>' +
+      '<div class="stat"><div class="v">' + (q.horasDia * q.dias.length).toFixed(1).replace('.', ',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat"><div class="v v-dias">' + q.dias.map(i => DIAS_SEMANA[i]).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div></div>' +
       '<div class="resumo-grid">' +
-      '<div class="stat"><div class="v" style="color:var(--red);">' + cont.d + '</div><div class="l">COM DIFICULDADE</div></div>' +
-      '<div class="stat"><div class="v" style="color:var(--amber);">' + cont.r + '</div><div class="l">REGULARES</div></div>' +
-      '<div class="stat"><div class="v" style="color:var(--green);">' + cont.f + '</div><div class="l">DOMINADOS</div></div>' +
-      '<div class="stat"><div class="v">' + semAval + '</div><div class="l">SEM AVALIAÇÃO</div></div>' +
-      '</div>' +
-      '<p class="q-hint">Assuntos com dificuldade recebem vídeo-aula e mais questões. Conforme você registra resultados, o plano reclassifica os temas sozinho.' +
-      (temPlanos ? ' <b>Semanas já iniciadas mantêm o plano congelado</b> — para aplicar o novo perfil nelas, use o botão Recalcular na agenda da semana.' : '') + '</p>';
+      '<div class="stat neg"><div class="v">' + cont.d + '</div><div class="l">COM DIFICULDADE</div></div>' +
+      '<div class="stat warn"><div class="v">' + cont.r + '</div><div class="l">REGULARES</div></div>' +
+      '<div class="stat pos"><div class="v">' + cont.f + '</div><div class="l">DOMINADOS</div></div>' +
+      '<div class="stat"><div class="v">' + (cont.n + semAval) + '</div><div class="l">SEM AVALIAÇÃO</div></div></div>' +
+      '<p class="q-hint"><b>Como o plano lê isso:</b> assuntos com dificuldade recebem vídeo-aula e mais questões; dominados ficam só em manutenção. ' +
+      '<b>Regular</b>, <b>Não sei</b> e <b>sem avaliação</b> valem o mesmo para o cálculo (carga padrão). A diferença é de registro: "Regular" é a sua avaliação consciente; os outros são lacunas que o seu desempenho vai preencher, para cima ou para baixo, conforme você registra resultados.' +
+      (temPlanos ? ' <b>Semanas já iniciadas mantêm o plano congelado</b>: para aplicar o novo perfil nelas, use Recalcular na agenda da semana.' : '') + '</p>';
   },
   qColeta() {
-    const st = this.qStep;
-    if (st === 1) {
-      const h = document.getElementById('q-horas');
-      if (h) this._qTemp.horasDia = parseFloat(h.value) || null;
-    }
-    if (st === 6) {
-      const m = document.getElementById('q-meta');
-      if (m) this._qTemp.meta = parseInt(m.value) || null;
-    }
+    if (this.qStep === 1) { const h = document.getElementById('q-horas'); if (h) this._qTemp.horasDia = parseFloat(h.value) || null; }
+    if (this.qStep === 6) { const m = document.getElementById('q-meta'); if (m) this._qTemp.meta = parseInt(m.value) || null; }
   },
   qValida() {
     const st = this.qStep, q = this._qTemp;
@@ -1150,292 +1253,348 @@ const app = {
   qAvancar() {
     this.qColeta();
     const erro = this.qValida();
-    if (erro) { document.getElementById('q-erro').textContent = erro; return; }
-    this.qStep++; this.render();
+    if (erro) { document.getElementById('q-erro').textContent = erro; this.anunciar(erro); return; }
+    this.qStep++; this.render({ modo: 'tela' });
   },
-  qVoltar() { this.qColeta(); this.qStep--; this.render(); },
+  qVoltar() { this.qColeta(); this.qStep--; this.render({ modo: 'tela' }); },
   qConcluir() {
     this.qColeta();
     const erro = this.qValida();
-    if (erro) { document.getElementById('q-erro').textContent = erro; return; }
+    if (erro) { document.getElementById('q-erro').textContent = erro; this.anunciar(erro); return; }
     this.perfil = this._qTemp;
     this._qTemp = null; this.qStep = 0; this._editando = false;
-    this.salvar(); this.render();
-    this.toast('ok', 'Roteiro atualizado', 'Semanas futuras recalculadas. Semanas já iniciadas mantêm o plano congelado.');
+    this.salvar(); this.render({ modo: 'tela' });
+    this.toast('ok', 'Roteiro pronto', 'Semanas futuras calculadas. Semanas já iniciadas mantêm o plano congelado.');
   },
 
-  /* ---------------- PLANO ---------------- */
+  /* ============================================================
+     PLANO — próximo passo · resumo · agenda (coluna principal)
+     + painel lateral no desktop
+     ============================================================ */
   primeiroNome() { return String(CONFIG.ALUNO || '').split(' ')[0]; },
+  _hm(min) { min = Math.max(0, Math.round(min)); return Math.floor(min / 60) + 'h' + String(min % 60).padStart(2, '0'); },
+  _fimSemana(sem) { return addDias(dt(sem.ini), (sem.dias || 7) - 1); },
+  _semanaPassada(sem) { return this.hoje() > this._fimSemana(sem); },
+  _numerosSemana(sem, dose) {
+    const self = this;
+    const feitas = dose.itens.filter(it => self.feito(it.key));
+    const feitoMin = feitas.reduce((s, it) => s + it.min, 0) + (dose.temMini && this.minis[sem.n] ? CONFIG.MIN_MINI : 0);
+    const totalAtv = dose.itens.length + (dose.temMini ? 1 : 0);
+    const feitasAtv = feitas.length + (dose.temMini && this.minis[sem.n] ? 1 : 0);
+    return { feitoMin, totalMin: dose.totalMin, pct: dose.totalMin ? Math.round(feitoMin / dose.totalMin * 100) : 0,
+             totalAtv, feitasAtv, restantes: totalAtv - feitasAtv, miniFeito: !!this.minis[sem.n] };
+  },
   htmlPlano() {
     const atualN = this.semanaAtualN();
     const antes = this.hoje() < dt(SEMANAS[0].ini);
     const selN = this.semanaSel || atualN || 1;
     const sem = SEMANAS.find(s => s.n === selN);
     const dose = this.dosePara(sem);
-    return (
+    const resumo = this.htmlProgresso(sem, dose);
+    return '<svg width="0" height="0" aria-hidden="true" class="svg-defs"><defs><linearGradient id="gradp"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs></svg>' +
       this.htmlSaudacao(atualN, antes, sem) +
-      (antes ? this.htmlPre() : '') +
-      '<section id="sec-next">' + this.htmlNext(sem, dose, atualN, antes) + '</section>' +
-      '<section id="sec-prog">' + this.htmlProgresso(sem, dose) + '</section>' +
-      '<section id="sec-agenda">' + this.htmlAgenda(sem, dose, atualN) + '</section>' +
-      '<section id="sec-evo">' + this.htmlEvolucao() + '</section>' +
-      '<section id="sec-semanas">' + this.htmlTimeline(atualN, selN) + '</section>' +
-      '<section id="sec-perfil">' + this.htmlPerfil() + '</section>' +
-      '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>'
-    );
+      '<div class="layout"><div class="col-main stack-v">' +
+        (antes ? this.htmlPre() : '') +
+        '<section id="sec-next" aria-label="Seu próximo passo">' + this.htmlNext(sem, dose, atualN, antes) + '</section>' +
+        '<section class="only-mobile" aria-label="Resumo da semana"><div class="card">' + resumo + '</div></section>' +
+        '<section id="sec-agenda" aria-label="Agenda da semana">' + this.htmlAgenda(sem, dose, atualN) + '</section>' +
+        '<section id="sec-mais" aria-label="Evolução, semanas e perfil">' + this.htmlMais(atualN, selN) + '</section>' +
+        '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>' +
+      '</div><aside class="col-side" aria-label="Painel da semana"><div class="stack">' +
+        '<div class="card">' + resumo + '</div>' +
+        '<div class="card">' + this.htmlTimelineMini(atualN, selN) + '</div>' +
+        '<div class="card">' + this.htmlPerfilCompacto() + '</div>' +
+      '</div></aside></div>';
   },
   htmlSaudacao(atualN, antes, sem) {
-    const ctx = antes
-      ? 'Seu roteiro está pronto. A Semana 1 abre em ' + fmtCurto(dt(SEMANAS[0].ini)) + '.'
-      : (atualN && sem.n === atualN)
-        ? 'Semana ' + atualN + ' de 7 · ' + rotSemana(sem)
-        : 'Você está vendo a Semana ' + sem.n + ' · ' + rotSemana(sem);
-    return '<div style="margin-top:22px;"><div class="h-page">Olá, ' + esc(this.primeiroNome()) + '</div>' +
-      '<p class="txt-sub" style="margin-top:3px;">' + ctx + '</p></div>';
+    const ctx = antes ? 'Seu roteiro está pronto. A Semana 1 abre em ' + fmtCurto(dt(SEMANAS[0].ini)) + '.'
+      : (atualN && sem.n === atualN) ? 'Semana ' + atualN + ' de 7 · ' + rotSemana(sem)
+      : 'Você está vendo a Semana ' + sem.n + ' · ' + rotSemana(sem) + (atualN ? ' · <button type="button" class="btn btn-ghost btn-sm btn-inline" onclick="app.semanaSel=null;app.render({scrollPara:\'sec-next\'})">voltar à semana atual</button>' : '');
+    return '<div class="greet"><div><div class="h1">Olá, ' + esc(this.primeiroNome()) + '</div><p class="sub">' + ctx + '</p></div></div>';
   },
   htmlPre() {
-    return '<section><div class="panel" style="border-color:rgba(251,191,36,.4);">' +
-      '<p style="font-size:13px;line-height:1.55;"><b>A revisão começa em ' + fmtCurto(dt(CONFIG.INICIO)) + '.</b> ' +
-      'Até lá, siga o cronograma normal do curso. Quando a Semana 1 abrir, o seu primeiro passo aparece aqui automaticamente.</p></div></section>';
+    return '<div class="aviso"><b>A revisão começa em ' + fmtCurto(dt(CONFIG.INICIO)) + '.</b> Até lá, siga o cronograma normal do curso. Quando a Semana 1 abrir, o seu primeiro passo aparece aqui automaticamente.</div>';
   },
   htmlNext(sem, dose, atualN, antes) {
     if (antes) {
-      return '<div class="next"><span class="tag-topo">ENQUANTO A REVISÃO NÃO COMEÇA</span>' +
+      return '<div class="next quiet"><span class="eyebrow">Enquanto a revisão não começa</span>' +
         '<h2>Seu plano da Semana 1 já está montado</h2>' +
-        '<p class="just">Explore a agenda abaixo para ver como as suas respostas viraram doses de estudo. Dá para reajustar o perfil quantas vezes quiser até lá.</p></div>';
+        '<p class="just">Explore a agenda abaixo para ver como as suas respostas viraram carga de estudo. Dá para reajustar o perfil quantas vezes quiser até lá.</p></div>';
     }
     const prox = this.proximaAtividade(sem.n);
     const miniOk = !!this.minis[sem.n];
+    const passada = this._semanaPassada(sem);
     if (!prox && miniOk) {
-      return '<div class="next"><span class="tag-topo">SEMANA CONCLUÍDA</span>' +
+      return '<div class="next done"><span class="eyebrow">Semana concluída</span>' +
         '<h2>Você fechou a Semana ' + sem.n + '</h2>' +
-        '<p class="just">Veja o diagnóstico do mini na seção Evolução, ou navegue para a próxima semana na linha do tempo.</p></div>';
+        '<p class="just">Veja o diagnóstico do mini na aba Evolução' + (atualN && atualN > sem.n ? ', ou volte à semana atual' : (sem.n < 7 ? ', ou siga para a Semana ' + (sem.n + 1) : '')) + '.</p>' +
+        '<div class="acts"><button type="button" class="btn btn-sec" onclick="app.navTo(\'sec-mais\',\'evo\')">Ver diagnóstico</button>' +
+        (sem.n < 7 ? '<button type="button" class="btn btn-ghost" onclick="app.semanaSel=' + (sem.n + 1) + ';app.render({scrollPara:\'sec-next\'})">Semana ' + (sem.n + 1) + '</button>' : '') + '</div></div>';
     }
     if (!prox) {
-      return '<div class="next"><span class="tag-topo">SEU PRÓXIMO PASSO</span>' +
+      return '<div class="next"><span class="eyebrow">Seu próximo passo</span>' +
         '<h2>Mini-simulado da Semana ' + sem.n + '</h2>' +
-        '<div class="infos"><span>' + ic('clock',14) + ' ~' + CONFIG.MIN_MINI + ' min</span><span>' + ic('book',14) + ' ' + CONFIG.MINI_QTDE + ' questões · ' + CONFIG.MINI_POR_TEMA + ' por tema</span></div>' +
-        '<p class="just">Todas as atividades da semana foram concluídas — o mini fecha o ciclo e mede a sua evolução real.</p>' +
-        '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>' +
-        '<button type="button" class="btn btn-ghost" onclick="app.toast(\'\',\'Demonstração\',\'No app real: inicia o mini-simulado cronometrado na plataforma.\')">Fazer na plataforma</button></div></div>';
+        '<div class="infos"><span>' + ic('clock', 15) + ' ~' + CONFIG.MIN_MINI + ' min</span><span>' + ic('book', 15) + ' ' + CONFIG.MINI_QTDE + ' questões · ' + CONFIG.MINI_POR_TEMA + ' por tema</span></div>' +
+        '<p class="just">Todas as atividades da semana foram concluídas. O mini fecha o ciclo e mede a sua evolução real.</p>' +
+        '<div class="acts"><button type="button" class="btn btn-pri" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>' +
+        '<button type="button" class="btn btn-sec" onclick="app.toast(\'\',\'Demonstração\',\'No app real: inicia o mini-simulado cronometrado na plataforma.\')">Fazer na plataforma</button></div></div>';
     }
     const just = prox.auto
-      ? (prox.efv === -1
-          ? 'Ajustado pelo seu desempenho — seus registros neste tema ficaram abaixo de 50%, então a dose aumentou.'
-          : 'Ajustado pelo seu desempenho — seus registros mostram evolução, então a dose foi reduzida para manutenção.')
-      : prox.efv === -1 ? 'Prioridade alta — você marcou dificuldade neste tema.'
-      : prox.geo ? 'Geometria da semana — presença fixa no roteiro: toda semana tem uma.'
-      : prox.efv === 1 ? 'Manutenção leve — você domina este tema; é só não perder o ritmo.'
-      : 'Dose padrão desta semana.';
-    return '<div class="next"><span class="tag-topo">SEU PRÓXIMO PASSO</span>' +
+      ? (prox.efv === -1 ? 'Ajustado pelo seu desempenho: seus registros neste assunto ficaram abaixo de 50%, então a carga aumentou.'
+                         : 'Ajustado pelo seu desempenho: seus registros mostram evolução, então a carga caiu para manutenção.')
+      : prox.efv === -1 ? ('Prioridade alta: você marcou dificuldade neste assunto' + ((prox.inc && prox.inc.v >= 3) ? ', e ele cai em média ' + prox.inc.v.toString().replace('.', ',') + ' questões por prova.' : '.'))
+      : prox.geo ? 'Geometria da semana: presença fixa no roteiro, toda semana tem uma.'
+      : prox.efv === 1 ? 'Manutenção leve: você domina este assunto, é só não perder o ritmo.'
+      : (prox.inc && prox.inc.rotulo) ? 'Assunto de peso: cai em média ' + prox.inc.v.toString().replace('.', ',') + ' questões por prova do ENEM, então recebe mais tempo no seu plano.'
+      : 'Carga padrão desta semana.';
+    const atrasada = (sem.n === atualN && this.diaDe(prox) < Math.floor((this.hoje() - dt(sem.ini)) / 86400000)) || passada;
+    return '<div class="next"><span class="eyebrow">' + (atrasada ? 'Atividade atrasada · seu próximo passo' : 'Seu próximo passo') + '</span>' +
       '<h2>' + esc(prox.titulo) + '</h2>' +
-      '<div class="infos"><span>' + ic('clock',14) + ' ~' + prox.min + ' min</span>' +
-      '<span>' + ic(prox.tipo==='v'?'play':'book',14) + ' ' + (prox.tipo==='v'?'Vídeo-aula':'Questões no banco') + '</span></div>' +
+      '<div class="infos"><span>' + ic('clock', 15) + ' ~' + prox.min + ' min</span>' +
+      '<span>' + ic(prox.tipo === 'v' ? 'play' : 'book', 15) + ' ' + (prox.tipo === 'v' ? 'Vídeo-aula' : 'Questões no banco') + '</span>' +
+      '<span>' + ic('cal', 15) + ' ' + DIAS_LONGOS[this.diaDe(prox)] + ' ' + fmtCurto(addDias(dt(sem.ini), this.diaDe(prox))) + '</span></div>' +
       '<p class="just">' + just + '</p>' +
-      '<div class="acts">' +
-      '<button type="button" class="btn btn-pri" onclick="app.demoAbrir(\'' + prox.temaId + '\')">Começar agora</button>' +
-      '<button type="button" class="btn btn-ghost" onclick="app.concluir(\'' + prox.key + '\')">Marcar concluída</button>' +
-      '</div></div>';
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.demoAbrir(\'' + prox.temaId + '\')">Abrir atividade</button>' +
+      '<button type="button" class="btn btn-sec" data-foco="next:' + prox.key + '" onclick="app.concluir(\'' + prox.key + '\')">Marcar concluída</button></div></div>';
   },
   htmlProgresso(sem, dose) {
-    const feitoMin = dose.itens.filter(it=>this.feito(it.key)).reduce((s,it)=>s+it.min,0) + (dose.temMini && this.minis[sem.n] ? CONFIG.MIN_MINI : 0);
-    const pct = dose.totalMin ? Math.round(feitoMin / dose.totalMin * 100) : 0;
-    const r = 30, c = Math.round(2*Math.PI*r*100)/100;
-    const hF = Math.floor(feitoMin/60), mF = feitoMin%60;
-    const hT = Math.floor(dose.totalMin/60), mT = dose.totalMin%60;
-    return '<div class="panel"><div class="prog-big">' +
-      '<div class="prog-ring" role="img" aria-label="Progresso da semana: ' + pct + ' por cento">' +
-        '<svg width="72" height="72" aria-hidden="true"><defs><linearGradient id="gradp"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>' +
-        '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="#16244a" stroke-width="7"/>' +
-        '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="url(#gradp)" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + (c*(1-pct/100)) + '"/></svg>' +
-        '<span class="pct">' + pct + '%</span></div>' +
-      '<div class="prog-info" aria-live="polite">' +
-        '<div class="lin">Progresso da Semana ' + sem.n + '</div>' +
-        '<div class="det">' + hF + 'h' + String(mF).padStart(2,'0') + ' de ' + hT + 'h' + String(mT).padStart(2,'0') + ' estimadas · ponderado pelo tempo de cada atividade</div>' +
-        (dose.avisos.length ? '<div class="det" style="color:var(--amber);margin-top:5px;">' + esc(dose.avisos[0]) + '</div>' : '') +
-      '</div></div></div>';
+    const n = this._numerosSemana(sem, dose);
+    const r = 36, c = Math.round(2 * Math.PI * r * 100) / 100;
+    const sobra = dose.budget - dose.totalMin;
+    return '<div class="resumo">' +
+      '<div class="ring" role="img" aria-label="Progresso da Semana ' + sem.n + ': ' + n.pct + ' por cento">' +
+        '<svg width="84" height="84" aria-hidden="true"><circle cx="42" cy="42" r="' + r + '" fill="none" stroke="#1a2a55" stroke-width="8"/>' +
+        '<circle cx="42" cy="42" r="' + r + '" fill="none" stroke="url(#gradp)" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + (c * (1 - n.pct / 100)) + '"/></svg>' +
+        '<span class="pct">' + n.pct + '%</span></div>' +
+      '<div><div class="h3 mb-6">Semana ' + sem.n + '</div><div class="kpis">' +
+        '<div class="kpi"><div class="v">' + n.feitasAtv + '<span class="meta"> / ' + n.totalAtv + '</span></div><div class="l">concluídas</div></div>' +
+        '<div class="kpi"><div class="v">' + n.restantes + '</div><div class="l">restantes</div></div>' +
+        '<div class="kpi"><div class="v">' + this._hm(n.feitoMin) + '</div><div class="l">tempo feito</div></div>' +
+        '<div class="kpi"><div class="v">' + this._hm(n.totalMin) + '</div><div class="l">planejado</div></div>' +
+      '</div></div>' +
+      '<div class="resumo-foot"><span>Plano montado dentro das <b>' + this._hm(dose.budget) + '</b> que você marcou no perfil' + (sobra >= CONFIG.MIN_QUESTAO ? ' (' + sobra + ' min livres)' : '') + '.</span>' +
+        (dose.temMini ? '<span class="chip ' + (n.miniFeito ? 'chip-ok' : 'chip-neutro') + '">' + (n.miniFeito ? 'Mini feito · ' + this.minis[sem.n].total + '/' + CONFIG.MINI_QTDE : 'Mini pendente') + '</span>' : '') +
+        (dose.avisos.length ? '<span class="chip chip-atraso tip" data-tip="' + esc(dose.avisos[0]) + '" tabindex="0">' + ic('alert', 12) + ' Tempo curto</span>' : '') +
+      '</div></div>';
+  },
+  _cardAtividade(sem, dose, it, estado) {
+    const done = this.feito(it.key), o = this.ov[it.key] || {};
+    const priCls = it.geo ? 'chip-geo' : (it.peso >= 3 ? 'chip-alta' : it.peso >= 2 ? 'chip-padrao' : 'chip-leve');
+    const priTxt = it.geo ? 'Geometria' : (it.peso >= 3 ? 'Prioridade alta' : it.peso >= 2 ? 'Carga padrão' : 'Manutenção');
+    const nomeTema = it.titulo.split('— ')[1] || it.titulo;
+    const tipo = it.tipo === 'v' ? 'Vídeo-aula · ' + it.min + ' min' : it.questoes + ' questões · ~' + it.min + ' min';
+    const dia = this.diaDe(it);
+    const extras = [];
+    if (it.inc && it.inc.rotulo) extras.push('<span class="tip" data-tip="Cai em média ' + it.inc.v.toString().replace('.', ',') + ' questões por prova do ENEM, por isso recebe mais tempo." tabindex="0">' + it.inc.rotulo.toLowerCase().replace('incidência', 'no ENEM') + '</span>');
+    if (it.auto) extras.push('<span class="tip" data-tip="' + (it.efv === -1 ? 'Seus registros neste assunto ficaram abaixo de 50%: a carga aumentou automaticamente.' : 'Seus registros neste assunto passaram de 80%: a carga caiu para manutenção.') + '" tabindex="0">ajustado pelo seu desempenho</span>');
+    const nDias = sem.dias || 7;
+    const marcados = (dose.diasAtivos && dose.diasAtivos.length ? dose.diasAtivos : [0, 1, 2, 3, 4]).filter(d => d < nDias);
+    const lista = marcados.indexOf(dia) === -1 ? marcados.concat([dia]).sort((a, b) => a - b) : marcados;
+    const sel = '<label class="reag"><span class="sr-only">Reagendar ' + esc(nomeTema) + '</span><select data-foco="reag:' + it.key + '" onchange="app.moverDia(\'' + it.key + '\', this.value)">' +
+      lista.map(d => '<option value="' + d + '"' + (d === dia ? ' selected' : '') + '>' + DIAS_LONGOS[d] + ' ' + fmtCurto(addDias(dt(sem.ini), d)) + '</option>').join('') + '</select></label>';
+    return '<article class="atv' + (done ? ' done' : '') + (estado === 'late' ? ' late' : '') + '" data-atv="' + it.key + '">' +
+      '<button type="button" class="chk" role="checkbox" aria-checked="' + done + '" data-foco="chk:' + it.key + '" aria-label="' + (done ? 'Desfazer conclusão de ' : 'Concluir ') + esc(it.titulo) + '" onclick="app.concluir(\'' + it.key + '\')">' + ic('check', 20) + '</button>' +
+      '<div class="atv-body"><div class="atv-top"><span>' + tipo + '</span><span class="chip ' + priCls + '">' + priTxt + '</span></div>' +
+      '<h4 class="atv-titulo">' + esc(nomeTema) + '</h4>' +
+      '<div class="atv-meta"><span>' + DIAS_LONGOS[dia] + ' ' + fmtCurto(addDias(dt(sem.ini), dia)) + '</span>' +
+        (estado === 'late' && !done ? '<span class="chip chip-atraso">Atrasada</span>' : '') +
+        (done && o.total ? '<span class="ok">' + o.hits + '/' + o.total + ' acertos</span>' : (done ? '<span class="ok">Concluída</span>' : '')) +
+        extras.join('') + '</div></div>' +
+      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.demoAbrir(\'' + it.temaId + '\')">Abrir atividade</button>' + sel + '</div>' : '') +
+      '</article>';
   },
   htmlAgenda(sem, dose, atualN) {
-    const hoje = this.hoje();
+    const hoje = this.hoje(), self = this;
     const idxHoje = Math.floor((hoje - dt(sem.ini)) / 86400000);
-    const nDias = (sem.dias||7);
-    const ehAtual = sem.n === atualN;
-    const self = this;
-
-    const diasSel = (it) => {
-      const marcados = (dose.diasAtivos && dose.diasAtivos.length ? dose.diasAtivos : [0,1,2,3,4]).filter(d => d < nDias);
-      const atual = self.diaDe(it);
-      const lista = marcados.indexOf(atual) === -1 ? marcados.concat([atual]).sort((a,b)=>a-b) : marcados;
-      let ops = '';
-      lista.forEach(d => {
-        ops += '<option value="' + d + '"' + (atual===d?' selected':'') + '>' + fmtSemDia(addDias(dt(sem.ini), d)) + '</option>';
-      });
-      return '<select class="mover" aria-label="Mover atividade de dia" onchange="app.moverDia(\'' + it.key + '\', this.value)">' + ops + '</select>';
-    };
-    const linha = (it, atrasada) => {
-      const done = self.feito(it.key);
-      const o = self.ov[it.key] || {};
-      const priCls = it.geo ? 'pri-g' : ('pri-' + it.peso);
-      const priTxt = it.geo ? 'GEOMETRIA' : (it.peso===3 ? 'PRIORIDADE ALTA' : it.peso===2 ? 'DOSE PADRÃO' : 'MANUTENÇÃO');
-      const autoTitle = it.efv === -1
-        ? 'Seus registros neste tema ficaram abaixo de 50% de acerto — a dose aumentou automaticamente.'
-        : 'Seus registros neste tema passaram de 80% de acerto — a dose caiu para manutenção.';
-      return '<div class="atv' + (done?' done':'') + '">' +
-        '<button type="button" class="chk" role="checkbox" aria-checked="' + done + '" aria-label="' + (done?'Desfazer conclusão de ':'Concluir ') + esc(it.titulo) + '" onclick="app.concluir(\'' + it.key + '\')">' + ic('check',14) + '</button>' +
-        '<div class="body"><div class="t">' + esc(it.titulo) + '</div>' +
-        '<div class="m"><span class="pri ' + priCls + '">' + priTxt + '</span>' +
-        (it.auto ? '<span class="pri pri-auto" title="' + autoTitle + '">AJUSTADO PELO SEU DESEMPENHO</span>' : '') +
-        '<span>~' + it.min + ' min</span>' +
-        (atrasada && !done ? '<span style="color:var(--amber);font-weight:700;">planejada para ' + fmtSemDia(addDias(dt(sem.ini), self.diaDe(it))) + '</span>' : '') +
-        (done && o.total ? '<span style="color:var(--green);font-weight:700;">' + o.hits + '/' + o.total + ' acertos</span>' : '') +
-        (!done ? '<button type="button" class="btn btn-ghost btn-sm" style="min-height:30px;padding:4px 10px;font-size:11px;" onclick="app.demoAbrir(\'' + it.temaId + '\')">Abrir</button>' : '') +
-        '</div></div>' +
-        (!done ? diasSel(it) : '') +
-        '</div>';
-    };
-
-    let html = '<div class="h-sec"><span class="ic">' + ic('cal',16) + '</span>Agenda da semana' +
-      (dose.congelado
-        ? '<span class="lado"><span class="txt-mini">plano fixado em ' + fmtCurto(new Date(dose.criadoEm)) + '</span>' +
-          '<button type="button" class="btn btn-ghost btn-sm" onclick="app.recalcularSemana(' + sem.n + ')">' + ic('refresh',12) + ' Recalcular</button></span>'
-        : '') +
-      '</div>';
-
-    const pendHoje = [], proximas = [], feitas = [];
+    const nDias = sem.dias || 7;
+    const ehAtual = sem.n === atualN, passada = this._semanaPassada(sem);
+    const grupos = { late: [], hoje: [], prox: [], feitas: [] };
     dose.itens.forEach(it => {
-      if (self.feito(it.key)) feitas.push(it);
-      else if (ehAtual && self.diaDe(it) <= idxHoje) pendHoje.push(it);
-      else proximas.push(it);
+      const d = self.diaDe(it);
+      if (self.feito(it.key)) grupos.feitas.push(it);
+      else if (passada || (ehAtual && d < idxHoje)) grupos.late.push(it);
+      else if (ehAtual && d === idxHoje) grupos.hoje.push(it);
+      else grupos.prox.push(it);
     });
-
-    if (ehAtual) {
-      html += '<div class="dia-grupo"><div class="dia-head hoje">HOJE <span class="data">· ' + fmtSemDia(hoje) + ' ' + fmtCurto(hoje) + '</span></div>';
-      html += pendHoje.length
-        ? pendHoje.sort((a,b)=>self.diaDe(a)-self.diaDe(b)||b.peso-a.peso).map(it => linha(it, self.diaDe(it) < idxHoje)).join('')
-        : '<div class="atv-vazia">Nada pendente para hoje. Adiante uma atividade das próximas ou descanse — constância também é recuperação.</div>';
-      html += '</div>';
+    const ordena = a => a.sort((x, y) => self.diaDe(x) - self.diaDe(y) || y.peso - x.peso);
+    let html = '<div class="sec-title"><span class="ic">' + ic('cal', 18) + '</span>Agenda da semana' +
+      '<span class="lado">' + (dose.congelado
+        ? '<span class="meta">plano fixado em ' + fmtCurto(new Date(dose.criadoEm)) + '</span><button type="button" class="btn btn-ghost btn-sm" onclick="app.recalcularSemana(' + sem.n + ')">' + ic('refresh', 14) + ' Recalcular</button>'
+        : '<span class="meta tip" data-tip="A semana fica fixada na primeira atividade concluída. Até lá, mudanças de perfil recalculam tudo." tabindex="0">plano ainda flexível</span>') + '</span></div>';
+    if (grupos.late.length) {
+      html += '<div class="grupo"><div class="grupo-h atraso">' + ic('alert', 14) + ' Atrasadas <span class="n">' + grupos.late.length + '</span></div>' +
+        ordena(grupos.late).map(it => self._cardAtividade(sem, dose, it, 'late')).join('') + '</div>';
     }
-    if (proximas.length) {
-      html += '<div class="dia-grupo"><div class="dia-head">' + (ehAtual ? 'PRÓXIMAS' : 'ATIVIDADES DA SEMANA') + '</div>';
-      const grupos = {};
-      proximas.forEach(it => { const d = self.diaDe(it); (grupos[d]=grupos[d]||[]).push(it); });
-      Object.keys(grupos).map(Number).sort((a,b)=>a-b).forEach(d => {
-        html += '<div class="txt-mini" style="margin:8px 0 5px;font-weight:700;">' + fmtSemDia(addDias(dt(sem.ini), d)) + ' ' + fmtCurto(addDias(dt(sem.ini), d)) + '</div>';
-        html += grupos[d].sort((a,b)=>b.peso-a.peso).map(it => linha(it, false)).join('');
+    if (ehAtual) {
+      const diaEstudo = dose.diasAtivos.indexOf(idxHoje) !== -1;
+      html += '<div class="grupo"><div class="grupo-h hoje">Hoje · ' + DIAS_LONGOS[idxHoje] + ' ' + fmtCurto(hoje) + (grupos.hoje.length ? ' <span class="n">' + grupos.hoje.length + '</span>' : '') + '</div>' +
+        (grupos.hoje.length ? ordena(grupos.hoje).map(it => self._cardAtividade(sem, dose, it, 'hoje')).join('')
+          : '<div class="vazio">' + (diaEstudo ? '<b>Nada pendente para hoje.</b> Adiante uma das próximas ou descanse: constância também é recuperação.' : '<b>Hoje não é dia de estudo no seu plano.</b> Se sobrar tempo, adiante uma das próximas atividades.') + '</div>') + '</div>';
+    }
+    if (grupos.prox.length) {
+      html += '<div class="grupo"><div class="grupo-h">' + (ehAtual ? 'Próximas' : 'Atividades da semana') + ' <span class="n">' + grupos.prox.length + '</span></div>';
+      const porDia = {};
+      grupos.prox.forEach(it => { const d = self.diaDe(it); (porDia[d] = porDia[d] || []).push(it); });
+      Object.keys(porDia).map(Number).sort((a, b) => a - b).forEach(d => {
+        html += '<div class="dia-lbl">' + DIAS_LONGOS[d] + ' · ' + fmtCurto(addDias(dt(sem.ini), d)) + '</div>' +
+          porDia[d].sort((a, b) => b.peso - a.peso).map(it => self._cardAtividade(sem, dose, it, 'prox')).join('');
       });
       html += '</div>';
     }
+    if (!dose.itens.length) html += '<div class="vazio"><b>Nenhuma atividade individual nesta semana.</b> Seu tempo cobre só o mini-simulado. Amplie a disponibilidade no perfil para receber questões.</div>';
     if (dose.fora.length) {
-      html += '<div class="dia-grupo"><div class="dia-head">FORA DO ORÇAMENTO DESTA SEMANA</div>' +
-        dose.fora.map(f => '<div class="fora-item"><b>' + esc(f.nome) + '</b> — ' + esc(f.motivo) + '</div>').join('') +
-        '</div>';
+      html += '<div class="grupo"><div class="grupo-h">Fora do tempo desta semana</div>' +
+        dose.fora.map(f => '<div class="fora"><b>' + esc(f.nome) + '</b>: ' + esc(f.motivo) + '</div>').join('') + '</div>';
     }
-    // mini-simulado
     if (dose.temMini) {
       const mini = this.minis[sem.n];
       const sab = addDias(dt(sem.ini), nDias >= 7 ? 5 : nDias - 1);
-      html += '<div class="mini"><span class="ic">' + ic('clock',22) + '</span>' +
-        '<div class="inf"><div class="t">Mini-simulado · fecha a semana</div>' +
-        '<div class="s">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema · ~' + CONFIG.MIN_MINI + ' min · sugerido para ' + fmtSemDia(sab) + ' ' + fmtCurto(sab) + '</div></div>' +
-        (mini
-          ? '<div class="mini-res"><b>' + mini.total + '/' + CONFIG.MINI_QTDE + '</b>' +
-            '<button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + sem.n + ')">Ver / editar</button></div>'
-          : '<button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>') +
-        '</div>';
+      html += '<div class="mini"><span class="ic">' + ic('clock', 22) + '</span>' +
+        '<div class="inf"><div class="t">Mini-simulado da semana</div><div class="s">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por assunto · ~' + CONFIG.MIN_MINI + ' min · sugerido para ' + DIAS_LONGOS[nDias >= 7 ? 5 : nDias - 1].toLowerCase() + ' ' + fmtCurto(sab) + '</div></div>' +
+        '<div class="act">' + (mini
+          ? '<div class="mini-res"><b>' + mini.total + '/' + CONFIG.MINI_QTDE + '</b><button type="button" class="btn btn-ghost btn-sm" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Ver ou editar</button></div>'
+          : '<button type="button" class="btn btn-sec btn-sm" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>') + '</div></div>';
     }
-    if (feitas.length) {
-      html += '<details class="concl"><summary><span class="chev">' + ic('chev',13) + '</span>CONCLUÍDAS (' + feitas.length + ')</summary>' +
-        feitas.map(it => linha(it, false)).join('') + '</details>';
+    if (grupos.feitas.length) {
+      html += '<details class="concl"><summary><span class="chev">' + ic('chev', 14) + '</span>Concluídas <span class="n n-ok">' + grupos.feitas.length + '</span></summary>' +
+        grupos.feitas.map(it => self._cardAtividade(sem, dose, it, 'done')).join('') + '</details>';
     }
     return html;
   },
-  htmlEvolucao() {
+
+  /* ============================================================
+     MAIS — abas: Evolução · 7 semanas · Perfil
+     ============================================================ */
+  htmlMais(atualN, selN) {
+    const tab = this._uiTab;
+    const abas = [['evo', 'Evolução'], ['semanas', '7 semanas'], ['perfil', 'Perfil']];
+    return '<div class="tabs" role="tablist" aria-label="Mais informações">' + abas.map(a =>
+        '<button type="button" role="tab" id="tab-' + a[0] + '" data-tabbtn="' + a[0] + '" aria-selected="' + (tab === a[0]) + '" aria-controls="panel-' + a[0] + '" tabindex="' + (tab === a[0] ? 0 : -1) + '" onclick="app.setTab(\'' + a[0] + '\')" onkeydown="app._tabTeclas(event)">' + a[1] + '</button>').join('') + '</div>' +
+      '<div id="panel-evo" role="tabpanel" aria-labelledby="tab-evo" data-tabpanel="evo" class="tabpanel"' + (tab !== 'evo' ? ' hidden' : '') + '><div class="card" id="sec-evo">' + this.htmlEvolucao(atualN) + '</div></div>' +
+      '<div id="panel-semanas" role="tabpanel" aria-labelledby="tab-semanas" data-tabpanel="semanas" class="tabpanel"' + (tab !== 'semanas' ? ' hidden' : '') + '><div class="card" id="sec-semanas">' + this.htmlTimeline(atualN, selN) + '</div></div>' +
+      '<div id="panel-perfil" role="tabpanel" aria-labelledby="tab-perfil" data-tabpanel="perfil" class="tabpanel"' + (tab !== 'perfil' ? ' hidden' : '') + '><div class="card" id="sec-perfil">' + this.htmlPerfil() + '</div></div>';
+  },
+  _tabTeclas(e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const ordem = ['evo', 'semanas', 'perfil'];
+    let i = ordem.indexOf(this._uiTab) + (e.key === 'ArrowRight' ? 1 : -1);
+    i = (i + ordem.length) % ordem.length;
+    this.setTab(ordem[i]);
+    const b = document.getElementById('tab-' + ordem[i]); if (b) b.focus();
+    e.preventDefault();
+  },
+  selecionarSemana(n) { this.semanaSel = n; this.render({ scrollPara: 'sec-next' }); this.anunciar('Semana ' + n + ' selecionada.'); },
+  evoSelecionar(n) { this._evoSel = n; this.render({ foco: 'evo:' + n }); },
+  _estadoSemana(s, atualN) {
+    const dose = this.dosePara(s);
+    const n = this._numerosSemana(s, dose);
+    const passada = this._semanaPassada(s);
+    const futura = this.hoje() < dt(s.ini);
+    let st = 'futura';
+    if (n.pct >= 100) st = 'done'; else if (s.n === atualN) st = 'atual'; else if (passada) st = 'incompleta';
+    return { dose, n, st, passada, futura };
+  },
+  htmlEvolucao(atualN) {
     const metaMini = Math.round(this.perfil.meta / 3);
     const regs = SEMANAS.map(s => this.minis[s.n] ? this.minis[s.n].total : null);
-    const tem = regs.some(v => v != null);
-    let corpo;
-    if (!tem) {
-      corpo = '<div class="atv-vazia">Os resultados dos seus mini-simulados vão aparecer aqui, comparados com a sua meta (' + metaMini + '/' + CONFIG.MINI_QTDE + ' por mini).</div>';
-    } else {
-      const metaPct = Math.min(100, metaMini / CONFIG.MINI_QTDE * 100);
-      const descr = SEMANAS.map((s,i)=>regs[i]!=null?('Semana '+s.n+': '+regs[i]+' de '+CONFIG.MINI_QTDE+'. '):'').join('');
-      corpo = '<div class="evo" role="img" aria-label="Gráfico de barras dos mini-simulados. ' + descr + 'Meta: ' + metaMini + ' de ' + CONFIG.MINI_QTDE + '.">' +
-        '<div class="meta-line" style="bottom:' + metaPct + '%;"><small>meta ' + metaMini + '</small></div>' +
-        SEMANAS.map((s,i) => {
-          const v = regs[i];
-          return '<div class="evo-col">' +
-            (v!=null ? '<span class="evo-v">' + v + '</span>' : '') +
-            '<div class="evo-bar' + (v==null?' off':'') + '" style="height:' + (v!=null ? Math.max(6, v/CONFIG.MINI_QTDE*100) : 24) + '%;"></div>' +
-            '<span class="evo-l">S' + s.n + '</span></div>';
-        }).join('') + '</div>' +
-        '<table class="sr-only"><caption>Acertos por mini-simulado</caption><tbody><tr>' + SEMANAS.map(s=>'<th scope="col">Semana '+s.n+'</th>').join('') + '</tr><tr>' +
-        regs.map(v=>'<td>'+(v==null?'sem registro':v+' de '+CONFIG.MINI_QTDE)+'</td>').join('') + '</tr></tbody></table>';
+    const feitosN = SEMANAS.map(s => s.n).filter(n => this.minis[n]);
+    const titulo = '<div class="sec-title"><span class="ic">' + ic('chart', 18) + '</span>Evolução até a prova</div>';
+    if (!feitosN.length) {
+      return titulo + '<div class="vazio"><b>Seus mini-simulados vão aparecer aqui.</b> Cada semana fecha com um mini de ' + CONFIG.MINI_QTDE + ' questões; a meta é ' + metaMini + ' acertos por mini (proporcional à sua meta de ' + this.perfil.meta + '/45).</div>';
     }
-    let diag = '';
-    const feitosN = SEMANAS.map(s=>s.n).filter(n=>this.minis[n]);
-    const ultimoN = feitosN.length ? feitosN[feitosN.length-1] : null;
-    if (ultimoN) {
-      const m = this.minis[ultimoN];
-      const pares = Object.keys(m.porTema).map(id => [id, m.porTema[id]]);
-      const melhor = pares.slice().sort((a,b)=>b[1]-a[1])[0];
-      const pior = pares.slice().sort((a,b)=>a[1]-b[1])[0];
-      const pct = Math.round(m.total / CONFIG.MINI_QTDE * 100);
-      const delta = m.total - metaMini;
-      const reaparece = SEMANAS.find(s => s.n > ultimoN && (s.temas.indexOf(pior[0]) !== -1 || s.geo.id === pior[0]));
-      const rec = pior[1] >= 3 ? 'Desempenho sólido em todos os temas — mantenha o ritmo na próxima semana.'
-        : reaparece
-          ? 'Reforce ' + T(pior[0]).nome + ': ele volta na Semana ' + reaparece.n + ', e o plano aumentará a dose se o desempenho continuar baixo.'
-          : 'Reserve uns 30 minutos extras para ' + T(pior[0]).nome + ' na próxima semana — ele não volta no roteiro fixo.';
-      diag = '<div class="diag"><b style="font-size:13px;">Diagnóstico · mini da Semana ' + ultimoN + '</b>' +
-        '<div class="linha">' +
-        '<div class="stat"><div class="v">' + pct + '%</div><div class="l">ACERTOS</div></div>' +
-        '<div class="stat"><div class="v" style="color:var(--green);">' + esc(T(melhor[0]).nome) + '</div><div class="l">MELHOR · ' + melhor[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div>' +
-        '<div class="stat"><div class="v" style="color:var(--red);">' + esc(T(pior[0]).nome) + '</div><div class="l">ATENÇÃO · ' + pior[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div>' +
-        '<div class="stat"><div class="v" style="color:' + (delta>=0?'var(--green)':'var(--amber)') + ';">' + (delta>=0?'+':'') + delta + '</div><div class="l">VS. META</div></div>' +
-        '</div><p class="rec">' + rec + '</p>' +
-        '<div style="margin-top:8px;"><button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + ultimoN + ')">Ver / editar lançamento</button></div>' +
-        '</div>';
-    }
-    return '<div class="panel"><div class="h-sec"><span class="ic">' + ic('chart',16) + '</span>Evolução até a prova</div>' + corpo + diag + '</div>';
+    const selN = (this._evoSel && this.minis[this._evoSel]) ? this._evoSel : feitosN[feitosN.length - 1];
+    const metaPct = Math.min(100, metaMini / CONFIG.MINI_QTDE * 100);
+    const descr = SEMANAS.map((s, i) => regs[i] != null ? 'Semana ' + s.n + ': ' + regs[i] + ' de ' + CONFIG.MINI_QTDE + '. ' : '').join('');
+    const barras = SEMANAS.map((s, i) => {
+      const v = regs[i];
+      const futura = this.hoje() < dt(s.ini);
+      const atual = s.n === atualN && v == null;
+      const cls = v != null ? '' : (atual ? ' atual' : ' off');
+      const alt = 'Semana ' + s.n + (v != null ? ': ' + v + ' de ' + CONFIG.MINI_QTDE : atual ? ': em curso, mini ainda não registrado' : futura ? ': futura' : ': sem registro');
+      return '<button type="button" class="evo-col" data-foco="evo:' + s.n + '" aria-label="' + alt + '" aria-pressed="' + (s.n === selN) + '"' + (v != null ? ' onclick="app.evoSelecionar(' + s.n + ')"' : ' disabled') + '>' +
+        '<span class="evo-v">' + (v != null ? v : (atual ? '…' : '')) + '</span>' +
+        '<div class="evo-bar' + cls + (s.n === selN ? ' sel' : '') + '" style="height:' + (v != null ? Math.max(6, v / CONFIG.MINI_QTDE * 100) : (atual ? 30 : 18)) + '%"></div>' +
+        '<span class="evo-l">S' + s.n + '</span></button>';
+    }).join('');
+    const grafico = '<div class="evo" role="group" aria-label="Acertos por mini-simulado. ' + descr + 'Meta: ' + metaMini + ' de ' + CONFIG.MINI_QTDE + '. Toque em uma semana para ver o diagnóstico.">' +
+      '<div class="meta-line" style="bottom:' + metaPct + '%"><small>meta ' + metaMini + '</small></div>' + barras + '</div>' +
+      '<div class="legenda"><span><i style="background:var(--blue)"></i>registrado</span><span><i style="background:var(--coral)"></i>semana atual</span><span><i style="border:1px dashed var(--line-2)"></i>futura ou sem registro</span><span><i style="border-top:2px dashed var(--green);height:0;border-radius:0"></i>meta por mini</span></div>' +
+      '<table class="sr-only"><caption>Acertos por mini-simulado</caption><tbody><tr>' + SEMANAS.map(s => '<th scope="col">Semana ' + s.n + '</th>').join('') + '</tr><tr>' + regs.map(v => '<td>' + (v == null ? 'sem registro' : v + ' de ' + CONFIG.MINI_QTDE) + '</td>').join('') + '</tr></tbody></table>';
+    // diagnóstico da semana selecionada
+    const m = this.minis[selN];
+    const pares = Object.keys(m.porTema).map(id => [id, m.porTema[id]]);
+    const melhor = pares.slice().sort((a, b) => b[1] - a[1])[0], pior = pares.slice().sort((a, b) => a[1] - b[1])[0];
+    const pct = Math.round(m.total / CONFIG.MINI_QTDE * 100), delta = m.total - metaMini;
+    const antN = feitosN.filter(n => n < selN).pop();
+    const deltaAnt = antN ? m.total - this.minis[antN].total : null;
+    const reaparece = SEMANAS.find(s => s.n > selN && (s.temas.indexOf(pior[0]) !== -1 || s.geo.id === pior[0]));
+    const rec = pior[1] >= 3 ? 'Desempenho sólido em todos os assuntos. Mantenha o ritmo na próxima semana.'
+      : reaparece ? 'Reforce ' + T(pior[0]).nome + ': ele volta na Semana ' + reaparece.n + ', e o plano aumenta a carga se o desempenho continuar baixo.'
+      : 'Reserve uns 30 minutos extras para ' + T(pior[0]).nome + ' na próxima semana: ele não volta no roteiro fixo.';
+    const diag = '<div class="diag"><div class="h3">Diagnóstico · mini da Semana ' + selN + '</div>' +
+      '<div class="stats">' +
+      '<div class="stat"><div class="v">' + m.total + '/' + CONFIG.MINI_QTDE + '</div><div class="l">' + pct + '% DE ACERTOS</div></div>' +
+      '<div class="stat ' + (delta >= 0 ? 'pos' : 'warn') + '"><div class="v">' + (delta >= 0 ? '+' : '') + delta + '</div><div class="l">VS. META (' + metaMini + ')</div></div>' +
+      (deltaAnt != null ? '<div class="stat ' + (deltaAnt > 0 ? 'pos' : deltaAnt < 0 ? 'neg' : '') + '"><div class="v">' + (deltaAnt > 0 ? '+' : '') + deltaAnt + '</div><div class="l">VS. SEMANA ' + antN + '</div></div>' : '<div class="stat"><div class="v">1º</div><div class="l">PRIMEIRO MINI</div></div>') +
+      '<div class="stat pos"><div class="v">' + esc(T(melhor[0]).nome) + '</div><div class="l">MELHOR · ' + melhor[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div>' +
+      '<div class="stat neg"><div class="v">' + esc(T(pior[0]).nome) + '</div><div class="l">ATENÇÃO · ' + pior[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div></div>' +
+      '<p class="rec">' + rec + '</p>' +
+      '<div class="mt-10"><button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + selN + ')">Ver ou editar lançamento</button></div></div>';
+    return titulo + grafico + diag;
   },
   htmlTimeline(atualN, selN) {
     const self = this;
     const btns = SEMANAS.map(s => {
-      const dose = self.dosePara(s);
-      const feitoMin = dose.itens.filter(it=>self.feito(it.key)).reduce((x,it)=>x+it.min,0) + (dose.temMini && self.minis[s.n]?CONFIG.MIN_MINI:0);
-      const pct = dose.totalMin ? Math.round(feitoMin/dose.totalMin*100) : 0;
-      const status = pct >= 100 ? 'CONCLUÍDA' : (s.n === atualN ? 'ATUAL' : (pct > 0 ? pct + '%' : ''));
-      const corSt = pct>=100 ? 'var(--green)' : (s.n===atualN ? 'var(--cyan)' : 'var(--muted)');
-      return '<button type="button" class="tl-item' + (s.n===atualN?' atual':'') + (s.n===selN?' sel':'') + '"' +
-        ' aria-pressed="' + (s.n===selN) + '"' + (s.n===atualN ? ' aria-current="date"' : '') +
-        ' aria-label="Semana ' + s.n + ', ' + rotSemana(s) + (status ? ', ' + status.toLowerCase() : '') + '"' +
-        ' onclick="app.semanaSel=' + s.n + ';app.render()">' +
-        '<span class="n">SEMANA ' + s.n + (status ? ' <span class="status-txt" style="color:' + corSt + ';">' + status + '</span>' : '') + '</span>' +
-        '<span class="d">' + rotSemana(s) + '</span>' +
-        '<span class="bar"><i style="width:' + pct + '%;"></i></span></button>';
+      const e = self._estadoSemana(s, atualN);
+      const rot = e.st === 'done' ? 'Concluída' : e.st === 'atual' ? 'Atual' : e.st === 'incompleta' ? e.n.pct + '% feita' : 'Futura';
+      return '<button type="button" class="tl-item ' + e.st + (s.n === selN ? ' sel' : '') + '" aria-pressed="' + (s.n === selN) + '"' + (s.n === atualN ? ' aria-current="date"' : '') +
+        ' aria-label="Semana ' + s.n + ', ' + rotSemana(s) + ', ' + rot.toLowerCase() + (s.n === selN ? ', selecionada' : '') + '" onclick="app.selecionarSemana(' + s.n + ')">' +
+        '<span class="n">Semana ' + s.n + '<span class="st">' + rot + '</span></span><span class="d">' + rotSemana(s) + '</span>' +
+        '<span class="bar"><i style="width:' + e.n.pct + '%"></i></span></button>';
     }).join('');
-    return '<div class="h-sec"><span class="ic">' + ic('flag',16) + '</span>As 7 semanas</div>' +
-      '<div class="tl" role="group" aria-label="Navegar entre as semanas">' + btns +
-      '<div class="tl-prova">PROVA<small>' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '</small></div></div>' +
-      '<p class="txt-mini">A Semana 7 acontece entre os dois domingos de prova — os temas de maior incidência ficam para o fim, frescos na memória.</p>';
+    return '<div class="sec-title"><span class="ic">' + ic('flag', 18) + '</span>As 7 semanas</div>' +
+      '<div class="tl" role="group" aria-label="Escolher a semana exibida na agenda">' + btns +
+      '<div class="tl-prova">Provas<small>' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '</small></div></div>' +
+      '<p class="sub">A Semana 7 acontece entre os dois domingos de prova: os assuntos de maior incidência ficam para o fim, frescos na memória. Toque em uma semana para ver a agenda dela.</p>';
   },
+  htmlTimelineMini(atualN, selN) {
+    const self = this;
+    const dias = Math.ceil((dt(CONFIG.PROVA2) - this.hoje()) / 86400000);
+    const semSel = SEMANAS.find(s => s.n === selN);
+    return '<div class="sec-title mb-8"><span class="ic">' + ic('flag', 18) + '</span>As 7 semanas</div>' +
+      '<div class="tl-mini" role="group" aria-label="Escolher semana">' + SEMANAS.map(s => {
+        const e = self._estadoSemana(s, atualN);
+        return '<button type="button" class="' + e.st + (s.n === selN ? ' sel' : '') + '" aria-pressed="' + (s.n === selN) + '" aria-label="Semana ' + s.n + ', ' + (e.st === 'done' ? 'concluída' : e.st === 'atual' ? 'atual' : e.st === 'incompleta' ? e.n.pct + ' por cento feita' : 'futura') + '" onclick="app.selecionarSemana(' + s.n + ')">' + s.n + '</button>';
+      }).join('') + '</div>' +
+      '<p class="sub mt-10">Vendo a <b class="txt-2">Semana ' + selN + '</b> · ' + rotSemana(semSel) + (selN !== atualN && atualN ? ' · <button type="button" class="btn btn-ghost btn-sm btn-inline" onclick="app.semanaSel=null;app.render({scrollPara:\'sec-next\'})">voltar à atual</button>' : '') + '</p>' +
+      '<div class="divider"></div>' +
+      '<div class="kpis kpis-2"><div class="kpi"><div class="v c-coral">' + (dias > 0 ? dias : 0) + '</div><div class="l">dias para Matemática</div></div>' +
+      '<div class="kpi"><div class="v">' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '</div><div class="l">provas</div></div></div>';
+  },
+  _faixasTxt() { return ['menos de 10', '10–15', '15–20', '20–25', '25–30', '30–35', '35–40', 'acima de 40']; },
   htmlPerfil() {
     const p = this.perfil;
-    const faixas = ['menos de 10','10–15','15–20','20–25','25–30','30–35','35–40','acima de 40'];
-    return '<div class="panel"><div class="h-sec"><span class="ic">' + ic('user',16) + '</span>Seu perfil de estudo</div>' +
-      '<div class="perfil-grid">' +
-      '<div class="stat"><div class="v">' + faixas[p.acertos] + '</div><div class="l">PONTO DE PARTIDA</div></div>' +
+    return '<div class="sec-title"><span class="ic">' + ic('user', 18) + '</span>Seu perfil de estudo</div>' +
+      '<div class="stats" style="margin-top:0">' +
+      '<div class="stat"><div class="v">' + this._faixasTxt()[p.acertos] + '</div><div class="l">PONTO DE PARTIDA</div></div>' +
       '<div class="stat"><div class="v">' + p.meta + '/45</div><div class="l">META</div></div>' +
-      '<div class="stat"><div class="v">' + (p.horasDia*p.dias.length).toFixed(1).replace('.',',') + 'h</div><div class="l">POR SEMANA</div></div>' +
-      '<div class="stat"><div class="v" style="font-size:12.5px;line-height:1.9;">' + p.dias.map(function(i){ return DIAS_SEMANA[i]; }).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div>' +
-      '</div>' +
-      '<p class="txt-sub" style="margin:10px 0 14px;">Mudou a rotina ou evoluiu mais rápido? Reajuste — as semanas futuras recalculam na hora; semanas já iniciadas mantêm o plano fixado.</p>' +
-      '<button type="button" class="btn btn-ghost" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render()">' + ic('edit',14) + ' Reajustar meu perfil</button></div>';
+      '<div class="stat"><div class="v">' + (p.horasDia * p.dias.length).toFixed(1).replace('.', ',') + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat"><div class="v v-dias">' + p.dias.map(i => DIAS_SEMANA[i]).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div></div>' +
+      '<p class="sub my-a">Mudou a rotina ou evoluiu mais rápido? Reajuste: as semanas futuras recalculam na hora; semanas já iniciadas mantêm o plano fixado.</p>' +
+      '<button type="button" class="btn btn-sec" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">' + ic('edit', 15) + ' Reajustar meu perfil</button>';
+  },
+  htmlPerfilCompacto() {
+    const p = this.perfil;
+    return '<div class="sec-title mb-8"><span class="ic">' + ic('user', 18) + '</span>Perfil</div>' +
+      '<div class="kpis kpis-2"><div class="kpi"><div class="v">' + p.meta + '/45</div><div class="l">meta</div></div>' +
+      '<div class="kpi"><div class="v">' + (p.horasDia * p.dias.length).toFixed(1).replace('.', ',') + 'h</div><div class="l">por semana</div></div></div>' +
+      '<p class="meta my-b">' + p.dias.map(i => DIAS_LONGOS[i]).join(', ') + '</p>' +
+      '<button type="button" class="btn btn-sec btn-sm btn-block" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">' + ic('edit', 14) + ' Reajustar perfil</button>';
   },
 
   /* ---------------- PÓS-PROVA ---------------- */
   htmlPosProva() {
-    let minF=0, minT=0, atvF=0, atvT=0, minisFeitos=0;
+    let minF = 0, minT = 0, atvF = 0, atvT = 0, minisFeitos = 0;
     const self = this;
     SEMANAS.forEach(s => {
       const d = self.dosePara(s);
@@ -1443,37 +1602,36 @@ const app = {
       d.itens.forEach(it => { atvT++; if (self.feito(it.key)) { atvF++; minF += it.min; } });
       if (d.temMini) { atvT++; if (self.minis[s.n]) { atvF++; minF += CONFIG.MIN_MINI; minisFeitos++; } }
     });
-    const hF = Math.floor(minF/60), mF = minF%60;
     const comAmostra = TEMAS.map(t => ({ t, a: self.amostraTema(t.id) })).filter(x => x.a.total >= 4);
-    comAmostra.sort((x,y) => (y.a.hits/y.a.total) - (x.a.hits/x.a.total));
-    const melhor = comAmostra[0], pior = comAmostra[comAmostra.length-1];
-    return (
-      '<div style="margin-top:22px;"><div class="h-page">Você chegou ao fim, ' + esc(this.primeiroNome()) + '</div>' +
-      '<p class="txt-sub" style="margin-top:3px;">As provas foram em ' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '. A revisão cumpriu o papel dela — agora é esperar o resultado com a consciência tranquila de quem trabalhou.</p></div>' +
-      '<section id="sec-next"><div class="next"><span class="tag-topo">RESUMO DA SUA REVISÃO</span>' +
-      '<h2>7 semanas em números</h2>' +
-      '<div class="stats-linha">' +
-      '<div class="stat"><div class="v">' + hF + 'h' + String(mF).padStart(2,'0') + '</div><div class="l">TEMPO ESTUDADO</div></div>' +
+    comAmostra.sort((x, y) => (y.a.hits / y.a.total) - (x.a.hits / x.a.total));
+    const melhor = comAmostra[0], pior = comAmostra[comAmostra.length - 1];
+    const selN = this.semanaSel || 7;
+    const sem = SEMANAS.find(s => s.n === selN);
+    return '<svg width="0" height="0" aria-hidden="true" class="svg-defs"><defs><linearGradient id="gradp"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs></svg>' +
+      '<div class="greet"><div><div class="h1">Você chegou ao fim, ' + esc(this.primeiroNome()) + '</div>' +
+      '<p class="sub">As provas foram em ' + fmtCurto(dt(CONFIG.PROVA1)) + ' e ' + fmtCurto(dt(CONFIG.PROVA2)) + '. A revisão cumpriu o papel dela. Agora é esperar o resultado com a consciência tranquila de quem trabalhou.</p></div></div>' +
+      '<div class="layout"><div class="col-main stack-v">' +
+      '<section id="sec-next" aria-label="Resumo da revisão"><div class="next done"><span class="eyebrow">Resumo da sua revisão</span><h2>7 semanas em números</h2>' +
+      '<div class="stats">' +
+      '<div class="stat"><div class="v">' + this._hm(minF) + '</div><div class="l">TEMPO ESTUDADO · de ' + this._hm(minT) + '</div></div>' +
       '<div class="stat"><div class="v">' + atvF + '/' + atvT + '</div><div class="l">ATIVIDADES</div></div>' +
       '<div class="stat"><div class="v">' + minisFeitos + '/7</div><div class="l">MINI-SIMULADOS</div></div>' +
-      '</div>' +
-      (melhor && pior && melhor !== pior ?
-        '<div class="stats-linha">' +
-        '<div class="stat"><div class="v" style="color:var(--green);">' + esc(melhor.t.nome) + '</div><div class="l">MELHOR DESEMPENHO · ' + Math.round(melhor.a.hits/melhor.a.total*100) + '%</div></div>' +
-        '<div class="stat"><div class="v" style="color:var(--red);">' + esc(pior.t.nome) + '</div><div class="l">MAIOR DESAFIO · ' + Math.round(pior.a.hits/pior.a.total*100) + '%</div></div>' +
-        '</div>' : '') +
-      '</div></section>' +
-      '<section id="sec-evo">' + this.htmlEvolucao() + '</section>' +
-      '<section id="sec-agenda">' + this.htmlTimeline(null, this.semanaSel || 7) + '</section>' +
-      '<section id="sec-perfil"><div class="panel"><p class="txt-sub">Quer revisitar alguma semana? Toque nela na linha do tempo acima. Os registros ficam guardados.</p></div></section>' +
-      '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>'
-    );
+      (melhor && pior && melhor !== pior ? '<div class="stat pos"><div class="v">' + esc(melhor.t.nome) + '</div><div class="l">MELHOR · ' + Math.round(melhor.a.hits / melhor.a.total * 100) + '%</div></div>' +
+        '<div class="stat neg"><div class="v">' + esc(pior.t.nome) + '</div><div class="l">MAIOR DESAFIO · ' + Math.round(pior.a.hits / pior.a.total * 100) + '%</div></div>' : '') +
+      '</div></div></section>' +
+      '<section id="sec-agenda" aria-label="Revisitar semanas"><div class="card">' + this.htmlTimeline(null, selN) + '</div>' +
+      '<div class="mt-20">' + this.htmlAgenda(sem, this.dosePara(sem), null) + '</div></section>' +
+      '<section id="sec-mais" aria-label="Evolução e perfil"><div class="tabs" role="tablist"><button type="button" role="tab" id="tab-evo" data-tabbtn="evo" aria-selected="' + (this._uiTab !== 'perfil') + '" aria-controls="panel-evo" onclick="app.setTab(\'evo\')">Evolução</button><button type="button" role="tab" id="tab-perfil" data-tabbtn="perfil" aria-selected="' + (this._uiTab === 'perfil') + '" aria-controls="panel-perfil" onclick="app.setTab(\'perfil\')">Perfil</button></div>' +
+      '<div id="panel-evo" role="tabpanel" data-tabpanel="evo" class="tabpanel"' + (this._uiTab === 'perfil' ? ' hidden' : '') + '><div class="card" id="sec-evo">' + this.htmlEvolucao(null) + '</div></div>' +
+      '<div id="panel-perfil" role="tabpanel" data-tabpanel="perfil" class="tabpanel"' + (this._uiTab !== 'perfil' ? ' hidden' : '') + '><div class="card" id="sec-perfil">' + this.htmlPerfil() + '</div></div></section>' +
+      '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>' +
+      '</div><aside class="col-side" aria-label="Painel"><div class="stack"><div class="card">' + this.htmlTimelineMini(null, selN) + '</div><div class="card">' + this.htmlPerfilCompacto() + '</div></div></aside></div>';
   }
 };
 
-document.querySelectorAll('.bnav [data-ic]').forEach(el => { el.innerHTML = ic(el.getAttribute('data-ic'), 18); });
+document.querySelectorAll('.bnav [data-ic]').forEach(el => { el.innerHTML = ic(el.getAttribute('data-ic'), 20); });
 app.carregar();
-app.render();
+app.render({ modo: 'tela' });
 </script>
 </body>
 </html>
