@@ -6009,6 +6009,13 @@
   .rvp-bar .v{color:var(--radix-text-muted,#8fa3cc);white-space:nowrap;font-size:12px}
   .rvp-lista{columns:2;gap:24px;margin:10px 0 0 18px;font-size:13.5px;line-height:1.7}
   @media (max-width:700px){.rvp-lista{columns:1}.rvp-bar{grid-template-columns:1fr;gap:4px}}
+
+  /* ---------- semanas de revisão: chips dos assuntos ---------- */
+  .cron-temas{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  .cron-tema{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--radix-surface-2,rgba(0,0,0,.06));color:inherit;line-height:1.5}
+  .cron-tema.geo{background:rgba(124,58,237,.14)}
+  .cron-plano-link{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:var(--radix-blue,#1565C0);text-decoration:none}
+  .cron-plano-link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -6208,7 +6215,7 @@ const MODULOS = [
     cor: '#0277BD',
     temas: ['combinatoria','probabilidade','estatistica','matrizes','sistemas-lineares'] },
   { id: 'm5', numero: '05', nome: 'Revisão Geral',
-    subtitulo: 'Revisão completa para a reta final',
+    subtitulo: '7 semanas · 4 assuntos + geometria por semana · mini-simulado',
     cor: '#1565C0',
     temas: [] },
 ];
@@ -6248,13 +6255,13 @@ const CRONOGRAMA_2026 = [
   { n: 30, data: '31/08', titulo: 'Estatística',                             moduloId: 'm4', temaId: 'estatistica' },
   { n: 31, data: '07/09', titulo: 'Matrizes',                                moduloId: 'm4', temaId: 'matrizes' },
   { n: 32, data: '14/09', titulo: 'Sistemas Lineares',                       moduloId: 'm4', temaId: 'sistemas-lineares' },
-  { n: 33, data: '21/09', titulo: 'Revisão I',                               moduloId: 'm5', temaId: null, tipo: 'revisao' },
-  { n: 34, data: '28/09', titulo: 'Revisão II',                              moduloId: 'm5', temaId: null, tipo: 'revisao' },
-  { n: 35, data: '05/10', titulo: 'Revisão III',                             moduloId: 'm5', temaId: null, tipo: 'revisao' },
-  { n: 36, data: '12/10', titulo: 'Revisão IV',                              moduloId: 'm5', temaId: null, tipo: 'revisao' },
-  { n: 37, data: '19/10', titulo: 'Revisão V',                               moduloId: 'm5', temaId: null, tipo: 'revisao' },
-  { n: 38, data: '26/10', titulo: 'Revisão VI',                              moduloId: 'm5', temaId: null, tipo: 'revisao' },
-  { n: 39, data: '02/11', titulo: 'Revisão VII',                             moduloId: 'm5', temaId: null, tipo: 'revisao' },
+  { n: 33, data: '21/09', titulo: 'Revisão 1 — Financeira, Sistemas Lineares, Matrizes, Potenciação e Geometria Plana I', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 1, temas: ['financeira','sistemas-lineares','matrizes','potencias','geo-plana'] },
+  { n: 34, data: '28/09', titulo: 'Revisão 2 — PG, Trigonometria no Triângulo, Lógica, Conjuntos e Geometria Espacial I', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 2, temas: ['pg','trigonometria','logica','conjuntos','geo-espacial'] },
+  { n: 35, data: '05/10', titulo: 'Revisão 3 — PA, Múltiplos e Divisores, Funções Trigonométricas, Exponencial e Geometria Analítica I', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 3, temas: ['pa','multiplos','fun-trig','exponencial','geo-analitica'] },
+  { n: 36, data: '12/10', titulo: 'Revisão 4 — Função Quadrática, Combinatória, Função do 1º grau, Logaritmos e Geometria Plana II', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 4, temas: ['fun-2grau','combinatoria','fun-1grau','logaritmica','geo-plana'] },
+  { n: 37, data: '19/10', titulo: 'Revisão 5 — Probabilidade, Porcentagem, Gráficos e Tabelas, Sistema Métrico e Geometria Analítica II', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 5, temas: ['probabilidade','porcentagem','interp-graficos','sist-numeracao','geo-analitica'] },
+  { n: 38, data: '26/10', titulo: 'Revisão 6 — Estatística, Combinatória, Razão e Proporção, Porcentagem e Geometria Espacial II', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 6, temas: ['estatistica','combinatoria','razao-proporcao','porcentagem','geo-espacial'] },
+  { n: 39, data: '02/11', titulo: 'Revisão 7 — 4 Operações, Probabilidade, Razão e Proporção, Estatística e Geometria Espacial III', moduloId: 'm5', temaId: null, tipo: 'revisao', revisaoN: 7, temas: ['operacoes','probabilidade','razao-proporcao','estatistica','geo-espacial'] },
 ];
 
 // =========================================================
@@ -6333,13 +6340,13 @@ const CRONOGRAMA_INTEGRAL_2026 = [
   { n: 30, data: '15/09', titulo: 'Gráficos e Tabelas',                     moduloId: 'mi5', temaId: 'interp-graficos' },
   { n: 31, data: '22/09', titulo: 'Estatística',                            moduloId: 'mi5', temaId: 'estatistica' },
   // Módulo 06 — Revisão (Revisão 08 removida)
-  { n: 32, data: '29/09', titulo: 'Revisão 01',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
-  { n: 33, data: '06/10', titulo: 'Revisão 02',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
-  { n: 34, data: '13/10', titulo: 'Revisão 03',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
-  { n: 35, data: '20/10', titulo: 'Revisão 04',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
-  { n: 36, data: '27/10', titulo: 'Revisão 05',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
-  { n: 37, data: '03/11', titulo: 'Revisão 06',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
-  { n: 38, data: '10/11', titulo: 'Revisão 07',                             moduloId: 'mi6', temaId: null, tipo: 'revisao' },
+  { n: 32, data: '29/09', titulo: 'Revisão 1 — Financeira, Sistemas Lineares, Matrizes, Potenciação e Geometria Plana I', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 1, temas: ['financeira','sistemas-lineares','matrizes','potencias','geo-plana'] },
+  { n: 33, data: '06/10', titulo: 'Revisão 2 — PG, Trigonometria no Triângulo, Lógica, Conjuntos e Geometria Espacial I', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 2, temas: ['pg','trigonometria','logica','conjuntos','geo-espacial'] },
+  { n: 34, data: '13/10', titulo: 'Revisão 3 — PA, Múltiplos e Divisores, Funções Trigonométricas, Exponencial e Geometria Analítica I', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 3, temas: ['pa','multiplos','fun-trig','exponencial','geo-analitica'] },
+  { n: 35, data: '20/10', titulo: 'Revisão 4 — Função Quadrática, Combinatória, Função do 1º grau, Logaritmos e Geometria Plana II', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 4, temas: ['fun-2grau','combinatoria','fun-1grau','logaritmica','geo-plana'] },
+  { n: 36, data: '27/10', titulo: 'Revisão 5 — Probabilidade, Porcentagem, Gráficos e Tabelas, Sistema Métrico e Geometria Analítica II', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 5, temas: ['probabilidade','porcentagem','interp-graficos','sist-numeracao','geo-analitica'] },
+  { n: 37, data: '03/11', titulo: 'Revisão 6 — Estatística, Combinatória, Razão e Proporção, Porcentagem e Geometria Espacial II', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 6, temas: ['estatistica','combinatoria','razao-proporcao','porcentagem','geo-espacial'] },
+  { n: 38, data: '10/11', titulo: 'Revisão 7 — 4 Operações, Probabilidade, Razão e Proporção, Estatística e Geometria Espacial III', moduloId: 'mi6', temaId: null, tipo: 'revisao', revisaoN: 7, temas: ['operacoes','probabilidade','razao-proporcao','estatistica','geo-espacial'] },
 ];
 
 // =========================================================
@@ -11115,8 +11122,8 @@ function _questoesComFiltros(pularArg) {
   if (!pular('semana') && semanaFiltro) {
     const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
     const sem = merged.find(s => String(s.n) === String(semanaFiltro));
-    const temaDaSemana = sem && sem.temaId;
-    qs = temaDaSemana ? qs.filter(q => q.tema === temaDaSemana) : [];
+    const temasSem = _temasDaSemana(sem);
+    qs = temasSem.length ? qs.filter(q => temasSem.includes(q.tema)) : [];
   }
   if (!pular('prova') && provaAtual) {
     qs = qs.filter(q => _provaBase(q.prova || '') === provaAtual);
@@ -11189,9 +11196,10 @@ function renderTelaQuestoes() {
   // considerasse a seleção da sidebar, toda semana de outro tema mostraria 0).
   const baseSemana = _questoesComFiltros(['semana', 'tema']);
   const semanasFiltraveis = cronoMerged
-    .filter(s => s.temaId && !s.cancelada)
+    .filter(s => _temasDaSemana(s).length && !s.cancelada)
     .map(s => {
-      const cnt = baseSemana.filter(q => q.tema === s.temaId).length;
+      const ts = _temasDaSemana(s);
+      const cnt = baseSemana.filter(q => ts.includes(q.tema)).length;
       return { ...s, _cnt: cnt };
     });
   const semanaFiltro = state._semanaFiltro || '';
@@ -11227,7 +11235,7 @@ function renderTelaQuestoes() {
         <div class="qbk-tb-item">
           <span class="qbk-tb-label">Semana do curso</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            ${semanaAtualObj && semanaAtualObj.temaId ? `
+            ${semanaAtualObj && _temasDaSemana(semanaAtualObj).length ? `
               <button class="qbk-tb-hoje ${String(semanaFiltro) === String(semanaAtualObj.n) ? 'active' : ''}"
                       onclick="selecionarSemanaFiltro(${semanaAtualObj.n})"
                       title="Questões do tema da aula desta semana">
@@ -11239,7 +11247,7 @@ function renderTelaQuestoes() {
               <option value="" ${!semanaFiltro ? 'selected' : ''}>Todas as semanas</option>
               ${semanasFiltraveis.map(s => {
                 const tema = TEMAS.find(t => t.id === s.temaId);
-                const labelTema = tema ? tema.nome : s.titulo;
+                const labelTema = s.temas ? ('Revisão ' + (s.revisaoN || '') + ' · ' + s.temas.map(_nomeCurtoTema).join(', ')) : (tema ? tema.nome : s.titulo);
                 return `<option value="${s.n}" ${String(semanaFiltro) === String(s.n) ? 'selected' : ''}>Sem ${String(s.n).padStart(2,'0')} · ${labelTema} (${s._cnt})</option>`;
               }).join('')}
             </select>
@@ -17680,10 +17688,23 @@ async function carregarProgressoCronograma() {
   });
 }
 
+// Semana comum tem 1 tema (temaId); semana de revisão tem vários (temas[]).
+function _temasDaSemana(s) {
+  if (!s) return [];
+  if (Array.isArray(s.temas) && s.temas.length) return s.temas;
+  return s.temaId ? [s.temaId] : [];
+}
+function _nomeCurtoTema(id) {
+  const t = TEMAS.find(x => x.id === id);
+  if (!t) return id;
+  return t.nome.replace('Sistema de Numeração e Métrico Decimal', 'Sistema Métrico').replace('Problemas sobre as 4 operações', '4 Operações')
+    .replace('Interpretação de gráficos e tabelas', 'Gráficos e Tabelas').replace('Lógica Matemática', 'Lógica');
+}
 function statsDaSemana(semana) {
   // Conta respostas do aluno em questões do tema dessa semana
-  if (!semana.temaId) return { total: 0, acertos: 0, taxa: 0 };
-  const resp = state.respostasAluno.filter(r => r.tema === semana.temaId);
+  const temasSem = _temasDaSemana(semana);
+  if (!temasSem.length) return { total: 0, acertos: 0, taxa: 0 };
+  const resp = state.respostasAluno.filter(r => temasSem.includes(r.tema));
   const total = resp.length;
   const acertos = resp.filter(r => r.correto).length;
   const taxa = total ? Math.round((acertos / total) * 100) : 0;
@@ -17726,7 +17747,7 @@ function renderCronograma(focoN) {
   merged.forEach(s => {
     if (s.tipo === 'recesso' || s.cancelada) return;
     totalSemanas++;
-    if (s.temaId) totalAulas++;
+    if (s.temaId || (s.temas && s.temas.length)) totalAulas++;
     if (mostrarProgresso) {
       const st = statusDaSemana(s.n);
       if (st === 'concluido') concluidas++;
@@ -17821,6 +17842,13 @@ function renderCronograma(focoN) {
   }
 }
 
+function _chipsTemasSemana(s) {
+  if (!s || !Array.isArray(s.temas) || !s.temas.length) return '';
+  const chips = s.temas.map((id, i) => '<span class="cron-tema' + (i === s.temas.length - 1 ? ' geo' : '') + '">' + _nomeCurtoTema(id) + '</span>').join('');
+  const link = (s.revisaoN && state.usuario && state.usuario.perfil !== 'professor')
+    ? '<a class="cron-plano-link" href="/mockup_reta_final" onclick="event.stopPropagation()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
+  return '<div class="cron-temas">' + chips + '</div>' + link;
+}
 function renderSemanaCard(s, mostrarProgresso) {
   if (mostrarProgresso === undefined) mostrarProgresso = true;
   const tipoBadge = s.tipo === 'simulado' ? '<span class="cron-tipo simulado-tipo">SIMULADO</span>' :
@@ -17838,6 +17866,7 @@ function renderSemanaCard(s, mostrarProgresso) {
           <div class="cron-semana-meta">
             <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
             <div class="cron-semana-titulo">${s.titulo}</div>
+            ${_chipsTemasSemana(s)}
           </div>
         </div>
       </div>`;
@@ -17888,10 +17917,11 @@ function renderSemanaCard(s, mostrarProgresso) {
         <div class="cron-semana-meta">
           <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
           <div class="cron-semana-titulo">${s.titulo}</div>
+          ${_chipsTemasSemana(s)}
         </div>
         <div class="cron-semana-status" title="${stLabel}">${stIcon}</div>
       </div>
-      ${s.temaId ? `
+      ${(s.temaId || (s.temas && s.temas.length)) ? `
         <div class="cron-semana-stats">
           <span>📝 ${stats.total} ${stats.total === 1 ? 'questão' : 'questões'}</span>
           ${stats.total > 0 ? `<span>· 🎯 ${stats.taxa}% acerto</span>` : ''}
