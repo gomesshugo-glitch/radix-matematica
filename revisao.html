@@ -234,6 +234,13 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.14;font-weight:800;margin-top:
 .access li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-2);line-height:1.5}
 .access li svg{flex-shrink:0;margin-top:4px}
 .access li b{color:var(--text)}
+.turmas{margin-top:22px}
+.turmas h4{font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}
+.turmas ul{margin-top:10px;display:grid;grid-template-columns:1fr;gap:8px}
+.turma{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(6,18,31,.45);border-radius:10px;padding:12px 14px;min-height:48px}
+.turma b{font-size:15px;color:var(--text)}
+.turma span{font-size:15px;color:var(--text-2);text-align:right}
+@media (min-width:640px){.turmas ul{grid-template-columns:1fr 1fr}}
 .pending{margin-top:14px;background:rgba(251,191,36,.08);border:1px dashed rgba(251,191,36,.5);border-radius:12px;padding:14px 16px;font-size:14.5px;color:var(--text-2)}
 .pending b{color:var(--amber)}
 
@@ -647,6 +654,15 @@ body.has-sticky{padding-bottom:96px}
             <span><b>Ainda não é aluno?</b> Curso presencial: R$ 300. Curso online: R$ 69,90. Nos dois, a Revisão Final vem junto.</span>
           </li>
         </ul>
+        <div class="turmas">
+          <h4>Horários das turmas presenciais</h4>
+          <ul>
+            <li class="turma"><b>Turma 01</b><span>Terça, 8h às 12h</span></li>
+            <li class="turma"><b>Turma 02</b><span>Terça, 14h30 às 18h30</span></li>
+            <li class="turma"><b>Turma 03</b><span>Segunda, 18h às 22h</span></li>
+            <li class="turma"><b>Turma 04</b><span>Quarta, 14h30 às 18h30</span></li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
