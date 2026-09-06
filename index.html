@@ -17846,7 +17846,7 @@ function _chipsTemasSemana(s) {
   if (!s || !Array.isArray(s.temas) || !s.temas.length) return '';
   const chips = s.temas.map((id, i) => '<span class="cron-tema' + (i === s.temas.length - 1 ? ' geo' : '') + '">' + _nomeCurtoTema(id) + '</span>').join('');
   const link = (s.revisaoN && state.usuario && state.usuario.perfil !== 'professor')
-    ? '<a class="cron-plano-link" href="/mockup_reta_final" onclick="event.stopPropagation()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
+    ? '<a class="cron-plano-link" href="/revisao-final" onclick="event.stopPropagation()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
   return '<div class="cron-temas">' + chips + '</div>' + link;
 }
 function renderSemanaCard(s, mostrarProgresso) {
