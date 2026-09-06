@@ -7337,6 +7337,15 @@ async function iniciarSessao() {
     mostrarTelaUploadFotoObrigatorio();
     return;
   }
+  // Retorno pos-login: /?voltar=<chave> leva o aluno de volta para onde ele
+  // estava antes de entrar (ex.: landing/pagina da Revisao Final). Lista fechada
+  // de destinos, sempre no mesmo dominio, para o parametro nao virar redirect aberto.
+  const _voltarPara = { 'revisao-final': '/revisao-final' };
+  const _voltar = new URLSearchParams(window.location.search).get('voltar');
+  if (_voltar && _voltarPara[_voltar]) {
+    window.location.replace(_voltarPara[_voltar]);
+    return;
+  }
   await carregarDados();
   mostrarApp();
   } catch (e) {
