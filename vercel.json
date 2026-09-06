@@ -1,9 +1,3 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/revisao-final",
-      "destination": "/mockup_reta_final"
-    }
-  ]
+  "cleanUrls": true
 }
