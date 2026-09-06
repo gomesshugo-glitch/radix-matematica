@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -5978,6 +5978,37 @@
     .qbk-escolha-grid { grid-template-columns: 1fr; }
   }
 
+
+  /* ---------- Painel Revisão Final (professor) ---------- */
+  .rvp-muted{color:var(--radix-text-muted,#8fa3cc)}
+  .rvp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
+  .rvp-h2{font-size:20px;font-weight:800;margin:0 0 4px}
+  .rvp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+  .rvp-tile{background:var(--radix-card,rgba(255,255,255,.04));border:1px solid var(--radix-border,rgba(255,255,255,.08));border-radius:12px;padding:12px 14px}
+  .rvp-tile .v{font-size:24px;font-weight:800;line-height:1.1} .rvp-tile .v small{font-size:13px;font-weight:600;color:var(--radix-text-muted,#8fa3cc)}
+  .rvp-tile .l{font-size:12px;color:var(--radix-text-muted,#8fa3cc);margin-top:4px}
+  .rvp-tile.ok .v{color:#34d399} .rvp-tile.warn .v{color:#fbbf24}
+  .rvp-filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .rvp-filtros input,.rvp-filtros select{background:var(--radix-card,rgba(255,255,255,.04));color:inherit;border:1px solid var(--radix-border,rgba(255,255,255,.12));border-radius:8px;padding:9px 12px;min-height:40px;font-size:14px}
+  .rvp-filtros input{flex:1 1 220px}
+  .rvp-tabela-wrap{overflow-x:auto;border:1px solid var(--radix-border,rgba(255,255,255,.08));border-radius:12px}
+  .rvp-tabela{width:100%;border-collapse:collapse;font-size:13.5px;min-width:900px}
+  .rvp-tabela th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--radix-text-muted,#8fa3cc);padding:10px 10px;border-bottom:1px solid var(--radix-border,rgba(255,255,255,.08));white-space:nowrap}
+  .rvp-tabela td{padding:10px;border-bottom:1px solid var(--radix-border,rgba(255,255,255,.06));vertical-align:middle}
+  .rvp-tabela .rvp-c{text-align:center}
+  .rvp-linha{cursor:pointer} .rvp-linha:hover td{background:rgba(255,255,255,.03)} .rvp-linha.aberta td{background:rgba(34,211,238,.06)}
+  .rvp-mini{display:inline-block;min-width:26px;text-align:center;font-weight:800;border-radius:6px;padding:2px 6px;background:rgba(251,191,36,.15);color:#fcd34d}
+  .rvp-mini.ok{background:rgba(52,211,153,.16);color:#6ee7b7}
+  .rvp-chip{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08)}
+  .rvp-chip.ok{background:rgba(52,211,153,.16);color:#6ee7b7} .rvp-chip.warn{background:rgba(251,191,36,.16);color:#fcd34d}
+  .rvp-detalhe td{background:rgba(255,255,255,.02)!important}
+  .rvp-det{display:grid;gap:6px;font-size:13px;line-height:1.5}
+  .rvp-card{margin-top:14px} .rvp-card summary{cursor:pointer;font-size:14px}
+  .rvp-bar{display:grid;grid-template-columns:minmax(140px,1fr) 2fr auto;gap:10px;align-items:center;padding:6px 0;font-size:13px}
+  .rvp-bar .b{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden} .rvp-bar .b i{display:block;height:100%;background:linear-gradient(90deg,#fb7185,#fbbf24);border-radius:99px}
+  .rvp-bar .v{color:var(--radix-text-muted,#8fa3cc);white-space:nowrap;font-size:12px}
+  .rvp-lista{columns:2;gap:24px;margin:10px 0 0 18px;font-size:13.5px;line-height:1.7}
+  @media (max-width:700px){.rvp-lista{columns:1}.rvp-bar{grid-template-columns:1fr;gap:4px}}
 </style>
 </head>
 <body>
@@ -8261,6 +8292,136 @@ function mostrarApp() {
 }
 
 // ========== RENDER HOME ==========
+// ============================================================
+// PAINEL DO PROFESSOR — Revisão Final ENEM 2026
+// Lê a view v_revisao_painel (agregados por aluno) + perfis.
+// Calendário espelha o CONFIG da página do aluno.
+// ============================================================
+const RVP = {
+  INICIO: '2026-09-28', PROVA2: '2026-11-15', MINI_QTDE: 15,
+  SEMANAS: [
+    { n:1, ini:'2026-09-28' }, { n:2, ini:'2026-10-05' }, { n:3, ini:'2026-10-12' }, { n:4, ini:'2026-10-19' },
+    { n:5, ini:'2026-10-26' }, { n:6, ini:'2026-11-02' }, { n:7, ini:'2026-11-09', dias:6 }
+  ],
+  dt(s) { return new Date(s + 'T12:00:00'); },
+  semanaAtual() {
+    const h = new Date();
+    for (const s of this.SEMANAS) { const f = new Date(this.dt(s.ini)); f.setDate(f.getDate() + (s.dias || 7) - 1); if (h >= this.dt(s.ini) && h <= f) return s.n; }
+    return h < this.dt(this.SEMANAS[0].ini) ? 0 : 8;   // 0 = antes; 8 = depois
+  },
+  esc(x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); },
+  diasAtras(iso) { if (!iso) return null; return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); },
+  nomeTema(id) { const t = (typeof TEMAS !== 'undefined') ? TEMAS.find(x => x.id === id) : null; return t ? t.nome : id; },
+  nomeTurma(id) { try { const t = turmaPorId(id); return t ? t.nome : (id || '—'); } catch (e) { return id || '—'; } }
+};
+
+async function renderRevisaoPainel() {
+  const el = document.getElementById('main-content');
+  const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Revisão Final</div>';
+  el.innerHTML = bc + '<p class="rvp-muted">Carregando dados da revisão…</p>';
+  const [v, a] = await Promise.all([
+    sb.from('v_revisao_painel').select('*'),
+    sb.from('perfis').select('id, nome, turma').eq('perfil', 'aluno').eq('status', 'aprovado').order('nome')
+  ]);
+  if (v.error) {
+    el.innerHTML = bc + '<div class="card"><h3>Não consegui carregar o painel</h3><p>' + RVP.esc(v.error.message) + '</p><p class="rvp-muted">Se as tabelas <code>revisao_*</code> ainda não existirem, rode o SQL_revisao_final.sql no Supabase.</p></div>';
+    return;
+  }
+  state._rvp = { linhas: v.data || [], alunos: a.data || [], turma: 'todas', busca: '', aberto: null, ordem: 'ultima' };
+  _rvpRender();
+}
+
+function _rvpFiltrados() {
+  const r = state._rvp, b = (r.busca || '').toLowerCase();
+  return r.linhas.filter(l => (r.turma === 'todas' || l.turma === r.turma) && (!b || (l.nome || '').toLowerCase().includes(b)));
+}
+
+function _rvpRender() {
+  const el = document.getElementById('main-content');
+  const r = state._rvp, esc = RVP.esc;
+  const semN = RVP.semanaAtual();
+  const linhas = _rvpFiltrados();
+  const alunosFiltro = r.alunos.filter(x => r.turma === 'todas' || x.turma === r.turma);
+  const ids = new Set(r.linhas.map(l => l.aluno_id));
+  const naoComecaram = alunosFiltro.filter(x => !ids.has(x.id));
+  const ativos7 = linhas.filter(l => RVP.diasAtras(l.ultima_atividade) <= 7).length;
+  const parados = linhas.filter(l => RVP.diasAtras(l.ultima_atividade) > 7).length;
+  const minisSem = linhas.map(l => (l.minis_por_semana || {})[semN]).filter(x => x != null);
+  const mediaSem = minisSem.length ? (minisSem.reduce((s, x) => s + Number(x), 0) / minisSem.length).toFixed(1) : null;
+  const turmas = Array.from(new Set(r.alunos.map(x => x.turma).filter(Boolean))).sort();
+
+  // mapa de dificuldades (autoavaliação + o que está sendo estudado)
+  const dif = {}, dom = {};
+  linhas.forEach(l => { const d = l.dif || {}; Object.keys(d).forEach(k => { if (d[k] === -1) dif[k] = (dif[k] || 0) + 1; if (d[k] === 1) dom[k] = (dom[k] || 0) + 1; }); });
+  const mapa = Object.keys(Object.assign({}, dif, dom)).map(k => ({ id: k, dif: dif[k] || 0, dom: dom[k] || 0 })).sort((x, y) => y.dif - x.dif || x.dom - y.dom).slice(0, 12);
+  const maxDif = Math.max(1, ...mapa.map(m => m.dif));
+
+  const tile = (v, l, cls) => '<div class="rvp-tile ' + (cls || '') + '"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+  const contexto = semN === 0 ? 'A revisão começa em 28/09.' : semN === 8 ? 'Revisão encerrada (provas 08 e 15/11).' : 'Semana ' + semN + ' de 7 em andamento.';
+
+  let html = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Revisão Final</div>' +
+    '<div class="rvp-head"><div><h2 class="rvp-h2">Revisão Final ENEM 2026 · turma</h2><p class="rvp-muted">' + contexto + ' Dados atualizados a cada ação do aluno na página da revisão.</p></div>' +
+    '<button class="btn btn-secondary" onclick="renderRevisaoPainel()">Atualizar</button></div>' +
+    '<div class="rvp-tiles">' +
+    tile(r.linhas.length + '<small> / ' + r.alunos.length + '</small>', 'preencheram o questionário') +
+    tile(ativos7, 'ativos nos últimos 7 dias', 'ok') +
+    tile(parados, 'parados há mais de 7 dias', parados ? 'warn' : '') +
+    (semN >= 1 && semN <= 7 ? tile(mediaSem != null ? mediaSem + '<small> / ' + RVP.MINI_QTDE + '</small>' : '—', 'média do mini da Semana ' + semN + (minisSem.length ? ' (' + minisSem.length + ' alunos)' : '')) : '') +
+    '</div>' +
+    '<div class="rvp-filtros"><input type="search" placeholder="Buscar aluno" value="' + esc(r.busca) + '" oninput="state._rvp.busca=this.value;_rvpRender();_rvpFoco(\'busca\')" id="rvp-busca">' +
+    '<select onchange="state._rvp.turma=this.value;_rvpRender()"><option value="todas"' + (r.turma === 'todas' ? ' selected' : '') + '>Todas as turmas</option>' +
+    turmas.map(t => '<option value="' + esc(t) + '"' + (r.turma === t ? ' selected' : '') + '>' + esc(RVP.nomeTurma(t)) + '</option>').join('') + '</select>' +
+    '<select onchange="state._rvp.ordem=this.value;_rvpRender()"><option value="ultima"' + (r.ordem === 'ultima' ? ' selected' : '') + '>Última atividade</option><option value="nome"' + (r.ordem === 'nome' ? ' selected' : '') + '>Nome</option><option value="progresso"' + (r.ordem === 'progresso' ? ' selected' : '') + '>Atividades feitas</option><option value="mini"' + (r.ordem === 'mini' ? ' selected' : '') + '>Média dos minis</option></select></div>';
+
+  const ord = linhas.slice().sort((x, y) => {
+    if (r.ordem === 'nome') return (x.nome || '').localeCompare(y.nome || '');
+    if (r.ordem === 'progresso') return (y.atividades_feitas || 0) - (x.atividades_feitas || 0);
+    if (r.ordem === 'mini') return (Number(y.media_mini) || 0) - (Number(x.media_mini) || 0);
+    return String(y.ultima_atividade || '').localeCompare(String(x.ultima_atividade || ''));
+  });
+
+  html += '<div class="rvp-tabela-wrap"><table class="rvp-tabela"><thead><tr><th>Aluno</th><th>Meta · tempo/sem</th><th>Semanas</th><th>Atividades</th><th>Acerto</th>' +
+    RVP.SEMANAS.map(s => '<th class="rvp-c">M' + s.n + '</th>').join('') + '<th>Média</th><th>Última atividade</th></tr></thead><tbody>' +
+    (ord.length ? ord.map(l => {
+      const d = RVP.diasAtras(l.ultima_atividade);
+      const st = d == null ? ['—', ''] : d <= 3 ? ['Em dia', 'ok'] : d <= 7 ? [d + ' dias', ''] : ['Parado há ' + d + ' dias', 'warn'];
+      const pct = l.total_atividades > 0 ? Math.round(l.acertos_atividades / l.total_atividades * 100) + '%' : '—';
+      const mp = l.minis_por_semana || {};
+      const hSem = (Number(l.horas_dia) * ((l.dias || []).length)).toFixed(1).replace('.', ',') + 'h';
+      const aberto = r.aberto === l.aluno_id;
+      return '<tr class="rvp-linha' + (aberto ? ' aberta' : '') + '" onclick="state._rvp.aberto = state._rvp.aberto === \'' + l.aluno_id + '\' ? null : \'' + l.aluno_id + '\'; _rvpRender()">' +
+        '<td><b>' + esc(l.nome) + '</b><br><small class="rvp-muted">' + esc(RVP.nomeTurma(l.turma)) + '</small></td>' +
+        '<td>' + l.meta + '/45<br><small class="rvp-muted">' + hSem + '</small></td>' +
+        '<td>' + (l.semanas_iniciadas || 0) + '</td><td>' + (l.atividades_feitas || 0) + '</td><td>' + pct + '</td>' +
+        RVP.SEMANAS.map(s => '<td class="rvp-c">' + (mp[s.n] != null ? '<span class="rvp-mini ' + (mp[s.n] >= Math.round(l.meta / 3) ? 'ok' : 'warn') + '">' + mp[s.n] + '</span>' : '<span class="rvp-muted">·</span>') + '</td>').join('') +
+        '<td>' + (l.media_mini != null ? Number(l.media_mini).toFixed(1).replace('.', ',') : '—') + '</td>' +
+        '<td><span class="rvp-chip ' + st[1] + '">' + st[0] + '</span></td></tr>' +
+        (aberto ? '<tr class="rvp-detalhe"><td colspan="' + (7 + RVP.SEMANAS.length) + '">' + _rvpDetalhe(l) + '</td></tr>' : '');
+    }).join('') : '<tr><td colspan="' + (7 + RVP.SEMANAS.length) + '" class="rvp-muted" style="text-align:center;padding:24px">Nenhum aluno com questionário preenchido neste filtro.</td></tr>') +
+    '</tbody></table></div>';
+
+  if (mapa.length) {
+    html += '<div class="card rvp-card"><h3>Onde a turma diz que tem dificuldade</h3><p class="rvp-muted">Autoavaliação do questionário. Cada barra é quantos alunos marcaram "tenho dificuldade" no assunto.</p>' +
+      mapa.map(m => '<div class="rvp-bar"><span class="n">' + esc(RVP.nomeTema(m.id)) + '</span><span class="b"><i style="width:' + Math.round(m.dif / maxDif * 100) + '%"></i></span><span class="v">' + m.dif + ' com dificuldade · ' + m.dom + ' dominam</span></div>').join('') + '</div>';
+  }
+  html += '<details class="card rvp-card"><summary><b>Ainda não começaram</b> · ' + naoComecaram.length + ' aluno' + (naoComecaram.length === 1 ? '' : 's') + ' aprovado' + (naoComecaram.length === 1 ? '' : 's') + ' sem questionário</summary>' +
+    (naoComecaram.length ? '<ul class="rvp-lista">' + naoComecaram.map(x => '<li>' + esc(x.nome) + ' <small class="rvp-muted">' + esc(RVP.nomeTurma(x.turma)) + '</small></li>').join('') + '</ul>' : '<p class="rvp-muted">Todos começaram.</p>') + '</details>';
+  el.innerHTML = html;
+}
+
+function _rvpDetalhe(l) {
+  const esc = RVP.esc, d = l.dif || {};
+  const difs = Object.keys(d).filter(k => d[k] === -1).map(RVP.nomeTema.bind(RVP));
+  const doms = Object.keys(d).filter(k => d[k] === 1).map(RVP.nomeTema.bind(RVP));
+  const dias = (l.dias || []).map(i => ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][i]).join(', ');
+  return '<div class="rvp-det"><div><b>Tenho dificuldade:</b> ' + (difs.length ? esc(difs.join(', ')) : '<span class="rvp-muted">nenhum marcado</span>') + '</div>' +
+    '<div><b>Domino:</b> ' + (doms.length ? esc(doms.join(', ')) : '<span class="rvp-muted">nenhum marcado</span>') + '</div>' +
+    '<div><b>Rotina:</b> ' + Number(l.horas_dia).toString().replace('.', ',') + 'h por dia · ' + esc(dias || '—') + '</div>' +
+    '<div><b>Questionário:</b> ' + (l.perfil_em ? new Date(l.perfil_em).toLocaleDateString('pt-BR') : '—') + ' · <b>acertos nas atividades:</b> ' + (l.acertos_atividades || 0) + '/' + (l.total_atividades || 0) + '</div></div>';
+}
+
+function _rvpFoco(id) { const el = document.getElementById('rvp-' + id); if (el) { const v = el.value; el.focus(); el.setSelectionRange(v.length, v.length); } }
+
 function renderHome() {
   state.view = 'home';
   const main = document.getElementById('main-content');
@@ -8308,6 +8469,10 @@ function renderHome() {
         <div class="quick-card" onclick="renderMetricasAlunos()">
           <div class="icon icon-success"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
           <div><h3>Métricas dos alunos</h3><p>Estudos, questões, revisões</p></div>
+        </div>
+        <div class="quick-card" onclick="renderRevisaoPainel()">
+          <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+          <div><h3>Revisão Final</h3><p>Quem começou, progresso, minis por semana</p></div>
         </div>
         <div class="quick-card" onclick="renderEditarCronograma()">
           <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
@@ -8538,6 +8703,11 @@ function renderDashboardAluno() {
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
             <span>Vídeo-aulas</span>
             <small>Aulas e materiais</small>
+          </div>
+          <div class="dash-atalho" onclick="window.location.href='/mockup_reta_final'">
+            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+            <span>Revisão Final</span>
+            <small>Seu plano das 7 semanas até o ENEM</small>
           </div>
           <div class="dash-atalho" onclick="renderSimulados()">
             <div class="dash-atalho-icon icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>

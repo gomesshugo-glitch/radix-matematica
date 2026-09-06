@@ -385,10 +385,12 @@
       <button type="button" data-alvo="sec-mais" data-tab="evo" onclick="app.navTo('sec-mais','evo')">Evolução</button>
       <button type="button" data-alvo="sec-mais" data-tab="perfil" onclick="app.navTo('sec-mais','perfil')">Perfil</button>
     </nav>
+    <span id="sync-status" class="chip" hidden></span>
     <div class="count-pill" id="pill-contagem"></div>
   </div>
 </header>
 
+<div class="wrap"><div id="aviso-login" class="aviso" hidden style="margin-top:14px"><b>Você não está conectado ao app.</b> O progresso fica só neste navegador e o professor não consegue acompanhar. <a href="/" style="color:var(--cyan-2);font-weight:700">Entrar no app</a> e voltar aqui.</div></div>
 <main class="wrap" id="root"></main>
 
 <nav class="bnav" id="bnav" aria-label="Navegação rápida">
@@ -403,6 +405,7 @@
 <div id="modal-root"></div>
 <div id="celebra-root"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 'use strict';
 /* ============================================================
@@ -549,9 +552,10 @@ const app = {
       }
     } catch(e) {}
   },
-  salvar() {
+  salvarLocal() {
     try { localStorage.setItem(KEY, JSON.stringify({ v:3, perfil:this.perfil, ov:this.ov, minis:this.minis, planos:this.planos })); } catch(e) {}
   },
+  salvar() { this.salvarLocal(); if (typeof SYNC !== 'undefined') SYNC.agendar(); },
   demoExemplo() {
     const dif = {};
     ['financeira','exponencial','probabilidade'].forEach(id => dif[id] = -1);
@@ -1030,6 +1034,7 @@ const app = {
       texto: 'Perfil, atividades concluídas, mini-simulados e planos congelados serão apagados deste navegador. Não dá para desfazer.' }, () => self.resetar(true));
     this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
     this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false; this._evoSel = null;
+    if (typeof SYNC !== 'undefined') SYNC.apagarTudo();
     try { localStorage.removeItem(KEY); } catch (e) { this.toast('erro', 'Não consegui limpar o armazenamento', 'Verifique as permissões do navegador.'); }
     this.render({ modo: 'tela' });
     this.toast('', 'Dados zerados', 'Comece pelo questionário para montar um novo roteiro.');
@@ -1629,9 +1634,145 @@ const app = {
   }
 };
 
-document.querySelectorAll('.bnav [data-ic]').forEach(el => { el.innerHTML = ic(el.getAttribute('data-ic'), 20); });
-app.carregar();
-app.render({ modo: 'tela' });
+
+/* ============================================================
+   SINCRONIZAÇÃO COM O APP (Supabase)
+   A página vive no mesmo domínio do app, então enxerga a sessão
+   que o aluno abriu lá. Logado: o estado vai para as tabelas
+   revisao_* (e o professor acompanha). Sem login: fica só no
+   navegador, com aviso. `?demo=1` mantém a barra de simulação.
+   ============================================================ */
+const SYNC = {
+  URL: 'https://bvvfalzwpwvkoghmjvom.supabase.co',
+  KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dmZhbHp3cHd2a29naG1qdm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQ5MjMsImV4cCI6MjA5NDEyMDkyM30.iZm6Xs6oKq2vwP00lYefLNT1kx3G07SE7gpDg_HXIyc',
+  sb: null, uid: null, nome: null, ativo: false, _timer: null,
+  demo: (typeof location !== 'undefined') && /[?&]demo=1/.test(location.search),
+
+  async iniciar() {
+    if (!window.supabase || !window.supabase.createClient) return false;
+    this.sb = window.supabase.createClient(this.URL, this.KEY);
+    const { data } = await this.sb.auth.getSession();
+    if (!data || !data.session) return false;
+    this.uid = data.session.user.id;
+    try {
+      const { data: p } = await this.sb.from('perfis').select('nome').eq('id', this.uid).single();
+      if (p && p.nome) { this.nome = p.nome; CONFIG.ALUNO = p.nome; }
+    } catch (e) {}
+    this.ativo = true;
+    await this.puxar();
+    return true;
+  },
+
+  // Servidor manda. Se o servidor está vazio e o navegador tem dados
+  // (aluno testou antes de logar), migra o que existe para o servidor.
+  async puxar() {
+    const uid = this.uid, sb = this.sb;
+    const [rp, rg, rm, rpl] = await Promise.all([
+      sb.from('revisao_perfil').select('*').eq('aluno_id', uid).maybeSingle(),
+      sb.from('revisao_progresso').select('*').eq('aluno_id', uid),
+      sb.from('revisao_mini').select('*').eq('aluno_id', uid),
+      sb.from('revisao_plano').select('*').eq('aluno_id', uid)
+    ]);
+    if (rp.error) throw rp.error;
+    if (rp.data) {
+      const r = rp.data;
+      app.perfil = { acertos: r.acertos, horasDia: Number(r.horas_dia), dias: r.dias || [], meta: r.meta, dif: r.dif || {} };
+      app.ov = {};
+      (rg.data || []).forEach(x => { app.ov[x.atividade_key] = { dia: x.dia == null ? undefined : x.dia, done: x.feito_em || null, hits: x.acertos, total: x.total }; });
+      app.minis = {};
+      (rm.data || []).forEach(x => { app.minis[x.semana] = { porTema: x.acertos_por_tema || {}, total: x.total, em: x.feito_em }; });
+      app.planos = {};
+      (rpl.data || []).forEach(x => { app.planos[x.semana] = Object.assign({}, x.plano || {}, { budget: x.budget, totalMin: x.total_min, congelado: true, criadoEm: x.criado_em }); });
+      app.salvarLocal();
+      this.status('ok');
+    } else if (app.perfil) {
+      await this.empurrar();
+    } else {
+      this.status('ok');
+    }
+  },
+
+  agendar() {
+    if (!this.ativo) return;
+    this.status('salvando');
+    clearTimeout(this._timer);
+    const self = this;
+    this._timer = setTimeout(function () { self.empurrar(); }, 800);
+  },
+
+  async empurrar() {
+    if (!this.ativo) return;
+    const uid = this.uid, sb = this.sb, p = app.perfil;
+    try {
+      if (p) {
+        const r = await sb.from('revisao_perfil').upsert({ aluno_id: uid, acertos: p.acertos, horas_dia: p.horasDia, dias: p.dias || [], meta: p.meta, dif: p.dif || {} });
+        if (r.error) throw r.error;
+      }
+      const rows = Object.keys(app.ov).map(k => {
+        const o = app.ov[k];
+        return { aluno_id: uid, semana: parseInt(k.slice(1)), atividade_key: k,
+                 dia: o.dia == null ? null : o.dia, feito_em: o.done || null,
+                 acertos: o.hits == null ? null : o.hits, total: o.total == null ? null : o.total };
+      });
+      if (rows.length) { const r = await sb.from('revisao_progresso').upsert(rows, { onConflict: 'aluno_id,atividade_key' }); if (r.error) throw r.error; }
+
+      const minis = Object.keys(app.minis).map(n => ({ aluno_id: uid, semana: parseInt(n), acertos_por_tema: app.minis[n].porTema || {}, total: app.minis[n].total, feito_em: app.minis[n].em || new Date().toISOString() }));
+      if (minis.length) { const r = await sb.from('revisao_mini').upsert(minis); if (r.error) throw r.error; }
+      const semMini = Object.keys(app.minis).map(Number);
+      await sb.from('revisao_mini').delete().eq('aluno_id', uid).not('semana', 'in', '(' + (semMini.length ? semMini.join(',') : '0') + ')');
+
+      const planos = Object.keys(app.planos).map(n => {
+        const d = app.planos[n];
+        return { aluno_id: uid, semana: parseInt(n), budget: d.budget, total_min: d.totalMin,
+                 plano: { itens: d.itens, avisos: d.avisos, fora: d.fora, diasAtivos: d.diasAtivos, temMini: d.temMini },
+                 criado_em: d.criadoEm || new Date().toISOString() };
+      });
+      if (planos.length) { const r = await sb.from('revisao_plano').upsert(planos); if (r.error) throw r.error; }
+      const semPl = Object.keys(app.planos).map(Number);
+      await sb.from('revisao_plano').delete().eq('aluno_id', uid).not('semana', 'in', '(' + (semPl.length ? semPl.join(',') : '0') + ')');
+      this.status('ok');
+    } catch (e) {
+      console.warn('[sync] falha ao salvar:', e);
+      this.status('erro');
+      app.toast('erro', 'Não consegui salvar no app', 'Seu progresso continua neste navegador. Vou tentar de novo na próxima ação.');
+    }
+  },
+
+  async apagarTudo() {
+    if (!this.ativo) return;
+    const uid = this.uid, sb = this.sb;
+    for (const t of ['revisao_progresso', 'revisao_mini', 'revisao_plano', 'revisao_perfil']) {
+      await sb.from(t).delete().eq('aluno_id', uid);
+    }
+  },
+
+  status(s) {
+    const el = document.getElementById('sync-status');
+    if (!el) return;
+    const map = { ok: ['chip-ok', 'Salvo no app'], salvando: ['chip-neutro', 'Salvando…'], erro: ['chip-atraso', 'Erro ao salvar'] };
+    const m = map[s] || map.ok;
+    el.className = 'chip ' + m[0];
+    el.textContent = m[1];
+    el.hidden = false;
+  }
+};
+
+/* ---------- inicialização ---------- */
+(async function boot() {
+  document.querySelectorAll('.bnav [data-ic]').forEach(el => { el.innerHTML = ic(el.getAttribute('data-ic'), 20); });
+  app.carregar();
+  const root = document.getElementById('root');
+  root.innerHTML = '<div class="q-wrap"><p class="sub my-c">Carregando seu progresso…</p><div class="skel skel-a"></div><div class="skel skel-b"></div></div>';
+  let logado = false;
+  try {
+    logado = await Promise.race([SYNC.iniciar(), new Promise(r => setTimeout(() => r(false), 6000))]);
+  } catch (e) { console.warn('[sync] indisponível:', e); }
+  const demoBar = document.querySelector('.demo');
+  if (demoBar && logado && !SYNC.demo) demoBar.hidden = true;   // aluno real usa a data real
+  const aviso = document.getElementById('aviso-login');
+  if (aviso) aviso.hidden = logado || SYNC.demo;
+  app.render({ modo: 'tela' });
+})();
 </script>
 </body>
 </html>
