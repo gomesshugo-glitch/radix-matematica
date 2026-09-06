@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/revisao-final",
-      "destination": "/mockup_reta_final.html"
+      "destination": "/mockup_reta_final"
     }
   ]
 }
