@@ -6045,6 +6045,13 @@
   .cron-tema.geo{background:rgba(124,58,237,.14)}
   .cron-plano-link{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:var(--radix-blue,#1565C0);text-decoration:none}
   .cron-plano-link:hover{text-decoration:underline}
+
+  /* ---------- modo degustação ---------- */
+  .deg-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,122,92,.14),rgba(34,211,238,.10));border:1px solid rgba(255,122,92,.35);border-radius:14px;padding:12px 16px;margin:0 0 14px}
+  .deg-banner-txt{flex:1 1 320px;font-size:14px;line-height:1.5}
+  .deg-banner-btn{white-space:nowrap}
+  .deg-preco{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:12px 0 16px;font-size:14px}
+  .deg-preco b{font-size:26px}
 </style>
 </head>
 <body>
@@ -7076,6 +7083,19 @@ const SUPABASE_URL = 'https://bvvfalzwpwvkoghmjvom.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dmZhbHp3cHd2a29naG1qdm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQ5MjMsImV4cCI6MjA5NDEyMDkyM30.iZm6Xs6oKq2vwP00lYefLNT1kx3G07SE7gpDg_HXIyc';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ====== MODO DEGUSTAÇÃO ======
+// Cadastro novo de aluno entra direto por DEGUSTACAO.dias com acesso à amostra
+// (questões/materiais marcados no banco). O que ele enxerga é decidido pela RLS
+// (fn_status_atual / fn_pode_ver_questao); aqui é só interface e conversão.
+const DEGUSTACAO = {
+  dias: 7,
+  preco: 'R$ —',                          // TODO: valor da matrícula
+  whatsapp: '',                            // TODO: número com DDI+DDD, só dígitos (ex.: 5584999999999)
+  msg: 'Olá, Hugo! Fiz a degustação da plataforma Radix e quero garantir minha vaga.',
+  zapUrl() { return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(this.msg); },
+  ativa() { return !!(state && state.degustacao); }
+};
+
 // Lista de e-mails do(s) administrador(es) — só esses entram como "professor"
 const ADMIN_EMAILS = ['gomess.hugo@gmail.com', 'direcao@colegiosimples.com'];
 
@@ -7350,6 +7370,15 @@ async function iniciarSessao() {
     setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
     return;
   }
+  // Degustação: aluno recém-cadastrado (pendente, nunca degustou) entra em modo teste
+  if (meuPerfil.status === 'pendente' && meuPerfil.perfil === 'aluno' && !meuPerfil.degustacao_inicio) {
+    try {
+      const { data: deg, error: eDeg } = await sb.rpc('fn_iniciar_degustacao', { p_dias: DEGUSTACAO.dias });
+      if (!eDeg && deg && deg.ok) {
+        meuPerfil.status = 'degustacao'; meuPerfil.degustacao_ate = deg.ate; meuPerfil.degustacao_inicio = new Date().toISOString();
+      }
+    } catch (e) { console.warn('[degustacao] não iniciou:', e); }
+  }
   if (meuPerfil.status === 'pendente') {
     mostrarTelaAguardandoAprovacao(meuPerfil);
     return;
@@ -7357,6 +7386,12 @@ async function iniciarSessao() {
   if (meuPerfil.status === 'bloqueado') {
     mostrarTelaBloqueado(meuPerfil);
     return;
+  }
+  state.degustacao = null;
+  if (meuPerfil.status === 'degustacao') {
+    const ate = meuPerfil.degustacao_ate ? new Date(meuPerfil.degustacao_ate) : null;
+    if (!ate || ate < new Date()) { mostrarTelaDegustacaoExpirada(meuPerfil); return; }
+    state.degustacao = { ate, diasRestantes: Math.max(1, Math.ceil((ate - new Date()) / 86400000)) };
   }
   // Status = aprovado: entra normalmente
   state.usuario = {
@@ -7383,12 +7418,12 @@ async function iniciarSessao() {
   // bloqueia até escolher. Tem que rodar ANTES da foto porque a turma também
   // será exigida pelo back-end (constraint chk_aluno_turma) — quando o Bloco 3
   // do SQL_turma_obrigatoria.sql for executado.
-  if (meuPerfil.perfil === 'aluno' && !turmaPorId(meuPerfil.turma)) {
+  if (meuPerfil.perfil === 'aluno' && !state.degustacao && !turmaPorId(meuPerfil.turma)) {
     mostrarTelaTurmaObrigatoria();
     return;
   }
   // Se for aluno e não tiver foto, bloquear acesso até subir
-  if (meuPerfil.perfil === 'aluno' && !meuPerfil.foto_base64) {
+  if (meuPerfil.perfil === 'aluno' && !state.degustacao && !meuPerfil.foto_base64) {
     mostrarTelaUploadFotoObrigatorio();
     return;
   }
@@ -7434,6 +7469,40 @@ function mostrarTelaAguardandoAprovacao(perfil) {
   `;
 }
 
+function mostrarTelaDegustacaoExpirada(perfil) {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.add('hidden');
+  const v = document.getElementById('view-status');
+  v.classList.remove('hidden');
+  const primeiro = String(perfil.nome || '').split(' ')[0];
+  v.innerHTML = `
+    <div class="status-screen">
+      <div class="status-card">
+        <div class="status-ico status-ico-warn">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h2 class="status-titulo">Sua degustação terminou, ${primeiro}</h2>
+        <p class="status-msg">
+          Você teve ${DEGUSTACAO.dias} dias para conhecer a plataforma: banco de questões com gabarito comentado,
+          simulados cronometrados, cronograma semanal e o plano da Revisão Final.
+          Para continuar com acesso completo até o ENEM, garanta sua matrícula.
+        </p>
+        <div class="deg-preco"><span>Matrícula</span><b>${DEGUSTACAO.preco}</b></div>
+        ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Quero garantir minha vaga</a>` : ''}
+        <button class="btn btn-secondary" style="margin-top:10px" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
+      </div>
+    </div>
+  `;
+}
+function _bannerDegustacao() {
+  if (!state.degustacao) return '';
+  const d = state.degustacao.diasRestantes;
+  return `
+    <div class="deg-banner" role="status">
+      <div class="deg-banner-txt"><b>Modo degustação</b> · ${d === 1 ? 'último dia' : 'faltam ' + d + ' dias'}. Você está vendo uma amostra: questões do ENEM com gabarito comentado, simulado de até 15 questões e o plano da Revisão Final.</div>
+      ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary deg-banner-btn" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Garantir minha vaga · ${DEGUSTACAO.preco}</a>` : ''}
+    </div>`;
+}
 function mostrarTelaBloqueado(perfil) {
   document.getElementById('view-login').classList.add('hidden');
   document.getElementById('view-app').classList.add('hidden');
@@ -8680,7 +8749,7 @@ function renderDashboardAluno() {
   const mesesBR = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const heroDate = `${diasSemBR[hoje.getDay()]} · ${hoje.getDate()} de ${mesesBR[hoje.getMonth()]}`;
 
-  main.innerHTML = `
+  main.innerHTML = `${_bannerDegustacao()}
     <!-- HERO -->
     <div class="dash-hero">
       <div style="position:relative;z-index:1;width:100%;">
@@ -12065,8 +12134,8 @@ function abrirSimuladoConfig() {
           <option value="10" selected>10 questões</option>
           <option value="15">15 questões</option>
           <option value="20">20 questões</option>
-          <option value="30">30 questões</option>
-          <option value="45">45 questões (prova completa do ENEM)</option>
+          ${DEGUSTACAO.ativa() ? '' : `<option value="30">30 questões</option>
+          <option value="45">45 questões (prova completa do ENEM)</option>`}
         </select>
       </div>
       <div class="form-group">
@@ -15129,6 +15198,7 @@ async function renderGerenciarAlunos() {
   const pendentesT  = perfis.filter(p => p.status === 'pendente').length;
   const aprovadosT  = perfis.filter(p => p.status === 'aprovado').length;
   const bloqueadosT = perfis.filter(p => p.status === 'bloqueado').length;
+  const degustT     = perfis.filter(p => p.status === 'degustacao').length;
   const semTurmaT   = perfis.filter(p => p.perfil === 'aluno' && !turmaPorId(p.turma)).length;
 
   main.innerHTML = `
@@ -15216,6 +15286,7 @@ function filtrarAlunos() {
   const pendentes  = filtrados.filter(p => p.status === 'pendente');
   const aprovados  = filtrados.filter(p => p.status === 'aprovado');
   const bloqueados = filtrados.filter(p => p.status === 'bloqueado');
+  const degust     = filtrados.filter(p => p.status === 'degustacao').sort((a, b) => String(b.degustacao_ate || '').localeCompare(String(a.degustacao_ate || '')));
 
   // Atualiza batch toolbar
   const batchEl = document.getElementById('aluno-batch-bar');
@@ -15275,6 +15346,11 @@ function filtrarAlunos() {
       ${aprovados.length === 0
         ? `<p style="color:var(--radix-gray-light);">${termo ? 'Nenhum aprovado com esse termo.' : 'Nenhum aluno aprovado ainda.'}</p>`
         : renderListaAlunos(aprovados, 'aprovado')}
+    ` : ''}
+
+    ${degust.length > 0 ? `
+      <h3 class="section-title"><span class="section-title-accent"></span>🧪 Em degustação (${degust.length}) <small style="font-weight:400;font-size:12px;color:var(--radix-gray-light)">leads de ${DEGUSTACAO.dias} dias · ${degust.filter(p => p.degustacao_ate && new Date(p.degustacao_ate) < new Date()).length} expirada(s) · aprovar = matricular</small></h3>
+      ${renderListaAlunos(degust, 'degustacao')}
     ` : ''}
 
     ${bloqueados.length > 0 ? `
