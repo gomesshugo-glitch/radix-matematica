@@ -7127,7 +7127,9 @@ const ADMIN_EMAILS = ['gomess.hugo@gmail.com', 'direcao@colegiosimples.com'];
 
 function trocarAba(aba, manterModo) {
   document.querySelectorAll('.auth-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === aba);
+    const ativa = t.dataset.tab === aba;
+    t.classList.toggle('active', ativa);
+    t.classList.toggle('on', ativa);
   });
   document.getElementById('form-signin').classList.toggle('hidden', aba !== 'signin');
   document.getElementById('form-signup').classList.toggle('hidden', aba !== 'signup');
