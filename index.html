@@ -6050,8 +6050,9 @@
   .deg-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,122,92,.14),rgba(34,211,238,.10));border:1px solid rgba(255,122,92,.35);border-radius:14px;padding:12px 16px;margin:0 0 14px}
   .deg-banner-txt{flex:1 1 320px;font-size:14px;line-height:1.5}
   .deg-banner-btn{white-space:nowrap}
-  .deg-preco{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:12px 0 16px;font-size:14px}
-  .deg-preco b{font-size:26px}
+  .deg-precos{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:12px 0 18px}
+  .deg-preco{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:150px;padding:10px 16px;border-radius:12px;background:var(--radix-bg);border:1px solid var(--radix-line);font-size:13px}
+  .deg-preco b{font-size:22px}
 
   /* ---------- degustação: botão da página inicial + modo do cadastro ---------- */
   .mk-deg-cta{margin-top:22px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px)}
@@ -7112,9 +7113,11 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // (fn_status_atual / fn_pode_ver_questao); aqui é só interface e conversão.
 const DEGUSTACAO = {
   dias: 7,
-  preco: 'R$ —',                          // TODO: valor da matrícula
-  whatsapp: '',                            // TODO: número com DDI+DDD, só dígitos (ex.: 5584999999999)
-  msg: 'Olá, Hugo! Fiz a degustação da plataforma Radix e quero garantir minha vaga.',
+  precoPresencial: 'R$ 300,00',            // Revisão presencial
+  precoOnline: 'R$ 69,90',                 // Revisão online
+  preco: 'a partir de R$ 69,90',           // rótulo curto usado na faixa do painel
+  whatsapp: '5584998131870',               // (84) 99813-1870
+  msg: 'Olá, Hugo! Fiz a degustação da plataforma Radix e quero garantir minha vaga na Revisão Final.',
   zapUrl() { return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(this.msg); },
   ativa() { return !!(state && state.degustacao); }
 };
@@ -7534,9 +7537,12 @@ function mostrarTelaDegustacaoExpirada(perfil) {
         <p class="status-msg">
           Você teve ${DEGUSTACAO.dias} dias para conhecer a plataforma: banco de questões com gabarito comentado,
           simulados cronometrados, cronograma semanal e o plano da Revisão Final.
-          Para continuar com acesso completo até o ENEM, garanta sua matrícula.
+          Para continuar com acesso completo até o ENEM, garanta sua vaga na Revisão Final:
         </p>
-        <div class="deg-preco"><span>Matrícula</span><b>${DEGUSTACAO.preco}</b></div>
+        <div class="deg-precos">
+          <div class="deg-preco"><span>Revisão presencial</span><b>${DEGUSTACAO.precoPresencial}</b></div>
+          <div class="deg-preco"><span>Revisão online</span><b>${DEGUSTACAO.precoOnline}</b></div>
+        </div>
         ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Quero garantir minha vaga</a>` : ''}
         <button class="btn btn-secondary" style="margin-top:10px" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
       </div>
