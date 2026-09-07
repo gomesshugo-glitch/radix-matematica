@@ -6052,6 +6052,14 @@
   .deg-banner-btn{white-space:nowrap}
   .deg-preco{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:12px 0 16px;font-size:14px}
   .deg-preco b{font-size:26px}
+
+  /* ---------- degustação: botão da página inicial + modo do cadastro ---------- */
+  .mk-deg-cta{margin-top:22px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px)}
+  .mk-deg-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:none;background:var(--radix-grad-coral);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .15s}
+  .mk-deg-btn:hover{transform:translateY(-1px)}
+  .mk-deg-sub{font-size:12.5px;color:rgba(255,255,255,.85);margin-top:10px;line-height:1.5;max-width:420px}
+  .signup-deg-banner{font-size:13px;line-height:1.5;padding:12px 14px;border-radius:12px;background:rgba(255,122,92,.12);border:1px solid rgba(255,122,92,.4);margin:-12px 0 18px}
+  .signup-deg-banner a{display:block;margin-top:6px;cursor:pointer;font-weight:600;color:var(--radix-blue,#1565C0)}
 </style>
 </head>
 <body>
@@ -6110,6 +6118,14 @@
           </div>
         </div>
       </div>
+
+      <div class="mk-deg-cta">
+        <button type="button" class="mk-deg-btn" onclick="abrirDegustacao()">
+          Conhecer a plataforma por 7 dias
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+        <div class="mk-deg-sub">Grátis e sem compromisso. Amostra de questões do ENEM com gabarito comentado, simulado e o plano da Revisão Final.</div>
+      </div>
     </div>
 
     <!-- LADO DIREITO: FORMULÁRIO -->
@@ -6142,8 +6158,12 @@
       </div>
 
       <div id="form-signup" class="hidden">
-        <div class="mk-form-title">Crie sua conta.</div>
-        <div class="mk-form-sub">Preencha os dados para liberar o acesso à plataforma.</div>
+        <div class="mk-form-title" id="signup-titulo">Crie sua conta.</div>
+        <div class="mk-form-sub" id="signup-sub">Preencha os dados para liberar o acesso à plataforma.</div>
+        <div id="signup-deg-banner" class="signup-deg-banner hidden">
+          <b>Degustação de 7 dias.</b> Você entra na hora, sem aprovação prévia, com uma amostra do banco de questões, simulado e o plano da Revisão Final.
+          <a onclick="definirModoCadastro(false)">Sou aluno Radix, quero o cadastro regular</a>
+        </div>
 
         <div class="mk-field">
           <label>Nome completo</label>
@@ -6167,12 +6187,15 @@
           <label>Senha (mínimo 6 caracteres)</label>
           <input type="password" id="signup-senha" placeholder="Crie uma senha" autocomplete="new-password">
         </div>
-        <button class="mk-btn-primary" onclick="fazerCadastro()">
-          Criar conta
+        <button class="mk-btn-primary" id="signup-btn" onclick="fazerCadastro()">
+          <span id="signup-btn-txt">Criar conta</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
         <p style="font-size:12px;color:var(--radix-text-muted);text-align:center;margin-top:14px;">
           Ao se cadastrar, você confirma o uso da plataforma Radix de Matemática.
+        </p>
+        <p id="signup-link-deg" style="font-size:13px;text-align:center;margin-top:6px;">
+          Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#1565C0)">Conheça a plataforma por 7 dias</a>
         </p>
       </div>
 
@@ -7099,13 +7122,36 @@ const DEGUSTACAO = {
 // Lista de e-mails do(s) administrador(es) — só esses entram como "professor"
 const ADMIN_EMAILS = ['gomess.hugo@gmail.com', 'direcao@colegiosimples.com'];
 
-function trocarAba(aba) {
+function trocarAba(aba, manterModo) {
   document.querySelectorAll('.auth-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === aba);
   });
   document.getElementById('form-signin').classList.toggle('hidden', aba !== 'signin');
   document.getElementById('form-signup').classList.toggle('hidden', aba !== 'signup');
   document.getElementById('auth-msg').textContent = '';
+  if (!manterModo) definirModoCadastro(false);
+}
+
+// Cadastro em dois modos: regular (fica pendente até o professor aprovar) ou
+// degustação (entra na hora por DEGUSTACAO.dias; só quem clicou no botão).
+let _signupDegustacao = false;
+function definirModoCadastro(deg) {
+  _signupDegustacao = !!deg;
+  const $ = id => document.getElementById(id);
+  if ($('signup-deg-banner')) $('signup-deg-banner').classList.toggle('hidden', !deg);
+  if ($('signup-link-deg')) $('signup-link-deg').classList.toggle('hidden', !!deg);
+  if ($('signup-titulo')) $('signup-titulo').textContent = deg ? 'Comece sua degustação.' : 'Crie sua conta.';
+  if ($('signup-sub')) $('signup-sub').textContent = deg
+    ? 'Preencha os dados e entre agora. Sem aprovação prévia, sem cartão.'
+    : 'Preencha os dados para liberar o acesso à plataforma.';
+  if ($('signup-btn-txt')) $('signup-btn-txt').textContent = deg ? 'Começar minha degustação' : 'Criar conta';
+}
+function abrirDegustacao() {
+  trocarAba('signup', true);
+  definirModoCadastro(true);
+  const el = document.getElementById('form-signup');
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => { const i = document.getElementById('signup-nome'); if (i) i.focus(); }, 350);
 }
 
 function setMsg(texto, cor) {
@@ -7190,7 +7236,7 @@ async function fazerCadastro() {
   setMsg('Criando sua conta...');
   const { data, error } = await sb.auth.signUp({
     email, password: senha,
-    options: { data: { nome, telefone: whats, cpf } }
+    options: { data: Object.assign({ nome, telefone: whats, cpf }, _signupDegustacao ? { degustacao: true } : {}) }
   });
   if (error) {
     setMsg(mensagemAmigavelErroAuth(error, 'cadastro'), 'var(--radix-red)');
@@ -7203,7 +7249,9 @@ async function fazerCadastro() {
     }, 800);
   }
   if (data.user && !data.session) {
-    setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
+    setMsg(_signupDegustacao
+      ? 'Conta criada! Confirme seu e-mail e faça login para começar a degustação.'
+      : 'Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
     trocarAba('signin');
     document.getElementById('signin-email').value = email;
   } else {
@@ -7371,7 +7419,8 @@ async function iniciarSessao() {
     return;
   }
   // Degustação: aluno recém-cadastrado (pendente, nunca degustou) entra em modo teste
-  if (meuPerfil.status === 'pendente' && meuPerfil.perfil === 'aluno' && !meuPerfil.degustacao_inicio) {
+  if (meuPerfil.status === 'pendente' && meuPerfil.perfil === 'aluno' && !meuPerfil.degustacao_inicio
+      && user.user_metadata && user.user_metadata.degustacao === true) {
     try {
       const { data: deg, error: eDeg } = await sb.rpc('fn_iniciar_degustacao', { p_dias: DEGUSTACAO.dias });
       if (!eDeg && deg && deg.ok) {
@@ -21296,6 +21345,8 @@ function fazerMiniSimulado(temaId) {
   // 5) Fluxo normal: se já tem sessão, entrar.
   if (session) {
     await iniciarSessao();
+  } else if (new URLSearchParams(window.location.search).get('degustacao') === '1') {
+    abrirDegustacao();
   }
 })();
 
