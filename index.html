@@ -1892,6 +1892,35 @@
   }
   /* Estados das letras já tratados nos seletores principais — sem override no estilo ENEM */
 
+  /* === Reportar erro na questão (aluno) + painel de avisos (professor) === */
+  .btn-reportar-erro {
+    background: transparent; border: 1px solid var(--radix-line); color: var(--radix-text-muted);
+    border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; font-family: inherit; line-height: 1;
+  }
+  .btn-reportar-erro:hover { border-color: var(--radix-coral); color: var(--radix-coral); }
+  .btn-reportar-erro.compacto { margin-top: 10px; }
+  .aviso-reportes {
+    display: flex; align-items: center; gap: 10px; background: rgba(230, 81, 0, .12);
+    border: 1px solid rgba(230, 81, 0, .45); color: var(--radix-text); padding: 10px 14px;
+    border-radius: 10px; margin: -6px 0 16px; font-weight: 600; font-size: 13.5px; cursor: pointer;
+  }
+  .aviso-reportes.hidden { display: none !important; }
+  .aviso-reportes svg { color: #E65100; flex: none; }
+  .reporte-card { background: var(--radix-surface); border: 1px solid var(--radix-border); border-left: 4px solid #E65100;
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+  .reporte-card.rep-resolvido { border-left-color: var(--radix-success); opacity: .85; }
+  .reporte-card.rep-descartado { border-left-color: var(--radix-gray); opacity: .7; }
+  .reporte-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .reporte-meta { font-size: 12.5px; color: var(--radix-text-muted); margin-top: 3px; }
+  .reporte-tipo { font-weight: 700; color: var(--radix-coral); }
+  .reporte-status { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+    background: var(--radix-bg-2); padding: 3px 8px; border-radius: 999px; color: var(--radix-text-2); white-space: nowrap; }
+  .reporte-msg { margin: 10px 0; white-space: pre-wrap; line-height: 1.5; }
+  .reporte-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .reporte-acoes .btn { padding: 7px 12px; font-size: 12.5px; }
+  .reporte-questao { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--radix-line); }
+  .reporte-questao.hidden { display: none !important; }
   .acoes-questao {
     display: flex;
     gap: 8px;
@@ -6688,20 +6717,35 @@ function formatarEnunciado(texto) {
       return '\u0000KATEX' + (_katexBlocks.length - 1) + '\u0000';
     } catch (e) { return null; }
   }
+  // IMAGENS MARKDOWN saem do caminho ANTES do KaTeX e do escape HTML. O alt
+  // costuma ter fórmula ("$t_0$"): se o KaTeX rodar dentro dele, o HTML gerado
+  // (cheio de aspas) quebra o atributo alt e o texto vaza na tela (bug FUVEST).
+  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)(?:\{[^}]*\})?/g, (m, alt, src) => {
+    src = src.trim();
+    if (!/^(https?:|data:)/.test(src)) return m; // caminho local: placeholder da etapa 4.e
+    const altLimpo = alt.replace(/\$/g, '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    _katexBlocks.push('<img src="' + src.replace(/"/g, '&quot;') + '" class="enunciado-img" alt="' + altLimpo + '">');
+    return '\u0000KATEX' + (_katexBlocks.length - 1) + '\u0000';
+  });
   // PROTEÇÃO MOEDA: "R$" é dinheiro, não delimitador de fórmula. Esconde o
   // cifrão de moeda ANTES do KaTeX (senão dois "R$" viram um span de fórmula
   // e embaralham o texto entre eles). Restaurado após a extração de fórmulas.
-  s = s.replace(/R\$/g, ' RCASH ');
+  s = s.replace(/(R|US|U)\\\$/g, '$1$$');          // "R\$" escapado vira R$ normal
+  s = s.replace(/\b(R|US|U)\$/g, ' $1CASH ');
   // $$...$$ (display)
   s = s.replace(/\$\$([^$]+?)\$\$/g, (m, tex) => _stashKatex(tex.trim(), true) || m);
   // $...$ (inline) — evita capturar moeda "$ 100" exigindo que o conteúdo tenha letra ou comando \
-  s = s.replace(/\$([^$\n]{2,}?)\$/g, (m, tex) => {
+  // {1,}: "$m$", "$x$", "$A$" têm UM caractere — com {2,} eles não casavam e o
+  // primeiro "$" sobrava, deslocando todos os pares seguintes (bug FUVEST).
+  s = s.replace(/\$([^$\n]+?)\$/g, (m, tex) => {
     const t = tex.trim();
-    if (!/[a-zA-Z\\^_{}]/.test(t)) return m; // sem letra/comando: provavelmente moeda
+    if (!t) return m;
+    // sem letra/comando: só renderiza se for expressão numérica compacta ("$0$", "$-1$", "$3/4$")
+    if (!/[a-zA-Z\\^_{}]/.test(t) && !/^[-+\u2212]?[\d.,]+(?:\s*[-+\u2212*\/\u00d7\u00f7:]\s*[-+\u2212]?[\d.,]+)*$/.test(t)) return m; // provavelmente moeda
     return _stashKatex(t, false) || m;
   });
   // restaura o cifrão de moeda como texto normal (KaTeX já não o vê mais)
-  s = s.replace(/ RCASH /g, 'R$');
+  s = s.replace(/ (R|US|U)CASH /g, '$1$$');
 
   // ---- ETAPA A: substituições puramente textuais (antes do escape HTML) ----
 
@@ -8449,6 +8493,7 @@ function renderHome() {
     main.innerHTML = `
       <h2 class="section-title"><span class="section-title-accent"></span>Painel do Professor</h2>
       <div class="tagline-bar">√ Gerencie o banco de questões e acompanhe o desempenho dos alunos.</div>
+      <div id="aviso-reportes" class="aviso-reportes hidden" onclick="renderReportesErro()" title="Ver os avisos"></div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="label">Total de Questões</div>
@@ -8477,6 +8522,11 @@ function renderHome() {
             <p>Aprovar cadastros novos</p>
           </div>
           <span id="badge-pendentes" class="badge-pendentes hidden"></span>
+        </div>
+        <div class="quick-card" onclick="renderReportesErro()" style="position:relative;">
+          <div class="icon icon-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><h3>Erros reportados</h3><p>Avisos dos alunos sobre questões</p></div>
+          <span id="badge-reportes" class="badge-pendentes hidden"></span>
         </div>
         <div class="quick-card" onclick="renderRelatorioProfessor()">
           <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
@@ -9737,6 +9787,7 @@ async function finalizarConferenciaGabarito() {
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
             <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
             ${btnCaderno}
+            ${htmlBtnReportarErro(q.id, true)}
           </div>
         </div>
       `;
@@ -10044,6 +10095,7 @@ function renderEstudoDigital() {
         ${imgsHtml}
         <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">${altsHtml}</div>
         <div id="explicacao-${q.id}"></div>
+        ${htmlBtnReportarErro(q.id, true)}
       </div>`;
   }).join('');
 
@@ -11771,6 +11823,7 @@ function renderQuestaoCardLinha(q, numero) {
                 onclick="event.stopPropagation();toggleQuestaoLista(${q.id});atualizarBotaoLista(${q.id});">
           ${sel ? '✓ Já está na sua lista' : '+ Adicionar à lista'}
         </button>
+        ${htmlBtnReportarErro(q.id)}
       </div>
       ${expandedHtml}
     </div>`;
@@ -11943,6 +11996,7 @@ function renderQuestao(q, numero, modoSimulado) {
           <button class="btn ${sel ? 'btn-success' : 'btn-secondary'}" data-lista-btn="${q.id}" onclick="toggleQuestaoLista(${q.id})">
             ${sel ? '✓ Na lista' : '+ Adicionar à lista'}
           </button>
+          ${htmlBtnReportarErro(q.id)}
         </div>`;
       })() : ''}
     </div>
@@ -12362,6 +12416,7 @@ function renderResultadoSimulado(registro, porTempo) {
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
             <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
             ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
+            ${htmlBtnReportarErro(q.id, true)}
           </div>
         </div>
       `;
@@ -15845,6 +15900,7 @@ async function excluirAluno(alunoId, alunoNome) {
 
 async function atualizarBadgePendentes() {
   if (state.usuario?.perfil !== 'professor') return;
+  atualizarBadgeReportes(); // avisos de erro em questão (mesmos gatilhos do badge de cadastros)
   const { data } = await sb.from('perfis').select('id').eq('status', 'pendente');
   const badge = document.getElementById('badge-pendentes');
   if (!badge) return;
@@ -15857,6 +15913,168 @@ async function atualizarBadgePendentes() {
 }
 
 
+
+
+// ========== REPORTAR ERRO NA QUESTÃO (aluno → professor) ==========
+// Tabela questao_reporte (RLS: aluno insere/lê os seus; professor lê e atualiza todos).
+// Marcador: RADIX_PATCH_REPORTAR_ERRO_2026-09-07
+const ICONE_ALERTA_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+const TIPOS_REPORTE = { enunciado: 'Enunciado', alternativas: 'Alternativas', gabarito: 'Gabarito', figura: 'Figura', resolucao: 'Resolução', outro: 'Outro' };
+const _escRep = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function htmlBtnReportarErro(qid, compacto) {
+  if (state.usuario?.perfil !== 'aluno') return '';
+  return `<button type="button" class="btn-reportar-erro${compacto ? ' compacto' : ''}" onclick="event.stopPropagation();abrirModalReportarErro(${qid})" title="Avisar o professor sobre um problema nesta questão">${ICONE_ALERTA_SVG}Reportar erro</button>`;
+}
+
+function abrirModalReportarErro(qid) {
+  const id = 'modal-reportar-erro';
+  const antigo = document.getElementById(id); if (antigo) antigo.remove();
+  const q = (state.questoes || []).find(x => x.id === qid);
+  const tema = q ? TEMAS.find(t => t.id === q.tema) : null;
+  const ref = q ? [q.prova ? _escRep(q.prova) : '', tema ? tema.nome : ''].filter(Boolean).join(' · ') : '';
+  const html = `
+    <div class="modal-overlay" id="${id}">
+      <div class="modal" style="max-width:520px;">
+        <h2 style="margin:0 0 4px;">Reportar erro na questão</h2>
+        <p style="margin:0 0 14px;font-size:13px;color:var(--radix-text-muted);">${ref ? ref + ' · ' : ''}questão ${qid}. O professor recebe o aviso no painel dele.</p>
+        <div class="form-group">
+          <label for="${id}-tipo">Onde está o problema?</label>
+          <select id="${id}-tipo" style="width:100%;">
+            <option value="enunciado">Enunciado (texto ou fórmula quebrada)</option>
+            <option value="alternativas">Alternativas</option>
+            <option value="gabarito">Gabarito (a resposta certa parece errada)</option>
+            <option value="figura">Figura / imagem</option>
+            <option value="resolucao">Resolução / explicação</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="${id}-msg">Descreva o que você viu</label>
+          <textarea id="${id}-msg" rows="4" maxlength="1000" style="width:100%;resize:vertical;" placeholder="Ex.: a fórmula do enunciado aparece com cifrão e letras soltas"></textarea>
+        </div>
+        <div id="${id}-status" style="font-size:13px;min-height:18px;color:var(--radix-red);"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button class="btn btn-secondary" type="button" onclick="fecharModalReportarErro()">Cancelar</button>
+          <button class="btn" type="button" id="${id}-enviar" onclick="enviarReporteErro(${qid})">Enviar aviso</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.body.classList.add('modal-open');
+  document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) fecharModalReportarErro(); });
+  setTimeout(() => { const el = document.getElementById(id + '-msg'); if (el) el.focus(); }, 50);
+}
+
+function fecharModalReportarErro() {
+  const m = document.getElementById('modal-reportar-erro'); if (m) m.remove();
+  if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
+}
+
+async function enviarReporteErro(qid) {
+  const id = 'modal-reportar-erro';
+  const tipo = document.getElementById(id + '-tipo')?.value || 'outro';
+  const mensagem = (document.getElementById(id + '-msg')?.value || '').trim();
+  const status = document.getElementById(id + '-status');
+  if (mensagem.length < 5) { if (status) status.textContent = 'Escreva pelo menos uma frase sobre o problema.'; return; }
+  const btn = document.getElementById(id + '-enviar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+  const payload = { questao_id: qid, aluno_id: state.usuario.id, aluno_nome: state.usuario.nome || null, tipo, mensagem, tela: state.view || null };
+  const { error } = await sb.from('questao_reporte').insert(payload);
+  if (error) {
+    console.error('[questao_reporte] erro ao enviar:', error, '| payload:', payload);
+    if (status) status.textContent = 'Não foi possível enviar: ' + (error.message || 'erro desconhecido');
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar aviso'; }
+    return;
+  }
+  const box = document.querySelector('#' + id + ' .modal');
+  if (box) box.innerHTML = `
+    <h2 style="margin:0 0 8px;">Aviso enviado</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:var(--radix-text-2);">Obrigado. O professor vai conferir a questão ${qid}.</p>
+    <div style="display:flex;justify-content:flex-end;"><button class="btn" type="button" onclick="fecharModalReportarErro()">Fechar</button></div>`;
+}
+
+// ---- lado do professor ----
+async function atualizarBadgeReportes() {
+  if (state.usuario?.perfil !== 'professor') return;
+  const { count, error } = await sb.from('questao_reporte').select('id', { count: 'exact', head: true }).eq('status', 'aberto');
+  if (error) { console.warn('[questao_reporte] badge:', error.message); return; }
+  const n = count || 0;
+  const badge = document.getElementById('badge-reportes');
+  if (badge) { badge.textContent = n; badge.classList.toggle('hidden', n === 0); }
+  const aviso = document.getElementById('aviso-reportes');
+  if (aviso) {
+    aviso.classList.toggle('hidden', n === 0);
+    aviso.innerHTML = n ? `${ICONE_ALERTA_SVG}<span>${n} aviso${n > 1 ? 's' : ''} de erro em questão enviado${n > 1 ? 's' : ''} por alunos — clique para conferir</span>` : '';
+  }
+}
+
+async function renderReportesErro(filtro) {
+  if (state.usuario?.perfil !== 'professor') return;
+  state.view = 'reportes';
+  if (filtro) state._filtroReportes = filtro;
+  const f = state._filtroReportes || 'aberto';
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<h2 class="section-title"><span class="section-title-accent"></span>Erros reportados pelos alunos</h2><div class="tagline-bar">Carregando avisos...</div>`;
+  let qry = sb.from('questao_reporte').select('*').order('criado_em', { ascending: false }).limit(300);
+  if (f !== 'todos') qry = qry.eq('status', f);
+  const { data, error } = await qry;
+  if (error) { main.innerHTML += `<p style="color:var(--radix-red);">Erro ao carregar: ${_escRep(error.message)}</p>`; return; }
+  const tabs = [['aberto', 'Abertos'], ['resolvido', 'Resolvidos'], ['descartado', 'Descartados'], ['todos', 'Todos']]
+    .map(([v, l]) => `<button class="btn ${f === v ? '' : 'btn-secondary'}" style="padding:7px 14px;font-size:13px;" onclick="renderReportesErro('${v}')">${l}</button>`).join('');
+  const cards = (data || []).map(r => {
+    const q = (state.questoes || []).find(x => x.id === r.questao_id);
+    const tema = q ? TEMAS.find(t => t.id === q.tema) : null;
+    const ref = q ? [q.prova ? _escRep(q.prova) : '', tema ? tema.nome : ''].filter(Boolean).join(' · ') : 'questão não encontrada no banco';
+    const quando = r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const cls = { aberto: 'rep-aberto', resolvido: 'rep-resolvido', descartado: 'rep-descartado' }[r.status] || '';
+    return `
+      <div class="reporte-card ${cls}" id="reporte-${r.id}">
+        <div class="reporte-head">
+          <div>
+            <b>Questão ${r.questao_id}</b> <span class="qbk-sep">·</span> ${ref}
+            <div class="reporte-meta">${_escRep(r.aluno_nome || 'aluno')} · ${quando} · <span class="reporte-tipo">${TIPOS_REPORTE[r.tipo] || _escRep(r.tipo)}</span>${r.tela ? ' · tela: ' + _escRep(r.tela) : ''}</div>
+          </div>
+          <span class="reporte-status">${_escRep(r.status)}</span>
+        </div>
+        <div class="reporte-msg">${_escRep(r.mensagem)}</div>
+        <div class="reporte-acoes">
+          ${q ? `<button class="btn btn-secondary" onclick="toggleVerQuestaoReporte(${r.id}, ${r.questao_id})">Ver questão</button>
+                 <button class="btn btn-secondary" onclick="editarQuestao(${r.questao_id})">Editar questão</button>` : ''}
+          ${r.status !== 'resolvido' ? `<button class="btn btn-success" onclick="atualizarStatusReporte(${r.id}, 'resolvido')">Marcar resolvido</button>` : ''}
+          ${r.status !== 'descartado' ? `<button class="btn btn-danger" onclick="atualizarStatusReporte(${r.id}, 'descartado')">Descartar</button>` : ''}
+          ${r.status !== 'aberto' ? `<button class="btn btn-secondary" onclick="atualizarStatusReporte(${r.id}, 'aberto')">Reabrir</button>` : ''}
+        </div>
+        <div class="reporte-questao hidden" id="reporte-q-${r.id}"></div>
+      </div>`;
+  }).join('');
+  main.innerHTML = `
+    <h2 class="section-title"><span class="section-title-accent"></span>Erros reportados pelos alunos</h2>
+    <div class="tagline-bar">Avisos enviados pelo botão "Reportar erro" das questões. Corrija no banco e marque como resolvido.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+      <button class="btn btn-secondary" style="padding:7px 14px;font-size:13px;" onclick="renderHome()">Voltar</button>
+      ${tabs}
+      <span style="margin-left:auto;font-size:13px;color:var(--radix-text-muted);">${(data || []).length} aviso(s)</span>
+    </div>
+    ${cards || '<p style="color:var(--radix-text-muted);">Nenhum aviso nesta lista.</p>'}`;
+  atualizarBadgeReportes();
+}
+
+function toggleVerQuestaoReporte(rid, qid) {
+  const box = document.getElementById('reporte-q-' + rid); if (!box) return;
+  if (!box.classList.contains('hidden')) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  const q = (state.questoes || []).find(x => x.id === qid); if (!q) return;
+  box.innerHTML = renderQuestaoCompletaGer(q);
+  box.classList.remove('hidden');
+}
+
+async function atualizarStatusReporte(rid, status) {
+  const fechado = status !== 'aberto';
+  const patch = { status, resolvido_em: fechado ? new Date().toISOString() : null, resolvido_por: fechado ? state.usuario.id : null };
+  const { error } = await sb.from('questao_reporte').update(patch).eq('id', rid);
+  if (error) { alert('Não foi possível atualizar: ' + error.message); return; }
+  renderReportesErro();
+}
 
 // ========== VÍDEO-AULAS E MATERIAIS ==========
 
