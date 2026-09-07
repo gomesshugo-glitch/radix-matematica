@@ -6741,7 +6741,9 @@ function formatarEnunciado(texto) {
     const t = tex.trim();
     if (!t) return m;
     // sem letra/comando: só renderiza se for expressão numérica compacta ("$0$", "$-1$", "$3/4$")
-    if (!/[a-zA-Z\\^_{}]/.test(t) && !/^[-+\u2212]?[\d.,]+(?:\s*[-+\u2212*\/\u00d7\u00f7:]\s*[-+\u2212]?[\d.,]+)*$/.test(t)) return m; // provavelmente moeda
+    // sem letra/comando: renderiza se for expressão só de números/sinais/parênteses colada nos "$"
+    // ("$0$", "$-1$", "$3/4$", "$(3,2)$", "$[0, 1]$"); "$ 100" com espaço é moeda e fica como texto
+    if (!/[a-zA-Z\\^_{}]/.test(t) && (tex !== t || !/^[\d.,;:%\u00b0!|()\[\]+\-\u2212*\/\u00d7\u00f7=<>\u2264\u2265\u2260\s]+$/.test(t))) return m;
     return _stashKatex(t, false) || m;
   });
   // restaura o cifrão de moeda como texto normal (KaTeX já não o vê mais)
@@ -6904,7 +6906,9 @@ function formatarEnunciado(texto) {
 function sanitizarTextoQuestao(s) {
   if (!s || typeof s !== 'string') return s;
   return s
-    .replace(/\\r\\n|\\n/g, '\n') // literais "\n"/"\r\n" do import -> quebra REAL
+    // literais "\n"/"\r\n" do import -> quebra REAL, MENOS quando o "\n" é começo de
+    // comando LaTeX (\neq, \ne, \nabla, \not, \notin, \nu, \nleq...). RADIX_PATCH_LATEX_V2_2026-09-07
+    .replace(/\\r\\n|\\n(?!(?:eq|e|abla|ot|otin|u|leq|geq|le|ge|mid|exists|ewline|sim|cong|equiv|approx|subseteq|supseteq|parallel|prec|succ|vdash|i)\b)/g, '\n')
     .replace(/\r\n?/g, '\n')      // CRLF/CR -> LF
     .replace(/[ \t]+/g, ' ')       // colapsa espaços/tabs (NÃO toca em quebra de linha)
     .replace(/ *\n */g, '\n')      // remove espaços ao redor das quebras
