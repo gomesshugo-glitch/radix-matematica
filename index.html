@@ -6061,6 +6061,25 @@
   .mk-deg-sub{font-size:12.5px;color:rgba(255,255,255,.85);margin-top:10px;line-height:1.5;max-width:420px}
   .signup-deg-banner{font-size:13px;line-height:1.5;padding:12px 14px;border-radius:12px;background:rgba(255,122,92,.12);border:1px solid rgba(255,122,92,.4);margin:-12px 0 18px}
   .signup-deg-banner a{display:block;margin-top:6px;cursor:pointer;font-weight:600;color:var(--radix-blue,#1565C0)}
+
+  /* ---------- degustação: tela de leads ---------- */
+  .ldg-sit{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .ldg-sit.ativo{background:rgba(52,211,153,.16);color:#6ee7b7}
+  .ldg-sit.expirado{background:rgba(251,191,36,.18);color:#fcd34d}
+  .ldg-sit.matriculado{background:rgba(34,211,238,.18);color:#67e8f9}
+  .ldg-sit.bloqueado{background:rgba(255,122,92,.18);color:#fca5a5}
+  body.theme-light .ldg-sit.ativo{color:#059669} body.theme-light .ldg-sit.expirado{color:#b45309}
+  body.theme-light .ldg-sit.matriculado{color:#0e7490} body.theme-light .ldg-sit.bloqueado{color:#c2410c}
+  .ldg-det td{background:rgba(255,255,255,.03)!important}
+  body.theme-light .ldg-det td{background:rgba(0,0,0,.025)!important}
+  .ldg-det-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;font-size:12.5px;line-height:1.7}
+  @media (max-width:800px){.ldg-det-grid{grid-template-columns:1fr}}
+  .ldg-det-l{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--radix-text-muted);margin-bottom:4px}
+  .ldg-temas{display:flex;flex-wrap:wrap;gap:6px}
+  .ldg-tema{font-size:11.5px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08)}
+  body.theme-light .ldg-tema{background:rgba(0,0,0,.06)}
+  .ldg-empty{padding:44px 20px;text-align:center;color:var(--radix-text-muted);font-size:14px;border:1px dashed var(--radix-line,rgba(255,255,255,.12));border-radius:14px}
+  .ldg-table a.btn-icon{text-decoration:none}
 </style>
 </head>
 <body>
@@ -8652,6 +8671,10 @@ function renderHome() {
             <p>Aprovar cadastros novos</p>
           </div>
           <span id="badge-pendentes" class="badge-pendentes hidden"></span>
+        </div>
+        <div class="quick-card" onclick="renderLeadsDegustacao()">
+          <div class="icon icon-coral"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+          <div><h3>Degustação</h3><p>Leads dos 7 dias grátis, uso e conversão</p></div>
         </div>
         <div class="quick-card" onclick="renderReportesErro()" style="position:relative;">
           <div class="icon icon-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
@@ -15231,6 +15254,195 @@ function renderRelatorioProfessor() {
 
 // ========== GERENCIAR ALUNOS (Moderação) ==========
 
+// ====== DEGUSTAÇÃO: tela de leads do professor ======
+// Lista todo mundo que passou pela degustação (degustacao_inicio preenchido),
+// inclusive quem já foi matriculado ou bloqueado, para medir a conversão.
+const LDG = { filtro: 'todos', busca: '', aberto: null, dados: null };
+
+function _ldgSituacao(p) {
+  if (p.status === 'aprovado') return { k: 'matriculado', l: 'Matriculado' };
+  if (p.status === 'bloqueado') return { k: 'bloqueado', l: 'Bloqueado' };
+  const ate = p.degustacao_ate ? new Date(p.degustacao_ate) : null;
+  if (!ate) return { k: 'expirado', l: 'Sem prazo' };
+  const dif = (ate.getTime() - Date.now()) / 86400000;
+  if (dif < 0) return { k: 'expirado', l: 'Expirou há ' + Math.max(1, Math.floor(-dif)) + 'd' };
+  const d = Math.ceil(dif);
+  return { k: 'ativo', l: d === 1 ? 'Último dia' : 'Faltam ' + d + ' dias' };
+}
+function _ldgRel(ts) {
+  if (!ts) return '<span style="color:var(--radix-text-muted);font-size:12px;">Nunca</span>';
+  const d = new Date(ts);
+  const min = Math.floor((Date.now() - d.getTime()) / 60000), hrs = Math.floor(min / 60), dias = Math.floor(hrs / 24);
+  let label, cor;
+  if (min < 5) { label = 'Online agora'; cor = 'var(--radix-success)'; }
+  else if (min < 60) { label = 'há ' + min + ' min'; cor = 'var(--radix-success)'; }
+  else if (hrs < 24) { label = 'há ' + hrs + 'h'; cor = 'var(--radix-cyan)'; }
+  else if (dias < 7) { label = 'há ' + dias + 'd'; cor = 'var(--radix-text-2)'; }
+  else { label = d.toLocaleDateString('pt-BR'); cor = 'var(--radix-warning)'; }
+  return '<span style="color:' + cor + ';font-size:12px;font-weight:600;" title="' + d.toLocaleString('pt-BR') + '">' + label + '</span>';
+}
+function _ldgData(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+function _ldgZap(p) {
+  if (!p.telefone) return '';
+  const primeiro = String(p.nome || '').split(' ')[0];
+  const msg = 'Olá, ' + primeiro + '! Aqui é o Hugo, da Radix Matemática. Vi que você está conhecendo a plataforma. Posso te ajudar com alguma dúvida sobre a Revisão Final ENEM 2026?';
+  return 'https://wa.me/55' + String(p.telefone).replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
+}
+
+async function renderLeadsDegustacao() {
+  state.view = 'leads-degustacao';
+  const main = document.getElementById('main-content');
+  const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderGerenciarAlunos()">Gerenciar Alunos</a> / Degustação</div>';
+  main.innerHTML = bc + '<p style="color:var(--radix-text-muted);">Carregando leads…</p>';
+  try {
+    const { data: perfis, error } = await sb.from('perfis').select('*')
+      .not('degustacao_inicio', 'is', null).order('degustacao_inicio', { ascending: false });
+    if (error) throw error;
+    const ids = (perfis || []).map(p => p.id);
+    let resp = [], sims = [], rev = [];
+    if (ids.length) {
+      const [r1, r2, r3] = await Promise.all([
+        sb.from('respostas').select('aluno_id, tema, correto, respondido_em').in('aluno_id', ids).limit(20000),
+        sb.from('simulados_realizados').select('aluno_id, realizado_em, acertos, total_questoes').in('aluno_id', ids),
+        sb.from('revisao_perfil').select('aluno_id').in('aluno_id', ids)
+      ]);
+      resp = r1.data || []; sims = r2.data || []; rev = r3.data || [];
+    }
+    const porAluno = {};
+    ids.forEach(id => { porAluno[id] = { n: 0, ok: 0, temas: {}, ultima: null, sims: 0, plano: false }; });
+    resp.forEach(r => {
+      const a = porAluno[r.aluno_id]; if (!a) return;
+      a.n++; if (r.correto) a.ok++;
+      const t = a.temas[r.tema] || (a.temas[r.tema] = { n: 0, ok: 0 });
+      t.n++; if (r.correto) t.ok++;
+      if (!a.ultima || r.respondido_em > a.ultima) a.ultima = r.respondido_em;
+    });
+    sims.forEach(s => { const a = porAluno[s.aluno_id]; if (a) a.sims++; });
+    rev.forEach(v => { const a = porAluno[v.aluno_id]; if (a) a.plano = true; });
+    LDG.dados = { perfis: perfis || [], porAluno };
+    _ldgRender();
+  } catch (e) {
+    main.innerHTML = bc + '<p style="color:var(--radix-coral);">Erro ao carregar: ' + (e.message || e) + '</p>';
+  }
+}
+
+function _ldgRender() {
+  const main = document.getElementById('main-content');
+  const { perfis, porAluno } = LDG.dados;
+  const info = p => porAluno[p.id] || { n: 0, ok: 0, temas: {}, ultima: null, sims: 0, plano: false };
+  const sit = p => _ldgSituacao(p).k;
+  const tot = perfis.length;
+  const ativos = perfis.filter(p => sit(p) === 'ativo').length;
+  const expirados = perfis.filter(p => sit(p) === 'expirado').length;
+  const matric = perfis.filter(p => sit(p) === 'matriculado').length;
+  const engaj = perfis.filter(p => info(p).n > 0).length;
+  const semUso = perfis.filter(p => !info(p).n && !p.ultimo_acesso).length;
+  const conv = tot ? Math.round(matric / tot * 100) : 0;
+
+  const termo = _normBusca(LDG.busca || '');
+  const lista = perfis.filter(p => {
+    const k = sit(p), a = info(p);
+    if (LDG.filtro === 'ativos' && k !== 'ativo') return false;
+    if (LDG.filtro === 'expirados' && k !== 'expirado') return false;
+    if (LDG.filtro === 'matriculados' && k !== 'matriculado') return false;
+    if (LDG.filtro === 'engajados' && !a.n) return false;
+    if (LDG.filtro === 'semuso' && (a.n || p.ultimo_acesso)) return false;
+    if (termo && !_normBusca((p.nome || '') + ' ' + (p.email || '') + ' ' + (p.telefone || '')).includes(termo)) return false;
+    return true;
+  });
+
+  const tile = (v, l, cls) => '<div class="rvp-tile ' + (cls || '') + '"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+  const chip = (id, label, qtd) => '<button class="qbk-chip' + (LDG.filtro === id ? ' active' : '') + '" onclick="LDG.filtro=\'' + id + '\';_ldgRender()">' + label + ' <span class="qbk-chip-count">' + qtd + '</span></button>';
+
+  const linhas = lista.map(p => {
+    const a = info(p), s = _ldgSituacao(p);
+    const taxa = a.n ? Math.round(a.ok / a.n * 100) : null;
+    const nomeEsc = String(p.nome || '').replace(/"/g, '&quot;');
+    const zap = _ldgZap(p);
+    const aberto = LDG.aberto === p.id;
+    const temasHtml = Object.keys(a.temas).sort((x, y) => a.temas[y].n - a.temas[x].n)
+      .map(t => '<span class="ldg-tema">' + (typeof _nomeCurtoTema === 'function' ? _nomeCurtoTema(t) : t) + ' <b>' + a.temas[t].ok + '/' + a.temas[t].n + '</b></span>').join('') || '<span style="color:var(--radix-text-muted);">Nenhuma questão respondida ainda.</span>';
+    const acoes = [];
+    if (zap) acoes.push('<a class="btn-icon" title="Chamar no WhatsApp" href="' + zap + '" target="_blank" rel="noopener" style="color:#25D366;text-decoration:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>');
+    if (s.k !== 'matriculado') acoes.push('<button class="btn-icon success" title="Matricular (aprovar acesso completo)" onclick="_ldgStatus(\'' + p.id + '\',\'aprovado\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>');
+    if (s.k === 'ativo' || s.k === 'expirado') acoes.push('<button class="btn-icon" title="Estender a degustação por mais 7 dias" onclick="_ldgEstender(\'' + p.id + '\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>');
+    if (s.k === 'ativo' || s.k === 'expirado') acoes.push('<button class="btn-icon danger" title="Bloquear" onclick="_ldgStatus(\'' + p.id + '\',\'bloqueado\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>');
+    acoes.push('<button class="btn-icon" title="' + (aberto ? 'Fechar detalhe' : 'Ver detalhe') + '" onclick="LDG.aberto = LDG.aberto === \'' + p.id + '\' ? null : \'' + p.id + '\'; _ldgRender()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (aberto ? '<polyline points="18 15 12 9 6 15"/>' : '<polyline points="6 9 12 15 18 9"/>') + '</svg></button>');
+
+    return '<tr>' +
+      '<td><div style="display:flex;align-items:center;gap:10px;"><span style="display:inline-flex;border-radius:50%;">' + avatarHTML(p, 32) + '</span><div><strong style="display:block;">' + nomeEsc + '</strong><span style="font-size:11.5px;color:var(--radix-text-muted);">' + String(p.email || '') + '</span></div></div></td>' +
+      '<td style="white-space:nowrap;">' + (p.telefone ? '<a href="' + zap + '" target="_blank" rel="noopener" style="color:var(--radix-success);text-decoration:none;font-weight:600;">' + String(p.telefone).replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3') + '</a>' : '<span style="color:var(--radix-text-muted);">—</span>') + '</td>' +
+      '<td style="white-space:nowrap;"><span title="Início ' + _ldgData(p.degustacao_inicio) + ' · fim ' + _ldgData(p.degustacao_ate) + '">' + _ldgData(p.degustacao_inicio || p.criado_em) + '</span></td>' +
+      '<td><span class="ldg-sit ' + s.k + '">' + s.l + '</span></td>' +
+      '<td style="white-space:nowrap;">' + _ldgRel(p.ultimo_acesso) + '</td>' +
+      '<td style="white-space:nowrap;">' + (a.n ? '<b>' + a.n + '</b> <small style="color:var(--radix-text-muted);">· ' + taxa + '% de acerto</small>' : '<span style="color:var(--radix-text-muted);">0</span>') + '</td>' +
+      '<td style="text-align:center;">' + (a.sims || '<span style="color:var(--radix-text-muted);">0</span>') + '</td>' +
+      '<td style="text-align:center;">' + (a.plano ? '<span class="rvp-chip ok">sim</span>' : '<span style="color:var(--radix-text-muted);">não</span>') + '</td>' +
+      '<td style="text-align:right;white-space:nowrap;"><div style="display:flex;gap:6px;justify-content:flex-end;">' + acoes.join('') + '</div></td>' +
+      '</tr>' +
+      (aberto ? '<tr class="ldg-det"><td colspan="9"><div class="ldg-det-grid">' +
+        '<div><div class="ldg-det-l">Questões por assunto</div><div class="ldg-temas">' + temasHtml + '</div></div>' +
+        '<div><div class="ldg-det-l">Linha do tempo</div>' +
+          '<div>Cadastro: <b>' + _ldgData(p.criado_em) + '</b> · Degustação: <b>' + _ldgData(p.degustacao_inicio) + '</b> → <b>' + _ldgData(p.degustacao_ate) + '</b></div>' +
+          '<div>Última questão: <b>' + (a.ultima ? new Date(a.ultima).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—') + '</b> · Simulados: <b>' + a.sims + '</b> · Plano da Revisão Final: <b>' + (a.plano ? 'montou' : 'não montou') + '</b></div>' +
+          '<div>Turma: <b>' + (turmaPorId(p.turma) ? turmaPorId(p.turma).nome : '—') + '</b> · CPF: <b>' + (p.cpf ? String(p.cpf).replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4') : '—') + '</b></div>' +
+        '</div></div></td></tr>' : '');
+  }).join('');
+
+  main.innerHTML =
+    '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderGerenciarAlunos()">Gerenciar Alunos</a> / Degustação</div>' +
+    '<h2 class="section-title"><span class="section-title-accent"></span>Degustação · leads</h2>' +
+    '<div class="tagline-bar">Quem se cadastrou pelos 7 dias grátis, quanto usou e quem virou matrícula. Matricular = aprovar o acesso completo.</div>' +
+    '<div class="rvp-tiles">' +
+      tile(tot, 'leads no total') +
+      tile(ativos, 'em degustação agora', 'ok') +
+      tile(expirados, 'expiradas sem matrícula', 'warn') +
+      tile(engaj + ' <small>de ' + tot + '</small>', 'responderam questões') +
+      tile(matric + ' <small>· ' + conv + '%</small>', 'matriculados (conversão)', 'ok') +
+    '</div>' +
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">' +
+      '<div class="qbk-chips" style="margin:0;">' +
+        chip('todos', 'Todos', tot) + chip('ativos', 'Ativos', ativos) + chip('expirados', 'Expirados', expirados) +
+        chip('engajados', 'Responderam', engaj) + chip('semuso', 'Sem uso', semUso) + chip('matriculados', 'Matriculados', matric) +
+      '</div>' +
+      '<div class="qbk-busca-wrap" style="flex:1;min-width:220px;margin:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
+        '<input type="text" class="qbk-busca" placeholder="Buscar por nome, e-mail ou WhatsApp" value="' + String(LDG.busca || '').replace(/"/g, '&quot;') + '" oninput="LDG.busca=this.value;clearTimeout(LDG._t);LDG._t=setTimeout(_ldgRender,180)"></div>' +
+      '<button class="btn btn-secondary" style="padding:8px 14px;font-size:12.5px;" onclick="renderLeadsDegustacao()">Atualizar</button>' +
+    '</div>' +
+    (tot === 0
+      ? '<div class="ldg-empty">Nenhum lead ainda. Quem clicar em "Conhecer a plataforma por 7 dias" na página inicial aparece aqui.</div>'
+      : (lista.length === 0
+        ? '<div class="ldg-empty">Nenhum lead neste filtro.</div>'
+        : '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table"><thead><tr>' +
+          '<th>Lead</th><th>WhatsApp</th><th>Início</th><th>Situação</th><th>Último acesso</th><th>Questões</th><th style="text-align:center;">Simulados</th><th style="text-align:center;" title="Montou o plano da Revisão Final">Plano RF</th><th style="text-align:right;">Ações</th>' +
+          '</tr></thead><tbody>' + linhas + '</tbody></table></div>'));
+  const inp = main.querySelector('.qbk-busca');
+  if (inp && LDG.busca) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+
+async function _ldgStatus(id, novo) {
+  const p = (LDG.dados && LDG.dados.perfis.find(x => x.id === id)) || {};
+  const acao = novo === 'aprovado' ? 'matricular (liberar acesso completo para)' : 'bloquear';
+  if (!confirm('Confirma ' + acao + ' ' + (p.nome || 'este lead') + '?')) return;
+  const { error } = await sb.from('perfis').update({ status: novo }).eq('id', id);
+  if (error) { alert('Erro: ' + error.message); return; }
+  if (typeof atualizarBadgePendentes === 'function') atualizarBadgePendentes();
+  renderLeadsDegustacao();
+}
+async function _ldgEstender(id) {
+  const p = (LDG.dados && LDG.dados.perfis.find(x => x.id === id)) || {};
+  const base = Math.max(Date.now(), p.degustacao_ate ? new Date(p.degustacao_ate).getTime() : 0);
+  const nova = new Date(base + DEGUSTACAO.dias * 86400000);
+  if (!confirm('Estender a degustação de ' + (p.nome || 'este lead') + ' até ' + nova.toLocaleDateString('pt-BR') + '?')) return;
+  const { error } = await sb.from('perfis').update({ degustacao_ate: nova.toISOString(), status: 'degustacao' }).eq('id', id);
+  if (error) { alert('Erro: ' + error.message); return; }
+  renderLeadsDegustacao();
+}
+
 async function renderGerenciarAlunos() {
   state.view = 'gerenciar-alunos';
   const main = document.getElementById('main-content');
@@ -15266,6 +15478,7 @@ async function renderGerenciarAlunos() {
       <div class="stat-card"><div class="label">Pendentes</div><div class="value" style="color:#E65100;">${pendentesT}</div></div>
       <div class="stat-card"><div class="label">Aprovados</div><div class="value" style="color:#16A34A;">${aprovadosT}</div></div>
       <div class="stat-card"><div class="label">Bloqueados</div><div class="value" style="color:var(--radix-red);">${bloqueadosT}</div></div>
+      <div class="stat-card" style="cursor:pointer;" onclick="renderLeadsDegustacao()" title="Abrir o detalhamento dos leads da degustação"><div class="label">Em degustação</div><div class="value" style="color:var(--radix-cyan,#0891b2);">${degustT}</div><div class="sub">ver detalhamento →</div></div>
       <div class="stat-card"><div class="label">Total</div><div class="value">${totalGeral}</div></div>
     </div>
 
@@ -15406,7 +15619,7 @@ function filtrarAlunos() {
     ` : ''}
 
     ${degust.length > 0 ? `
-      <h3 class="section-title"><span class="section-title-accent"></span>🧪 Em degustação (${degust.length}) <small style="font-weight:400;font-size:12px;color:var(--radix-gray-light)">leads de ${DEGUSTACAO.dias} dias · ${degust.filter(p => p.degustacao_ate && new Date(p.degustacao_ate) < new Date()).length} expirada(s) · aprovar = matricular</small></h3>
+      <h3 class="section-title"><span class="section-title-accent"></span>🧪 Em degustação (${degust.length}) <small style="font-weight:400;font-size:12px;color:var(--radix-gray-light)">leads de ${DEGUSTACAO.dias} dias · ${degust.filter(p => p.degustacao_ate && new Date(p.degustacao_ate) < new Date()).length} expirada(s) · aprovar = matricular · <a onclick="renderLeadsDegustacao()" style="cursor:pointer;color:var(--radix-cyan,#0891b2);font-weight:700;">ver detalhamento →</a></small></h3>
       ${renderListaAlunos(degust, 'degustacao')}
     ` : ''}
 
@@ -15851,7 +16064,7 @@ function renderListaAlunos(perfis, statusAtual) {
                         </button>
                       `}
 
-                      ${statusAtual === 'pendente' || statusAtual === 'bloqueado' ? `
+                      ${statusAtual === 'pendente' || statusAtual === 'bloqueado' || statusAtual === 'degustacao' ? `
                         <button class="btn-icon success" title="Aprovar / Reativar" onclick="mudarStatusAluno('${p.id}','aprovado')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
@@ -15863,7 +16076,7 @@ function renderListaAlunos(perfis, statusAtual) {
                         </button>
                       ` : ''}
 
-                      ${statusAtual === 'aprovado' || statusAtual === 'pendente' ? `
+                      ${statusAtual === 'aprovado' || statusAtual === 'pendente' || statusAtual === 'degustacao' ? `
                         <button class="btn-icon danger" title="Bloquear" onclick="mudarStatusAluno('${p.id}','bloqueado')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                         </button>
