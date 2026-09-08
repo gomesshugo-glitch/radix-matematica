@@ -15835,20 +15835,41 @@ function _ldgRender() {
 // Ao mudar o status para aprovado, o banco dispara o e-mail de aviso ao aluno
 // (trigger trg_email_aluno_aprovado, que chama a Resend). O registro fica em
 // email_enviado. Aqui só conferimos se saiu, pra o professor não ficar no escuro.
+// Devolve o resultado REAL do envio. A linha em email_enviado é gravada antes
+// de a Resend responder, então ela sozinha não prova entrega: a RPC lê a
+// resposta HTTP da chamada. Como o envio é assíncrono, damos um tempo curto
+// para a resposta chegar antes de desistir.
 async function _avisoAprovacaoSaiu(alunoId) {
-  try {
-    const desde = new Date(Date.now() - 120000).toISOString();
-    const { data } = await sb.from('email_enviado')
-      .select('assunto, criado_em')
-      .eq('aluno_id', alunoId).gte('criado_em', desde)
-      .order('criado_em', { ascending: false }).limit(1);
-    return (data && data.length) ? data[0] : null;
-  } catch (e) { return null; }
+  for (let tentativa = 0; tentativa < 4; tentativa++) {
+    try {
+      const { data, error } = await sb.rpc('fn_status_ultimo_email', { p_aluno_id: alunoId });
+      if (error) return { ok: false, motivo: error.message };
+      if (data && data.encontrado && !data.pendente) {
+        return data.ok
+          ? { ok: true }
+          : { ok: false, motivo: _motivoEmail(data.status, data.detalhe) };
+      }
+      if (data && !data.encontrado) return { ok: false, motivo: 'o banco não chegou a montar o e-mail' };
+    } catch (e) { return { ok: false, motivo: String(e.message || e) }; }
+    await new Promise(r => setTimeout(r, 700));
+  }
+  return { ok: null, motivo: 'o envio ainda estava em andamento' };
 }
-function _avisoFalhou(nome) {
-  return nome + ' foi matriculado, mas o e-mail de aviso NÃO saiu.\n\n'
-    + 'Confira se os segredos resend_api_key e resend_remetente estão no Vault do Supabase. '
-    + 'O acesso do aluno já está liberado de qualquer forma.';
+// Traduz os erros mais comuns da Resend para linguagem de gente.
+function _motivoEmail(status, detalhe) {
+  const d = String(detalhe || '');
+  if (/not verified|verify a domain|only send testing emails/i.test(d)) {
+    return 'o domínio ainda não está verificado na Resend, então ela só aceita enviar para o seu próprio e-mail. '
+         + 'Verifique radixmatematica.com.br em resend.com/domains e o envio passa a funcionar para todos.';
+  }
+  if (/restricted/i.test(d)) return 'a chave da Resend não tem permissão de envio.';
+  if (status === 401 || status === 403) return 'a Resend recusou a chave ou o remetente (HTTP ' + status + ').';
+  return 'a Resend respondeu HTTP ' + (status || '?') + '. ' + d.slice(0, 160);
+}
+function _avisoFalhou(nome, motivo) {
+  return nome + ' teve o acesso liberado normalmente, mas o e-mail de aviso NÃO saiu.\n\n'
+    + 'Motivo: ' + (motivo || 'não identificado') + '\n\n'
+    + 'Avise o aluno por WhatsApp desta vez.';
 }
 
 async function _ldgStatus(id, novo) {
@@ -15863,9 +15884,9 @@ async function _ldgStatus(id, novo) {
   if (error) { alert('Erro: ' + error.message); return; }
   if (novo === 'aprovado') {
     const env = await _avisoAprovacaoSaiu(id);
-    alert(env
+    alert(env.ok
       ? nome + ' foi matriculado e avisado por e-mail' + (p.email ? ' em ' + p.email : '') + '.'
-      : _avisoFalhou(nome));
+      : _avisoFalhou(nome, env.motivo));
   }
   if (typeof atualizarBadgePendentes === 'function') atualizarBadgePendentes();
   renderLeadsDegustacao();
@@ -16575,12 +16596,12 @@ async function liberarDegustacao(alunoId) {
 
   const env = await _avisoAprovacaoSaiu(alunoId);
   const ateFmt = ate.toLocaleDateString('pt-BR');
-  alert(env
+  alert(env.ok
     ? nome + ' está em teste até ' + ateFmt + ' e foi avisado por e-mail'
       + (p.email ? ' em ' + p.email : '') + '.'
     : nome + ' está em teste até ' + ateFmt + ', mas o e-mail de aviso NÃO saiu.\n\n'
-      + 'Confira se os segredos resend_api_key e resend_remetente estão no Vault do Supabase. '
-      + 'O acesso de teste já está valendo de qualquer forma.');
+      + 'Motivo: ' + (env.motivo || 'não identificado') + '\n\n'
+      + 'Avise o aluno por WhatsApp desta vez.');
   renderGerenciarAlunos();
   atualizarBadgePendentes();
 }
@@ -16601,9 +16622,9 @@ async function mudarStatusAluno(alunoId, novoStatus) {
   if (error) { alert('Erro: ' + error.message); return; }
   if (novoStatus === 'aprovado') {
     const env = await _avisoAprovacaoSaiu(alunoId);
-    alert(env
+    alert(env.ok
       ? nomeAtual + ' foi aprovado e avisado por e-mail' + (pAtual.email ? ' em ' + pAtual.email : '') + '.'
-      : _avisoFalhou(nomeAtual));
+      : _avisoFalhou(nomeAtual, env.motivo));
   }
   renderGerenciarAlunos();
   atualizarBadgePendentes();
