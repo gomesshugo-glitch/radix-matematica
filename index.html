@@ -7563,10 +7563,10 @@ function mostrarTelaAguardandoAprovacao(perfil) {
         </div>
         <h2 class="status-titulo">Aguardando aprovação</h2>
         <p class="status-msg">
-          Olá, <strong>${perfil.nome}</strong>. Seu cadastro foi recebido e está aguardando aprovação do professor.
+          Olá, <strong>${_escHtml(perfil.nome)}</strong>. Seu cadastro foi recebido e está aguardando aprovação do professor.
           Você receberá um e-mail assim que for liberado.
         </p>
-        <div class="status-meta">E-mail cadastrado: <b>${perfil.email}</b></div>
+        <div class="status-meta">E-mail cadastrado: <b>${_escHtml(perfil.email)}</b></div>
         <button class="btn btn-secondary" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
       </div>
     </div>
@@ -7623,7 +7623,7 @@ function mostrarTelaBloqueado(perfil) {
         </div>
         <h2 class="status-titulo">Acesso bloqueado</h2>
         <p class="status-msg">
-          <strong>${perfil.nome}</strong>, seu acesso à plataforma Radix está bloqueado.
+          <strong>${_escHtml(perfil.nome)}</strong>, seu acesso à plataforma Radix está bloqueado.
           Entre em contato com o professor Hugo Gomes para regularizar sua situação.
         </p>
         <button class="btn btn-secondary" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
@@ -7673,7 +7673,7 @@ async function comprimirFoto(file, maxSize = 400, quality = 0.85) {
 function avatarHTML(perfil, size = 36) {
   const iniciais = (perfil?.nome || '?').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
   if (perfil?.foto_base64) {
-    return `<img src="${perfil.foto_base64}" class="avatar-img" style="width:${size}px;height:${size}px;" alt="${perfil.nome}">`;
+    return `<img src="${perfil.foto_base64}" class="avatar-img" style="width:${size}px;height:${size}px;" alt="${_escHtml(perfil.nome)}">`;
   }
   return `<div class="avatar-iniciais" style="width:${size}px;height:${size}px;font-size:${size*0.4}px;">${iniciais}</div>`;
 }
@@ -7698,7 +7698,7 @@ function abrirFotoAluno(alunoId) {
   const iniciais = (p.nome || '?').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
 
   const fotoHtml = p.foto_base64
-    ? `<img src="${p.foto_base64}" alt="${p.nome.replace(/"/g,'&quot;')}"
+    ? `<img src="${p.foto_base64}" alt="${_escHtml(p.nome)}"
             style="width:320px;height:320px;border-radius:50%;object-fit:cover;border:4px solid var(--radix-surface,#fff);box-shadow:0 12px 40px rgba(0,0,0,0.35);">`
     : `<div style="width:320px;height:320px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#0891b2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:96px;font-weight:700;letter-spacing:.02em;border:4px solid var(--radix-surface,#fff);box-shadow:0 12px 40px rgba(0,0,0,0.35);">${iniciais}</div>`;
 
@@ -7728,8 +7728,8 @@ function abrirFotoAluno(alunoId) {
 
         <div style="margin:6px 0 14px;">${fotoHtml}</div>
 
-        <h3 style="margin:0 0 4px;font-size:20px;font-weight:700;color:var(--radix-text,#111);">${p.nome}</h3>
-        <div style="font-size:13px;color:var(--radix-text-muted,#6b7280);word-break:break-word;">${p.email || ''}</div>
+        <h3 style="margin:0 0 4px;font-size:20px;font-weight:700;color:var(--radix-text,#111);">${_escHtml(p.nome)}</h3>
+        <div style="font-size:13px;color:var(--radix-text-muted,#6b7280);word-break:break-word;">${_escHtml(p.email || '')}</div>
 
         <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px;">
           ${turmaBadge}
@@ -7794,7 +7794,7 @@ function mostrarTelaTelefoneObrigatorio() {
         </div>
         <h2 class="status-titulo">Complete seu cadastro</h2>
         <p class="status-msg">
-          Olá, <strong>${state.usuario.nome}</strong>. Para usar a plataforma,
+          Olá, <strong>${_escHtml(state.usuario.nome)}</strong>. Para usar a plataforma,
           precisamos do seu <strong>WhatsApp com DDD</strong>. Ele é usado para
           enviar avisos importantes do curso (cronograma, materiais, gabaritos).
         </p>
@@ -7896,7 +7896,7 @@ function mostrarTelaTurmaObrigatoria() {
         </div>
         <h2 class="status-titulo">Escolha sua turma</h2>
         <p class="status-msg">
-          Olá, <strong>${state.usuario.nome}</strong>. Pra finalizar seu cadastro,
+          Olá, <strong>${_escHtml(state.usuario.nome)}</strong>. Pra finalizar seu cadastro,
           escolha em qual <strong>turma do curso</strong> você está matriculado.
           Isso me ajuda a mandar avisos certos pra você (cronograma, materiais, aula extra).
         </p>
@@ -8003,7 +8003,7 @@ function mostrarTelaUploadFotoObrigatorio() {
         </div>
         <h2 class="status-titulo">Adicione sua foto</h2>
         <p class="status-msg">
-          Olá, <strong>${state.usuario.nome}</strong>. Pra completar seu cadastro, precisamos da sua foto de perfil. Ela ajuda o professor a te identificar e personaliza sua experiência na plataforma.
+          Olá, <strong>${_escHtml(state.usuario.nome)}</strong>. Pra completar seu cadastro, precisamos da sua foto de perfil. Ela ajuda o professor a te identificar e personaliza sua experiência na plataforma.
         </p>
 
         <div id="foto-preview-wrap" style="margin:0 auto 22px;">
@@ -8309,7 +8309,7 @@ async function abrirMeuPerfil() {
             <div style="position:absolute;bottom:-2px;right:-2px;background:var(--radix-grad-brand);color:#0e1a36;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--radix-surface);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           </div>
           <div>
-            <div style="font-size:18px;font-weight:700;color:var(--radix-text);">${p.nome}</div>
+            <div style="font-size:18px;font-weight:700;color:var(--radix-text);">${_escHtml(p.nome)}</div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
               <span style="font-size:12px;color:var(--radix-text-muted);font-weight:600;">${isProf ? 'Professor' : 'Aluno'}</span>
               <span style="background:${statusInfo.bg};color:${statusInfo.fg};padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${statusInfo.label}</span>
@@ -8322,7 +8322,7 @@ async function abrirMeuPerfil() {
 
         <div class="form-group">
           <label>Nome completo</label>
-          <input type="text" id="meu-nome" value="${p.nome}">
+          <input type="text" id="meu-nome" value="${_escHtml(p.nome)}">
         </div>
 
         <div class="form-group">
@@ -8346,7 +8346,7 @@ async function abrirMeuPerfil() {
 
         <div class="form-group">
           <label>E-mail <span style="color:var(--radix-gray-light);font-size:11px;font-weight:400;">(não editável)</span></label>
-          <input type="email" value="${p.email}" disabled style="background:#F3F4F6;color:var(--radix-gray-light);cursor:not-allowed;">
+          <input type="email" value="${_escHtml(p.email)}" disabled style="background:#F3F4F6;color:var(--radix-gray-light);cursor:not-allowed;">
         </div>
 
         <div class="form-group">
@@ -8356,7 +8356,7 @@ async function abrirMeuPerfil() {
 
         <div class="form-group">
           <label>Alterar senha</label>
-          <button class="btn btn-secondary" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;" onclick="solicitarTrocaSenha('${p.email}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Enviar link de troca de senha pro meu e-mail</button>
+          <button class="btn btn-secondary" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;" onclick="solicitarTrocaSenha(state.usuario.email)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Enviar link de troca de senha pro meu e-mail</button>
         </div>
 
         <div class="modal-acoes">
@@ -8507,7 +8507,7 @@ function atualizarHeaderAvatar() {
   el.innerHTML = `
     <span style="display:inline-flex;align-items:center;gap:8px;">
       ${avatarHTML(state.usuario, avatarSize)}
-      <span>${state.usuario.nome} <span style="opacity:0.7;">(${perfilLabel})</span></span>
+      <span>${_escHtml(state.usuario.nome)} <span style="opacity:0.7;">(${perfilLabel})</span></span>
     </span>
   `;
 }
@@ -8940,7 +8940,7 @@ function renderDashboardAluno() {
             <div class="v3-week-row v3-week-${s._vstatus}" onclick="${clickAction}">
               <div class="v3-week-num">${String(s.n).padStart(2,'0')}</div>
               <div class="v3-week-body">
-                <div class="v3-week-title">${s.titulo}</div>
+                <div class="v3-week-title">${_escHtml(s.titulo)}</div>
                 <div class="v3-week-meta">${tema ? tema.nome : 'Sem tema'}${matsCount > 0 ? ' · ' + matsCount + ' material' + (matsCount > 1 ? 'is' : '') : ''}</div>
               </div>
               <span class="v3-week-pill v3-week-pill-${s._vstatus}">${s._vstatus === 'now' ? 'Agora' : s._vstatus === 'todo' ? 'A seguir' : 'Concluída'}</span>
@@ -11502,7 +11502,7 @@ function renderTelaQuestoes() {
                   onchange="selecionarProva(this.value)" style="min-width:170px;">
             <option value="" ${!provaAtual ? 'selected' : ''}>Todas as provas</option>
             ${provas.map(([nome, cnt]) => {
-              const nomeEsc = String(nome).replace(/[<>&]/g,'').replace(/"/g,'&quot;');
+              const nomeEsc = _escHtml(nome);
               return `<option value="${nomeEsc}" ${provaAtual === nome ? 'selected' : ''}>${nomeEsc} (${cnt})</option>`;
             }).join('')}
           </select>
@@ -15016,7 +15016,7 @@ function _renderTabelaMetricas() {
             const semTxt = l.semIniciadas === 0 ? '—' : (l.semConcluidas + '+' + (l.semIniciadas - l.semConcluidas));
             const diasTxt = l.diasDesde == null ? '—' : (l.diasDesde === 0 ? 'Hoje' : l.diasDesde === 1 ? '1 dia' : l.diasDesde + ' dias');
             // Avatar: foto se existir, senão inicial do nome com cor derivada do id
-            const nomeEsc = (l.nome || '').replace(/[<>&]/g,'');
+            const nomeEsc = _escHtml(l.nome || '');
             const inicial = (l.nome || '?').trim().charAt(0).toUpperCase();
             const avatarHtml = l.foto
               ? `<img class="met-avatar" src="${l.foto}" alt="${nomeEsc}" onclick="abrirFotoAlunoMetricas('${l.id}', this.src)">`
@@ -15028,7 +15028,7 @@ function _renderTabelaMetricas() {
                     ${avatarHtml}
                     <div class="met-aluno-info">
                       <div class="met-nome">${nomeEsc}</div>
-                      <div class="met-email">${(l.email || '').replace(/[<>&]/g,'')}</div>
+                      <div class="met-email">${_escHtml(l.email || '')}</div>
                     </div>
                   </div>
                 </td>
@@ -15209,7 +15209,7 @@ function renderRelatorioProfessor() {
             ${ranking.map((a, i) => `
               <tr>
                 <td><strong>${['🥇','🥈','🥉'][i] || (i+1)+'º'}</strong></td>
-                <td><strong>${a.nome}</strong></td>
+                <td><strong>${_escHtml(a.nome)}</strong></td>
                 <td>${a.total}</td>
                 <td>${a.acertos}</td>
                 <td><strong style="color:${a.taxa>=70?'#16A34A':a.taxa>=50?'#EA580C':'#DC2626'};">${a.taxa}%</strong></td>
@@ -15396,7 +15396,7 @@ function _ldgRender() {
   const linhas = lista.map(p => {
     const a = info(p), s = _ldgSituacao(p);
     const taxa = a.n ? Math.round(a.ok / a.n * 100) : null;
-    const nomeEsc = String(p.nome || '').replace(/"/g, '&quot;');
+    const nomeEsc = _escHtml(p.nome || '');
     const zap = _ldgZap(p);
     const aberto = LDG.aberto === p.id;
     const temasHtml = Object.keys(a.temas).sort((x, y) => a.temas[y].n - a.temas[x].n)
@@ -15409,7 +15409,7 @@ function _ldgRender() {
     acoes.push('<button class="btn-icon" title="' + (aberto ? 'Fechar detalhe' : 'Ver detalhe') + '" onclick="LDG.aberto = LDG.aberto === \'' + p.id + '\' ? null : \'' + p.id + '\'; _ldgRender()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (aberto ? '<polyline points="18 15 12 9 6 15"/>' : '<polyline points="6 9 12 15 18 9"/>') + '</svg></button>');
 
     return '<tr>' +
-      '<td><div style="display:flex;align-items:center;gap:10px;"><span style="display:inline-flex;border-radius:50%;">' + avatarHTML(p, 32) + '</span><div><strong style="display:block;">' + nomeEsc + '</strong><span style="font-size:11.5px;color:var(--radix-text-muted);">' + String(p.email || '') + '</span></div></div></td>' +
+      '<td><div style="display:flex;align-items:center;gap:10px;"><span style="display:inline-flex;border-radius:50%;">' + avatarHTML(p, 32) + '</span><div><strong style="display:block;">' + nomeEsc + '</strong><span style="font-size:11.5px;color:var(--radix-text-muted);">' + _escHtml(p.email || '') + '</span></div></div></td>' +
       '<td style="white-space:nowrap;">' + (p.telefone ? '<a href="' + zap + '" target="_blank" rel="noopener" style="color:var(--radix-success);text-decoration:none;font-weight:600;">' + String(p.telefone).replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3') + '</a>' : '<span style="color:var(--radix-text-muted);">—</span>') + '</td>' +
       '<td style="white-space:nowrap;"><span title="Início ' + _ldgData(p.degustacao_inicio) + ' · fim ' + _ldgData(p.degustacao_ate) + '">' + _ldgData(p.degustacao_inicio || p.criado_em) + '</span></td>' +
       '<td><span class="ldg-sit ' + s.k + '">' + s.l + '</span></td>' +
@@ -15871,6 +15871,14 @@ function notificarWhatsTurma(turmaId) {
 
 // Envio individual: abre o modal de WhatsApp pré-filtrado para UM aluno só.
 // Chamada do botão verde na linha do Gerenciar Alunos.
+// Handlers inline recebem só o id: nome/e-mail nunca entram em atributo HTML nem em string JS.
+function _alunoDaLista(id) {
+  return (state._alunoListaAtual || []).find(p => p.id === id)
+      || (typeof LDG !== 'undefined' && LDG.dados && LDG.dados.perfis.find(p => p.id === id)) || null;
+}
+function notificarWhatsAlunoId(id) { const p = _alunoDaLista(id); if (!p) { alert('Aluno não encontrado.'); return; } notificarWhatsAluno(p.id, p.nome, p.telefone); }
+function reenviarSenhaAlunoId(id)  { const p = _alunoDaLista(id); if (!p) { alert('Aluno não encontrado.'); return; } reenviarSenhaAluno(p.email, p.nome); }
+function excluirAlunoId(id)        { const p = _alunoDaLista(id); if (!p) { alert('Aluno não encontrado.'); return; } excluirAluno(p.id, p.nome); }
 function notificarWhatsAluno(alunoId, nome, telefone) {
   if (!telefone) {
     alert(`${nome} não tem WhatsApp cadastrado.\n\nEdite o aluno para adicionar o número antes de mandar mensagem.`);
@@ -16059,11 +16067,11 @@ function renderListaAlunos(perfis, statusAtual) {
                           onclick="abrirFotoAluno('${p.id}')">
                       ${avatarHTML(p, 32)}
                     </span>
-                    <strong>${p.nome}</strong>
+                    <strong>${_escHtml(p.nome)}</strong>
                     ${isProf ? '<span title="Professor" style="background:rgba(34,211,238,0.18);color:var(--radix-cyan,#0891b2);padding:1px 6px;border-radius:4px;font-size:9.5px;font-weight:800;letter-spacing:.05em;">PROF</span>' : ''}
                   </div>
                 </td>
-                <td class="col-email" title="${p.email.replace(/"/g,'&quot;')}">${p.email}</td>
+                <td class="col-email" title="${_escHtml(p.email)}">${_escHtml(p.email)}</td>
                 <td style="white-space:nowrap;">${waLink}</td>
                 <td style="white-space:nowrap;text-align:center;">${(() => {
                   if (isProf) return '<span style="color:var(--radix-text-muted);font-size:12px;">—</span>';
@@ -16090,7 +16098,7 @@ function renderListaAlunos(perfis, statusAtual) {
                       </button>
 
                       ${p.telefone ? `
-                        <button class="btn-icon" title="Enviar WhatsApp para ${p.nome.replace(/"/g,'&quot;')}" style="color:#25D366;" onclick="notificarWhatsAluno('${p.id}','${p.nome.replace(/'/g, '\\\'')}','${p.telefone}')">
+                        <button class="btn-icon" title="Enviar WhatsApp para ${_escHtml(p.nome)}" style="color:#25D366;" onclick="notificarWhatsAlunoId('${p.id}')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                         </button>
                       ` : `
@@ -16106,7 +16114,7 @@ function renderListaAlunos(perfis, statusAtual) {
                       ` : ''}
 
                       ${statusAtual === 'aprovado' ? `
-                        <button class="btn-icon" title="Reenviar Senha" onclick="reenviarSenhaAluno('${p.email}','${p.nome.replace(/'/g, '\\\'')}')">
+                        <button class="btn-icon" title="Reenviar Senha" onclick="reenviarSenhaAlunoId('${p.id}')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         </button>
                       ` : ''}
@@ -16117,7 +16125,7 @@ function renderListaAlunos(perfis, statusAtual) {
                         </button>
                       ` : ''}
 
-                      <button class="btn-icon danger" title="Excluir" onclick="excluirAluno('${p.id}','${p.nome.replace(/'/g, '\\\'')}')">
+                      <button class="btn-icon danger" title="Excluir" onclick="excluirAlunoId('${p.id}')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       </button>
                     </div>
@@ -16164,12 +16172,12 @@ async function abrirEditarAluno(alunoId) {
       <div class="modal" style="max-width:520px;">
         <h2>✏️ Editar aluno</h2>
         <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
-          <strong>${p.email}</strong> · ${p.perfil === 'professor' ? '👨‍🏫 Professor' : '🎓 Aluno'}
+          <strong>${_escHtml(p.email)}</strong> · ${p.perfil === 'professor' ? '👨‍🏫 Professor' : '🎓 Aluno'}
         </p>
 
         <div class="form-group">
           <label>Nome completo</label>
-          <input type="text" id="edit-nome" value="${p.nome}">
+          <input type="text" id="edit-nome" value="${_escHtml(p.nome)}">
         </div>
 
         <div class="form-group">
@@ -16758,7 +16766,7 @@ function renderListaModulos() {
               <div class="vsem-secao">
                 <div class="vsem-header">
                   <span class="vsem-num">SEM ${String(sem.n).padStart(2, '0')}</span>
-                  <span class="vsem-tit">${sem.titulo}</span>
+                  <span class="vsem-tit">${_escHtml(sem.titulo)}</span>
                   <span class="vsem-prog ${completo ? 'is-completo' : ''}">${conclSem}/${matsSem.length}${completo ? ' ✓' : ''}</span>
                 </div>
                 ${matsSem.map(m => renderLinhaMaterial(m)).join('')}
@@ -16820,8 +16828,8 @@ function renderLinhaMaterial(m) {
       </button>
       <div class="mrow-tipo ${tipoCls}">${tipoSvg}</div>
       <div class="mrow-info">
-        <div class="mrow-titulo">${m.titulo}</div>
-        ${m.descricao ? `<div class="mrow-desc">${m.descricao}</div>` : ''}
+        <div class="mrow-titulo">${_escHtml(m.titulo)}</div>
+        ${m.descricao ? `<div class="mrow-desc">${_escHtml(m.descricao)}</div>` : ''}
       </div>
       <div class="mrow-meta">${meta}</div>
       <div class="mrow-acao">
@@ -16934,7 +16942,7 @@ function abrirPlayerYouTube(matId) {
     <div class="modal-overlay" onclick="if(event.target===this)fecharPlayer()">
       <div class="modal player-modal" oncontextmenu="event.preventDefault();return false;">
         <div class="player-header">
-          <h2 style="margin:0;">${mat.titulo}</h2>
+          <h2 style="margin:0;">${_escHtml(mat.titulo)}</h2>
           <button class="btn btn-secondary" onclick="fecharPlayer()" style="padding:5px 10px;">Fechar ✕</button>
         </div>
         <div class="video-wrapper" oncontextmenu="event.preventDefault();return false;">
@@ -16942,7 +16950,7 @@ function abrirPlayerYouTube(matId) {
           <div class="video-watermark-corner">${aluno} • ${id_alt}</div>
           <div class="video-watermark-center">${aluno}</div>
         </div>
-        ${mat.descricao ? `<p style="margin-top:14px;color:var(--radix-gray-light);font-size:14px;">${mat.descricao}</p>` : ''}
+        ${mat.descricao ? `<p style="margin-top:14px;color:var(--radix-gray-light);font-size:14px;">${_escHtml(mat.descricao)}</p>` : ''}
         <p style="font-size:11px;color:var(--radix-gray-light);margin-top:10px;text-align:center;">
           🔒 Este vídeo é para uso exclusivo dos alunos da Radix. Sua identificação está marcada na tela.
         </p>
@@ -17156,7 +17164,7 @@ async function renderGerenciarMateriais() {
               return `
                 <div class="gerencia-semana">
                   <div class="gerencia-semana-titulo">
-                    <strong>Semana ${String(sem.n).padStart(2, '0')} · ${sem.data || '—'} · ${sem.titulo}</strong>
+                    <strong>Semana ${String(sem.n).padStart(2, '0')} · ${sem.data || '—'} · ${_escHtml(sem.titulo)}</strong>
                     <span style="display:inline-flex;gap:6px;flex-wrap:wrap;">
                       <button class="btn-mini" title="Adicionar vídeo-aula nesta semana"   onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'aula_youtube')">🎬 + Vídeo</button>
                       <button class="btn-mini" title="Adicionar PDF/apostila nesta semana" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'pdf')">📄 + PDF</button>
@@ -17174,7 +17182,7 @@ async function renderGerenciarMateriais() {
                           <span class="gerencia-mat-ordem">${idx + 1}</span>
                           <span class="gerencia-mat-ico">${ico}</span>
                           <div class="gerencia-mat-info">
-                            <div class="gerencia-mat-titulo">${mat.titulo}${!mat.visivel ? ' (oculto)' : ''}</div>
+                            <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}${!mat.visivel ? ' (oculto)' : ''}</div>
                             <div class="gerencia-mat-tipo">${tipoLabel}${mat.duracao_min ? ' · ' + mat.duracao_min + ' min' : ''}</div>
                           </div>
                           <div class="gerencia-mat-acoes">
@@ -17201,7 +17209,7 @@ async function renderGerenciarMateriais() {
                           <div class="gerencia-mat-item" style="opacity:0.92;">
                             <span class="gerencia-mat-ico">${ico}</span>
                             <div class="gerencia-mat-info">
-                              <div class="gerencia-mat-titulo">${mat.titulo}</div>
+                              <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}</div>
                               <div class="gerencia-mat-tipo">${tipoLabel}${mat.duracao_min ? ' · ' + mat.duracao_min + ' min' : ''} · <span style="color:var(--radix-cyan,#0891b2);font-weight:700;">do Regular</span></div>
                             </div>
                             <div class="gerencia-mat-acoes">
@@ -17232,7 +17240,7 @@ async function renderGerenciarMateriais() {
                         <div class="gerencia-mat-item ${!mat.visivel ? 'oculto' : ''}">
                           <span class="gerencia-mat-ico">${ico}</span>
                           <div class="gerencia-mat-info">
-                            <div class="gerencia-mat-titulo">${mat.titulo}</div>
+                            <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}</div>
                           </div>
                           <div class="gerencia-mat-acoes">
                             <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
@@ -17267,7 +17275,7 @@ async function renderGerenciarMateriais() {
                 <div class="gerencia-mat-item">
                   <span class="gerencia-mat-ico">${ico}</span>
                   <div class="gerencia-mat-info">
-                    <div class="gerencia-mat-titulo">${mat.titulo}</div>
+                    <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}</div>
                   </div>
                   <div class="gerencia-mat-acoes">
                     <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})">✏️</button>
@@ -17360,12 +17368,12 @@ function abrirModalMaterial(material, tipo) {
 
         <div class="form-group">
           <label>Título</label>
-          <input type="text" id="mat-titulo" value="${material?.titulo || ''}" placeholder="Ex: Aula 1 - Função do 1º grau">
+          <input type="text" id="mat-titulo" value="${_escHtml(material?.titulo || '')}" placeholder="Ex: Aula 1 - Função do 1º grau">
         </div>
 
         <div class="form-group">
           <label>Descrição (opcional)</label>
-          <textarea id="mat-desc" rows="2">${material?.descricao || ''}</textarea>
+          <textarea id="mat-desc" rows="2">${_escHtml(material?.descricao || '')}</textarea>
         </div>
 
         ${tipo === 'aula_youtube' ? `
@@ -17637,7 +17645,7 @@ async function renderEditarCronograma() {
                 <tr ${s.cancelada ? 'style="opacity:0.5;text-decoration:line-through;"' : ''}>
                   <td><strong>${String(s.n).padStart(2,'0')}</strong></td>
                   <td>${s.data || '—'}</td>
-                  <td>${s.titulo} ${s._extra ? '<span class="cron-tipo evento-tipo">EXTRA</span>' : ''}</td>
+                  <td>${_escHtml(s.titulo)} ${s._extra ? '<span class="cron-tipo evento-tipo">EXTRA</span>' : ''}</td>
                   <td>${s.tipo || 'normal'}</td>
                   <td style="text-align:right;">
                     <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="editarSemanaCrono(${s.n}, ${s._customId || 'null'})">Editar</button>
@@ -17689,7 +17697,7 @@ function abrirEditorCrono(semana, customId) {
         </div>
         <div class="form-group">
           <label>Título</label>
-          <input type="text" id="crono-titulo" placeholder="Aula sobre..." value="${isNova ? '' : (semana.titulo || '')}">
+          <input type="text" id="crono-titulo" placeholder="Aula sobre..." value="${isNova ? '' : _escHtml(semana.titulo || '')}">
         </div>
         <div class="form-group">
           <label>Tema vinculado (opcional)</label>
@@ -17715,7 +17723,7 @@ function abrirEditorCrono(semana, customId) {
         </div>
         <div class="form-group">
           <label>Observação (opcional)</label>
-          <textarea id="crono-obs" rows="2">${isNova ? '' : (semana.observacao || '')}</textarea>
+          <textarea id="crono-obs" rows="2">${isNova ? '' : _escHtml(semana.observacao || '')}</textarea>
         </div>
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharModalCrono()">Cancelar</button>
@@ -18165,8 +18173,11 @@ async function enviarWhatsLinks(alunos, btnEl) {
       }
 
       try {
+        // lote_id: se a rede cair depois do envio e o app repetir a chamada, a função
+        // reconhece o lote e não manda a mesma mensagem duas vezes (Etapa 6).
+        const loteId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : null;
         const { data, error } = await sb.functions.invoke('enviar-whatsapp', {
-          body: { mensagem: msg, destinatarios }
+          body: { mensagem: msg, destinatarios, lote_id: loteId }
         });
         if (error) throw error;
         enviadasTotal += Number(data?.enviadas) || 0;
@@ -18470,7 +18481,7 @@ function renderSemanaCard(s, mostrarProgresso) {
           <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
           <div class="cron-semana-meta">
             <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
-            <div class="cron-semana-titulo">${s.titulo}</div>
+            <div class="cron-semana-titulo">${_escHtml(s.titulo)}</div>
             ${_chipsTemasSemana(s)}
           </div>
         </div>
@@ -18521,7 +18532,7 @@ function renderSemanaCard(s, mostrarProgresso) {
         <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
         <div class="cron-semana-meta">
           <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
-          <div class="cron-semana-titulo">${s.titulo}</div>
+          <div class="cron-semana-titulo">${_escHtml(s.titulo)}</div>
           ${_chipsTemasSemana(s)}
         </div>
         <div class="cron-semana-status" title="${stLabel}">${stIcon}</div>
@@ -20456,7 +20467,7 @@ function abrirEditorSemana(n) {
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalSemana()">
       <div class="modal" style="max-width:560px;">
-        <h2>Semana ${String(s.n).padStart(2,'0')} — ${s.titulo}</h2>
+        <h2>Semana ${String(s.n).padStart(2,'0')} — ${_escHtml(s.titulo)}</h2>
         <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:18px;">
           Início: ${s.data}/2026 ${tema ? '· Tema: '+tema.nome : ''}
         </p>
