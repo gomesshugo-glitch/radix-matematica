@@ -7062,22 +7062,22 @@ async function carregarDadosAluno() {
   carregarListasSalvas();
 
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
-  const { data: resp } = await sb.from('respostas')
+  const resp = await sbTodas(() => sb.from('respostas')
     .select('*')
     .eq('aluno_id', state.usuario.id)
     .order('respondido_em', { ascending: false })
-    .limit(2000);
+    .order('id', { ascending: false }));
   state.respostasAluno = (resp || []).map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
     data: r.respondido_em, aluno: state.usuario.nome,
     fonte: r.fonte
   }));
-  const { data: sim } = await sb.from('simulados_realizados')
+  const sim = await sbTodas(() => sb.from('simulados_realizados')
     .select('*')
     .eq('aluno_id', state.usuario.id)
     .order('realizado_em', { ascending: false })
-    .limit(500);
+    .order('id', { ascending: false }));
   state.historicoSimulados = (sim || []).map(s => ({
     id: s.id, aluno: state.usuario.nome,
     data: s.realizado_em, acertos: s.acertos,
@@ -7093,10 +7093,18 @@ async function carregarDadosProfessor() {
   const perfilMap = {};
   (perfis || []).forEach(p => perfilMap[p.id] = p);
 
-  const { data: resp } = await sb.from('respostas')
+  // Totais reais (contados no servidor) — não dependem de quantas linhas vieram.
+  const [totResp, totCorretas, totSim] = await Promise.all([
+    sbContar('respostas'),
+    sbContar('respostas', q => q.eq('correto', true)),
+    sbContar('simulados_realizados')
+  ]);
+  state.totais = { respostas: totResp, corretas: totCorretas, simulados: totSim };
+
+  const resp = await sbTodas(() => sb.from('respostas')
     .select('*')
     .order('respondido_em', { ascending: false })
-    .limit(5000);
+    .order('id', { ascending: false }));
   state.respostasAluno = (resp || []).map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
@@ -7107,10 +7115,10 @@ async function carregarDadosProfessor() {
     fonte: r.fonte
   }));
 
-  const { data: sim } = await sb.from('simulados_realizados')
+  const sim = await sbTodas(() => sb.from('simulados_realizados')
     .select('*')
     .order('realizado_em', { ascending: false })
-    .limit(1000);
+    .order('id', { ascending: false }));
   state.historicoSimulados = (sim || []).map(s => ({
     id: s.id,
     aluno: perfilMap[s.aluno_id]?.nome || 'Aluno',
@@ -7125,6 +7133,32 @@ async function carregarDadosProfessor() {
 const SUPABASE_URL = 'https://bvvfalzwpwvkoghmjvom.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_2_YTQi6igB_VeDBE6joJXg_SNPMIHcC';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ====== LEITURA COMPLETA DE TABELAS ======
+// O servidor (PostgREST) devolve no máximo 1000 linhas por requisição, mesmo
+// quando .limit() pede mais. Quem precisa da tabela inteira usa sbTodas(), que
+// pagina com .range() até acabar. Sempre ordene por uma coluna única (id) para
+// as páginas não se sobreporem.
+const SB_PAGINA = 1000;
+async function sbTodas(criarQuery, max) {
+  const teto = max || 40000;
+  const tudo = [];
+  for (let de = 0; de < teto; de += SB_PAGINA) {
+    const { data, error } = await criarQuery().range(de, de + SB_PAGINA - 1);
+    if (error) { console.warn('[sbTodas] parou em ' + de + ':', error.message); break; }
+    tudo.push(...(data || []));
+    if (!data || data.length < SB_PAGINA) break;
+  }
+  return tudo;
+}
+// Contagem real no servidor (não traz linhas).
+async function sbContar(tabela, ajustar) {
+  let q = sb.from(tabela).select('*', { count: 'exact', head: true });
+  if (ajustar) q = ajustar(q);
+  const { count, error } = await q;
+  if (error) { console.warn('[sbContar] ' + tabela + ':', error.message); return null; }
+  return count;
+}
 
 // ====== MODO DEGUSTAÇÃO ======
 // Cadastro novo de aluno entra direto por DEGUSTACAO.dias com acesso à amostra
@@ -8638,7 +8672,10 @@ function renderHome() {
     renderDashboardAluno();
   } else {
     const totalQ = state.questoes.length;
-    const totalA = state.respostasAluno.length;
+    const _tot = state.totais || {};
+    const totalA = _tot.respostas != null ? _tot.respostas : state.respostasAluno.length;
+    const totalCorretas = _tot.corretas != null ? _tot.corretas : state.respostasAluno.filter(r => r.correto).length;
+    const totalSim = _tot.simulados != null ? _tot.simulados : state.historicoSimulados.length;
     main.innerHTML = `
       <h2 class="section-title"><span class="section-title-accent"></span>Painel do Professor</h2>
       <div class="tagline-bar">√ Gerencie o banco de questões e acompanhe o desempenho dos alunos.</div>
@@ -8656,11 +8693,11 @@ function renderHome() {
         </div>
         <div class="stat-card">
           <div class="label">Simulados Realizados</div>
-          <div class="value">${state.historicoSimulados.length}</div>
+          <div class="value">${totalSim}</div>
         </div>
         <div class="stat-card">
           <div class="label">Taxa de Acerto Geral</div>
-          <div class="value">${totalA ? Math.round(state.respostasAluno.filter(r=>r.correto).length / totalA * 100) : 0}%</div>
+          <div class="value">${totalA ? Math.round(totalCorretas / totalA * 100) : 0}%</div>
         </div>
       </div>
       <div class="quick-actions">
@@ -9223,7 +9260,7 @@ async function renderEstatisticasAvancadas() {
   `;
 
   // Buscar média da turma (todas as respostas, agrupadas por tema)
-  const { data: todasResp } = await sb.from('respostas').select('tema, correto').limit(50000);
+  const todasResp = await sbTodas(() => sb.from('respostas').select('tema, correto').order('id', { ascending: true }));
 
   // Stats por tema do aluno
   const meusPorTema = {};
@@ -14662,9 +14699,9 @@ async function renderMetricasAlunos() {
   try {
     const [r1, r2, r3, r4] = await Promise.all([
       sb.from('perfis').select('id, nome, email, turma, perfil, status, foto_base64, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
-      sb.from('respostas').select('aluno_id, tema, correto, data_resposta, fonte'),
-      sb.from('progresso_semanas').select('*'),
-      sb.from('caderno_erros').select('aluno_id, resolvido')
+      sbTodas(() => sb.from('respostas').select('aluno_id, tema, correto, respondido_em, fonte').order('id', { ascending: true })).then(d => ({ data: d })),
+      sbTodas(() => sb.from('progresso_semanas').select('*').order('id', { ascending: true })).then(d => ({ data: d })),
+      sbTodas(() => sb.from('caderno_erros').select('aluno_id, resolvido').order('id', { ascending: true })).then(d => ({ data: d }))
     ]);
     if (r1.error) throw new Error('Perfis: ' + r1.error.message);
     perfis = r1.data || [];
@@ -14734,7 +14771,7 @@ async function renderMetricasAlunos() {
     // Última atividade: max(data de qualquer resposta, data de qualquer save)
     let ultimaResp = null;
     resps.forEach(r => {
-      if (r.data_resposta && (!ultimaResp || r.data_resposta > ultimaResp)) ultimaResp = r.data_resposta;
+      if (r.respondido_em && (!ultimaResp || r.respondido_em > ultimaResp)) ultimaResp = r.respondido_em;
     });
     let ultimaSave = null;
     progs.forEach(x => {
@@ -15306,7 +15343,7 @@ async function renderLeadsDegustacao() {
     let resp = [], sims = [], rev = [];
     if (ids.length) {
       const [r1, r2, r3] = await Promise.all([
-        sb.from('respostas').select('aluno_id, tema, correto, respondido_em').in('aluno_id', ids).limit(20000),
+        sbTodas(() => sb.from('respostas').select('aluno_id, tema, correto, respondido_em').in('aluno_id', ids).order('id', { ascending: true })).then(d => ({ data: d })),
         sb.from('simulados_realizados').select('aluno_id, realizado_em, acertos, total_questoes').in('aluno_id', ids),
         sb.from('revisao_perfil').select('aluno_id').in('aluno_id', ids)
       ]);
