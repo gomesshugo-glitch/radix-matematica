@@ -20,14 +20,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M 7 19 L 10 17 L 14 24 L 20 8 L 26 8' stroke='%23fff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Parsing de gabarito: XLSX (SheetJS) e PDF (pdf.js) — usados só na importação -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-<script>
-  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-</script>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<!-- xlsx (importação), pdf.js (gabarito em PDF) e pdf-lib (gerar PDF) carregam sob demanda: carregarLib() -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6967,7 +6960,83 @@ function sanitizarTextoQuestao(s) {
     .trim();
 }
 
+// ====== BIBLIOTECAS SOB DEMANDA (Etapa 7) ======
+// 550 KB (xlsx + pdf.js + pdf-lib) saíram do carregamento inicial. Cada tela que
+// precisa chama "await carregarLib('...')" antes de usar.
+const LIBS_EXTERNAS = {
+  xlsx:   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+  pdfjs:  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+  pdflib: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'
+};
+const _libsCarregando = {};
+function carregarLib(nome) {
+  const pronta = { xlsx: () => window.XLSX, pdfjs: () => window.pdfjsLib, pdflib: () => window.PDFLib }[nome];
+  if (pronta && pronta()) return Promise.resolve();
+  if (!_libsCarregando[nome]) {
+    _libsCarregando[nome] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = LIBS_EXTERNAS[nome];
+      s.onload = () => {
+        if (nome === 'pdfjs' && window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        res();
+      };
+      s.onerror = () => { delete _libsCarregando[nome]; rej(new Error('Não foi possível carregar ' + nome + '. Verifique a conexão e tente de novo.')); };
+      document.head.appendChild(s);
+    });
+  }
+  return _libsCarregando[nome];
+}
+
+// ====== CACHE LOCAL DO BANCO DE QUESTÕES (Etapa 7) ======
+// O banco (3 MB) fica guardado no IndexedDB do navegador, por usuário, com a
+// versão que o servidor informa (fn_versao_banco: contagem + últimas alterações
+// visíveis para ESTE usuário). Se a versão não mudou, não baixa de novo.
+// Sai no logout. Sem a RPC no servidor, o cache é ignorado.
+const _idb = {
+  db: null,
+  abrir() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      if (typeof indexedDB === 'undefined') { rej(new Error('sem IndexedDB')); return; }
+      const r = indexedDB.open('radix-cache', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onsuccess = () => { this.db = r.result; res(this.db); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async get(k) { const db = await this.abrir(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readonly').objectStore('kv').get(k); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); },
+  async set(k, v) { const db = await this.abrir(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite').objectStore('kv').put(v, k); t.onsuccess = () => res(); t.onerror = () => rej(t.error); }); },
+  async del(k) { const db = await this.abrir(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite').objectStore('kv').delete(k); t.onsuccess = () => res(); t.onerror = () => rej(t.error); }); }
+};
+function _chaveCacheBanco() { return state.usuario && state.usuario.id ? 'banco:' + state.usuario.id : null; }
+async function _cacheBancoLimpar() { try { const k = _chaveCacheBanco(); if (k) await _idb.del(k); } catch (e) {} }
+async function _versaoBanco() {
+  try {
+    const { data, error } = await sb.rpc('fn_versao_banco');
+    if (error || !data) return null;
+    return String(data) + '|' + (state.usuario && state.usuario.status || '');
+  } catch (e) { return null; }
+}
 async function carregarQuestoesDoBanco() {
+  const k = _chaveCacheBanco();
+  const versao = k ? await _versaoBanco() : null;
+  if (k && versao) {
+    try {
+      const c = await _idb.get(k);
+      if (c && c.versao === versao && Array.isArray(c.questoes) && c.questoes.length) {
+        console.log('[Radix] banco do cache local (' + c.questoes.length + ' questões, versão ' + versao.slice(0, 18) + '…).');
+        return c.questoes;
+      }
+    } catch (e) { console.warn('[cache banco] leitura falhou:', e && e.message); }
+  }
+  const remotas = await _carregarQuestoesDoServidor();
+  if (k && versao && remotas && remotas.length) {
+    _idb.set(k, { versao, questoes: remotas, em: Date.now() }).catch(e => console.warn('[cache banco] gravação falhou:', e && e.message));
+  }
+  return remotas;
+}
+
+async function _carregarQuestoesDoServidor() {
   // Busca TODAS as questões no Supabase, em páginas de 1000.
   // O PostgREST tem limite padrão de 1000 linhas por request. Sem paginação
   // o banco "trava" nesse número mesmo que existam mais. Fazemos loop com
@@ -7031,16 +7100,26 @@ async function carregarDados() {
   localStorage.removeItem('radix_respostas');
   localStorage.removeItem('radix_simulados');
 
-  // Questões: lê do Supabase (sem fallback local — QUESTOES_INICIAIS foi removido)
-  const remotas = await carregarQuestoesDoBanco();
-  if (remotas && remotas.length > 0) {
-    state.questoes = remotas;
-    console.log('[Radix] %d questões carregadas do Supabase.', remotas.length);
-  } else {
-    state.questoes = [];
-    console.error('[Radix] FALHA: não foi possível carregar questões do Supabase.');
-    alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
-  }
+  // Questões (Etapa 7): carregam em SEGUNDO PLANO. O painel aparece antes; as
+  // telas que precisam do banco esperam state.questoesPromise (ver _comBanco).
+  state.questoesPronto = false;
+  if (!Array.isArray(state.questoes)) state.questoes = [];
+  state.questoesPromise = carregarQuestoesDoBanco().then(remotas => {
+    if (remotas && remotas.length > 0) {
+      state.questoes = remotas;
+      console.log('[Radix] %d questões carregadas do Supabase.', remotas.length);
+    } else {
+      state.questoes = [];
+      console.error('[Radix] FALHA: não foi possível carregar questões do Supabase.');
+      alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
+    }
+    state.questoesPronto = true;
+    try {
+      if (state.usuario && state.usuario.perfil !== 'professor') carregarListaLocal();
+      atualizarBadgeLista();
+      if (state.view === 'home' && document.getElementById('view-app') && !document.getElementById('view-app').classList.contains('hidden')) renderHome();
+    } catch (e) { console.warn('[Radix] pós-carga do banco:', e); }
+  }).catch(e => { console.error('[Radix] banco:', e); state.questoes = []; state.questoesPronto = true; });
   state.respostasAluno = [];
   state.historicoSimulados = [];
 
@@ -7633,6 +7712,7 @@ function mostrarTelaBloqueado(perfil) {
 }
 
 async function logout() {
+  await _cacheBancoLimpar();
   await sb.auth.signOut();
   state.usuario = null;
   document.getElementById('view-app').classList.add('hidden');
@@ -8520,6 +8600,24 @@ async function solicitarTrocaSenha(email) {
   if (error) { alert('Erro: ' + error.message); return; }
   alert(`✅ E-mail enviado para ${email}. Verifique sua caixa de entrada (e a pasta de SPAM).`);
 }
+
+// Envolve as entradas de tela que usam state.questoes: se o banco ainda não
+// chegou, mostra o aviso e espera. (Etapa 7)
+function _comBanco(nome) {
+  const orig = window[nome];
+  if (typeof orig !== 'function') { console.warn('[_comBanco] não achou', nome); return; }
+  window[nome] = async function () {
+    if (!state.questoesPronto && state.questoesPromise) {
+      radixShowLoading('Carregando banco de questões…');
+      try { await state.questoesPromise; } finally { radixHideLoading(); }
+    }
+    return orig.apply(this, arguments);
+  };
+}
+['renderTelaQuestoes', 'abrirSimuladoConfig', 'iniciarSimulado', 'renderMontarLista', 'renderListaSalva',
+ 'renderTelaGerenciar', 'renderGerenciarQuestoes', 'renderRelatorioProfessor', 'renderEstatisticasAvancadas',
+ 'abrirCadastroQuestao', 'iniciarEstudoDigital', 'iniciarConferenciaGabarito', 'renderReportesErro',
+ 'abrirModalGerar', 'baixarQuestoesFiltradasPDF', 'baixarMinhaListaPDF', 'baixarListaSalvaPDF', 'escolherPDF'].forEach(_comBanco);
 
 function mostrarApp() {
   document.getElementById('view-login').classList.add('hidden');
@@ -10571,7 +10669,7 @@ async function baixarQuestoesFiltradasPDF() {
 }
 
 async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
-  if (!window.PDFLib) { alert('pdf-lib nao carregou. Recarregue (Ctrl+F5).'); return; }
+  try { await carregarLib('pdflib'); } catch (e) { alert(e.message); return; }
   if (questoes.length === 0) { alert('Nada para gerar.'); return; }
 
   const { data: perfil } = await sb.from('perfis').select('nome,cpf').eq('id', state.usuario.id).single();
@@ -14140,6 +14238,7 @@ function radixParseGabaritoCSV(text) {
   return map;
 }
 async function radixParseGabaritoXLSX(buf) {
+  await carregarLib('xlsx');
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const linhas = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -14152,6 +14251,7 @@ async function radixParseGabaritoXLSX(buf) {
   return map;
 }
 async function radixParseGabaritoPDF(buf) {
+  await carregarLib('pdfjs');
   if (!window.pdfjsLib) throw new Error('pdf.js não carregou');
   const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
   const msgEl = document.getElementById('imp-msg');
@@ -16974,10 +17074,7 @@ async function baixarPDFComMarcaDagua(matId) {
   const oldText = btn ? btn.textContent : '';
 
   try {
-    if (!window.PDFLib) {
-      alert('Biblioteca pdf-lib não carregou. Recarregue a página (Ctrl+F5) e tente de novo.');
-      return;
-    }
+    try { await carregarLib('pdflib'); } catch (e) { alert(e.message); return; }
 
     const mat = materiaisCache.find(m => m.id === matId);
     if (!mat) { alert('Material não encontrado'); return; }
@@ -20951,7 +21048,7 @@ async function salvarSemana(opts) {
 // `titulo`: string que vai pro cabeçalho do PDF.
 // ============================================================================
 async function gerarPDFProgresso(semanas, titulo) {
-  if (!window.PDFLib) { alert('pdf-lib nao carregou. Recarregue (Ctrl+F5).'); return; }
+  try { await carregarLib('pdflib'); } catch (e) { alert(e.message); return; }
 
   // Quais semanas exportar? Filtra só as que têm progresso
   const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
