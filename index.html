@@ -7480,7 +7480,8 @@ async function iniciarSessao() {
   if (meuPerfil.status === 'pendente' && meuPerfil.perfil === 'aluno' && !meuPerfil.degustacao_inicio
       && user.user_metadata && user.user_metadata.degustacao === true) {
     try {
-      const { data: deg, error: eDeg } = await sb.rpc('fn_iniciar_degustacao', { p_dias: DEGUSTACAO.dias });
+      // A duração é fixada no servidor (fn_degustacao_dias = 7); DEGUSTACAO.dias é só texto de interface.
+      const { data: deg, error: eDeg } = await sb.rpc('fn_iniciar_degustacao');
       if (!eDeg && deg && deg.ok) {
         meuPerfil.status = 'degustacao'; meuPerfil.degustacao_ate = deg.ate; meuPerfil.degustacao_inicio = new Date().toISOString();
       }
@@ -16888,11 +16889,13 @@ function filtrarMateriais() {
 
 // ===== URL do material: link assinado de curta duração =====
 // O bucket 'Materiais' é PRIVADO. Nada de link permanente: cada clique gera
-// uma URL assinada válida por 1h, que expira depois. Assim o PDF repassado
+// uma URL assinada válida por 15 minutos, que expira depois. (Etapa 1 de
+// segurança, 08/09/2026: o servidor só assina para quem a policy do Storage
+// autoriza; uma URL já emitida vale até expirar mesmo se a conta for bloqueada.) Assim o PDF repassado
 // no WhatsApp não abre para quem não é aluno — e ninguém contorna a marca
 // d'água baixando o arquivo cru direto do bucket.
 // Materiais antigos seguem funcionando: a URL é regerada do storage_path.
-const MATERIAL_URL_TTL = 3600; // segundos
+const MATERIAL_URL_TTL = 900; // segundos (15 min)
 
 async function urlMaterial(mat) {
   if (!mat) return null;
