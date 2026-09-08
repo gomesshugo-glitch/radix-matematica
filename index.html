@@ -15708,17 +15708,18 @@ async function renderLeadsDegustacao() {
       .not('degustacao_inicio', 'is', null).order('degustacao_inicio', { ascending: false });
     if (error) throw error;
     const ids = (perfis || []).map(p => p.id);
-    let resp = [], sims = [], rev = [];
+    let resp = [], sims = [], rev = [], avisos = [];
     if (ids.length) {
-      const [r1, r2, r3] = await Promise.all([
+      const [r1, r2, r3, r4] = await Promise.all([
         sbTodas(() => sb.from('respostas').select('aluno_id, tema, correto, respondido_em').in('aluno_id', ids).order('id', { ascending: true })).then(d => ({ data: d })),
         sb.from('simulados_realizados').select('aluno_id, realizado_em, acertos, total_questoes').in('aluno_id', ids),
-        sb.from('revisao_perfil').select('aluno_id').in('aluno_id', ids)
+        sb.from('revisao_perfil').select('aluno_id').in('aluno_id', ids),
+        sb.from('email_enviado').select('aluno_id, criado_em, tipo').in('aluno_id', ids).order('criado_em', { ascending: false })
       ]);
-      resp = r1.data || []; sims = r2.data || []; rev = r3.data || [];
+      resp = r1.data || []; sims = r2.data || []; rev = r3.data || []; avisos = r4.data || [];
     }
     const porAluno = {};
-    ids.forEach(id => { porAluno[id] = { n: 0, ok: 0, temas: {}, ultima: null, sims: 0, plano: false }; });
+    ids.forEach(id => { porAluno[id] = { n: 0, ok: 0, temas: {}, ultima: null, sims: 0, plano: false, aviso: null }; });
     resp.forEach(r => {
       const a = porAluno[r.aluno_id]; if (!a) return;
       a.n++; if (r.correto) a.ok++;
@@ -15728,6 +15729,7 @@ async function renderLeadsDegustacao() {
     });
     sims.forEach(s => { const a = porAluno[s.aluno_id]; if (a) a.sims++; });
     rev.forEach(v => { const a = porAluno[v.aluno_id]; if (a) a.plano = true; });
+    avisos.forEach(e => { const a = porAluno[e.aluno_id]; if (a && !a.aviso) a.aviso = e.criado_em; });
     LDG.dados = { perfis: perfis || [], porAluno };
     _ldgRender();
   } catch (e) {
@@ -15738,7 +15740,7 @@ async function renderLeadsDegustacao() {
 function _ldgRender() {
   const main = document.getElementById('main-content');
   const { perfis, porAluno } = LDG.dados;
-  const info = p => porAluno[p.id] || { n: 0, ok: 0, temas: {}, ultima: null, sims: 0, plano: false };
+  const info = p => porAluno[p.id] || { n: 0, ok: 0, temas: {}, ultima: null, sims: 0, plano: false, aviso: null };
   const sit = p => _ldgSituacao(p).k;
   const tot = perfis.length;
   const ativos = perfis.filter(p => sit(p) === 'ativo').length;
@@ -15794,6 +15796,7 @@ function _ldgRender() {
         '<div><div class="ldg-det-l">Linha do tempo</div>' +
           '<div>Cadastro: <b>' + _ldgData(p.criado_em) + '</b> · Degustação: <b>' + _ldgData(p.degustacao_inicio) + '</b> → <b>' + _ldgData(p.degustacao_ate) + '</b></div>' +
           '<div>Última questão: <b>' + (a.ultima ? new Date(a.ultima).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—') + '</b> · Simulados: <b>' + a.sims + '</b> · Plano da Revisão Final: <b>' + (a.plano ? 'montou' : 'não montou') + '</b></div>' +
+          '<div>Aviso de matrícula por e-mail: <b>' + (a.aviso ? new Date(a.aviso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'não enviado') + '</b></div>' +
           '<div>Turma: <b>' + (turmaPorId(p.turma) ? turmaPorId(p.turma).nome : '—') + '</b> · CPF: <b>' + (p.cpf ? String(p.cpf).replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4') : '—') + '</b></div>' +
         '</div></div></td></tr>' : '');
   }).join('');
@@ -15829,12 +15832,41 @@ function _ldgRender() {
   if (inp && LDG.busca) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
 }
 
+// Ao mudar o status para aprovado, o banco dispara o e-mail de aviso ao aluno
+// (trigger trg_email_aluno_aprovado, que chama a Resend). O registro fica em
+// email_enviado. Aqui só conferimos se saiu, pra o professor não ficar no escuro.
+async function _avisoAprovacaoSaiu(alunoId) {
+  try {
+    const desde = new Date(Date.now() - 120000).toISOString();
+    const { data } = await sb.from('email_enviado')
+      .select('assunto, criado_em')
+      .eq('aluno_id', alunoId).gte('criado_em', desde)
+      .order('criado_em', { ascending: false }).limit(1);
+    return (data && data.length) ? data[0] : null;
+  } catch (e) { return null; }
+}
+function _avisoFalhou(nome) {
+  return nome + ' foi matriculado, mas o e-mail de aviso NÃO saiu.\n\n'
+    + 'Confira se os segredos resend_api_key e resend_remetente estão no Vault do Supabase. '
+    + 'O acesso do aluno já está liberado de qualquer forma.';
+}
+
 async function _ldgStatus(id, novo) {
   const p = (LDG.dados && LDG.dados.perfis.find(x => x.id === id)) || {};
-  const acao = novo === 'aprovado' ? 'matricular (liberar acesso completo para)' : 'bloquear';
-  if (!confirm('Confirma ' + acao + ' ' + (p.nome || 'este lead') + '?')) return;
+  const nome = p.nome || 'este lead';
+  const pergunta = novo === 'aprovado'
+    ? 'Matricular ' + nome + '?\n\nO acesso completo é liberado na hora e ele recebe um e-mail avisando'
+      + (p.email ? ', em ' + p.email : '') + '.'
+    : 'Confirma bloquear ' + nome + '?';
+  if (!confirm(pergunta)) return;
   const { error } = await sb.from('perfis').update({ status: novo }).eq('id', id);
   if (error) { alert('Erro: ' + error.message); return; }
+  if (novo === 'aprovado') {
+    const env = await _avisoAprovacaoSaiu(id);
+    alert(env
+      ? nome + ' foi matriculado e avisado por e-mail' + (p.email ? ' em ' + p.email : '') + '.'
+      : _avisoFalhou(nome));
+  }
   if (typeof atualizarBadgePendentes === 'function') atualizarBadgePendentes();
   renderLeadsDegustacao();
 }
@@ -16512,14 +16544,25 @@ function renderListaAlunos(perfis, statusAtual) {
 }
 
 async function mudarStatusAluno(alunoId, novoStatus) {
-  const acaoLabel = { 'aprovado': 'aprovar', 'bloqueado': 'bloquear' }[novoStatus];
-  if (!confirm(`Confirma ${acaoLabel} este aluno?`)) return;
+  const pAtual = (state._alunoListaAtual || []).find(x => x.id === alunoId) || {};
+  const nomeAtual = pAtual.nome || 'este aluno';
+  const pergunta = novoStatus === 'aprovado'
+    ? 'Aprovar ' + nomeAtual + '?\n\nO acesso é liberado na hora e ele recebe um e-mail avisando'
+      + (pAtual.email ? ', em ' + pAtual.email : '') + '.'
+    : 'Confirma bloquear ' + nomeAtual + '?';
+  if (!confirm(pergunta)) return;
 
   const { error } = await sb.from('perfis')
     .update({ status: novoStatus })
     .eq('id', alunoId);
 
   if (error) { alert('Erro: ' + error.message); return; }
+  if (novoStatus === 'aprovado') {
+    const env = await _avisoAprovacaoSaiu(alunoId);
+    alert(env
+      ? nomeAtual + ' foi aprovado e avisado por e-mail' + (pAtual.email ? ' em ' + pAtual.email : '') + '.'
+      : _avisoFalhou(nomeAtual));
+  }
   renderGerenciarAlunos();
   atualizarBadgePendentes();
 }
