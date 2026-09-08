@@ -7042,29 +7042,26 @@ async function _carregarQuestoesDoServidor() {
   // o banco "trava" nesse número mesmo que existam mais. Fazemos loop com
   // .range(offset, offset+999) até vir menos que o tamanho da página.
   const TAMANHO_PAGINA = 1000;
-  const LIMITE_SAFETY = 100000; // para se algo estiver muito estranho (100k questões é MUITO)
   try {
+    // Etapa 7: conta primeiro (barato) e busca todas as páginas EM PARALELO.
+    const pagina = i => sb.from('v_questoes_legado').select('*').order('id').range(i * TAMANHO_PAGINA, (i + 1) * TAMANHO_PAGINA - 1);
+    const { count, error: eCount } = await sb.from('v_questoes_legado').select('id', { count: 'exact', head: true });
+    if (eCount) console.warn('Erro contando questões:', eCount.message);
+    const nPag = Math.min(100, Math.max(1, Math.ceil((count || 0) / TAMANHO_PAGINA)));
+    const pags = await Promise.all(Array.from({ length: nPag }, (_, i) => pagina(i)));
     let todos = [];
-    let offset = 0;
-    while (true) {
-      const { data, error } = await sb.from('v_questoes_legado')
-        .select('*')
-        .order('id')
-        .range(offset, offset + TAMANHO_PAGINA - 1);
-      if (error) {
-        console.warn('Erro buscando questões no Supabase (página offset=' + offset + '):', error.message);
-        // Se já pegamos algumas páginas, devolve o parcial em vez de perder tudo
-        if (todos.length > 0) break;
-        return null;
-      }
-      if (!data || data.length === 0) break;
+    for (const p of pags) {
+      if (p.error) { console.warn('Erro buscando questões no Supabase:', p.error.message); if (!todos.length) return null; break; }
+      todos = todos.concat(p.data || []);
+    }
+    // se o banco cresceu entre a contagem e a leitura, pega o que sobrou
+    let offset = nPag * TAMANHO_PAGINA;
+    while (todos.length === offset && offset < 100000) {
+      const { data, error } = await pagina(offset / TAMANHO_PAGINA);
+      if (error || !data || !data.length) break;
       todos = todos.concat(data);
-      if (data.length < TAMANHO_PAGINA) break; // última página
+      if (data.length < TAMANHO_PAGINA) break;
       offset += TAMANHO_PAGINA;
-      if (offset >= LIMITE_SAFETY) {
-        console.warn('[carregarQuestoesDoBanco] Safety limit atingido em', offset, '— parando.');
-        break;
-      }
     }
     if (todos.length === 0) {
       console.warn('Tabela questoes vazia no Supabase.');
@@ -7166,25 +7163,27 @@ async function carregarDadosAluno() {
 }
 
 async function carregarDadosProfessor() {
-  await carregarCronogramaCustom();
-  // Professor vê tudo (RLS permite via is_professor())
-  const { data: perfis } = await sb.from('perfis').select('id, nome, email');
-  const perfilMap = {};
-  (perfis || []).forEach(p => perfilMap[p.id] = p);
-
-  // Totais reais (contados no servidor) — não dependem de quantas linhas vieram.
-  const [totResp, totCorretas, totSim] = await Promise.all([
+  // Etapa 7: tudo em paralelo (antes eram ~9 pedidos em fila, ~4 s).
+  const TAM = 1000;
+  const [, perfisRes, totResp, totCorretas, totSim, sim] = await Promise.all([
+    carregarCronogramaCustom(),
+    sb.from('perfis').select('id, nome, email'),
     sbContar('respostas'),
     sbContar('respostas', q => q.eq('correto', true)),
-    sbContar('simulados_realizados')
+    sbContar('simulados_realizados'),
+    sbTodas(() => sb.from('simulados_realizados').select('*').order('realizado_em', { ascending: false }).order('id', { ascending: false }))
   ]);
+  const perfilMap = {};
+  ((perfisRes && perfisRes.data) || []).forEach(p => perfilMap[p.id] = p);
   state.totais = { respostas: totResp, corretas: totCorretas, simulados: totSim };
 
-  const resp = await sbTodas(() => sb.from('respostas')
-    .select('*')
-    .order('respondido_em', { ascending: false })
-    .order('id', { ascending: false }));
-  state.respostasAluno = (resp || []).map(r => ({
+  // respostas: páginas em paralelo com base no total contado
+  const nPag = Math.min(60, Math.max(1, Math.ceil((totResp || 0) / TAM)));
+  const pags = await Promise.all(Array.from({ length: nPag }, (_, i) =>
+    sb.from('respostas').select('*').order('respondido_em', { ascending: false }).order('id', { ascending: false }).range(i * TAM, (i + 1) * TAM - 1)));
+  let resp = [];
+  for (const p of pags) { if (p.error) { console.warn('[professor] respostas:', p.error.message); continue; } resp = resp.concat(p.data || []); }
+  state.respostasAluno = resp.map(r => ({
     questaoId: r.questao_id, tema: r.tema,
     resposta: r.resposta_marcada, correto: r.correto,
     data: r.respondido_em,
@@ -7193,11 +7192,6 @@ async function carregarDadosProfessor() {
     aluno_id: r.aluno_id,
     fonte: r.fonte
   }));
-
-  const sim = await sbTodas(() => sb.from('simulados_realizados')
-    .select('*')
-    .order('realizado_em', { ascending: false })
-    .order('id', { ascending: false }));
   state.historicoSimulados = (sim || []).map(s => ({
     id: s.id,
     aluno: perfilMap[s.aluno_id]?.nome || 'Aluno',
@@ -7542,11 +7536,21 @@ window.addEventListener('beforeunload', () => _radixLoading.force());
 async function iniciarSessao() {
   radixShowLoading('Entrando…');
   try {
-  const { data: { user } } = await sb.auth.getUser();
+  // Etapa 7: a sessão local já traz o usuário; getUser() custava ~1,3 s de rede em todo
+  // carregamento. O token continua sendo validado pelo servidor em cada consulta (RLS).
+  let user = null;
+  try { const { data: { session } } = await sb.auth.getSession(); user = (session && session.user) || null; } catch (e) {}
+  if (!user) { const { data } = await sb.auth.getUser(); user = (data && data.user) || null; }
   if (!user) return;
 
   // Buscar o perfil dele para checar status de aprovação
-  const { data: meuPerfil } = await sb.from('perfis').select('*').eq('id', user.id).single();
+  const { data: meuPerfil, error: ePerfil } = await sb.from('perfis').select('*').eq('id', user.id).single();
+  if (ePerfil || !meuPerfil) {
+    // sessão inválida/expirada ou perfil ausente: volta para o login limpo
+    console.warn('[Radix] perfil não carregou:', ePerfil && ePerfil.message);
+    try { await sb.auth.signOut(); } catch (e) {}
+    return;
+  }
   if (!meuPerfil) {
     setMsg('Perfil não encontrado. Tente sair e entrar novamente.', 'var(--radix-red)');
     return;
