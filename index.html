@@ -7300,12 +7300,8 @@ async function fazerCadastro() {
     setMsg(mensagemAmigavelErroAuth(error, 'cadastro'), 'var(--radix-red)');
     return;
   }
-  // Salvar telefone na perfis (caso o trigger não capture)
-  if (data.user) {
-    setTimeout(async () => {
-      await sb.from('perfis').update({ telefone: whats, cpf: cpf || null }).eq('id', data.user.id);
-    }, 800);
-  }
+  // Telefone e CPF vão no metadata do cadastro; o trigger handle_novo_usuario grava
+  // os dois no perfil (Etapa 4: o UPDATE direto que existia aqui era ignorado pela RLS).
   if (data.user && !data.session) {
     setMsg(_signupDegustacao
       ? 'Conta criada! Confirme seu e-mail e faça login para começar a degustação.'
@@ -10585,7 +10581,8 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     if (!cpfInput) return;
     cpf = cpfInput.replace(/\D/g, '');
     if (cpf.length !== 11) { alert('CPF invalido.'); return; }
-    await sb.from('perfis').update({ cpf }).eq('id', state.usuario.id);
+    const { error: eCpf } = await sb.rpc('fn_set_meu_cpf', { p_cpf: cpf });   // validado no servidor (formato + dígitos)
+    if (eCpf) { alert('CPF inválido. Confira os 11 dígitos e tente de novo.'); return; }
   }
   const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
   const nomeAluno = (perfil?.nome || state.usuario.nome).toUpperCase();
@@ -16987,8 +16984,8 @@ async function baixarPDFComMarcaDagua(matId) {
       if (!cpfInput) return;
       cpf = cpfInput.replace(/\D/g,'');
       if (cpf.length !== 11) { alert('CPF inválido. Use 11 dígitos.'); return; }
-      const { error: errUp } = await sb.from('perfis').update({ cpf }).eq('id', state.usuario.id);
-      if (errUp) { alert('Erro salvando CPF: ' + errUp.message); return; }
+      const { error: errUp } = await sb.rpc('fn_set_meu_cpf', { p_cpf: cpf });   // validado no servidor (formato + dígitos)
+      if (errUp) { alert('CPF inválido. Confira os 11 dígitos e tente de novo.'); return; }
     }
 
     const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
