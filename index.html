@@ -7019,6 +7019,43 @@ async function _versaoBanco() {
     return String(data) + '|' + (state.usuario && state.usuario.status || '');
   } catch (e) { return null; }
 }
+// ====== RESOLUÇÕES SOB DEMANDA (Etapa 7) ======
+// A explicacao (resolução) é 1,35 MB dos 3 MB do banco. A carga inicial vem sem
+// ela; cada tela que mostra resolução chama garantirExplicacoes(questoes) —
+// uma consulta por lote de ids — e preenche os <span data-expl>.
+const _COLS_BANCO = 'id,tema,dificuldade,enunciado,alternativas,alternativas_img,imagens,correta,prova';
+function _htmlExplicacao(q) {
+  if (q && q._explOk === false) return '<em class="expl-carregando">Carregando resolução…</em>';
+  return formatarEnunciado(q ? (q.explicacao || '') : '');
+}
+async function garantirExplicacoes(lista) {
+  const pend = (lista || []).filter(q => q && q._explOk === false);
+  if (!pend.length) return;
+  const ids = [...new Set(pend.map(q => q.id))];
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data, error } = await sb.from('v_questoes_legado').select('id, explicacao').in('id', ids.slice(i, i + 300));
+    if (error) { console.warn('[explicacao]', error.message); break; }
+    const mapa = {};
+    (data || []).forEach(r => { mapa[r.id] = r.explicacao; });
+    pend.forEach(q => { if (q.id in mapa) { q.explicacao = sanitizarTextoQuestao(mapa[q.id] || ''); q._explOk = true; } });
+  }
+  // sem acesso ou erro: não fica preso em "carregando"
+  pend.forEach(q => { if (q._explOk === false) { q.explicacao = q.explicacao || ''; q._explOk = true; } });
+}
+async function garantirExplicacoesTodas() {
+  if (state._explTodas) return;
+  await garantirExplicacoes(state.questoes || []);
+  state._explTodas = true;
+}
+async function _preencherExplicacoes(lista) {
+  await garantirExplicacoes(lista);
+  document.querySelectorAll('[data-expl]').forEach(el => {
+    const id = el.getAttribute('data-expl');
+    const q = (lista || []).find(x => x && String(x.id) === id) || (state.questoes || []).find(x => String(x.id) === id);
+    if (q && q._explOk !== false) el.innerHTML = formatarEnunciado(q.explicacao || '');
+  });
+}
+
 async function carregarQuestoesDoBanco() {
   const k = _chaveCacheBanco();
   const versao = k ? await _versaoBanco() : null;
@@ -7046,7 +7083,8 @@ async function _carregarQuestoesDoServidor() {
   const TAMANHO_PAGINA = 1000;
   try {
     // Etapa 7: conta primeiro (barato) e busca todas as páginas EM PARALELO.
-    const pagina = i => sb.from('v_questoes_legado').select('*').order('id').range(i * TAMANHO_PAGINA, (i + 1) * TAMANHO_PAGINA - 1);
+    // Etapa 7: sem a coluna explicacao (44 % do pacote); ela vem sob demanda (garantirExplicacoes).
+    const pagina = i => sb.from('v_questoes_legado').select(_COLS_BANCO).order('id').range(i * TAMANHO_PAGINA, (i + 1) * TAMANHO_PAGINA - 1);
     const { count, error: eCount } = await sb.from('v_questoes_legado').select('id', { count: 'exact', head: true });
     if (eCount) console.warn('Erro contando questões:', eCount.message);
     const nPag = Math.min(100, Math.max(1, Math.ceil((count || 0) / TAMANHO_PAGINA)));
@@ -7080,7 +7118,8 @@ async function _carregarQuestoesDoServidor() {
       alternativasImg: q.alternativas_img || null,
       imagens: q.imagens || null,
       correta: q.correta,
-      explicacao: sanitizarTextoQuestao(q.explicacao || ''),
+      explicacao: (q.explicacao === undefined ? undefined : sanitizarTextoQuestao(q.explicacao || '')),
+      _explOk: q.explicacao !== undefined,
       prova: q.prova || null
     }));
   } catch (e) {
@@ -7106,6 +7145,7 @@ async function carregarDados() {
   state.questoesPromise = carregarQuestoesDoBanco().then(remotas => {
     if (remotas && remotas.length > 0) {
       state.questoes = remotas;
+      state._explTodas = false;
       console.log('[Radix] %d questões carregadas do Supabase.', remotas.length);
     } else {
       state.questoes = [];
@@ -8625,6 +8665,22 @@ function _comBanco(nome) {
  'abrirCadastroQuestao', 'iniciarEstudoDigital', 'iniciarConferenciaGabarito', 'renderReportesErro',
  'abrirModalGerar', 'baixarQuestoesFiltradasPDF', 'baixarMinhaListaPDF', 'baixarListaSalvaPDF', 'escolherPDF'].forEach(_comBanco);
 
+// Telas do professor que buscam/editam resoluções: carrega todas as explicações
+// uma vez por sessão (1,35 MB, só para o professor). (Etapa 7)
+function _comResolucoes(nome) {
+  const orig = window[nome];
+  if (typeof orig !== 'function') { console.warn('[_comResolucoes] não achou', nome); return; }
+  window[nome] = async function () {
+    if (state.questoesPromise) await state.questoesPromise;
+    if (!state._explTodas) {
+      radixShowLoading('Carregando resoluções…');
+      try { await garantirExplicacoesTodas(); } finally { radixHideLoading(); }
+    }
+    return orig.apply(this, arguments);
+  };
+}
+['renderTelaGerenciar', 'renderGerenciarQuestoes', 'abrirCadastroQuestao', 'abrirResolucaoIA', 'gerarResolucaoIApublicada', 'gerarResolucaoLote'].forEach(_comResolucoes);
+
 function mostrarApp() {
   document.getElementById('view-login').classList.add('hidden');
   document.getElementById('view-app').classList.remove('hidden');
@@ -10076,7 +10132,7 @@ async function finalizarConferenciaGabarito() {
           <div class="explicacao">
             <strong>Sua resposta:</strong> ${String.fromCharCode(65 + d.minhaResp)}) ${d.correto ? '✅ Correto!' : '❌ Incorreto'}<br>
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-            <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
+            <strong>Explicação:</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
             ${btnCaderno}
             ${htmlBtnReportarErro(q.id, true)}
           </div>
@@ -10084,6 +10140,7 @@ async function finalizarConferenciaGabarito() {
       `;
     }).join('')}
   `;
+  _preencherExplicacoes(detalhes.map(d => d.q));
 }
 
 // ========== GERAR PDF DAS QUESTÕES (Estilo ENEM) ==========
@@ -12318,11 +12375,12 @@ function responderQuestao(qid, idx) {
     <div class="explicacao">
       <strong>${idx === q.correta ? '✓ Correto!' : '✗ Resposta incorreta.'}</strong><br>
       <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-      <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
+      <strong>Explicação:</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
       ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
       ${btnCaderno}
     </div>
   `;
+  if (q._explOk === false) _preencherExplicacoes([q]);
   const correto = idx === q.correta;
   const nova = {
     questaoId: qid, tema: q.tema,
@@ -12641,6 +12699,7 @@ function finalizarSimulado(porTempo) {
   });
 
   renderResultadoSimulado(registro, porTempo);
+  _preencherExplicacoes(registro.detalhes.map(d => d.questao));
 }
 
 function renderResultadoSimulado(registro, porTempo) {
@@ -12706,7 +12765,7 @@ function renderResultadoSimulado(registro, porTempo) {
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-            <strong>Explicação:</strong> ${formatarEnunciado(q.explicacao)}
+            <strong>Explicação:</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
             ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
             ${htmlBtnReportarErro(q.id, true)}
           </div>
