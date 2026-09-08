@@ -16045,7 +16045,7 @@ function filtrarAlunos() {
     ` : ''}
 
     ${pendentes.length > 0 ? `
-      <h3 class="section-title"><span class="section-title-accent"></span>⏳ Pendentes de aprovação (${pendentes.length})</h3>
+      <h3 class="section-title"><span class="section-title-accent"></span>⏳ Pendentes de aprovação (${pendentes.length}) <small style="font-weight:400;font-size:12px;color:var(--radix-gray-light)">o relógio libera ${(typeof DEGUSTACAO !== 'undefined' && DEGUSTACAO.dias) ? DEGUSTACAO.dias : 7} dias de teste · o visto aprova o acesso completo · os dois avisam por e-mail</small></h3>
       ${renderListaAlunos(pendentes, 'pendente')}
     ` : ''}
 
@@ -16510,6 +16510,12 @@ function renderListaAlunos(perfis, statusAtual) {
                         </button>
                       `}
 
+                      ${statusAtual === 'pendente' ? `
+                        <button class="btn-icon" title="Liberar período de teste (avisa o aluno por e-mail)" style="color:var(--radix-cyan,#0891b2);" onclick="liberarDegustacao('${p.id}')">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </button>
+                      ` : ''}
+
                       ${statusAtual === 'pendente' || statusAtual === 'bloqueado' || statusAtual === 'degustacao' ? `
                         <button class="btn-icon success" title="Aprovar / Reativar" onclick="mudarStatusAluno('${p.id}','aprovado')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -16541,6 +16547,42 @@ function renderListaAlunos(perfis, statusAtual) {
       </table>
     </div>
   `;
+}
+
+// Libera o periodo de teste a um aluno que esta aguardando aprovacao. Ele
+// entra na hora, com a amostra do banco, e recebe o e-mail de aviso — quem
+// dispara o e-mail e o banco (trigger trg_email_aluno_status), nao esta tela.
+async function liberarDegustacao(alunoId) {
+  const p = (state._alunoListaAtual || []).find(x => x.id === alunoId) || {};
+  const nome = p.nome || 'este aluno';
+  const dias = (typeof DEGUSTACAO !== 'undefined' && DEGUSTACAO.dias) ? DEGUSTACAO.dias : 7;
+  const jaTeve = !!p.degustacao_inicio;
+  const pergunta = 'Liberar ' + dias + ' dias de teste para ' + nome + '?\n\n'
+    + 'Ele entra na hora com a amostra do banco de questões, simulado de até 15 questões '
+    + 'e o plano da Revisão Final, e recebe um e-mail avisando'
+    + (p.email ? ', em ' + p.email : '') + '.'
+    + (jaTeve ? '\n\nAtenção: este aluno já teve um período de teste antes.' : '');
+  if (!confirm(pergunta)) return;
+
+  const agora = new Date();
+  const ate = new Date(agora.getTime() + dias * 86400000);
+  const { error } = await sb.from('perfis').update({
+    status: 'degustacao',
+    degustacao_inicio: agora.toISOString(),
+    degustacao_ate: ate.toISOString()
+  }).eq('id', alunoId);
+  if (error) { alert('Erro: ' + error.message); return; }
+
+  const env = await _avisoAprovacaoSaiu(alunoId);
+  const ateFmt = ate.toLocaleDateString('pt-BR');
+  alert(env
+    ? nome + ' está em teste até ' + ateFmt + ' e foi avisado por e-mail'
+      + (p.email ? ' em ' + p.email : '') + '.'
+    : nome + ' está em teste até ' + ateFmt + ', mas o e-mail de aviso NÃO saiu.\n\n'
+      + 'Confira se os segredos resend_api_key e resend_remetente estão no Vault do Supabase. '
+      + 'O acesso de teste já está valendo de qualquer forma.');
+  renderGerenciarAlunos();
+  atualizarBadgePendentes();
 }
 
 async function mudarStatusAluno(alunoId, novoStatus) {
