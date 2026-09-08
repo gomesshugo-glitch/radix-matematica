@@ -18,8 +18,8 @@
 <meta name="twitter:title" content="Radix — Curso de Matemática">
 <meta name="twitter:description" content="Curso de Matemática para o ENEM, do básico ao avançado desde 2010.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M 7 19 L 10 17 L 14 24 L 20 8 L 26 8' stroke='%23fff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
 <!-- xlsx (importação), pdf.js (gabarito em PDF) e pdf-lib (gerar PDF) carregam sob demanda: carregarLib() -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
@@ -7024,6 +7024,24 @@ async function _versaoBanco() {
 // ela; cada tela que mostra resolução chama garantirExplicacoes(questoes) —
 // uma consulta por lote de ids — e preenche os <span data-expl>.
 const _COLS_BANCO = 'id,tema,dificuldade,enunciado,alternativas,alternativas_img,imagens,correta,prova';
+// Perfis nas listas do professor SEM foto_base64 (13,9 MB em 216 linhas). A foto
+// é buscada ao clicar no avatar ou pelo botão "Mostrar fotos". (Etapa 7)
+const _COLS_PERFIL = 'id,nome,email,perfil,turma,criado_em,status,telefone,cpf,ultimo_acesso,cronograma,degustacao_inicio,degustacao_ate';
+async function carregarFotosLista(btn) {
+  const lista = (state._alunoListaAtual || []).filter(p => p.foto_base64 === undefined);
+  if (btn) { btn.disabled = true; btn.textContent = 'Carregando fotos…'; }
+  for (let i = 0; i < lista.length; i += 40) {
+    const ids = lista.slice(i, i + 40).map(p => p.id);
+    const { data, error } = await sb.from('perfis').select('id, foto_base64').in('id', ids);
+    if (error) { console.warn('[fotos]', error.message); break; }
+    (data || []).forEach(r => {
+      const p = lista.find(x => x.id === r.id);
+      if (p) { p.foto_base64 = r.foto_base64 || null; const el = document.querySelector('[data-avatar="' + p.id + '"]'); if (el) el.innerHTML = avatarHTML(p, 32); }
+    });
+  }
+  lista.forEach(p => { if (p.foto_base64 === undefined) p.foto_base64 = null; });
+  if (btn) { btn.textContent = 'Fotos carregadas'; }
+}
 function _htmlExplicacao(q) {
   if (q && q._explOk === false) return '<em class="expl-carregando">Carregando resolução…</em>';
   return formatarEnunciado(q ? (q.explicacao || '') : '');
@@ -7808,10 +7826,16 @@ function avatarHTML(perfil, size = 36) {
 // identificação visual na hora de aprovar/contatar. Lê do cache em memória
 // (state._alunoListaAtual) — o Gerenciar Alunos já carregou tudo.
 // Fecha clicando fora, no X, ou pressionando ESC.
-function abrirFotoAluno(alunoId) {
+async function abrirFotoAluno(alunoId) {
   const perfis = state._alunoListaAtual || [];
-  const p = perfis.find(x => x.id === alunoId);
+  const p = perfis.find(x => x.id === alunoId) || (typeof _alunoDaLista === 'function' ? _alunoDaLista(alunoId) : null);
   if (!p) { alert('Aluno não encontrado no cache. Recarregue a lista.'); return; }
+  if (p.foto_base64 === undefined) {   // lista veio sem fotos (Etapa 7): busca só esta
+    const { data } = await sb.from('perfis').select('foto_base64').eq('id', alunoId).single();
+    p.foto_base64 = (data && data.foto_base64) || null;
+    const el = document.querySelector('[data-avatar="' + alunoId + '"]');
+    if (el) el.innerHTML = avatarHTML(p, 32);
+  }
 
   // Remove qualquer instância anterior (segurança)
   const ex = document.getElementById('modal-foto-aluno');
@@ -14861,7 +14885,7 @@ async function renderMetricasAlunos() {
   let perfis = [], respostas = [], progressos = [], cadernos = [];
   try {
     const [r1, r2, r3, r4] = await Promise.all([
-      sb.from('perfis').select('id, nome, email, turma, perfil, status, foto_base64, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
+      sb.from('perfis').select('id, nome, email, turma, perfil, status, criado_em').eq('perfil', 'aluno').eq('status', 'aprovado'),
       sbTodas(() => sb.from('respostas').select('aluno_id, tema, correto, respondido_em, fonte').order('id', { ascending: true })).then(d => ({ data: d })),
       sbTodas(() => sb.from('progresso_semanas').select('*').order('id', { ascending: true })).then(d => ({ data: d })),
       sbTodas(() => sb.from('caderno_erros').select('aluno_id, resolvido').order('id', { ascending: true })).then(d => ({ data: d }))
@@ -15499,7 +15523,7 @@ async function renderLeadsDegustacao() {
   const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderGerenciarAlunos()">Gerenciar Alunos</a> / Degustação</div>';
   main.innerHTML = bc + '<p style="color:var(--radix-text-muted);">Carregando leads…</p>';
   try {
-    const { data: perfis, error } = await sb.from('perfis').select('*')
+    const { data: perfis, error } = await sb.from('perfis').select(_COLS_PERFIL)
       .not('degustacao_inicio', 'is', null).order('degustacao_inicio', { ascending: false });
     if (error) throw error;
     const ids = (perfis || []).map(p => p.id);
@@ -15649,7 +15673,7 @@ async function renderGerenciarAlunos() {
 
   // Buscar todos os perfis (alunos + professores)
   const { data: perfis, error } = await sb.from('perfis')
-    .select('*')
+    .select(_COLS_PERFIL)
     .order('criado_em', { ascending: false });
 
   if (error) {
@@ -15697,6 +15721,7 @@ async function renderGerenciarAlunos() {
         ${TURMAS.map(t => `<option value="${t.id}" ${state._alunoTurmaFiltro === t.id ? 'selected' : ''}>${t.nome}</option>`).join('')}
         <option value="__sem__" ${state._alunoTurmaFiltro === '__sem__' ? 'selected' : ''}>— Sem turma definida (${semTurmaT}) —</option>
       </select>
+      <button class="btn btn-secondary" style="padding:9px 14px;font-size:13px;white-space:nowrap;" onclick="carregarFotosLista(this)" title="A lista abre sem as fotos para carregar em menos de 1 segundo; clique para buscá-las">Mostrar fotos</button>
     </div>
 
     <!-- Botão de envio direcionado: aparece só quando uma turma específica está filtrada -->
@@ -16229,7 +16254,7 @@ function renderListaAlunos(perfis, statusAtual) {
                           title="Clique para ver a foto maior"
                           onmouseover="this.style.transform='scale(1.08)';this.style.boxShadow='0 0 0 3px rgba(34,211,238,0.35)';"
                           onmouseout="this.style.transform='';this.style.boxShadow='';"
-                          onclick="abrirFotoAluno('${p.id}')">
+                          onclick="abrirFotoAluno('${p.id}')" data-avatar="${p.id}">
                       ${avatarHTML(p, 32)}
                     </span>
                     <strong>${_escHtml(p.nome)}</strong>
@@ -17983,7 +18008,7 @@ async function abrirNotificarWhatsApp(opts) {
     semTel = opts.preFiltrado.filter(a => !a.telefone);
     escopoLabel = opts.escopoLabel || 'alunos selecionados';
   } else {
-    const { data: alunos } = await sb.from('perfis').select('*').eq('perfil','aluno').eq('status','aprovado');
+    const { data: alunos } = await sb.from('perfis').select('id, nome, telefone, turma, status').eq('perfil','aluno').eq('status','aprovado');
     comTel = (alunos || []).filter(a => a.telefone);
     semTel = (alunos || []).filter(a => !a.telefone);
     escopoLabel = 'todos os aprovados';
