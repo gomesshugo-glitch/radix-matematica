@@ -6199,7 +6199,7 @@
           </div>
         </div>
         <div class="mk-field">
-          <label>Senha (mínimo 6 caracteres)</label>
+          <label>Senha (mínimo 8 caracteres, com letras e números)</label>
           <input type="password" id="signup-senha" placeholder="Crie uma senha" autocomplete="new-password">
         </div>
         <button class="mk-btn-primary" id="signup-btn" onclick="fazerCadastro()">
@@ -7375,6 +7375,50 @@ function telefoneLimpo(s) {
 // Converte erros do Supabase Auth (em inglês, técnicos) em mensagens
 // claras em PT-BR. Contexto = 'cadastro' | 'login' | 'recuperacao' — só
 // pra tunar o texto do rate-limit.
+// Política de senha (Etapa 9, 08/09/2026): a mesma configurada no Supabase Auth
+// (mínimo 8 caracteres, com letras e números). Aqui é só aviso antecipado; a
+// regra vale no servidor para cadastro e troca de senha.
+const SENHA_REGRA = 'A senha precisa ter no mínimo 8 caracteres, com letras e números.';
+function senhaForte(s) { s = String(s || ''); return s.length >= 8 && /[A-Za-z]/.test(s) && /[0-9]/.test(s); }
+
+// Captcha (Cloudflare Turnstile). Chave PÚBLICA do widget; vazio = desligado.
+// Quando preenchida, o app carrega o script do Turnstile na hora do uso e manda
+// o token nas chamadas de cadastro, login e recuperação de senha. O segredo fica
+// só no painel do Supabase (Authentication > Attack Protection).
+const CAPTCHA_SITE_KEY = '';
+let _captchaWidget = null;
+function _captchaCarregar() {
+  if (window.turnstile) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    s.async = true; s.onload = res; s.onerror = () => rej(new Error('captcha não carregou'));
+    document.head.appendChild(s);
+  });
+}
+// Devolve { captchaToken } com o captcha ligado; {} quando desligado ou se o
+// widget falhar (aí o servidor recusa e a mensagem amigável explica).
+async function _captchaOpts() {
+  if (!CAPTCHA_SITE_KEY) return {};
+  try {
+    await _captchaCarregar();
+    let box = document.getElementById('captcha-box');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'captcha-box';
+      box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;';
+      document.body.appendChild(box);
+    }
+    const token = await new Promise((res, rej) => {
+      if (_captchaWidget !== null) { try { turnstile.remove(_captchaWidget); } catch (e) {} }
+      _captchaWidget = turnstile.render(box, {
+        sitekey: CAPTCHA_SITE_KEY, appearance: 'interaction-only',
+        callback: res, 'error-callback': () => rej(new Error('captcha falhou')), 'expired-callback': () => {}
+      });
+    });
+    return { captchaToken: token };
+  } catch (e) { console.warn('[captcha]', e); return {}; }
+}
+
 function mensagemAmigavelErroAuth(err, contexto) {
   const m = String((err && (err.message || err.code || err)) || '').toLowerCase();
   // Rate limit do SMTP padrão do Supabase (free: poucos e-mails/hora por projeto)
@@ -7396,8 +7440,12 @@ function mensagemAmigavelErroAuth(err, contexto) {
   if (m.includes('invalid email') || m.includes('email_address_invalid')) {
     return 'E-mail inválido. Confira se digitou certo (sem espaços, com @ e domínio).';
   }
-  if (m.includes('weak password') || m.includes('password should be') || m.includes('password is too short')) {
-    return 'Senha muito fraca. Use no mínimo 6 caracteres.';
+  if (m.includes('weak password') || m.includes('weak_password') || m.includes('password should')
+      || m.includes('password is too short') || m.includes('known to be weak') || m.includes('easy to guess')) {
+    return 'Senha fraca. ' + SENHA_REGRA;
+  }
+  if (m.includes('captcha')) {
+    return 'A verificação anti-robô não passou. Recarregue a página e tente de novo.';
   }
   if (m.includes('signup is disabled') || m.includes('signup disabled')) {
     return 'Cadastro temporariamente indisponível. Avise o professor.';
@@ -7416,8 +7464,12 @@ async function fazerCadastro() {
   const cpf = (document.getElementById('signup-cpf').value || '').replace(/\D/g, '');
   const senha = document.getElementById('signup-senha').value;
 
-  if (!nome || !email || senha.length < 6) {
-    setMsg('Preencha nome, e-mail e senha (mínimo 6 caracteres).', 'var(--radix-red)');
+  if (!nome || !email || !senha) {
+    setMsg('Preencha nome, e-mail e senha.', 'var(--radix-red)');
+    return;
+  }
+  if (!senhaForte(senha)) {
+    setMsg(SENHA_REGRA, 'var(--radix-red)');
     return;
   }
   if (whats.length < 10 || whats.length > 11) {
@@ -7427,7 +7479,7 @@ async function fazerCadastro() {
   setMsg('Criando sua conta...');
   const { data, error } = await sb.auth.signUp({
     email, password: senha,
-    options: { data: Object.assign({ nome, telefone: whats, cpf }, _signupDegustacao ? { degustacao: true } : {}) }
+    options: Object.assign({ data: Object.assign({ nome, telefone: whats, cpf }, _signupDegustacao ? { degustacao: true } : {}) }, await _captchaOpts())
   });
   if (error) {
     setMsg(mensagemAmigavelErroAuth(error, 'cadastro'), 'var(--radix-red)');
@@ -7455,9 +7507,9 @@ async function fazerLogin() {
     return;
   }
   setMsg('Entrando...');
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha, options: await _captchaOpts() });
   if (error) {
-    setMsg('E-mail ou senha incorretos.', 'var(--radix-red)');
+    setMsg(/captcha/i.test(error.message || '') ? mensagemAmigavelErroAuth(error, 'login') : 'E-mail ou senha incorretos.', 'var(--radix-red)');
     return;
   }
   await iniciarSessao();
@@ -7469,10 +7521,10 @@ async function esqueciSenha() {
     setMsg('Digite seu e-mail acima primeiro.', 'var(--radix-red)');
     return;
   }
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
+  const { error } = await sb.auth.resetPasswordForEmail(email, Object.assign({
     redirectTo: window.location.origin + window.location.pathname
-  });
-  if (error) setMsg('Erro: ' + error.message, 'var(--radix-red)');
+  }, await _captchaOpts()));
+  if (error) setMsg(mensagemAmigavelErroAuth(error, 'recuperacao'), 'var(--radix-red)');
   else setMsg('Link de recuperação enviado para seu e-mail.', 'green');
 }
 
@@ -7491,15 +7543,15 @@ function abrirModalNovaSenha() {
       <div class="modal" style="max-width:420px;">
         <h2>Defina sua nova senha</h2>
         <p style="font-size:13px;color:var(--radix-text-muted);margin-bottom:10px;">
-          Você clicou no link de recuperação enviado por e-mail. Crie uma nova senha (mínimo 6 caracteres).
+          Você clicou no link de recuperação enviado por e-mail. Crie uma nova senha (mínimo 8 caracteres, com letras e números).
         </p>
         <div class="form-group">
           <label>Nova senha</label>
-          <input type="password" id="nsenha-1" autocomplete="new-password" minlength="6">
+          <input type="password" id="nsenha-1" autocomplete="new-password" minlength="8">
         </div>
         <div class="form-group">
           <label>Confirmar nova senha</label>
-          <input type="password" id="nsenha-2" autocomplete="new-password" minlength="6">
+          <input type="password" id="nsenha-2" autocomplete="new-password" minlength="8">
         </div>
         <p id="nsenha-msg" style="font-size:13px;min-height:18px;color:var(--radix-red);"></p>
         <div class="modal-acoes">
@@ -7527,7 +7579,7 @@ async function salvarNovaSenha() {
   const setM = (t) => { if (msg) msg.textContent = t || ''; };
   const s1 = (document.getElementById('nsenha-1').value || '');
   const s2 = (document.getElementById('nsenha-2').value || '');
-  if (!s1 || s1.length < 6) { setM('A senha precisa ter no mínimo 6 caracteres.'); return; }
+  if (!senhaForte(s1)) { setM(SENHA_REGRA); return; }
   if (s1 !== s2) { setM('As duas senhas não conferem.'); return; }
   setM('Salvando…');
   try {
@@ -7537,7 +7589,7 @@ async function salvarNovaSenha() {
     try { await sb.auth.signOut(); } catch (e) {}
     alert('✅ Senha atualizada com sucesso. Faça login com a nova senha.');
   } catch (e) {
-    setM('Erro: ' + (e.message || JSON.stringify(e)));
+    setM(mensagemAmigavelErroAuth(e, 'recuperacao'));
   }
 }
 
@@ -7634,6 +7686,13 @@ async function iniciarSessao() {
     mostrarTelaBloqueado(meuPerfil);
     return;
   }
+  // Etapa 9: professor só entra com o segundo fator (aplicativo autenticador).
+  // Sem fator cadastrado, cadastra agora; com fator, confirma o código. O servidor
+  // exige o mesmo: is_professor() só é true em aal2 quando há fator verificado.
+  if (meuPerfil.perfil === 'professor') {
+    const liberado = await _mfaProfessorLiberado(meuPerfil);
+    if (!liberado) return;
+  }
   state.degustacao = null;
   if (meuPerfil.status === 'degustacao') {
     const ate = meuPerfil.degustacao_ate ? new Date(meuPerfil.degustacao_ate) : null;
@@ -7691,6 +7750,120 @@ async function iniciarSessao() {
   } finally {
     radixHideLoading();
   }
+}
+
+// ===== MFA do professor (Etapa 9, 08/09/2026) =====
+// Fluxo: login com senha → sessão aal1 → (professor) confirma o código TOTP →
+// sessão aal2. No banco, is_professor() só devolve true em aal2 quando o usuário
+// tem fator verificado; sem o código nenhuma tela de professor funciona.
+async function _mfaProfessorLiberado(perfil) {
+  let nivel = null;
+  try { const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); nivel = data; } catch (e) { console.warn('[mfa] aal:', e); }
+  if (nivel && nivel.currentLevel === 'aal2') return true;
+  const { data: f, error } = await sb.auth.mfa.listFactors();
+  if (error) { setMsg('Não foi possível verificar o segundo fator: ' + error.message, 'var(--radix-red)'); return false; }
+  const verificado = ((f && f.totp) || []).find(x => x.status === 'verified');
+  if (verificado) mostrarTelaMfaVerificar(verificado.id, perfil);
+  else await mostrarTelaMfaCadastrar(perfil, f);
+  return false;
+}
+function _mfaTela(inner) {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.add('hidden');
+  const v = document.getElementById('view-status');
+  v.classList.remove('hidden');
+  v.innerHTML = '<div class="status-screen"><div class="status-card status-card-wide">' + inner + '</div></div>';
+  setTimeout(() => { const i = document.getElementById('mfa-codigo'); if (i) i.focus(); }, 50);
+}
+const _MFA_ICO = '<div class="status-ico status-ico-cyan"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>';
+function _mfaCampo(acao) {
+  return '<div class="mk-field" style="text-align:left;margin:18px auto 8px;max-width:260px;"><label>Código do aplicativo (6 dígitos)</label>'
+    + '<input type="text" id="mfa-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="text-align:center;font-size:22px;letter-spacing:6px;" onkeydown="if(event.key===\'Enter\'){' + acao + '}"></div>'
+    + '<p id="mfa-msg" style="font-size:13px;min-height:18px;color:var(--radix-red)"></p>';
+}
+function _mfaSair() { return '<div style="margin-top:14px"><button class="btn btn-secondary" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button></div>'; }
+function mostrarTelaMfaVerificar(factorId, perfil) {
+  const primeiro = String(perfil.nome || '').split(' ')[0];
+  const acao = "mfaVerificar('" + factorId + "')";
+  _mfaTela(_MFA_ICO
+    + '<h2 class="status-titulo">Confirme que é você, ' + _escHtml(primeiro) + '</h2>'
+    + '<p class="status-msg">Abra o aplicativo autenticador no celular e digite o código de 6 dígitos da conta Radix Matemática.</p>'
+    + _mfaCampo(acao)
+    + '<button class="btn btn-primary" id="mfa-btn" style="width:100%;max-width:260px" onclick="' + acao + '">Entrar</button>'
+    + _mfaSair()
+    + '<p class="status-meta" style="margin-top:18px">Perdeu o celular? O segundo fator só pode ser removido no painel do Supabase (Authentication, Users, sua conta, Factors). Depois disso o app pede um cadastro novo no próximo login.</p>');
+}
+async function mfaVerificar(factorId) {
+  const inp = document.getElementById('mfa-codigo'), msg = document.getElementById('mfa-msg'), btn = document.getElementById('mfa-btn');
+  const code = String((inp && inp.value) || '').replace(/\D/g, '');
+  if (code.length !== 6) { if (msg) msg.textContent = 'Digite os 6 dígitos do aplicativo.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Conferindo…'; }
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code });
+  if (error) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+    if (msg) msg.textContent = /invalid|expired|code/i.test(error.message || '') ? 'Código inválido ou vencido. Confira o relógio do celular e tente de novo.' : ('Erro: ' + error.message);
+    if (inp) { inp.value = ''; inp.focus(); }
+    return;
+  }
+  await iniciarSessao();   // a sessão agora é aal2
+}
+async function mostrarTelaMfaCadastrar(perfil, fatores) {
+  // limpa cadastros inacabados (fator criado e nunca confirmado)
+  try {
+    for (const f of ((fatores && fatores.all) || [])) if (f.status !== 'verified') await sb.auth.mfa.unenroll({ factorId: f.id });
+  } catch (e) { console.warn('[mfa] limpeza:', e); }
+  const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', issuer: 'Radix Matemática', friendlyName: 'Radix ' + new Date().toISOString().slice(0, 10) });
+  if (error || !data) {
+    _mfaTela(_MFA_ICO + '<h2 class="status-titulo">Não foi possível iniciar o cadastro</h2><p class="status-msg">' + _escHtml((error && error.message) || 'erro desconhecido') + '</p>' + _mfaSair());
+    return;
+  }
+  // O Supabase devolve o QR como data URL com o SVG cru (aspas e '#' dentro); não
+  // pode ir concatenado no HTML. Normaliza e atribui pela propriedade src.
+  const qr = String((data.totp && data.totp.qr_code) || '');
+  let qrSrc = '';
+  if (/^data:image\/svg\+xml/.test(qr)) {
+    const corpo = qr.slice(qr.indexOf(',') + 1);
+    const svg = /%3C/i.test(corpo) ? decodeURIComponent(corpo) : corpo;
+    qrSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+  const segredo = String((data.totp && data.totp.secret) || '');
+  const acao = "mfaConfirmarCadastro('" + data.id + "')";
+  _mfaTela(_MFA_ICO
+    + '<h2 class="status-titulo">Ative a verificação em duas etapas</h2>'
+    + '<p class="status-msg">A conta de professor passa a exigir um código do aplicativo autenticador a cada login (Google Authenticator, Microsoft Authenticator, Authy ou similar). Escaneie o código abaixo no aplicativo e digite os 6 dígitos que ele mostrar.</p>'
+    + (qrSrc ? '<img id="mfa-qr" alt="QR code do autenticador" style="width:200px;height:200px;background:#fff;padding:8px;border-radius:12px;">' : '')
+    + '<p class="status-meta" style="margin-top:14px">Sem câmera? Cadastre manualmente com a chave <b style="font-family:monospace;word-break:break-all">' + _escHtml(segredo) + '</b></p>'
+    + _mfaCampo(acao)
+    + '<button class="btn btn-primary" id="mfa-btn" style="width:100%;max-width:260px" onclick="' + acao + '">Ativar e entrar</button>'
+    + _mfaSair());
+  const im = document.getElementById('mfa-qr'); if (im) im.src = qrSrc;
+}
+async function mfaConfirmarCadastro(factorId) {
+  const inp = document.getElementById('mfa-codigo'), msg = document.getElementById('mfa-msg'), btn = document.getElementById('mfa-btn');
+  const code = String((inp && inp.value) || '').replace(/\D/g, '');
+  if (code.length !== 6) { if (msg) msg.textContent = 'Digite os 6 dígitos que o aplicativo mostrou.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Conferindo…'; }
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code });
+  if (error) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ativar e entrar'; }
+    if (msg) msg.textContent = 'Código não confere. Confira se o aplicativo escaneou este QR code e se o relógio do celular está certo.';
+    if (inp) { inp.value = ''; inp.focus(); }
+    return;
+  }
+  await iniciarSessao();
+}
+// Meu Perfil (professor): remove o fator atual para cadastrar outro celular.
+async function mfaRemoverFator() {
+  if (!confirm('Remover o autenticador atual? Você será desconectado e, no próximo login, o app pede para cadastrar um novo aplicativo autenticador.')) return;
+  const { data: f, error: eL } = await sb.auth.mfa.listFactors();
+  if (eL) { alert('Não foi possível listar: ' + eL.message); return; }
+  for (const x of ((f && f.all) || [])) {
+    const { error } = await sb.auth.mfa.unenroll({ factorId: x.id });
+    if (error) { alert('Não foi possível remover: ' + error.message); return; }
+  }
+  await _cacheBancoLimpar();
+  await sb.auth.signOut();
+  location.reload();
 }
 
 function mostrarTelaAguardandoAprovacao(perfil) {
@@ -8508,6 +8681,14 @@ async function abrirMeuPerfil() {
           <label>Alterar senha</label>
           <button class="btn btn-secondary" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;" onclick="solicitarTrocaSenha(state.usuario.email)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Enviar link de troca de senha pro meu e-mail</button>
         </div>
+        ${isProf ? `
+        <div class="form-group">
+          <label>Verificação em duas etapas</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:13px;color:var(--radix-text-2);">Ativa: código do aplicativo autenticador a cada login.</span>
+            <button class="btn btn-secondary" onclick="mfaRemoverFator()">Trocar autenticador</button>
+          </div>
+        </div>` : ''}
 
         <div class="modal-acoes">
           <button class="btn btn-secondary" onclick="fecharMeuPerfil()">Fechar</button>
@@ -8664,9 +8845,9 @@ function atualizarHeaderAvatar() {
 
 async function solicitarTrocaSenha(email) {
   if (!confirm(`Enviar link de troca de senha para ${email}?`)) return;
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
+  const { error } = await sb.auth.resetPasswordForEmail(email, Object.assign({
     redirectTo: window.location.origin + window.location.pathname
-  });
+  }, await _captchaOpts()));
   if (error) { alert('Erro: ' + error.message); return; }
   alert(`✅ E-mail enviado para ${email}. Verifique sua caixa de entrada (e a pasta de SPAM).`);
 }
@@ -16006,9 +16187,9 @@ async function reenviarSenhaAlunosSelecionados() {
   let ok = 0; const erros = [];
   for (let i = 0; i < alvos.length; i++) {
     const p = alvos[i];
-    const { error } = await sb.auth.resetPasswordForEmail(p.email, {
+    const { error } = await sb.auth.resetPasswordForEmail(p.email, Object.assign({
       redirectTo: window.location.origin + window.location.pathname
-    });
+    }, await _captchaOpts()));
     if (error) erros.push(p.nome + ': ' + error.message);
     else ok++;
     // Pequeno delay entre envios pra evitar rate-limit do provider de e-mail
@@ -16449,9 +16630,9 @@ async function salvarEditarAluno(alunoId) {
 
 async function reenviarSenhaAluno(email, nome) {
   if (!confirm(`Enviar e-mail de redefinição de senha para ${nome} (${email})?`)) return;
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
+  const { error } = await sb.auth.resetPasswordForEmail(email, Object.assign({
     redirectTo: window.location.origin + window.location.pathname
-  });
+  }, await _captchaOpts()));
   if (error) {
     alert('Erro: ' + error.message);
     return;
