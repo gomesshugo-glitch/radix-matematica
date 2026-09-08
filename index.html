@@ -6772,7 +6772,7 @@ function formatarEnunciado(texto) {
   // (cheio de aspas) quebra o atributo alt e o texto vaza na tela (bug FUVEST).
   s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)(?:\{[^}]*\})?/g, (m, alt, src) => {
     src = src.trim();
-    if (!/^(https?:|data:)/.test(src)) return m; // caminho local: placeholder da etapa 4.e
+    if (!/^(https:\/\/|data:image\/)/i.test(src)) return m; // só https/data:image; o resto vira placeholder na etapa 4.e
     const altLimpo = alt.replace(/\$/g, '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     _katexBlocks.push('<img src="' + src.replace(/"/g, '&quot;') + '" class="enunciado-img" alt="' + altLimpo + '">');
     return '\u0000KATEX' + (_katexBlocks.length - 1) + '\u0000';
@@ -6876,7 +6876,7 @@ function formatarEnunciado(texto) {
   // 4.e) Imagens Markdown: ![alt](caminho){attrs} -> <img> ou placeholder
   s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)(?:\{[^}]*\})?/g, (m, alt, src) => {
     src = src.trim();
-    if (/^(https?:|data:)/.test(src)) {
+    if (/^(https:\/\/|data:image\/)/i.test(src)) {
       const altEsc = alt.replace(/"/g, '&quot;');
       return '<img src="' + src + '" class="enunciado-img" alt="' + altEsc + '">';
     }
@@ -9738,7 +9738,7 @@ function renderListaSalva(lista) {
                     <div class="lista-num">${ordem}</div>
                     <div class="lista-conteudo">
                       <div class="lista-tema">${tema ? tema.nome : '—'}</div>
-                      <div class="lista-enun">${q.enunciado.substring(0, 200).replace(/<[^>]+>/g,'')}${q.enunciado.length > 200 ? '...' : ''}</div>
+                      <div class="lista-enun">${_escHtml(q.enunciado.substring(0, 200))}${q.enunciado.length > 200 ? '...' : ''}</div>
                     </div>
                   </div>`;
               }).join('')}
@@ -9839,7 +9839,7 @@ function renderConferirGabarito() {
             <div class="confer-num">${String(i + 1).padStart(2, '0')}</div>
             <div class="confer-info">
               <div class="confer-tema">${tema ? tema.nome : '—'}</div>
-              <div class="confer-preview">${q.enunciado.substring(0, 80).replace(/<[^>]+>/g,'')}...</div>
+              <div class="confer-preview">${_escHtml(q.enunciado.substring(0, 80))}...</div>
             </div>
             <div class="confer-alts">
               ${['A','B','C','D','E'].map((letra, k) => `
@@ -12902,12 +12902,12 @@ function abrirCadastroQuestao(idEdicao) {
       </div>
       <div class="form-group">
         <label>Enunciado</label>
-        <textarea id="q-enunciado" rows="4">${editando?.enunciado || ''}</textarea>
+        <textarea id="q-enunciado" rows="4">${_escHtml(editando?.enunciado || '')}</textarea>
       </div>
       ${[0,1,2,3,4].map(i => `
         <div class="form-group">
           <label>Alternativa ${String.fromCharCode(65+i)}</label>
-          <input type="text" id="q-alt-${i}" value="${editando?.alternativas[i]?.replace(new RegExp(`^${String.fromCharCode(65+i)}\\)\\s*`),'') || ''}">
+          <input type="text" id="q-alt-${i}" value="${_escHtml(editando?.alternativas[i]?.replace(new RegExp(`^${String.fromCharCode(65+i)}\\)\\s*`),'') || '')}">
         </div>
       `).join('')}
       <div class="form-group">
@@ -12918,7 +12918,7 @@ function abrirCadastroQuestao(idEdicao) {
       </div>
       <div class="form-group">
         <label>Explicação / Resolução</label>
-        <textarea id="q-explicacao" rows="3">${editando?.explicacao || ''}</textarea>
+        <textarea id="q-explicacao" rows="3">${_escHtml(editando?.explicacao || '')}</textarea>
       </div>
       ${editando ? `
         <button class="btn btn-success" style="width:100%;padding:14px;" onclick="salvarQuestao(${idEdicao},'publicada')">Salvar (nova versão)</button>
@@ -14422,7 +14422,7 @@ async function renderRevisarImportacoes() {
               <td>${radixBadgeEstado(r.estado)}</td>
               <td style="font-size:12px;">${p.origem_prova || '—'}</td>
               <td>${p.tema || '—'}</td>
-              <td style="max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${(p.enunciado||'').replace(/"/g,'&quot;')}">${(p.enunciado || '').substring(0, 70)}${(p.enunciado||'').length>70?'…':''}</td>
+              <td style="max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${_escHtml(p.enunciado||'')}">${_escHtml((p.enunciado || '').substring(0, 70))}${(p.enunciado||'').length>70?'…':''}</td>
               <td style="font-size:11px;">
                 ${crit.length?`<span style="color:var(--radix-red)">⛔ ${crit.map(e=>e.detalhe).join('; ')}</span><br>`:''}
                 ${warn.length?`<span style="color:#b26a00">⚠ ${warn.map(e=>e.detalhe).join('; ')}</span>`:''}
@@ -14467,13 +14467,13 @@ function abrirRevisarItem(id) {
         <div class="form-group"><label>Nível ENEM</label>
           <select id="rv-nivel">${niv.map(n=>`<option value="${n}" ${p.nivel_enem===n?'selected':''}>${n}</option>`).join('')}</select></div>
         <div class="form-group"><label>Enunciado</label>
-          <textarea id="rv-enun" rows="4">${(p.enunciado||'').replace(/</g,'&lt;')}</textarea></div>
+          <textarea id="rv-enun" rows="4">${_escHtml(p.enunciado||'')}</textarea></div>
         ${[0,1,2,3,4].map(i=>`<div class="form-group"><label>Alternativa ${String.fromCharCode(65+i)}</label>
-          <input type="text" id="rv-alt-${i}" value="${((alts[i]&&alts[i].texto)||'').replace(/"/g,'&quot;')}"></div>`).join('')}
+          <input type="text" id="rv-alt-${i}" value="${_escHtml((alts[i]&&alts[i].texto)||'')}"></div>`).join('')}
         <div class="form-group"><label>Correta</label>
           <select id="rv-corr">${[0,1,2,3,4].map(i=>`<option value="${i}" ${idxCorr===i?'selected':''}>${String.fromCharCode(65+i)}</option>`).join('')}</select></div>
         <div class="form-group"><label>Resolução comentada (opcional)</label>
-          <textarea id="rv-res" rows="6">${((p.resolucao&&p.resolucao.texto)||'').replace(/</g,'&lt;')}</textarea>
+          <textarea id="rv-res" rows="6">${_escHtml((p.resolucao&&p.resolucao.texto)||'')}</textarea>
           <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
             <button class="btn btn-secondary" type="button" id="rv-ia-btn" onclick="gerarResolucaoIA(${r.id})">✨ Gerar resolução com IA</button>
             <button class="btn btn-secondary" type="button" onclick="document.getElementById('rv-res').value=''; state._rvIaUsada=false;">Descartar resolução</button>
