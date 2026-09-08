@@ -15379,7 +15379,7 @@ function _ldgRender() {
       '<td style="white-space:nowrap;"><span title="Início ' + _ldgData(p.degustacao_inicio) + ' · fim ' + _ldgData(p.degustacao_ate) + '">' + _ldgData(p.degustacao_inicio || p.criado_em) + '</span></td>' +
       '<td><span class="ldg-sit ' + s.k + '">' + s.l + '</span></td>' +
       '<td style="white-space:nowrap;">' + _ldgRel(p.ultimo_acesso) + '</td>' +
-      '<td style="white-space:nowrap;">' + (a.n ? '<b>' + a.n + '</b> <small style="color:var(--radix-text-muted);">· ' + taxa + '% de acerto</small>' : '<span style="color:var(--radix-text-muted);">0</span>') + '</td>' +
+      '<td style="white-space:nowrap;">' + (a.n ? '<b>' + a.n + '</b> <small style="color:var(--radix-text-muted);">· ' + taxa + '%</small>' : '<span style="color:var(--radix-text-muted);">0</span>') + '</td>' +
       '<td style="text-align:center;">' + (a.sims || '<span style="color:var(--radix-text-muted);">0</span>') + '</td>' +
       '<td style="text-align:center;">' + (a.plano ? '<span class="rvp-chip ok">sim</span>' : '<span style="color:var(--radix-text-muted);">não</span>') + '</td>' +
       '<td style="text-align:right;white-space:nowrap;"><div style="display:flex;gap:6px;justify-content:flex-end;">' + acoes.join('') + '</div></td>' +
@@ -15418,7 +15418,7 @@ function _ldgRender() {
       : (lista.length === 0
         ? '<div class="ldg-empty">Nenhum lead neste filtro.</div>'
         : '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table"><thead><tr>' +
-          '<th>Lead</th><th>WhatsApp</th><th>Início</th><th>Situação</th><th>Último acesso</th><th>Questões</th><th style="text-align:center;">Simulados</th><th style="text-align:center;" title="Montou o plano da Revisão Final">Plano RF</th><th style="text-align:right;">Ações</th>' +
+          '<th>Lead</th><th>WhatsApp</th><th>Início</th><th>Situação</th><th>Último acesso</th><th title="Questões respondidas · taxa de acerto">Questões · acerto</th><th style="text-align:center;">Simulados</th><th style="text-align:center;" title="Montou o plano da Revisão Final">Plano RF</th><th style="text-align:right;">Ações</th>' +
           '</tr></thead><tbody>' + linhas + '</tbody></table></div>'));
   const inp = main.querySelector('.qbk-busca');
   if (inp && LDG.busca) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
