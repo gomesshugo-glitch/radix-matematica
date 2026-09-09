@@ -5098,6 +5098,8 @@
     color: var(--radix-cyan, #0891b2);
     background: rgba(34,211,238,.06);
   }
+  .ce-linha-acoes { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .ce-linha-btn-q { border-color: var(--radix-cyan, #0891b2); color: var(--radix-cyan, #0891b2); }
   .ce-linha.resolvida { opacity: 0.65; }
   .ce-linha.resolvida .ce-linha-titulo { text-decoration: line-through; text-decoration-color: rgba(16,185,129,0.5); }
   @media (max-width: 700px) {
@@ -20588,8 +20590,10 @@ function _renderLinhaErro(e, ehResolv) {
       <span class="ce-linha-titulo">${_esc(e.titulo)}</span>
       <span class="ce-linha-meta">SEM ${String(e.semana_numero).padStart(2,'0')} · ${cat.nome}</span>
       <span class="ce-linha-data">${dataBR}</span>
-      ${_questaoIdDoErro(e) ? `<button class="ce-linha-btn" onclick="event.stopPropagation();verQuestaoDoErro('${e.id}')" title="Abre a questão com gabarito e resolução">Ver questão</button>` : ''}
-      <button class="ce-linha-btn" onclick="event.stopPropagation();verDetalheErro('${e.id}')">${ehResolv ? 'Ver detalhes' : 'Ficha'}</button>
+      <span class="ce-linha-acoes">
+        ${_questaoIdDoErro(e) ? `<button class="ce-linha-btn ce-linha-btn-q" onclick="event.stopPropagation();verQuestaoDoErro('${e.id}')" title="Abre a questão com gabarito e resolução">Ver questão</button>` : ''}
+        <button class="ce-linha-btn" onclick="event.stopPropagation();verDetalheErro('${e.id}')">${ehResolv ? 'Ver detalhes' : 'Ficha'}</button>
+      </span>
     </div>`;
 }
 
