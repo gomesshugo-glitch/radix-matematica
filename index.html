@@ -20183,7 +20183,7 @@ function abrirModalErro(opcoes) {
   const aprendPre = editando ? (editando.aprendizado || '') : '';
   const categoriaPre = editando ? editando.categoria : (opcoes.pre?.categoria || 'outro');
   const prioridadePre = editando ? editando.prioridade : 2;
-  const questaoId = editando ? editando.questao_id : (opcoes.questaoId || null);
+  const questaoId = editando ? _questaoIdDoErro(editando) : (opcoes.questaoId || null);
 
   // Cards de categoria (SVG + nome)
   const catCards = CATEGORIAS_ERRO.map(c =>
@@ -20206,6 +20206,7 @@ function abrirModalErro(opcoes) {
         <div style="display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--radix-line);margin-bottom:18px;">
           <span style="font-size:28px;line-height:1;">📕</span>
           <h2 style="margin:0;flex:1;font-size:20px;font-weight:800;">${editando ? 'Editar erro' : 'Novo erro'}</h2>
+          ${questaoId ? `<button class="btn btn-secondary" style="padding:7px 12px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;" onclick="verQuestaoDoErro(${editando ? "'" + editando.id + "'" : 'null'}, ${questaoId})" title="Abre a questão ${questaoId} com gabarito e resolução"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver questão ${questaoId}</button>` : ''}
           <span style="background:var(--radix-bg-2);padding:5px 12px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:0.05em;color:var(--radix-text-muted);">SEM ${String(semanaN).padStart(2,'0')}</span>
         </div>
 
@@ -20311,24 +20312,28 @@ async function salvarErroNoModal() {
     semana_numero: semanaN,
     tema_id: temaId,
     titulo, descricao, causa, aprendizado,
-    categoria, prioridade
-    // questao_id removido: a FK pra `questoes` conflita quando o id local
-    // não bate com o id no banco. O número da questão fica no título.
-    // Se quiser ativar de novo, rode SQL_caderno_erros_fix_fk.sql pra
-    // remover a constraint e descomente a linha abaixo.
-    // , questao_id: questaoId
+    categoria, prioridade,
+    // Vínculo com a questão (voltou em 09/09/2026, migration 11: a FK antiga apontava
+    // para a tabela legada `questoes`). É o que permite "Ver questão" no caderno.
+    questao_id: questaoId
   };
 
   try {
+    const gravar = (p) => idExistente
+      ? sb.from('caderno_erros').update(p).eq('id', idExistente).select().single()
+      : sb.from('caderno_erros').insert(p).select().single();
+    let { data, error } = await gravar(payload);
+    if (error && error.code === '23503' && payload.questao_id != null) {
+      // banco ainda com a FK antiga: grava sem o vínculo (o número continua no título)
+      console.warn('[caderno_erros] FK de questao_id recusou; gravando sem o vínculo');
+      delete payload.questao_id;
+      ({ data, error } = await gravar(payload));
+    }
+    if (error) throw error;
     if (idExistente) {
-      const { data, error } = await sb.from('caderno_erros').update(payload).eq('id', idExistente).select().single();
-      if (error) throw error;
-      // Atualiza state local
       const idx = state.cadernoErros.findIndex(e => e.id === idExistente);
       if (idx >= 0) state.cadernoErros[idx] = data; else state.cadernoErros.unshift(data);
     } else {
-      const { data, error } = await sb.from('caderno_erros').insert(payload).select().single();
-      if (error) throw error;
       state.cadernoErros.unshift(data);
     }
   } catch (e) {
@@ -20583,13 +20588,92 @@ function _renderLinhaErro(e, ehResolv) {
       <span class="ce-linha-titulo">${_esc(e.titulo)}</span>
       <span class="ce-linha-meta">SEM ${String(e.semana_numero).padStart(2,'0')} · ${cat.nome}</span>
       <span class="ce-linha-data">${dataBR}</span>
-      <button class="ce-linha-btn" onclick="event.stopPropagation();verDetalheErro('${e.id}')">${ehResolv ? 'Ver detalhes' : 'Revisar'}</button>
+      ${_questaoIdDoErro(e) ? `<button class="ce-linha-btn" onclick="event.stopPropagation();verQuestaoDoErro('${e.id}')" title="Abre a questão com gabarito e resolução">Ver questão</button>` : ''}
+      <button class="ce-linha-btn" onclick="event.stopPropagation();verDetalheErro('${e.id}')">${ehResolv ? 'Ver detalhes' : 'Ficha'}</button>
     </div>`;
 }
 
 // Modal de detalhes/edição rápida
 function verDetalheErro(erroId) {
   abrirModalErro({ erroId });
+}
+
+// Questão ligada ao erro: pelo campo questao_id (gravado desde 09/09/2026) ou, nos
+// registros antigos, pelo número no título "Errei Q218 — …".
+function _questaoIdDoErro(e) {
+  if (!e) return null;
+  if (e.questao_id != null && Number(e.questao_id) > 0) return Number(e.questao_id);
+  const m = /^Errei Q(\d+)/i.exec(String(e.titulo || ''));
+  return m ? parseInt(m[1], 10) : null;
+}
+
+// Abre a questão do erro (só leitura): enunciado, alternativas com o gabarito e o que
+// o aluno marcou da última vez, e a resolução. erroId pode ser null (ficha nova).
+async function verQuestaoDoErro(erroId, qidDireto) {
+  const e = erroId ? (state.cadernoErros || []).find(x => x.id === erroId) : null;
+  const qid = qidDireto || _questaoIdDoErro(e);
+  if (!qid) { alert('Este erro não está ligado a uma questão do banco. Registros feitos à mão não têm questão para abrir.'); return; }
+  if (!state.questoesPronto && state.questoesPromise) {
+    radixShowLoading('Carregando banco de questões…');
+    try { await state.questoesPromise; } finally { radixHideLoading(); }
+  }
+  const q = (state.questoes || []).find(x => x.id === qid);
+  if (!q) { alert('A questão ' + qid + ' não está disponível no seu banco (pode ter sido removida ou estar fora da amostra da degustação).'); return; }
+  const tema = TEMAS.find(t => t.id === q.tema);
+  const letra = i => String.fromCharCode(65 + i);
+  const ultima = (state.respostasAluno || []).find(r => r.questaoId === qid);   // lista já vem da mais recente
+  const marcada = ultima && typeof ultima.resposta === 'number' ? ultima.resposta : null;
+  const altsImg = !!(q.alternativasImg && q.alternativasImg.length);
+  const lista = altsImg ? q.alternativasImg : (q.alternativas || []);
+  const alts = lista.map((alt, i) => {
+    const cls = i === q.correta ? ' correta' : (i === marcada ? ' errada' : '');
+    const corpo = altsImg
+      ? '<img class="alt-img-content" src="' + alt + '" alt="alternativa ' + letra(i) + '">'
+      : '<div>' + formatarEnunciado(String(alt).replace(/^[A-E]\)\s*/, '')) + '</div>';
+    return '<div class="alternativa' + (altsImg ? ' alt-img' : '') + cls + '" style="cursor:default;"><div class="alternativa-letra">' + letra(i) + '</div>' + corpo + '</div>';
+  }).join('');
+  const imgs = (q.imagens || []).map(src => '<div class="questao-img-wrap"><img class="questao-img" src="' + src + '" alt="figura da questão"></div>').join('');
+  let resumo;
+  if (marcada == null) resumo = '<strong>Gabarito:</strong> ' + letra(q.correta) + ')';
+  else if (marcada === q.correta) resumo = '<strong>Na última vez você marcou ' + letra(marcada) + ') e acertou.</strong> Gabarito: ' + letra(q.correta) + ')';
+  else resumo = '<strong>Você marcou ' + letra(marcada) + ').</strong> Gabarito: ' + letra(q.correta) + ')';
+  const dif = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[q.dificuldade] || '';
+  const old = document.getElementById('modal-caderno-questao'); if (old) old.remove();
+  const html = `
+    <div class="modal-overlay" id="modal-caderno-questao" onclick="if(event.target===this)fecharQuestaoDoErro()">
+      <div class="modal" style="max-width:780px;padding:22px 26px;max-height:92vh;overflow:auto;">
+        <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--radix-line);margin-bottom:16px;">
+          <div class="qno-badge">${qid}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;color:var(--radix-text-muted);font-weight:800;letter-spacing:.06em;">QUESTÃO DO CADERNO DE ERROS${dif ? ' · ' + dif.toUpperCase() : ''}</div>
+            <div style="font-size:16px;font-weight:800;">${_escHtml(tema ? tema.nome : 'Banco de questões')}</div>
+          </div>
+          <button class="btn btn-secondary" onclick="fecharQuestaoDoErro()" style="padding:8px 14px;">Fechar</button>
+        </div>
+        <div class="questao-card enem-style" style="margin:0;">
+          <div class="questao-enunciado">${formatarEnunciado(q.enunciado)}</div>
+          ${imgs}
+          <div class="alternativas ${altsImg ? 'alts-em-imagem' : ''}">${alts}</div>
+          <div class="explicacao" style="margin-top:14px;">
+            ${resumo}<br>
+            <strong>Explicação:</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
+            ${q.explicacaoImg ? '<div class="explicacao-img-wrap"><img class="explicacao-img" src="' + q.explicacaoImg + '" alt="resolução"></div>' : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;">
+          ${erroId ? `<button class="btn btn-secondary" onclick="fecharQuestaoDoErro();abrirModalErro({erroId:'${erroId}'})">Abrir ficha do erro</button>` : ''}
+          <button class="btn btn-primary" onclick="fecharQuestaoDoErro()">Fechar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.body.classList.add('modal-open');
+  if (q._explOk === false) _preencherExplicacoes([q]);
+}
+function fecharQuestaoDoErro() {
+  const m = document.getElementById('modal-caderno-questao');
+  if (m) m.remove();
+  if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
 }
 
 // =========================================================
@@ -20620,6 +20704,7 @@ function _renderSecaoCadernoNaSemana(semanaN) {
         <span style="font-size:14px;">${cat.icone}</span>
         <span class="ce-name">${_esc(e.titulo)}</span>
         <div class="acoes">
+          ${_questaoIdDoErro(e) ? `<button class="mini-btn" title="Ver questão ${_questaoIdDoErro(e)}" onclick="verQuestaoDoErro('${e.id}')">Q</button>` : ''}
           <button class="mini-btn" title="${e.resolvido ? 'Reabrir' : 'Marcar resolvido'}" onclick="toggleResolvidoErro('${e.id}')">${e.resolvido ? '↺' : '✓'}</button>
           <button class="mini-btn" title="Editar" onclick="abrirModalErro({erroId: '${e.id}'})">✏</button>
         </div>
