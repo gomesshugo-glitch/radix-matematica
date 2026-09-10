@@ -13487,10 +13487,18 @@ function renderTelaGerenciar() {
   const totalGeral = (state.questoes || []).length;
 
   // Contagens por assunto (tema) e por prova
+  // A caixa de conteudo e ENCADEADA a prova: conta so as questoes da prova
+  // escolhida (ou do banco todo, se nenhuma prova estiver marcada).
+  const baseTema = provaAtual ? (state.questoes || []).filter(q => q.prova === provaAtual) : (state.questoes || []);
   const cntPorTema = {};
-  (state.questoes || []).forEach(q => {
+  baseTema.forEach(q => {
     if (q.tema) cntPorTema[q.tema] = (cntPorTema[q.tema] || 0) + 1;
   });
+  const totalNaProva = baseTema.length;
+  // Se o assunto marcado nao existe na prova nova, solta o filtro de assunto
+  // para a lista nao aparecer vazia sem explicacao.
+  if (temaAtual && !cntPorTema[temaAtual]) state._gerTema = '';
+  const temaValido = state._gerTema || '';
   const cntPorProva = {};
   provas.forEach(p => { cntPorProva[p] = 0; });
   (state.questoes || []).forEach(q => {
@@ -13536,9 +13544,9 @@ function renderTelaGerenciar() {
       <div class="form-group" style="flex:1; min-width:240px; max-width:380px; margin:0;">
         <label>Filtrar por conteúdo</label>
         <select id="ger-tema" onchange="selecionarTemaGer(this.value)">
-          <option value="">Todos os conteúdos (${totalGeral})</option>
+          <option value="">Todos os conteúdos (${totalNaProva})</option>
           ${TEMAS.filter(t => (cntPorTema[t.id]||0) > 0).map(t =>
-            `<option value="${t.id}" ${temaAtual===t.id?'selected':''}>${t.nome} (${cntPorTema[t.id]||0})</option>`
+            `<option value="${t.id}" ${temaValido===t.id?'selected':''}>${t.nome} (${cntPorTema[t.id]||0})</option>`
           ).join('')}
         </select>
       </div>
