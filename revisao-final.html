@@ -90,6 +90,11 @@
   .demo b{letter-spacing:.1em}
   .demo select,.demo button{background:var(--s2);color:var(--text-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 10px;font-size:var(--fs-xs);min-height:36px}
   .demo button:hover{border-color:var(--coral);color:var(--coral)}
+  /* Etapa 10: acesso por status */
+  .tl-item.lock,.tl-mini button.lock{opacity:.5;cursor:not-allowed;border-style:dashed}
+  .aviso.amostra{border-left-color:var(--cyan);background:rgba(34,211,238,.07);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  body.sem-plano .dnav,body.sem-plano .bnav,body.sem-plano #pill-contagem,body.sem-plano #sync-status,body.sem-plano #aviso-login{display:none!important}
+  .q-wrap .acts,.modal .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 
   /* ---------- header + nav desktop ---------- */
   .top{position:sticky;top:0;z-index:40;background:rgba(11,21,48,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
@@ -519,6 +524,27 @@ function esc(x) {
               — snapshot congelado da dose no momento da 1ª ação da semana
    ============================================================ */
 const KEY = 'mockup_revisao_final_v3';
+
+/* ---------- Etapa 10 (10/09/2026): acesso por status ----------
+   completo  = aprovado / professor (7 semanas)
+   amostra   = degustação (só a Semana 1; as outras mostram o convite)
+   bloqueado = pendente / bloqueado / expirado / sem perfil
+   anon      = sem sessão (apresentação + botão de entrar)
+   O banco aplica a mesma regra (policies deg_restr_revisao_*, migration 12);
+   aqui é só a interface. */
+const ACESSO = { modo: 'anon', status: 'anon', semanasMax: 0 };
+const OFERTA = {
+  precoPresencial: 'R$ 300,00', precoOnline: 'R$ 69,90', whatsapp: '5584998131870',
+  msg: 'Olá, Hugo! Fiz a degustação da plataforma Radix e quero garantir minha vaga na Revisão Final.',
+  zapUrl() { return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(this.msg); }
+};
+function definirAcesso(status) {
+  ACESSO.status = status || 'anon';
+  if (status === 'aprovado' || status === 'professor') { ACESSO.modo = 'completo'; ACESSO.semanasMax = 7; }
+  else if (status === 'degustacao') { ACESSO.modo = 'amostra'; ACESSO.semanasMax = 1; }
+  else if (!status || status === 'anon') { ACESSO.modo = 'anon'; ACESSO.semanasMax = 0; }
+  else { ACESSO.modo = 'bloqueado'; ACESSO.semanasMax = 0; }
+}
 const app = {
   perfil: null, ov: {}, minis: {}, planos: {},
   semanaSel: null,
@@ -541,6 +567,57 @@ const app = {
     try { localStorage.setItem(KEY, JSON.stringify({ v:3, perfil:this.perfil, ov:this.ov, minis:this.minis, planos:this.planos })); } catch(e) {}
   },
   salvar() { this.salvarLocal(); if (typeof SYNC !== 'undefined') SYNC.agendar(); },
+
+  /* ---------- Etapa 10: semanas liberadas por status ---------- */
+  liberada(n) { return n <= ACESSO.semanasMax; },
+  semanasLib() { return SEMANAS.filter(s => this.liberada(s.n)); },
+  // na amostra, o que ficou no navegador de semanas trancadas sai (o servidor já não devolve)
+  podarLocal() {
+    if (ACESSO.modo !== 'amostra') return;
+    const max = ACESSO.semanasMax; let mudou = false;
+    Object.keys(this.ov).forEach(k => { if (parseInt(k.slice(1)) > max) { delete this.ov[k]; mudou = true; } });
+    [this.minis, this.planos].forEach(o => Object.keys(o).forEach(k => { if (parseInt(k) > max) { delete o[k]; mudou = true; } }));
+    if (this.semanaSel && this.semanaSel > max) this.semanaSel = null;
+    if (mudou) this.salvarLocal();
+  },
+  htmlOferta() {
+    return '<div class="kpis kpis-2 my-a"><div class="kpi"><div class="v">' + OFERTA.precoPresencial + '</div><div class="l">Revisão presencial</div></div>' +
+      '<div class="kpi"><div class="v">' + OFERTA.precoOnline + '</div><div class="l">Revisão online</div></div></div>' +
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="window.open(OFERTA.zapUrl(), \'_blank\', \'noopener\')">Quero garantir minha vaga</button></div>';
+  },
+  bloqueada(n) {
+    this.abrirModal(
+      '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">' + this._xFechar() +
+      '<h3 id="modal-titulo">A Semana ' + n + ' faz parte da Revisão Final</h3>' +
+      '<p class="sub">Na degustação você monta e acompanha a Semana 1 como amostra. As semanas 2 a 7, com a dose calculada para o seu perfil e os mini-simulados, ficam liberadas para os alunos da Revisão Final.</p>' +
+      this.htmlOferta() +
+      '<div class="q-nav"><span class="esp"></span><button type="button" class="btn btn-ghost btn-sm" onclick="app.fecharModal()">Fechar</button></div></div></div>');
+  },
+  htmlBannerAmostra() {
+    if (ACESSO.modo !== 'amostra') return '';
+    return '<div class="aviso amostra"><span><b>Modo degustação.</b> Esta é a Semana 1 do seu plano, como amostra. As semanas 2 a 7 fazem parte da Revisão Final.</span>' +
+      '<button type="button" class="btn btn-pri btn-sm" onclick="app.bloqueada(2)">Como garantir a vaga</button></div>';
+  },
+  htmlAnon() {
+    return '<div class="q-wrap"><span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span>' +
+      '<h2>Seu plano das 7 semanas até a prova de Matemática</h2>' +
+      '<p class="sub">Um roteiro montado a partir do seu ponto de partida, do seu tempo disponível e dos temas de maior incidência no ENEM: atividades dosadas por semana, mini-simulado no fim de cada uma e ajuste automático conforme o seu desempenho.</p>' +
+      '<p class="sub">O plano faz parte da plataforma Radix. Entre com a sua conta para abrir o seu. Se ainda não é aluno, conheça a plataforma por 7 dias.</p>' +
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="location.href=\'/?voltar=revisao-final\'">Entrar no app</button>' +
+      '<button type="button" class="btn btn-sec" onclick="location.href=\'/?degustacao=1\'">Conhecer por 7 dias</button></div></div>';
+  },
+  htmlBloqueado() {
+    const st = ACESSO.status;
+    const titulo = st === 'expirado' ? 'Sua degustação terminou' : st === 'pendente' ? 'Seu cadastro está aguardando aprovação' : st === 'bloqueado' ? 'Acesso bloqueado' : 'Seu acesso ao plano não está liberado';
+    const texto = st === 'expirado' ? 'Você conheceu a Semana 1 do plano durante a degustação. Para ter as 7 semanas com a dose calculada para o seu perfil, garanta sua vaga na Revisão Final.'
+      : st === 'pendente' ? 'Assim que o professor aprovar o seu cadastro, o plano das 7 semanas fica disponível aqui.'
+      : st === 'bloqueado' ? 'Fale com o professor Hugo Gomes para regularizar sua situação.'
+      : 'Abra o app para ver a situação da sua conta.';
+    return '<div class="q-wrap"><span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span><h2>' + titulo + '</h2><p class="sub">' + texto + '</p>' +
+      (st === 'expirado' ? this.htmlOferta() : '') +
+      '<div class="acts"><button type="button" class="btn btn-sec" onclick="location.href=\'/\'">Ir para o app</button></div></div>';
+  },
   demoExemplo() {
     const dif = {};
     ['financeira','exponencial','probabilidade'].forEach(id => dif[id] = -1);
@@ -701,6 +778,7 @@ const app = {
 
   /* ---------- congelamento ---------- */
   congelarSemana(n) {
+    if (!this.liberada(n)) return;
     if (this.planos[n]) return;
     const sem = SEMANAS.find(s => s.n === n);
     const d = this.dosarSemana(sem);
@@ -733,6 +811,7 @@ const app = {
 
   concluir(key) {
     const n = parseInt(key.slice(1));
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     if (this.feito(key)) {   // desfazer
       const o = this.ov[key]; o.done = null; o.hits = null; o.total = null;
       this.salvar(); this.render({ foco: 'chk:' + key });
@@ -747,6 +826,7 @@ const app = {
   },
   _marcar(key, hits, total) {
     const n = parseInt(key.slice(1));
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     this.congelarSemana(n);
     const o = this.ov[key] || (this.ov[key] = {});
     o.done = new Date().toISOString();
@@ -830,6 +910,7 @@ const app = {
 
   moverDia(key, dia) {
     const n = parseInt(key.slice(1));
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     this.congelarSemana(n);
     const o = this.ov[key] || (this.ov[key] = {});
     o.dia = parseInt(dia);
@@ -840,6 +921,7 @@ const app = {
   /* ---------- mini-simulado: registrar, ver, editar, excluir ---------- */
   _miniTmp: {},
   modalMini(n) {
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     const sem = SEMANAS.find(s => s.n === n);
     const lista = sem.temas.concat([sem.geo.id]);
     const existente = this.minis[n];
@@ -878,6 +960,7 @@ const app = {
     });
   },
   salvarMini(n) {
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     const faltam = Object.keys(this._miniTmp).filter(id => this._miniTmp[id] == null);
     if (faltam.length) {
       document.getElementById('mini-erro').textContent = 'Preencha os acertos de: ' + faltam.map(id => T(id).nome).join(', ') + '.';
@@ -920,9 +1003,12 @@ const app = {
     this.renderContagem();
     const root = document.getElementById('root');
     const y = (typeof window !== 'undefined' && window.scrollY) || 0;
-    let tela = (!this.perfil || this._editando) ? 'quest' : (this.posProva() ? 'pos' : 'plano');
+    let tela = ACESSO.modo === 'anon' ? 'anon' : ACESSO.modo === 'bloqueado' ? 'bloqueado'
+      : (!this.perfil || this._editando) ? 'quest' : (this.posProva() ? 'pos' : 'plano');
+    document.body.classList.toggle('sem-plano', tela === 'anon' || tela === 'bloqueado');
     const mudouTela = tela !== this._tela; this._tela = tela;
-    root.innerHTML = tela === 'quest' ? this.htmlQuest() : tela === 'pos' ? this.htmlPosProva() : this.htmlPlano();
+    root.innerHTML = tela === 'anon' ? this.htmlAnon() : tela === 'bloqueado' ? this.htmlBloqueado()
+      : tela === 'quest' ? this.htmlQuest() : tela === 'pos' ? this.htmlPosProva() : this.htmlPlano();
     this._posRender();
     if (mudouTela || opts.modo === 'tela') window.scrollTo(0, 0);
     else if (opts.scrollPara) {
@@ -1026,6 +1112,7 @@ const app = {
     this.toast('', 'Dados zerados', 'Comece pelo questionário para montar um novo roteiro.');
   },
   recalcularSemana(n, confirmado) {
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     if (!this.planos[n]) return;
     const self = this;
     if (!confirmado) return this.confirmar({ titulo: 'Recalcular a Semana ' + n + '?', ok: 'Recalcular',
@@ -1037,6 +1124,7 @@ const app = {
     this.toast('ok', 'Semana ' + n + ' recalculada', 'Cargas atualizadas com o seu perfil e desempenho de agora.');
   },
   excluirMini(n, confirmado) {
+    if (!this.liberada(n)) { this.bloqueada(n); return; }
     const self = this;
     if (!confirmado) return this.confirmar({ titulo: 'Excluir o mini da Semana ' + n + '?', perigo: true, ok: 'Excluir',
       texto: 'O lançamento sai do histórico e o diagnóstico e o gráfico de evolução são recalculados. Você pode registrar de novo depois.' }, () => self.excluirMini(n, true));
@@ -1278,19 +1366,19 @@ const app = {
   htmlPlano() {
     const atualN = this.semanaAtualN();
     const antes = this.hoje() < dt(SEMANAS[0].ini);
-    const selN = this.semanaSel || atualN || 1;
+    const selN = Math.min(this.semanaSel || atualN || 1, ACESSO.semanasMax || 7);
     const sem = SEMANAS.find(s => s.n === selN);
     const dose = this.dosePara(sem);
     const resumo = this.htmlProgresso(sem, dose);
     return '<svg width="0" height="0" aria-hidden="true" class="svg-defs"><defs><linearGradient id="gradp"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs></svg>' +
-      this.htmlSaudacao(atualN, antes, sem) +
+      this.htmlSaudacao(atualN, antes, sem) + this.htmlBannerAmostra() +
       '<div class="layout"><div class="col-main stack-v">' +
         (antes ? this.htmlPre() : '') +
         '<section id="sec-next" aria-label="Seu próximo passo">' + this.htmlNext(sem, dose, atualN, antes) + '</section>' +
         '<section class="only-mobile" aria-label="Resumo da semana"><div class="card">' + resumo + '</div></section>' +
         '<section id="sec-agenda" aria-label="Agenda da semana">' + this.htmlAgenda(sem, dose, atualN) + '</section>' +
         '<section id="sec-mais" aria-label="Evolução, semanas e perfil">' + this.htmlMais(atualN, selN) + '</section>' +
-        '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>' +
+        '<footer>Radix Matemática · ' + esc(CONFIG.PRODUTO) + ' ' + esc(CONFIG.EDICAO) + '</footer>' +
       '</div><aside class="col-side" aria-label="Painel da semana"><div class="stack">' +
         '<div class="card">' + resumo + '</div>' +
         '<div class="card">' + this.htmlTimelineMini(atualN, selN) + '</div>' +
@@ -1298,7 +1386,8 @@ const app = {
       '</div></aside></div>';
   },
   htmlSaudacao(atualN, antes, sem) {
-    const ctx = antes ? 'Seu roteiro está pronto. A Semana 1 abre em ' + fmtCurto(dt(SEMANAS[0].ini)) + '.'
+    const ctx = ACESSO.modo === 'amostra' ? 'Amostra da degustação · Semana 1 de 7 · ' + rotSemana(sem)
+      : antes ? 'Seu roteiro está pronto. A Semana 1 abre em ' + fmtCurto(dt(SEMANAS[0].ini)) + '.'
       : (atualN && sem.n === atualN) ? 'Semana ' + atualN + ' de 7 · ' + rotSemana(sem)
       : 'Você está vendo a Semana ' + sem.n + ' · ' + rotSemana(sem) + (atualN ? ' · <button type="button" class="btn btn-ghost btn-sm btn-inline" onclick="app.semanaSel=null;app.render({scrollPara:\'sec-next\'})">voltar à semana atual</button>' : '');
     return '<div class="greet"><div><div class="h1">Olá, ' + esc(this.primeiroNome()) + '</div><p class="sub">' + ctx + '</p></div></div>';
@@ -1318,9 +1407,9 @@ const app = {
     if (!prox && miniOk) {
       return '<div class="next done"><span class="eyebrow">Semana concluída</span>' +
         '<h2>Você fechou a Semana ' + sem.n + '</h2>' +
-        '<p class="just">Veja o diagnóstico do mini na aba Evolução' + (atualN && atualN > sem.n ? ', ou volte à semana atual' : (sem.n < 7 ? ', ou siga para a Semana ' + (sem.n + 1) : '')) + '.</p>' +
+        '<p class="just">Veja o diagnóstico do mini na aba Evolução' + (atualN && atualN > sem.n ? ', ou volte à semana atual' : (this.liberada(sem.n + 1) ? ', ou siga para a Semana ' + (sem.n + 1) : '')) + '.</p>' +
         '<div class="acts"><button type="button" class="btn btn-sec" onclick="app.navTo(\'sec-mais\',\'evo\')">Ver diagnóstico</button>' +
-        (sem.n < 7 ? '<button type="button" class="btn btn-ghost" onclick="app.semanaSel=' + (sem.n + 1) + ';app.render({scrollPara:\'sec-next\'})">Semana ' + (sem.n + 1) + '</button>' : '') + '</div></div>';
+        (this.liberada(sem.n + 1) ? '<button type="button" class="btn btn-ghost" onclick="app.semanaSel=' + (sem.n + 1) + ';app.render({scrollPara:\'sec-next\'})">Semana ' + (sem.n + 1) + '</button>' : '') + '</div></div>';
     }
     if (!prox) {
       return '<div class="next"><span class="eyebrow">Seu próximo passo</span>' +
@@ -1474,7 +1563,7 @@ const app = {
     const b = document.getElementById('tab-' + ordem[i]); if (b) b.focus();
     e.preventDefault();
   },
-  selecionarSemana(n) { this.semanaSel = n; this.render({ scrollPara: 'sec-next' }); this.anunciar('Semana ' + n + ' selecionada.'); },
+  selecionarSemana(n) { if (!this.liberada(n)) { this.bloqueada(n); return; } this.semanaSel = n; this.render({ scrollPara: 'sec-next' }); this.anunciar('Semana ' + n + ' selecionada.'); },
   evoSelecionar(n) { this._evoSel = n; this.render({ foco: 'evo:' + n }); },
   _estadoSemana(s, atualN) {
     const dose = this.dosePara(s);
@@ -1536,6 +1625,10 @@ const app = {
   htmlTimeline(atualN, selN) {
     const self = this;
     const btns = SEMANAS.map(s => {
+      if (!self.liberada(s.n)) {
+        return '<button type="button" class="tl-item lock" aria-label="Semana ' + s.n + ', ' + rotSemana(s) + ', disponível na Revisão Final" onclick="app.bloqueada(' + s.n + ')">' +
+          '<span class="n">Semana ' + s.n + '<span class="st">Revisão Final</span></span><span class="d">' + rotSemana(s) + '</span><span class="bar"><i style="width:0%"></i></span></button>';
+      }
       const e = self._estadoSemana(s, atualN);
       const rot = e.st === 'done' ? 'Concluída' : e.st === 'atual' ? 'Atual' : e.st === 'incompleta' ? e.n.pct + '% feita' : 'Futura';
       return '<button type="button" class="tl-item ' + e.st + (s.n === selN ? ' sel' : '') + '" aria-pressed="' + (s.n === selN) + '"' + (s.n === atualN ? ' aria-current="date"' : '') +
@@ -1554,6 +1647,7 @@ const app = {
     const semSel = SEMANAS.find(s => s.n === selN);
     return '<div class="sec-title mb-8"><span class="ic">' + ic('flag', 18) + '</span>As 7 semanas</div>' +
       '<div class="tl-mini" role="group" aria-label="Escolher semana">' + SEMANAS.map(s => {
+        if (!self.liberada(s.n)) return '<button type="button" class="lock" aria-label="Semana ' + s.n + ', disponível na Revisão Final" onclick="app.bloqueada(' + s.n + ')">' + s.n + '</button>';
         const e = self._estadoSemana(s, atualN);
         return '<button type="button" class="' + e.st + (s.n === selN ? ' sel' : '') + '" aria-pressed="' + (s.n === selN) + '" aria-label="Semana ' + s.n + ', ' + (e.st === 'done' ? 'concluída' : e.st === 'atual' ? 'atual' : e.st === 'incompleta' ? e.n.pct + ' por cento feita' : 'futura') + '" onclick="app.selecionarSemana(' + s.n + ')">' + s.n + '</button>';
       }).join('') + '</div>' +
@@ -1587,7 +1681,7 @@ const app = {
   htmlPosProva() {
     let minF = 0, minT = 0, atvF = 0, atvT = 0, minisFeitos = 0;
     const self = this;
-    SEMANAS.forEach(s => {
+    this.semanasLib().forEach(s => {
       const d = self.dosePara(s);
       minT += d.totalMin;
       d.itens.forEach(it => { atvT++; if (self.feito(it.key)) { atvF++; minF += it.min; } });
@@ -1596,7 +1690,7 @@ const app = {
     const comAmostra = TEMAS.map(t => ({ t, a: self.amostraTema(t.id) })).filter(x => x.a.total >= 4);
     comAmostra.sort((x, y) => (y.a.hits / y.a.total) - (x.a.hits / x.a.total));
     const melhor = comAmostra[0], pior = comAmostra[comAmostra.length - 1];
-    const selN = this.semanaSel || 7;
+    const selN = Math.min(this.semanaSel || 7, ACESSO.semanasMax || 7);
     const sem = SEMANAS.find(s => s.n === selN);
     return '<svg width="0" height="0" aria-hidden="true" class="svg-defs"><defs><linearGradient id="gradp"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs></svg>' +
       '<div class="greet"><div><div class="h1">Você chegou ao fim, ' + esc(this.primeiroNome()) + '</div>' +
@@ -1615,7 +1709,7 @@ const app = {
       '<section id="sec-mais" aria-label="Evolução e perfil"><div class="tabs" role="tablist"><button type="button" role="tab" id="tab-evo" data-tabbtn="evo" aria-selected="' + (this._uiTab !== 'perfil') + '" aria-controls="panel-evo" onclick="app.setTab(\'evo\')">Evolução</button><button type="button" role="tab" id="tab-perfil" data-tabbtn="perfil" aria-selected="' + (this._uiTab === 'perfil') + '" aria-controls="panel-perfil" onclick="app.setTab(\'perfil\')">Perfil</button></div>' +
       '<div id="panel-evo" role="tabpanel" data-tabpanel="evo" class="tabpanel"' + (this._uiTab === 'perfil' ? ' hidden' : '') + '><div class="card" id="sec-evo">' + this.htmlEvolucao(null) + '</div></div>' +
       '<div id="panel-perfil" role="tabpanel" data-tabpanel="perfil" class="tabpanel"' + (this._uiTab !== 'perfil' ? ' hidden' : '') + '><div class="card" id="sec-perfil">' + this.htmlPerfil() + '</div></div></section>' +
-      '<footer>Mockup · Radix Matemática · dados salvos apenas neste navegador</footer>' +
+      '<footer>Radix Matemática · ' + esc(CONFIG.PRODUTO) + ' ' + esc(CONFIG.EDICAO) + '</footer>' +
       '</div><aside class="col-side" aria-label="Painel"><div class="stack"><div class="card">' + this.htmlTimelineMini(null, selN) + '</div><div class="card">' + this.htmlPerfilCompacto() + '</div></div></aside></div>';
   }
 };
@@ -1640,6 +1734,11 @@ const SYNC = {
     const { data } = await this.sb.auth.getSession();
     if (!data || !data.session) return false;
     this.uid = data.session.user.id;
+    // Etapa 10: o status vem do servidor (fn_status_atual) e define o modo de acesso
+    let status = 'sem_perfil';
+    try { const { data: st, error: eSt } = await this.sb.rpc('fn_status_atual'); if (!eSt && st) status = st; } catch (e) { console.warn('[acesso]', e); }
+    definirAcesso(status);
+    if (ACESSO.modo === 'bloqueado') return true;   // logado, mas sem plano: a tela explica o motivo
     try {
       const { data: p } = await this.sb.from('perfis').select('nome').eq('id', this.uid).single();
       if (p && p.nome) { this.nome = p.nome; CONFIG.ALUNO = p.nome; }
@@ -1694,7 +1793,7 @@ const SYNC = {
         const r = await sb.from('revisao_perfil').upsert({ aluno_id: uid, acertos: p.acertos, horas_dia: p.horasDia, dias: p.dias || [], meta: p.meta, dif: p.dif || {} });
         if (r.error) throw r.error;
       }
-      const rows = Object.keys(app.ov).map(k => {
+      const rows = Object.keys(app.ov).filter(k => app.liberada(parseInt(k.slice(1)))).map(k => {
         const o = app.ov[k];
         return { aluno_id: uid, semana: parseInt(k.slice(1)), atividade_key: k,
                  dia: o.dia == null ? null : o.dia, feito_em: o.done || null,
@@ -1702,12 +1801,12 @@ const SYNC = {
       });
       if (rows.length) { const r = await sb.from('revisao_progresso').upsert(rows, { onConflict: 'aluno_id,atividade_key' }); if (r.error) throw r.error; }
 
-      const minis = Object.keys(app.minis).map(n => ({ aluno_id: uid, semana: parseInt(n), acertos_por_tema: app.minis[n].porTema || {}, total: app.minis[n].total, feito_em: app.minis[n].em || new Date().toISOString() }));
+      const minis = Object.keys(app.minis).filter(n => app.liberada(parseInt(n))).map(n => ({ aluno_id: uid, semana: parseInt(n), acertos_por_tema: app.minis[n].porTema || {}, total: app.minis[n].total, feito_em: app.minis[n].em || new Date().toISOString() }));
       if (minis.length) { const r = await sb.from('revisao_mini').upsert(minis); if (r.error) throw r.error; }
       const semMini = Object.keys(app.minis).map(Number);
       await sb.from('revisao_mini').delete().eq('aluno_id', uid).not('semana', 'in', '(' + (semMini.length ? semMini.join(',') : '0') + ')');
 
-      const planos = Object.keys(app.planos).map(n => {
+      const planos = Object.keys(app.planos).filter(n => app.liberada(parseInt(n))).map(n => {
         const d = app.planos[n];
         return { aluno_id: uid, semana: parseInt(n), budget: d.budget, total_min: d.totalMin,
                  plano: { itens: d.itens, avisos: d.avisos, fora: d.fora, diasAtivos: d.diasAtivos, temMini: d.temMini },
@@ -1751,12 +1850,14 @@ const SYNC = {
   root.innerHTML = '<div class="q-wrap"><p class="sub my-c">Carregando seu progresso…</p><div class="skel skel-a"></div><div class="skel skel-b"></div></div>';
   let logado = false;
   try {
-    logado = await Promise.race([SYNC.iniciar(), new Promise(r => setTimeout(() => r(false), 6000))]);
+    logado = await Promise.race([SYNC.iniciar(), new Promise(r => setTimeout(() => r(false), 12000))]);
   } catch (e) { console.warn('[sync] indisponível:', e); }
+  if (!logado) definirAcesso('anon');
+  app.podarLocal();
   const demoBar = document.querySelector('.demo');
   if (demoBar && logado && !SYNC.demo) demoBar.hidden = true;   // aluno real usa a data real
   const aviso = document.getElementById('aviso-login');
-  if (aviso) aviso.hidden = logado || SYNC.demo;
+  if (aviso) aviso.hidden = true;   // a tela sem sessão já traz o botão de entrar
   app.render({ modo: 'tela' });
 })();
 </script>

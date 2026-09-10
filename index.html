@@ -6141,7 +6141,7 @@
           Conhecer a plataforma por 7 dias
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
-        <div class="mk-deg-sub">Grátis e sem compromisso. Amostra de questões do ENEM com gabarito comentado, simulado e o plano da Revisão Final.</div>
+        <div class="mk-deg-sub">Grátis e sem compromisso. Amostra de questões do ENEM com gabarito comentado, simulado e a Semana 1 do plano da Revisão Final.</div>
       </div>
     </div>
 
@@ -6178,7 +6178,7 @@
         <div class="mk-form-title" id="signup-titulo">Crie sua conta.</div>
         <div class="mk-form-sub" id="signup-sub">Preencha os dados para liberar o acesso à plataforma.</div>
         <div id="signup-deg-banner" class="signup-deg-banner hidden">
-          <b>Degustação de 7 dias.</b> Você entra na hora, sem aprovação prévia, com uma amostra do banco de questões, simulado e o plano da Revisão Final.
+          <b>Degustação de 7 dias.</b> Você entra na hora, sem aprovação prévia, com uma amostra do banco de questões, simulado e a Semana 1 do plano da Revisão Final.
           <a onclick="definirModoCadastro(false)">Sou aluno Radix, quero o cadastro regular</a>
         </div>
 
@@ -7906,7 +7906,7 @@ function mostrarTelaDegustacaoExpirada(perfil) {
         <h2 class="status-titulo">Sua degustação terminou, ${primeiro}</h2>
         <p class="status-msg">
           Você teve ${DEGUSTACAO.dias} dias para conhecer a plataforma: banco de questões com gabarito comentado,
-          simulados cronometrados, cronograma semanal e o plano da Revisão Final.
+          simulados cronometrados, cronograma semanal e a Semana 1 do plano da Revisão Final.
           Para continuar com acesso completo até o ENEM, garanta sua vaga na Revisão Final:
         </p>
         <div class="deg-precos">
@@ -7924,7 +7924,7 @@ function _bannerDegustacao() {
   const d = state.degustacao.diasRestantes;
   return `
     <div class="deg-banner" role="status">
-      <div class="deg-banner-txt"><b>Modo degustação</b> · ${d === 1 ? 'último dia' : 'faltam ' + d + ' dias'}. Você está vendo uma amostra: questões do ENEM com gabarito comentado, simulado de até 15 questões e o plano da Revisão Final.</div>
+      <div class="deg-banner-txt"><b>Modo degustação</b> · ${d === 1 ? 'último dia' : 'faltam ' + d + ' dias'}. Você está vendo uma amostra: questões do ENEM com gabarito comentado, simulado de até 15 questões e a Semana 1 do plano da Revisão Final.</div>
       ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary deg-banner-btn" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Garantir minha vaga · ${DEGUSTACAO.preco}</a>` : ''}
     </div>`;
 }
@@ -9327,7 +9327,7 @@ function renderDashboardAluno() {
           <div class="dash-atalho" onclick="window.location.href='/revisao-final'">
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <span>Revisão Final</span>
-            <small>Seu plano das 7 semanas até o ENEM</small>
+            <small>${state.degustacao ? 'Amostra: Semana 1 do plano das 7 semanas' : 'Seu plano das 7 semanas até o ENEM'}</small>
           </div>
           <div class="dash-atalho" onclick="renderSimulados()">
             <div class="dash-atalho-icon icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
@@ -13449,22 +13449,20 @@ function _msgDupQuestao(err) {
     : 'Essa questão já está no banco (enunciado idêntico) — não foi duplicada.';
 }
 
-// Tela pesada (chips + paginação + cards). Mostra o spinner, cede um frame e
-// só então roda o render real. As duas fases são funções SEPARADAS de
-// propósito: renderGerenciarQuestoes é embrulhada por _comBanco/_comResolucoes
-// (wrappers async), e uma autochamada pelo nome global acertaria o wrapper,
-// que devolve Promise na hora e fazia a guarda antiga girar em loop sem nunca
-// desenhar (bug de 10/09). _renderGerenciarQuestoesAgora não está nas listas
-// de wrappers, então a chamada abaixo é direta e síncrona.
+let _radixRenderingGer = false;
 function renderGerenciarQuestoes() {
-  radixShowLoading('Abrindo banco de questões…');
-  setTimeout(() => {
-    try { _renderGerenciarQuestoesAgora(); }
-    catch (e) { console.error('[gerenciar] falha ao abrir:', e); alert('Não consegui abrir o Gerenciar Banco: ' + (e && e.message ? e.message : e)); }
-    finally { radixHideLoading(); }
-  }, 16);
-}
-function _renderGerenciarQuestoesAgora() {
+  // Tela pesada (chips + paginação + cards). Sem isso a UI trava no clique
+  // ANTES do navegador conseguir pintar o spinner. Esta guarda mostra
+  // o loading, cede um frame e só então roda o render real.
+  if (!_radixRenderingGer) {
+    radixShowLoading('Abrindo banco de questões…');
+    _radixRenderingGer = true;
+    setTimeout(() => {
+      try { renderGerenciarQuestoes(); }
+      finally { _radixRenderingGer = false; radixHideLoading(); }
+    }, 16);
+    return;
+  }
   state.view = 'gerenciar';
   // Reseta UI local (paginação, expansão). Mantém filtros se já existirem.
   state._gerPagina = 0;
