@@ -13449,20 +13449,22 @@ function _msgDupQuestao(err) {
     : 'Essa questão já está no banco (enunciado idêntico) — não foi duplicada.';
 }
 
-let _radixRenderingGer = false;
+// Tela pesada (chips + paginação + cards). Mostra o spinner, cede um frame e
+// só então roda o render real. As duas fases são funções SEPARADAS de
+// propósito: renderGerenciarQuestoes é embrulhada por _comBanco/_comResolucoes
+// (wrappers async), e uma autochamada pelo nome global acertaria o wrapper,
+// que devolve Promise na hora e fazia a guarda antiga girar em loop sem nunca
+// desenhar (bug de 10/09). _renderGerenciarQuestoesAgora não está nas listas
+// de wrappers, então a chamada abaixo é direta e síncrona.
 function renderGerenciarQuestoes() {
-  // Tela pesada (chips + paginação + cards). Sem isso a UI trava no clique
-  // ANTES do navegador conseguir pintar o spinner. Esta guarda mostra
-  // o loading, cede um frame e só então roda o render real.
-  if (!_radixRenderingGer) {
-    radixShowLoading('Abrindo banco de questões…');
-    _radixRenderingGer = true;
-    setTimeout(() => {
-      try { renderGerenciarQuestoes(); }
-      finally { _radixRenderingGer = false; radixHideLoading(); }
-    }, 16);
-    return;
-  }
+  radixShowLoading('Abrindo banco de questões…');
+  setTimeout(() => {
+    try { _renderGerenciarQuestoesAgora(); }
+    catch (e) { console.error('[gerenciar] falha ao abrir:', e); alert('Não consegui abrir o Gerenciar Banco: ' + (e && e.message ? e.message : e)); }
+    finally { radixHideLoading(); }
+  }, 16);
+}
+function _renderGerenciarQuestoesAgora() {
   state.view = 'gerenciar';
   // Reseta UI local (paginação, expansão). Mantém filtros se já existirem.
   state._gerPagina = 0;
