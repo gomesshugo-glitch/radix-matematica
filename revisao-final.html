@@ -1848,9 +1848,13 @@ const SYNC = {
   app.carregar();
   const root = document.getElementById('root');
   root.innerHTML = '<div class="q-wrap"><p class="sub my-c">Carregando seu progresso…</p><div class="skel skel-a"></div><div class="skel skel-b"></div></div>';
+  // Com sessão, espera o status do servidor terminar (aba em segundo plano atrasa
+  // pedidos e timers); só cai na tela sem sessão quando não há sessão mesmo.
   let logado = false;
   try {
-    logado = await Promise.race([SYNC.iniciar(), new Promise(r => setTimeout(() => r(false), 12000))]);
+    const ini = SYNC.iniciar();
+    logado = await Promise.race([ini, new Promise(r => setTimeout(() => r(null), 12000))]);
+    if (logado === null) logado = SYNC.uid ? await ini : false;
   } catch (e) { console.warn('[sync] indisponível:', e); }
   if (!logado) definirAcesso('anon');
   app.podarLocal();
