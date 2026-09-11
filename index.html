@@ -19320,6 +19320,180 @@ async function renderMeusSimulados()      { return renderSimulados('externos'); 
 async function renderHistoricoSimulados() { return renderSimulados('plataforma'); }
 
 // Hub unificado de Simulados. aba: 'externos' (default) | 'plataforma'
+// ===== Simulado ENEM oficial com nota TRI (Etapa 2, 11/09/2026) =====
+// O aluno escolhe um caderno oficial, abre o PDF do INEP, resolve as 45 questões de
+// Matemática (136 a 180) e marca aqui. As marcações vão para simulado_tri pelas
+// funções fn_simulado_tri_* (a nota é calculada no servidor por fn_nota_tri).
+const TRI = { provas: null, tentativas: null, atual: null, timer: null, salvarT: null };
+function _triCss() {
+  if (document.getElementById('tri-css')) return;
+  const s = document.createElement('style'); s.id = 'tri-css';
+  s.textContent = '.tri-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin:12px 0}'
+    + '.tri-q{display:flex;align-items:center;gap:6px;background:var(--radix-surface);border:1px solid var(--radix-line);border-radius:10px;padding:6px 8px}'
+    + '.tri-q .n{width:34px;font-weight:800;color:var(--radix-text-muted);font-size:13px}'
+    + '.tri-q button{width:32px;height:32px;border-radius:50%;border:1px solid var(--radix-line-2,#e5e7eb);background:transparent;color:var(--radix-text);font-weight:700;cursor:pointer;padding:0}'
+    + '.tri-q button.on{background:var(--radix-grad-brand,linear-gradient(135deg,#22d3ee,#3b82f6));color:#0e1a36;border-color:transparent}'
+    + '.tri-q.branco .n{color:var(--radix-coral,#ff7a5c)}'
+    + '.tri-top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:10px 0}'
+    + '.tri-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;display:inline-flex;align-items:center;gap:6px}'
+    + '.tri-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0}'
+    + '.tri-kpi{background:var(--radix-surface);border:1px solid var(--radix-line);border-radius:12px;padding:12px;text-align:center}'
+    + '.tri-kpi .v{font-size:26px;font-weight:900}.tri-kpi .l{font-size:11px;color:var(--radix-text-muted);text-transform:uppercase;letter-spacing:.06em}'
+    + '.tri-tab{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}.tri-tab th,.tri-tab td{padding:6px 8px;border-bottom:1px solid var(--radix-line);text-align:left}'
+    + '.tri-ok{color:var(--radix-success,#34d399);font-weight:700}.tri-err{color:var(--radix-coral,#ff7a5c);font-weight:700}'
+    + '.tri-card{background:var(--radix-surface);border:1px solid var(--radix-line);border-radius:14px;padding:14px 16px;margin:10px 0}'
+    + '.tri-tab-wrap{overflow-x:auto}';
+  document.head.appendChild(s);
+}
+function _triIco(n) {
+  const d = { target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>', clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>' };
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (d[n] || d.target) + '</svg>';
+}
+function _triCor(c) { c = String(c || '').toLowerCase(); return c === 'amarela' ? 'amarelo' : c; }
+function _triTempo(s) { if (s == null) return '—'; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return (h ? h + 'h' : '') + String(m).padStart(2, '0') + 'min'; }
+function _triNomeProva(cp) { const pr = (TRI.provas || []).find(x => x.co_prova === cp); return pr ? 'ENEM ' + pr.ano + ' · caderno ' + pr.caderno + ' ' + _triCor(pr.cor) : 'prova ' + cp; }
+async function renderSimuladoTRI() {
+  state.view = 'simulado-tri';
+  _triCss(); clearInterval(TRI.timer);
+  const main = document.getElementById('main-content');
+  const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimulados()">Simulados</a> / ENEM oficial com nota TRI</div>';
+  const titulo = '<h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success">' + _triIco('target') + '</span>Simulado ENEM oficial com nota TRI</h2>';
+  if (state.degustacao) { main.innerHTML = bc + titulo + '<div class="tri-card">O simulado com nota TRI faz parte da Revisão Final. Na degustação ele não está liberado.</div>'; return; }
+  main.innerHTML = bc + titulo + '<p style="color:var(--radix-text-muted)">Carregando…</p>';
+  const [p, t] = await Promise.all([
+    sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url').eq('area', 'MT').not('pdf_url', 'is', null).order('ano', { ascending: false }).order('caderno'),
+    sb.from('simulado_tri').select('id, co_prova, iniciado_em, enviado_em, nota, acertos, erros, brancos, tempo_seg').eq('aluno_id', state.usuario.id).order('iniciado_em', { ascending: false })
+  ]);
+  if (p.error) { main.innerHTML = bc + titulo + '<div class="tri-card">Não consegui carregar as provas: ' + _escHtml(p.error.message) + '</div>'; return; }
+  TRI.provas = p.data || []; TRI.tentativas = t.data || [];
+  const abertas = TRI.tentativas.filter(x => !x.enviado_em), feitas = TRI.tentativas.filter(x => x.enviado_em);
+  main.innerHTML = bc + titulo
+    + '<p style="color:var(--radix-text-2);max-width:760px">Escolha um caderno, abra o PDF oficial do INEP, resolva as 45 questões de Matemática (136 a 180) e marque aqui. A nota sai pelo mesmo modelo do ENEM, com os parâmetros oficiais de cada questão. Reserve cerca de 2 horas e meia.</p>'
+    + (abertas.length ? '<div class="tri-card"><b>Em andamento</b>' + abertas.map(a => '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap"><span>' + _escHtml(_triNomeProva(a.co_prova)) + ' · iniciado em ' + new Date(a.iniciado_em).toLocaleString('pt-BR') + '</span><span style="display:flex;gap:6px"><button class="btn" onclick="triContinuar(\'' + a.id + '\')">Continuar</button><button class="btn btn-secondary" onclick="triCancelar(\'' + a.id + '\')">Descartar</button></span></div>').join('') + '</div>' : '')
+    + '<div class="tri-card"><b>Provas disponíveis</b><div class="tri-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">'
+    + TRI.provas.map(pr => '<div class="tri-q" style="justify-content:space-between"><span><b>ENEM ' + pr.ano + '</b> · caderno ' + pr.caderno + ' ' + _triCor(pr.cor) + '<br><small style="color:var(--radix-text-muted)">Matemática, questões 136 a 180</small></span><button class="btn" style="width:auto;height:auto;border-radius:8px;padding:8px 12px" onclick="triIniciar(' + pr.co_prova + ')">Começar</button></div>').join('')
+    + '</div></div>'
+    + '<div class="tri-card"><b>Minhas notas</b>' + (feitas.length
+      ? '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Prova</th><th>Data</th><th>Nota TRI</th><th>Acertos</th><th>Tempo</th><th></th></tr></thead><tbody>' + feitas.map(f => '<tr><td>' + _escHtml(_triNomeProva(f.co_prova)) + '</td><td>' + new Date(f.enviado_em).toLocaleDateString('pt-BR') + '</td><td><b>' + Number(f.nota).toFixed(1).replace('.', ',') + '</b></td><td>' + f.acertos + '/45</td><td>' + _triTempo(f.tempo_seg) + '</td><td><button class="btn btn-secondary" onclick="triVerResultado(\'' + f.id + '\')">Ver relatório</button></td></tr>').join('') + '</tbody></table></div>'
+      : '<p style="color:var(--radix-text-muted);margin:8px 0 0">Nenhum simulado enviado ainda.</p>') + '</div>';
+}
+async function triIniciar(coProva) {
+  radixShowLoading('Preparando o simulado…');
+  const { data: id, error } = await sb.rpc('fn_simulado_tri_iniciar', { p_co_prova: coProva });
+  radixHideLoading();
+  if (error) { alert('Não foi possível iniciar: ' + error.message); return; }
+  await triContinuar(id);
+}
+async function triContinuar(id) {
+  const { data: t, error } = await sb.from('simulado_tri').select('id, co_prova, respostas, iniciado_em, enviado_em').eq('id', id).single();
+  if (error || !t) { alert('Tentativa não encontrada.'); return; }
+  if (t.enviado_em) { triVerResultado(id); return; }
+  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url').eq('area', 'MT'); TRI.provas = p.data || []; }
+  const prova = TRI.provas.find(x => x.co_prova === t.co_prova) || { ano: '', cor: '', caderno: '', pdf_url: '' };
+  const resp = (t.respostas && t.respostas.length === 45 ? t.respostas : '.'.repeat(45)).split('');
+  TRI.atual = { id: t.id, co_prova: t.co_prova, prova, resp, inicio: new Date(t.iniciado_em).getTime() };
+  renderGabaritoTRI();
+}
+function _triLinha(i, r) {
+  return '<div class="tri-q' + (r === '.' ? ' branco' : '') + '" id="tri-q-' + i + '"><span class="n">' + (136 + i) + '</span>'
+    + ['A', 'B', 'C', 'D', 'E'].map(l => '<button type="button" class="' + (r === l ? 'on' : '') + '" onclick="triMarcar(' + i + ',\'' + l + '\')" aria-label="Questão ' + (136 + i) + ', alternativa ' + l + '" aria-pressed="' + (r === l) + '">' + l + '</button>').join('') + '</div>';
+}
+function renderGabaritoTRI() {
+  state.view = 'simulado-tri-gabarito';
+  _triCss();
+  const a = TRI.atual; const main = document.getElementById('main-content');
+  const marcadas = a.resp.filter(x => x !== '.').length;
+  main.innerHTML = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Gabarito</div>'
+    + '<h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success">' + _triIco('doc') + '</span>ENEM ' + a.prova.ano + ' · caderno ' + a.prova.caderno + ' ' + _triCor(a.prova.cor) + ' · Matemática</h2>'
+    + '<div class="tri-top">'
+    + '<a class="btn" href="' + _escHtml(a.prova.pdf_url) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">' + _triIco('doc') + ' Abrir a prova (PDF do INEP)</a>'
+    + '<span class="tri-timer" id="tri-timer" title="Tempo decorrido desde o início">' + _triIco('clock') + ' 00:00:00</span>'
+    + '<span id="tri-progresso" style="color:var(--radix-text-muted)">' + marcadas + ' de 45 marcadas</span>'
+    + '</div>'
+    + '<p style="color:var(--radix-text-2);font-size:13px">Questões 136 a 180. Suas marcações são salvas automaticamente; você pode sair e continuar depois. Clique de novo na letra para desmarcar. O que ficar em branco conta como erro.</p>'
+    + '<div class="tri-grid" id="tri-grid">' + a.resp.map((r, i) => _triLinha(i, r)).join('') + '</div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">'
+    + '<button class="btn" style="background:var(--radix-grad-brand,linear-gradient(135deg,#22d3ee,#3b82f6));color:#0e1a36;font-weight:800;padding:10px 18px" onclick="triEnviar()">Enviar e calcular a nota</button>'
+    + '<button class="btn btn-secondary" onclick="renderSimuladoTRI()">Sair e continuar depois</button>'
+    + '</div>';
+  clearInterval(TRI.timer);
+  const tick = () => {
+    const el = document.getElementById('tri-timer'); if (!el) { clearInterval(TRI.timer); return; }
+    const s = Math.max(0, Math.floor((Date.now() - a.inicio) / 1000));
+    el.innerHTML = _triIco('clock') + ' ' + [Math.floor(s / 3600), Math.floor(s % 3600 / 60), s % 60].map(x => String(x).padStart(2, '0')).join(':');
+  };
+  tick(); TRI.timer = setInterval(tick, 1000);
+  window.scrollTo(0, 0);
+}
+function triMarcar(i, l) {
+  const a = TRI.atual; if (!a) return;
+  a.resp[i] = a.resp[i] === l ? '.' : l;
+  const el = document.getElementById('tri-q-' + i); if (el) el.outerHTML = _triLinha(i, a.resp[i]);
+  const p = document.getElementById('tri-progresso'); if (p) p.textContent = a.resp.filter(x => x !== '.').length + ' de 45 marcadas';
+  clearTimeout(TRI.salvarT);
+  TRI.salvarT = setTimeout(async () => {
+    const { error } = await sb.rpc('fn_simulado_tri_salvar', { p_id: a.id, p_respostas: a.resp.join('') });
+    if (error) console.warn('[tri] salvar:', error.message);
+  }, 800);
+}
+async function triEnviar() {
+  const a = TRI.atual; if (!a) return;
+  const brancos = a.resp.filter(x => x === '.').length;
+  const aviso = brancos > 0 ? brancos + ' questão(ões) em branco contam como erro. Enviar assim mesmo? Depois do envio não dá para alterar.' : 'Enviar o gabarito e calcular a nota? Depois do envio não dá para alterar.';
+  if (!confirm(aviso)) return;
+  clearTimeout(TRI.salvarT);
+  radixShowLoading('Calculando sua nota TRI…');
+  const tempo = Math.floor((Date.now() - a.inicio) / 1000);
+  const { data, error } = await sb.rpc('fn_simulado_tri_finalizar', { p_id: a.id, p_respostas: a.resp.join(''), p_tempo_seg: tempo });
+  radixHideLoading();
+  if (error) { alert('Não foi possível calcular: ' + error.message); return; }
+  clearInterval(TRI.timer); TRI.atual = null;
+  renderResultadoTRI(data, tempo);
+}
+async function triCancelar(id) {
+  if (!confirm('Descartar esta tentativa? As marcações serão apagadas.')) return;
+  const { error } = await sb.rpc('fn_simulado_tri_cancelar', { p_id: id });
+  if (error) { alert('Não foi possível descartar: ' + error.message); return; }
+  renderSimuladoTRI();
+}
+async function triVerResultado(id) {
+  radixShowLoading('Abrindo o relatório…');
+  const { data: t, error } = await sb.from('simulado_tri').select('resultado, tempo_seg').eq('id', id).single();
+  radixHideLoading();
+  if (error || !t || !t.resultado) { alert('Relatório não encontrado.'); return; }
+  renderResultadoTRI(Object.assign({ id }, t.resultado), t.tempo_seg);
+}
+function renderResultadoTRI(j, tempo) {
+  state.view = 'simulado-tri-resultado';
+  _triCss();
+  const main = document.getElementById('main-content');
+  const itens = (j.itens || []).slice();
+  const prior = itens.filter(x => x.acertou === false && x.chance != null && x.chance >= 50).sort((a, b) => b.chance - a.chance);
+  const porDif = itens.filter(x => !x.anulado).sort((a, b) => (a.dificuldade || 0) - (b.dificuldade || 0));
+  const nota = Number(j.nota).toFixed(1).replace('.', ',');
+  const resp = (x) => x.resposta === '.' ? 'em branco' : x.resposta;
+  main.innerHTML = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Resultado</div>'
+    + '<h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success">' + _triIco('target') + '</span>Resultado · ' + _escHtml(j.descricao || '') + '</h2>'
+    + '<div class="tri-kpis">'
+    + '<div class="tri-kpi"><div class="v">' + nota + '</div><div class="l">Nota TRI</div></div>'
+    + '<div class="tri-kpi"><div class="v tri-ok">' + j.acertos + '</div><div class="l">Acertos</div></div>'
+    + '<div class="tri-kpi"><div class="v tri-err">' + j.erros + '</div><div class="l">Erros</div></div>'
+    + '<div class="tri-kpi"><div class="v">' + j.brancos + '</div><div class="l">Em branco</div></div>'
+    + '<div class="tri-kpi"><div class="v">' + _triTempo(tempo) + '</div><div class="l">Tempo</div></div>'
+    + '</div>'
+    + '<div class="tri-card"><b>Revisão prioritária</b> <span style="color:var(--radix-text-muted);font-size:13px">erros em questões que estavam ao seu alcance (chance de acerto de 50% ou mais na sua proficiência). É aqui que a nota sobe mais rápido.</span>'
+    + (prior.length ? '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Questão</th><th>Sua resposta</th><th>Gabarito</th><th>Chance de acerto</th><th>Dificuldade</th></tr></thead><tbody>' + prior.map(x => '<tr><td><b>' + x.posicao + '</b></td><td class="tri-err">' + resp(x) + '</td><td>' + x.gabarito + '</td><td>' + x.chance + '%</td><td>' + x.dificuldade + '</td></tr>').join('') + '</tbody></table></div>'
+      : '<p style="color:var(--radix-text-muted);margin:8px 0 0">Nenhum erro em questões ao seu alcance. Os erros que ficaram são em questões acima do seu nível atual.</p>')
+    + '</div>'
+    + '<div class="tri-card"><b>Correção questão a questão</b> <span style="color:var(--radix-text-muted);font-size:13px">da mais fácil à mais difícil pela calibração oficial; a dificuldade está na mesma escala da nota</span>'
+    + '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Questão</th><th>Resultado</th><th>Sua resposta</th><th>Gabarito</th><th>Dificuldade</th><th>Chance</th></tr></thead><tbody>'
+    + porDif.map(x => '<tr><td><b>' + x.posicao + '</b></td><td class="' + (x.acertou ? 'tri-ok' : 'tri-err') + '">' + (x.acertou ? 'acertou' : (x.resposta === '.' ? 'em branco' : 'errou')) + '</td><td>' + (x.resposta === '.' ? '—' : x.resposta) + '</td><td>' + x.gabarito + '</td><td>' + x.dificuldade + '</td><td>' + x.chance + '%</td></tr>').join('')
+    + itens.filter(x => x.anulado).map(x => '<tr><td><b>' + x.posicao + '</b></td><td colspan="5" style="color:var(--radix-text-muted)">anulada pelo INEP, não entra na nota</td></tr>').join('')
+    + '</tbody></table></div></div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button class="btn btn-secondary" onclick="renderSimuladoTRI()">Voltar aos simulados</button></div>';
+  window.scrollTo(0, 0);
+}
+
 async function renderSimulados(aba) {
   state.view = 'meus-simulados';
   const abasValidas = ['externos', 'plataforma', 'metas'];
@@ -19383,6 +19557,10 @@ async function renderSimulados(aba) {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Registrar nota externa
       </button>
+      ${state.degustacao ? '' : `<button class="btn btn-secondary" style="padding:10px 18px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" onclick="renderSimuladoTRI()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        ENEM oficial com nota TRI
+      </button>`}
     </div>
 
     <!-- Abas -->
