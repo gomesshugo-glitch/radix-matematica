@@ -25,6 +25,24 @@
           "value": "camera=(self), microphone=(), geolocation=(), payment=()"
         }
       ]
+    },
+    {
+      "source": "/vendas",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/vendas.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ],
   "rewrites": [

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Matrícula · Radix Matemática</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -95,7 +96,32 @@
   th { color: var(--radix-text-muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
   .mono { font-family: ui-monospace, monospace; font-size: 12px; color: var(--radix-text-muted); }
   footer { color: var(--radix-text-muted); font-size: 12px; text-align: center; margin-top: 30px; }
-  @media (max-width: 640px) { .pix { grid-template-columns: 1fr; } .pix img { margin: 0 auto; } .linha { grid-template-columns: 1fr; } }
+  /* menus do cabeçalho */
+  .menu-wrap { position: relative; }
+  .menu-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--radix-surface-2); border: 1px solid var(--radix-line); color: var(--radix-text); border-radius: 10px; padding: 7px 12px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; min-height: 38px; }
+  .menu-btn:hover { border-color: var(--radix-line-2); }
+  .menu-btn[aria-expanded="true"] { border-color: var(--radix-cyan); }
+  .menu-btn .ini { width: 24px; height: 24px; border-radius: 50%; background: var(--radix-grad-brand); color: #06121f; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
+  .menu-btn .seta { opacity: .6; }
+  .menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 250px; background: var(--radix-surface); border: 1px solid var(--radix-line-2); border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,.55); padding: 6px; z-index: 40; }
+  .menu[hidden] { display: none; }
+  .menu-cab { padding: 10px 12px 8px; border-bottom: 1px solid var(--radix-line); margin-bottom: 6px; }
+  .menu-cab b { display: block; font-size: 14px; }
+  .menu-cab span { display: block; font-size: 12px; color: var(--radix-text-muted); word-break: break-all; margin-top: 2px; }
+  .menu button, .menu a { display: flex; width: 100%; align-items: center; gap: 10px; background: transparent; border: none; color: var(--radix-text-2); border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; font-family: inherit; text-decoration: none; }
+  .menu button:hover, .menu a:hover, .menu button:focus-visible, .menu a:focus-visible { background: var(--radix-surface-2); color: var(--radix-text); outline: none; }
+  .menu .sep { height: 1px; background: var(--radix-line); margin: 6px 0; }
+  .menu .ic { display: inline-flex; width: 18px; justify-content: center; opacity: .8; flex: 0 0 18px; }
+  .menu .zap { color: var(--radix-success); }
+  .menu small { display: block; font-size: 11.5px; font-weight: 500; color: var(--radix-text-muted); margin-top: 1px; }
+  .dados { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .dados th { width: 42%; color: var(--radix-text-muted); font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 13px; }
+  .modal-fundo { position: fixed; inset: 0; background: rgba(6,12,26,.72); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 60; }
+  .modal-cx { background: var(--radix-surface); border: 1px solid var(--radix-line-2); border-radius: 16px; padding: 24px; width: 100%; max-width: 520px; max-height: 86vh; overflow: auto; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .modal-cx h3 { font-size: 19px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 10px; }
+  .passos-txt { margin: 4px 0 14px 18px; font-size: 14px; line-height: 1.7; color: var(--radix-text-2); }
+  .passos-txt b { color: var(--radix-text); }
+  @media (max-width: 640px) { .pix { grid-template-columns: 1fr; } .pix img { margin: 0 auto; } .linha { grid-template-columns: 1fr; } .menu { min-width: 220px; } .menu-btn .rotulo { display: none; } }
 </style>
 </head>
 <body>
@@ -106,14 +132,64 @@
       <span>Radix Matemática<small>Matrícula</small></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <span id="chip-conta" class="chip" hidden></span>
-      <button class="btn btn-ghost btn-sm" id="btn-sair" hidden onclick="sair()">Sair</button>
+
+      <!-- AJUDA: sempre disponível, mesmo sem conta -->
+      <div class="menu-wrap">
+        <button class="menu-btn" id="btn-ajuda" aria-haspopup="true" aria-expanded="false" aria-controls="menu-ajuda" onclick="alternarMenu('ajuda')">
+          <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <span class="rotulo">Ajuda</span>
+        </button>
+        <div class="menu" id="menu-ajuda" role="menu" aria-labelledby="btn-ajuda" hidden>
+          <div class="menu-cab"><b>Precisa de ajuda?</b><span>Atendimento do Radix Matemática</span></div>
+          <a role="menuitem" id="link-whats" href="#" target="_blank" rel="noopener">
+            <span class="ic zap" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.25-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35z"/><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15c-1.53 0-3.03-.41-4.34-1.19l-.31-.18-3.12.82.83-3.04-.2-.31a8.21 8.21 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24z"/></svg></span>
+            <span>WhatsApp (84) 99813-1870<small>Fale com o professor Hugo Gomes</small></span>
+          </a>
+          <button role="menuitem" onclick="fecharMenus();abrirComoFunciona()">
+            <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+            <span>Como funciona a matrícula<small>Passo a passo e formas de pagamento</small></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTA: só com sessão -->
+      <div class="menu-wrap" id="wrap-conta" hidden>
+        <button class="menu-btn" id="btn-conta-menu" aria-haspopup="true" aria-expanded="false" aria-controls="menu-conta" onclick="alternarMenu('conta')">
+          <span class="ini" id="conta-iniciais" aria-hidden="true"></span>
+          <span class="rotulo" id="conta-primeiro"></span>
+          <span class="seta" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+        <div class="menu" id="menu-conta" role="menu" aria-labelledby="btn-conta-menu" hidden>
+          <div class="menu-cab"><b id="menu-nome"></b><span id="menu-email"></span></div>
+          <button role="menuitem" onclick="fecharMenus();abrirPerfil()">
+            <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <span>Meu perfil<small>Nome, e-mail e conta</small></span>
+          </button>
+          <button role="menuitem" onclick="fecharMenus();abrirPagamentos()">
+            <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+            <span>Meus pagamentos<small>Pedidos, cobranças e matrículas</small></span>
+          </button>
+          <button role="menuitem" onclick="fecharMenus();abrirTrocarSenha()">
+            <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <span>Trocar senha<small>Senha de acesso à plataforma</small></span>
+          </button>
+          <div class="sep"></div>
+          <button role="menuitem" onclick="fecharMenus();sair()">
+            <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+            <span>Sair</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="sandbox" id="aviso-sandbox"><b>Ambiente de teste.</b> Esta página conversa com a API beta do Lumen em ambiente de homologação. Nenhuma cobrança real é feita. As contas e os pedidos criados aqui, porém, ficam gravados: use um e-mail descartável por teste.</div>
+  <div class="sandbox" id="aviso-sandbox">
+    <b>Página de teste. Isto não é uma matrícula do Radix.</b><br>
+    As turmas e os preços abaixo são de um catálogo de demonstração da plataforma Lumen, não do curso Radix, e o pagamento roda em ambiente de homologação: nenhuma cobrança real é feita e nenhuma vaga é garantida.<br>
+    <b>Não use seu CPF real nem a senha que você usa no Radix.</b> A conta criada aqui fica gravada na plataforma Lumen e não pode ser apagada por esta página. Para se matricular de verdade, fale com o professor pelo WhatsApp (84) 99813-1870.
+  </div>
 
   <div class="passos" id="passos">
     <div class="passo" data-p="1">1<b>Turma</b></div>
@@ -203,8 +279,13 @@
     <div class="acoes"><button class="btn btn-sec btn-sm" onclick="carregarPedidos()">Atualizar</button></div>
   </section>
 
-  <footer>Radix Matemática · pagamentos via Lumen · <span id="rodape-amb"></span></footer>
+  <footer>
+    Radix Matemática · pagamentos via Lumen · <span id="rodape-amb"></span><br>
+    Atendimento: <a id="rodape-whats" href="#" target="_blank" rel="noopener">WhatsApp (84) 99813-1870</a>
+  </footer>
 </main>
+
+<div id="modal-root"></div>
 
 <script>
 'use strict';
@@ -213,6 +294,12 @@
    proxy de mesma origem (/api/lumen -> Railway). Local: server.js; Vercel:
    api/lumen/[...caminho].js.
    ===================================================================== */
+// Atendimento do Radix (o mesmo número do app).
+const RADIX = {
+  whatsapp: '5584998131870',
+  rotulo: '(84) 99813-1870',
+  zapUrl(msg) { return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(msg || 'Olá, Hugo! Tenho uma dúvida sobre a matrícula no Radix Matemática.'); }
+};
 const LUMEN = {
   proxy: '/api/lumen',
   slug: 'lumen',                       // loja da beta; trocar pela loja do Radix quando existir
@@ -233,6 +320,9 @@ function parcela(totalCent, n) { return Math.floor(totalCent / n); }
 function maxParcelasOferecidas(precoCent, teto) { return Math.max(1, Math.min(teto, Math.floor(precoCent / LUMEN.minParcelaCentavos))); }
 function normNome(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
 function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+// Link vindo da API só é usado se for https. Escapar impede quebrar o atributo,
+// mas não impede um 'javascript:' de executar no clique.
+function urlSegura(u) { return /^https:\/\/[^\s"'<>]+$/i.test(String(u || '')) ? String(u) : ''; }
 function fmtData(iso) { if (!iso) return '—'; const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; }   // data pura: sem fuso
 function fmtHora(iso) { try { return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }); } catch (e) { return iso; } }
 function mascaraCpf(el) { const d = el.value.replace(/\D/g, '').slice(0, 11); el.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'); }
@@ -270,9 +360,95 @@ function irPara(n) {
 }
 function setMsg(id, txt, tipo) { const el = document.getElementById(id); if (!el) return; el.textContent = txt || ''; el.className = 'msg' + (tipo ? ' ' + tipo : ''); }
 function atualizarCabecalho() {
-  const chip = document.getElementById('chip-conta'), sair = document.getElementById('btn-sair');
-  if (estado.conta) { chip.textContent = estado.conta.fullName || estado.conta.email; chip.hidden = false; sair.hidden = false; }
-  else { chip.hidden = true; sair.hidden = true; }
+  const wrap = document.getElementById('wrap-conta');
+  const zap = document.getElementById('link-whats');
+  if (zap) zap.href = RADIX.zapUrl();
+  if (!estado.conta) { wrap.hidden = true; fecharMenus(); return; }
+  const nome = normNome(estado.conta.fullName) || estado.conta.email || '';
+  const partes = nome.split(' ').filter(Boolean);
+  document.getElementById('conta-iniciais').textContent = ((partes[0] || '?')[0] + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+  document.getElementById('conta-primeiro').textContent = partes[0] || '';
+  document.getElementById('menu-nome').textContent = nome;
+  document.getElementById('menu-email').textContent = estado.conta.email || '';
+  wrap.hidden = false;
+}
+
+/* ---------- menus do cabeçalho ---------- */
+function fecharMenus(exceto) {
+  ['ajuda', 'conta'].forEach(m => {
+    if (m === exceto) return;
+    const menu = document.getElementById('menu-' + m), btn = document.getElementById(m === 'ajuda' ? 'btn-ajuda' : 'btn-conta-menu');
+    if (menu) menu.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  });
+}
+function alternarMenu(m) {
+  const menu = document.getElementById('menu-' + m), btn = document.getElementById(m === 'ajuda' ? 'btn-ajuda' : 'btn-conta-menu');
+  const abrir = menu.hidden;
+  fecharMenus(abrir ? m : null);
+  menu.hidden = !abrir;
+  btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+  if (abrir) { const alvo = menu.querySelector('button, a'); if (alvo) setTimeout(() => alvo.focus(), 10); }
+}
+document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) fecharMenus(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('modal-root').innerHTML) { fecharModal(); return; }
+  fecharMenus();
+});
+
+/* ---------- telas do menu ---------- */
+function abrirModal(html) {
+  document.getElementById('modal-root').innerHTML = html;
+  const f = document.querySelector('#modal-root button, #modal-root a');
+  if (f) setTimeout(() => f.focus(), 30);
+}
+function fecharModal() { document.getElementById('modal-root').innerHTML = ''; }
+function _modal(titulo, corpo, acoes) {
+  return '<div class="modal-fundo" onclick="if(event.target===this)fecharModal()">' +
+    '<div class="modal-cx" role="dialog" aria-modal="true" aria-label="' + esc(titulo) + '">' +
+    '<h3>' + esc(titulo) + '</h3>' + corpo +
+    '<div class="acoes">' + (acoes || '') + '<button class="btn btn-ghost" onclick="fecharModal()">Fechar</button></div>' +
+    '</div></div>';
+}
+function abrirPerfil() {
+  const c = estado.conta || {};
+  abrirModal(_modal('Meu perfil',
+    '<p class="sub">Dados da sua conta na plataforma de pagamento. Nome e e-mail são definidos no cadastro.</p>' +
+    '<table class="dados"><tbody>' +
+    '<tr><th>Nome</th><td>' + esc(normNome(c.fullName) || '—') + '</td></tr>' +
+    '<tr><th>E-mail</th><td>' + esc(c.email || '—') + '</td></tr>' +
+    '<tr><th>Conta criada em</th><td>' + esc(c.createdAt ? fmtHora(c.createdAt) : 'não informado') + '</td></tr>' +
+    '</tbody></table>' +
+    '<p class="msg warn" style="margin-top:14px">A plataforma ainda não permite editar nome e e-mail por aqui, nem apagar a conta. Para qualquer correção, fale com o professor pelo WhatsApp.</p>',
+    '<a class="btn btn-sec" href="' + esc(RADIX.zapUrl('Olá, Hugo! Preciso corrigir os dados da minha conta na página de matrícula.')) + '" target="_blank" rel="noopener">Falar no WhatsApp</a>'));
+}
+function abrirPagamentos() {
+  const sec = document.getElementById('sec-pedidos');
+  if (!estado.token) { irPara(2); return; }
+  sec.hidden = false;
+  carregarPedidos();
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function abrirTrocarSenha() {
+  abrirModal(_modal('Trocar senha',
+    '<p class="sub">A plataforma de pagamento ainda não oferece troca de senha nem recuperação por e-mail. Enquanto isso não existir, a troca é feita pelo atendimento.</p>' +
+    '<p class="sub">Chame o professor pelo WhatsApp que ele orienta o procedimento. Não mande sua senha atual por mensagem: ninguém do Radix vai pedir isso.</p>' +
+    '<p class="msg warn">Lembre que a senha desta página é separada da senha do app do Radix. Se você usou a mesma nos dois, troque a do app.</p>',
+    '<a class="btn btn-pri" href="' + esc(RADIX.zapUrl('Olá, Hugo! Preciso trocar a senha da minha conta na página de matrícula.')) + '" target="_blank" rel="noopener">Pedir no WhatsApp</a>'));
+}
+function abrirComoFunciona() {
+  abrirModal(_modal('Como funciona a matrícula',
+    '<p class="sub">São cinco passos, na ordem:</p>' +
+    '<ol class="passos-txt">' +
+    '<li><b>Turma.</b> Escolha o horário que cabe na sua rotina. O valor é por aluno.</li>' +
+    '<li><b>Conta.</b> Crie uma conta ou entre na que você já tem. Ela guarda seus pedidos.</li>' +
+    '<li><b>Aluno.</b> Diga se o curso é para você ou para outra pessoa. A data de nascimento é sempre a do aluno.</li>' +
+    '<li><b>Pagamento.</b> PIX à vista ou cartão parcelado. Depois de gerar a cobrança não dá para trocar a forma sem falar com a escola, então confira o resumo.</li>' +
+    '<li><b>Confirmação.</b> Pague e espere nesta tela. A confirmação chega sozinha e a vaga fica garantida.</li>' +
+    '</ol>' +
+    '<p class="sub">A vaga fica reservada por tempo limitado enquanto o pagamento não cai. Se passar do prazo, é só refazer o pedido.</p>',
+    '<a class="btn btn-sec" href="' + esc(RADIX.zapUrl()) + '" target="_blank" rel="noopener">Tirar dúvida no WhatsApp</a>'));
 }
 function sair() { estado.token = null; estado.conta = null; guardar('lumen_token', null); guardar('lumen_cobranca', null); pararPoll(); atualizarCabecalho(); document.getElementById('sec-pedidos').hidden = true; irPara(1); }
 
@@ -512,18 +688,24 @@ function mostrarConfirmacao() {
   document.getElementById('conf-sub').textContent = (t ? t.courseTitle + ' · ' : '') + brl(centavos(c.amount)) + (c.dueDate ? ' · vencimento ' + fmtData(c.dueDate) : '') + (estado.pedido && estado.pedido.expiresAt ? ' · vaga reservada até ' + fmtHora(estado.pedido.expiresAt) : '');
   acoes.innerHTML = '';
   if (c.method === 'pix') {
-    const qr = c.pixQrCode ? 'data:image/png;base64,' + c.pixQrCode : '';
-    corpo.innerHTML = '<div class="pix">' + (qr ? '<img src="' + qr + '" alt="QR code do PIX">' : '<div></div>') +
+    // O QR vem da API em base64. NÃO concatenar no atributo: vai por propriedade,
+    // depois de conferir que só tem caracteres de base64.
+    const qr = /^[A-Za-z0-9+/=\s]+$/.test(String(c.pixQrCode || '')) ? String(c.pixQrCode).replace(/\s/g, '') : '';
+    corpo.innerHTML = '<div class="pix">' + (qr ? '<img id="pix-qr" alt="QR code do PIX">' : '<div></div>') +
       '<div><p class="sub">Escaneie o QR code no aplicativo do banco ou copie o código abaixo e cole em "PIX copia e cola". No celular, use o código.</p>' +
       '<textarea id="pix-copia" readonly>' + esc(c.pixPayload || '') + '</textarea>' +
       '<div class="acoes"><button class="btn btn-pri btn-sm" onclick="copiarPix()">Copiar código PIX</button></div></div></div>';
+    const img = document.getElementById('pix-qr');
+    if (img && qr) img.src = 'data:image/png;base64,' + qr;
     iniciarPoll();
   } else if (c.method === 'boleto') {
-    corpo.innerHTML = '<p class="sub">Abra o boleto, pague no banco ou no aplicativo e aguarde a confirmação. A vaga é confirmada quando o pagamento compensar.</p>' + (c.bankSlipUrl ? '<a class="btn btn-pri" href="' + esc(c.bankSlipUrl) + '" target="_blank" rel="noopener">Abrir boleto</a>' : '<p class="msg warn">Link do boleto indisponível. Use "Recuperar dados do pagamento".</p>');
+    const link = urlSegura(c.bankSlipUrl);
+    corpo.innerHTML = '<p class="sub">Abra o boleto, pague no banco ou no aplicativo e aguarde a confirmação. A vaga é confirmada quando o pagamento compensar.</p>' + (link ? '<a class="btn btn-pri" href="' + esc(link) + '" target="_blank" rel="noopener">Abrir boleto</a>' : '<p class="msg warn">Link do boleto indisponível. Use "Recuperar dados do pagamento".</p>');
     iniciarPoll();
   } else {
+    const link = urlSegura(c.invoiceUrl);
     corpo.innerHTML = '<p class="sub">Você vai para a página segura do provedor para digitar os dados do cartão. Ao terminar, volte para esta página: o pagamento é confirmado automaticamente.</p>' +
-      (c.invoiceUrl ? '<a class="btn btn-pri" id="link-cartao" href="' + esc(c.invoiceUrl) + '">Ir para o pagamento com cartão</a>' : '<p class="msg warn">Link do cartão indisponível. Use "Recuperar dados do pagamento".</p>');
+      (link ? '<a class="btn btn-pri" id="link-cartao" href="' + esc(link) + '" rel="noopener">Ir para o pagamento com cartão</a>' : '<p class="msg warn">Link do cartão indisponível. Use "Recuperar dados do pagamento".</p>');
     // a cobrança já está guardada em sessionStorage antes de qualquer redirecionamento
     iniciarPoll();
   }
@@ -634,6 +816,8 @@ function testes() {
 /* ---------- inicialização ---------- */
 (async function boot() {
   document.getElementById('rodape-amb').textContent = 'loja ' + LUMEN.slug + ' · sandbox';
+  document.getElementById('rodape-whats').href = RADIX.zapUrl();
+  document.getElementById('link-whats').href = RADIX.zapUrl();
   estado.token = lerGuardado('lumen_token');
   await Promise.all([carregarCatalogo(), carregarConta()]);
   if (estado.conta) carregarPedidos();
