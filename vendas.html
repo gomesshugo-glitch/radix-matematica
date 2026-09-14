@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrícula · Radix Matemática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --radix-blue: #3b82f6; --radix-cyan: #22d3ee; --radix-coral: #ff7a5c;
+    --radix-bg: #0e1a36; --radix-bg-2: #13234a; --radix-surface: #19284e; --radix-surface-2: #223464; --radix-surface-3: #2b417a;
+    --radix-line: rgba(255,255,255,0.08); --radix-line-2: rgba(255,255,255,0.14);
+    --radix-text: #eaf1ff; --radix-text-2: #c6d2ec; --radix-text-muted: #8aa0c9;
+    --radix-success: #34d399; --radix-warning: #fbbf24; --radix-red: #ff5e3a;
+    --radix-grad-brand: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent 60%),
+                radial-gradient(900px 500px at -10% 20%, rgba(59,130,246,.12), transparent 60%), var(--radix-bg);
+    background-attachment: fixed; color: var(--radix-text); min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--radix-cyan); }
+  header.top { border-bottom: 1px solid var(--radix-line); background: rgba(14,26,54,.85); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 5; }
+  .top-in { max-width: 1040px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.3px; }
+  .brand .logo { display: inline-flex; width: 34px; height: 34px; border-radius: 9px; background: var(--radix-grad-brand); align-items: center; justify-content: center; }
+  .brand small { display: block; font-size: 11px; font-weight: 600; color: var(--radix-text-muted); letter-spacing: .08em; text-transform: uppercase; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--radix-surface-2); color: var(--radix-text-2); }
+  .chip.ok { background: rgba(52,211,153,.15); color: var(--radix-success); }
+  .chip.warn { background: rgba(251,191,36,.15); color: var(--radix-warning); }
+  .chip.err { background: rgba(255,94,58,.15); color: var(--radix-coral); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 22px 20px 60px; }
+  .sandbox { border-left: 3px solid var(--radix-warning); background: rgba(251,191,36,.08); padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; margin-bottom: 22px; color: var(--radix-text-2); }
+  .sandbox b { color: var(--radix-text); }
+  .passos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .passo { flex: 1; min-width: 140px; padding: 10px 12px; border-radius: 10px; background: var(--radix-surface); border: 1px solid var(--radix-line); font-size: 12px; color: var(--radix-text-muted); font-weight: 600; }
+  .passo b { display: block; font-size: 13px; color: var(--radix-text-2); margin-top: 2px; }
+  .passo.on { border-color: var(--radix-cyan); background: var(--radix-surface-2); }
+  .passo.on b { color: var(--radix-text); }
+  .passo.done { border-color: rgba(52,211,153,.5); }
+  .passo.done b { color: var(--radix-success); }
+  section.card { background: var(--radix-surface); border: 1px solid var(--radix-line); border-radius: 16px; padding: 22px; margin-bottom: 18px; }
+  section.card[hidden] { display: none; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 6px; }
+  h2 { font-size: 18px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 4px; }
+  .sub { color: var(--radix-text-muted); font-size: 14px; line-height: 1.55; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .turma { background: var(--radix-surface-2); border: 1px solid var(--radix-line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .turma.sel { border-color: var(--radix-cyan); box-shadow: 0 0 0 2px rgba(34,211,238,.25); }
+  .turma h3 { font-size: 15px; font-weight: 800; line-height: 1.3; }
+  .turma .meta { font-size: 12.5px; color: var(--radix-text-muted); line-height: 1.5; }
+  .turma .preco { font-size: 22px; font-weight: 900; margin-top: 4px; }
+  .turma .preco small { font-size: 12px; color: var(--radix-text-muted); font-weight: 600; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 10px; min-height: 42px; padding: 9px 16px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: transform .12s, filter .12s; color: var(--radix-text); background: var(--radix-surface-3); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+  .btn-pri { background: var(--radix-grad-brand); color: #06121f; }
+  .btn-sec { background: var(--radix-surface-3); }
+  .btn-ghost { background: transparent; border: 1px solid var(--radix-line-2); }
+  .btn-sm { min-height: 34px; padding: 6px 12px; font-size: 13px; }
+  .campo { margin-bottom: 12px; }
+  .campo label { display: block; font-size: 12px; font-weight: 700; color: var(--radix-text-muted); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+  .campo input, .campo select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--radix-line-2); background: var(--radix-bg-2); color: var(--radix-text); font-size: 15px; font-family: inherit; }
+  .campo input:focus, .campo select:focus { outline: none; border-color: var(--radix-cyan); }
+  .campo small { display: block; margin-top: 5px; font-size: 12px; color: var(--radix-text-muted); }
+  .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .abas { display: flex; gap: 6px; margin-bottom: 14px; }
+  .abas button { flex: 1; }
+  .abas button.on { background: var(--radix-surface-3); border: 1px solid var(--radix-cyan); }
+  .radios { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .radios label { flex: 1; min-width: 180px; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--radix-line-2); background: var(--radix-bg-2); cursor: pointer; font-weight: 600; font-size: 14px; }
+  .radios label.on { border-color: var(--radix-cyan); background: var(--radix-surface-2); }
+  .radios input { accent-color: var(--radix-cyan); }
+  .metodos { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .metodos button { flex: 1; min-width: 120px; }
+  .metodos button.on { background: var(--radix-surface-3); border: 1px solid var(--radix-cyan); }
+  .resumo { background: var(--radix-bg-2); border: 1px solid var(--radix-line); border-radius: 12px; padding: 14px 16px; margin: 14px 0; font-size: 14px; line-height: 1.6; }
+  .resumo b { color: var(--radix-text); }
+  .msg { font-size: 13.5px; line-height: 1.5; min-height: 18px; margin-top: 10px; }
+  .msg.err { color: var(--radix-coral); }
+  .msg.ok { color: var(--radix-success); }
+  .msg.warn { color: var(--radix-warning); }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .pix { display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; }
+  .pix img { width: 220px; height: 220px; background: #fff; padding: 10px; border-radius: 12px; }
+  .pix textarea { width: 100%; min-height: 110px; padding: 10px; border-radius: 10px; border: 1px solid var(--radix-line-2); background: var(--radix-bg-2); color: var(--radix-text); font-family: ui-monospace, monospace; font-size: 12px; resize: vertical; }
+  .status-pg { display: flex; align-items: center; gap: 10px; font-weight: 700; margin-top: 12px; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--radix-line-2); border-top-color: var(--radix-cyan); border-radius: 50%; animation: gira .8s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--radix-line); vertical-align: top; }
+  th { color: var(--radix-text-muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .mono { font-family: ui-monospace, monospace; font-size: 12px; color: var(--radix-text-muted); }
+  footer { color: var(--radix-text-muted); font-size: 12px; text-align: center; margin-top: 30px; }
+  @media (max-width: 640px) { .pix { grid-template-columns: 1fr; } .pix img { margin: 0 auto; } .linha { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <span class="logo"><svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="#06121f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18 L8 18 L13 27 L19 6 L30 6"/></svg></span>
+      <span>Radix Matemática<small>Matrícula</small></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="chip-conta" class="chip" hidden></span>
+      <button class="btn btn-ghost btn-sm" id="btn-sair" hidden onclick="sair()">Sair</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="sandbox" id="aviso-sandbox"><b>Ambiente de teste.</b> Esta página conversa com a API beta do Lumen em ambiente de homologação. Nenhuma cobrança real é feita. As contas e os pedidos criados aqui, porém, ficam gravados: use um e-mail descartável por teste.</div>
+
+  <div class="passos" id="passos">
+    <div class="passo" data-p="1">1<b>Turma</b></div>
+    <div class="passo" data-p="2">2<b>Sua conta</b></div>
+    <div class="passo" data-p="3">3<b>Aluno</b></div>
+    <div class="passo" data-p="4">4<b>Pagamento</b></div>
+    <div class="passo" data-p="5">5<b>Confirmação</b></div>
+  </div>
+
+  <!-- 1. CATÁLOGO -->
+  <section class="card" id="sec-catalogo">
+    <h1>Escolha sua turma</h1>
+    <p class="sub" id="catalogo-sub">Carregando as turmas disponíveis…</p>
+    <div class="grid" id="catalogo"></div>
+    <p class="msg" id="catalogo-msg"></p>
+  </section>
+
+  <!-- 2. CONTA -->
+  <section class="card" id="sec-conta" hidden>
+    <h2>Sua conta</h2>
+    <p class="sub">Para reservar a vaga precisamos identificar quem está pagando. Crie uma conta ou entre com a sua.</p>
+    <div class="abas">
+      <button class="btn btn-sec on" id="aba-criar" onclick="modoConta('criar')">Criar conta</button>
+      <button class="btn btn-sec" id="aba-entrar" onclick="modoConta('entrar')">Já tenho conta</button>
+    </div>
+    <div class="campo" id="campo-nome"><label>Seu nome completo</label><input type="text" id="conta-nome" autocomplete="name" placeholder="Nome e sobrenome"></div>
+    <div class="linha">
+      <div class="campo"><label>E-mail</label><input type="email" id="conta-email" autocomplete="email" placeholder="voce@email.com"></div>
+      <div class="campo"><label>Senha</label><input type="password" id="conta-senha" autocomplete="new-password" placeholder="Sua senha"></div>
+    </div>
+    <p class="msg" id="conta-msg"></p>
+    <div class="acoes">
+      <button class="btn btn-pri" id="btn-conta" onclick="enviarConta()">Continuar</button>
+      <button class="btn btn-ghost" onclick="irPara(1)">Voltar</button>
+    </div>
+  </section>
+
+  <!-- 3. ALUNO -->
+  <section class="card" id="sec-aluno" hidden>
+    <h2>Para quem é o curso?</h2>
+    <p class="sub">Quem paga e quem estuda são registros diferentes. Escolha antes de preencher o resto.</p>
+    <div class="radios">
+      <label class="on" id="rad-eu"><input type="radio" name="quem" value="eu" checked onchange="quemEstuda()"> Para mim</label>
+      <label id="rad-outro"><input type="radio" name="quem" value="outro" onchange="quemEstuda()"> Para outra pessoa</label>
+    </div>
+    <div class="campo" id="campo-aluno-nome" hidden><label>Nome completo do aluno</label><input type="text" id="aluno-nome" placeholder="Nome e sobrenome do aluno"></div>
+    <div class="campo" style="max-width:260px"><label>Data de nascimento do aluno</label><input type="date" id="aluno-nasc"><small>Obrigatória mesmo quando o aluno é você.</small></div>
+    <p class="msg" id="aluno-msg"></p>
+    <div class="acoes">
+      <button class="btn btn-pri" onclick="confirmarAluno()">Continuar</button>
+      <button class="btn btn-ghost" onclick="irPara(2)">Voltar</button>
+    </div>
+  </section>
+
+  <!-- 4. PAGAMENTO -->
+  <section class="card" id="sec-pagamento" hidden>
+    <h2>Pagamento</h2>
+    <p class="sub">Escolha a forma de pagamento. Depois de gerar a cobrança não dá para trocar a forma nem o parcelamento sem falar com a escola, então confira o resumo antes de confirmar.</p>
+    <div class="metodos" id="metodos"></div>
+    <div class="linha">
+      <div class="campo" id="campo-parcelas" hidden><label>Parcelas</label><select id="parcelas"></select><small id="parcelas-nota"></small></div>
+      <div class="campo"><label>CPF do pagador</label><input type="text" id="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCpf(this)"><small>Só os números são enviados. Não guardamos o CPF nesta página.</small></div>
+    </div>
+    <div class="resumo" id="resumo"></div>
+    <p class="msg" id="pag-msg"></p>
+    <div class="acoes">
+      <button class="btn btn-pri" id="btn-pagar" onclick="confirmarPagamento()">Reservar vaga e gerar pagamento</button>
+      <button class="btn btn-ghost" onclick="irPara(3)">Voltar</button>
+    </div>
+  </section>
+
+  <!-- 5. CONFIRMAÇÃO -->
+  <section class="card" id="sec-conf" hidden>
+    <h2 id="conf-titulo">Pagamento</h2>
+    <p class="sub" id="conf-sub"></p>
+    <div id="conf-corpo"></div>
+    <div class="status-pg" id="conf-status"></div>
+    <p class="msg" id="conf-msg"></p>
+    <div class="acoes" id="conf-acoes"></div>
+  </section>
+
+  <!-- MEUS PEDIDOS -->
+  <section class="card" id="sec-pedidos" hidden>
+    <h2>Meus pedidos e matrículas</h2>
+    <p class="sub">Tudo o que esta conta comprou, em qualquer loja da plataforma.</p>
+    <div id="pedidos"></div>
+    <div class="acoes"><button class="btn btn-sec btn-sm" onclick="carregarPedidos()">Atualizar</button></div>
+  </section>
+
+  <footer>Radix Matemática · pagamentos via Lumen · <span id="rodape-amb"></span></footer>
+</main>
+
+<script>
+'use strict';
+/* =====================================================================
+   CONFIGURAÇÃO. A API do Lumen não devolve CORS: as chamadas passam por um
+   proxy de mesma origem (/api/lumen -> Railway). Local: server.js; Vercel:
+   api/lumen/[...caminho].js.
+   ===================================================================== */
+const LUMEN = {
+  proxy: '/api/lumen',
+  slug: 'lumen',                       // loja da beta; trocar pela loja do Radix quando existir
+  fallbackMetodos: ['pix', 'card'],    // até a API devolver acceptedMethods
+  fallbackMaxParcelas: 10,             // até a API devolver maxCardInstallments
+  minParcelaCentavos: 500,             // mínimo da plataforma por parcela (R$ 5,00), não vem na API
+  pollMs: 4000, pollMaxMs: 10 * 60 * 1000,
+  metodosRenderizaveis: ['pix', 'card', 'boleto'],
+  nomes: { pix: 'PIX', card: 'Cartão de crédito', boleto: 'Boleto' }
+};
+const estado = { token: null, conta: null, turmas: [], turma: null, aluno: null, metodo: null, parcelas: null, pedido: null, cobranca: null, pedidoReq: null, cobrancaReq: null, pollTimer: null, pollInicio: 0 };
+
+/* ---------- dinheiro: só inteiros em centavos, nunca float ---------- */
+function centavos(s) { const m = String(s == null ? '' : s).trim().match(/^(\d+)(?:\.(\d{1,2}))?$/); if (!m) return null; return parseInt(m[1], 10) * 100 + parseInt((m[2] || '0').padEnd(2, '0'), 10); }
+function brl(c) { if (c == null) return '—'; const s = Math.abs(c); return (c < 0 ? '-' : '') + 'R$ ' + Math.floor(s / 100).toLocaleString('pt-BR') + ',' + String(s % 100).padStart(2, '0'); }
+// mesmo arredondamento do servidor: total / n com duas casas, PARA BAIXO
+function parcela(totalCent, n) { return Math.floor(totalCent / n); }
+function maxParcelasOferecidas(precoCent, teto) { return Math.max(1, Math.min(teto, Math.floor(precoCent / LUMEN.minParcelaCentavos))); }
+function normNome(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fmtData(iso) { if (!iso) return '—'; const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; }   // data pura: sem fuso
+function fmtHora(iso) { try { return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }); } catch (e) { return iso; } }
+function mascaraCpf(el) { const d = el.value.replace(/\D/g, '').slice(0, 11); el.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'); }
+function cpfValido(d) { if (!/^\d{11}$/.test(d) || /^(\d)\1{10}$/.test(d)) return false; const dv = (n) => { let s = 0; for (let i = 0; i < n - 1; i++) s += parseInt(d[i]) * (n - i); const r = (s * 10) % 11; return (r === 10 ? 0 : r) === parseInt(d[n - 1]); }; return dv(10) && dv(11); }
+
+/* ---------- HTTP: lê o status antes de tentar JSON (401 vem sem corpo) ---------- */
+async function api(metodo, caminho, opts) {
+  opts = opts || {};
+  const h = { 'Accept': 'application/json' };
+  if (opts.body !== undefined) h['Content-Type'] = 'application/json';
+  if (opts.auth) h['Authorization'] = 'Bearer ' + estado.token;
+  if (opts.slug) h['X-Tenant-Slug'] = LUMEN.slug;
+  let r;
+  try { r = await fetch(LUMEN.proxy + caminho, { method: metodo, headers: h, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined }); }
+  catch (e) { return { status: 0, data: null, rede: true }; }
+  const texto = await r.text();
+  let data = null;
+  if (texto && r.status !== 401) { try { data = JSON.parse(texto); } catch (e) { data = null; } }
+  return { status: r.status, data, texto };
+}
+// prefere uma mensagem do servidor se um dia existir; senão, a nossa
+function motivo(resp, padrao) { const m = resp && resp.data && typeof resp.data.message === 'string' && resp.data.message.trim(); return m || padrao; }
+
+/* ---------- sessão (mesma origem, sobrevive ao redirecionamento do cartão) ---------- */
+function guardar(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function lerGuardado(k) { try { const v = sessionStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+
+/* ---------- navegação ---------- */
+const SECOES = { 1: 'sec-catalogo', 2: 'sec-conta', 3: 'sec-aluno', 4: 'sec-pagamento', 5: 'sec-conf' };
+function irPara(n) {
+  Object.keys(SECOES).forEach(k => { document.getElementById(SECOES[k]).hidden = String(k) !== String(n); });
+  document.querySelectorAll('.passo').forEach(p => { const k = parseInt(p.getAttribute('data-p')); p.classList.toggle('on', k === n); p.classList.toggle('done', k < n); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 4) montarPagamento();
+}
+function setMsg(id, txt, tipo) { const el = document.getElementById(id); if (!el) return; el.textContent = txt || ''; el.className = 'msg' + (tipo ? ' ' + tipo : ''); }
+function atualizarCabecalho() {
+  const chip = document.getElementById('chip-conta'), sair = document.getElementById('btn-sair');
+  if (estado.conta) { chip.textContent = estado.conta.fullName || estado.conta.email; chip.hidden = false; sair.hidden = false; }
+  else { chip.hidden = true; sair.hidden = true; }
+}
+function sair() { estado.token = null; estado.conta = null; guardar('lumen_token', null); guardar('lumen_cobranca', null); pararPoll(); atualizarCabecalho(); document.getElementById('sec-pedidos').hidden = true; irPara(1); }
+
+/* ---------- 1. catálogo ---------- */
+async function carregarCatalogo() {
+  const grid = document.getElementById('catalogo');
+  const r = await api('GET', '/storefront/' + encodeURIComponent(LUMEN.slug));
+  if (r.status !== 200 || !r.data) {
+    document.getElementById('catalogo-sub').textContent = '';
+    setMsg('catalogo-msg', r.rede ? 'Sem conexão com o servidor de matrículas. Tente de novo em instantes.' : r.status === 404 ? 'Loja não encontrada. Avise a escola.' : 'Não foi possível carregar as turmas agora (erro ' + r.status + ').', 'err');
+    return;
+  }
+  estado.turmas = Array.isArray(r.data.items) ? r.data.items : [];
+  if (!estado.turmas.length) { document.getElementById('catalogo-sub').textContent = 'Nenhuma turma disponível no momento.'; grid.innerHTML = ''; return; }
+  document.getElementById('catalogo-sub').textContent = 'Turmas com vagas abertas. O valor é por aluno.';
+  grid.innerHTML = estado.turmas.map(t => {
+    const preco = centavos(t.price);
+    const mod = { online: 'Online', in_person: 'Presencial', hybrid: 'Híbrido' }[t.modality] || (t.modality || '');
+    const pol = politicaDe(t);
+    const vendavel = pol.metodos.length > 0;
+    return '<div class="turma' + (estado.turma && estado.turma.listingId === t.listingId ? ' sel' : '') + '" data-id="' + esc(t.listingId) + '">' +
+      '<h3>' + esc(t.courseTitle) + '</h3>' +
+      '<div class="meta">' + esc(mod) + (t.schedule ? ' · ' + esc(t.schedule) : '') + (t.startsOn ? '<br>Início em ' + fmtData(t.startsOn) : '') + '<br>Professor: ' + esc(t.taughtBy || '') + '</div>' +
+      '<div class="preco">' + brl(preco) + (pol.maxParcelas > 1 && pol.metodos.includes('card') ? '<br><small>ou até ' + pol.maxParcelas + 'x de ' + brl(parcela(preco, pol.maxParcelas)) + ' no cartão</small>' : '') + '</div>' +
+      (vendavel ? '<button class="btn btn-pri" onclick="escolherTurma(\'' + esc(t.listingId) + '\')">Escolher esta turma</button>'
+                : '<button class="btn btn-sec" disabled>Indisponível para venda no momento</button>') +
+      '</div>';
+  }).join('');
+}
+// política de pagamento vem da API quando existir; teste é "a chave existe", não "é falsy"
+function politicaDe(t) {
+  const metodosAceitos = ('acceptedMethods' in t) ? (Array.isArray(t.acceptedMethods) ? t.acceptedMethods : []) : LUMEN.fallbackMetodos;
+  const teto = ('maxCardInstallments' in t) ? (Number.isInteger(t.maxCardInstallments) ? t.maxCardInstallments : 0) : LUMEN.fallbackMaxParcelas;
+  const metodos = metodosAceitos.filter(m => LUMEN.metodosRenderizaveis.includes(m));   // interseção com o que sabemos mostrar
+  const preco = centavos(t.price) || 0;
+  return { metodos, teto, maxParcelas: maxParcelasOferecidas(preco, teto), politicaDaApi: ('acceptedMethods' in t) };
+}
+function escolherTurma(id) {
+  estado.turma = estado.turmas.find(t => t.listingId === id) || null;
+  if (!estado.turma) return;
+  document.querySelectorAll('.turma').forEach(el => el.classList.toggle('sel', el.getAttribute('data-id') === id));
+  if (estado.token && estado.conta) irPara(3); else irPara(2);
+}
+
+/* ---------- 2. conta ---------- */
+let modoAtual = 'criar';
+function modoConta(m) {
+  modoAtual = m;
+  document.getElementById('aba-criar').classList.toggle('on', m === 'criar');
+  document.getElementById('aba-entrar').classList.toggle('on', m === 'entrar');
+  document.getElementById('campo-nome').hidden = m !== 'criar';
+  document.getElementById('conta-senha').setAttribute('autocomplete', m === 'criar' ? 'new-password' : 'current-password');
+  setMsg('conta-msg', '');
+}
+async function enviarConta() {
+  const nome = normNome(document.getElementById('conta-nome').value);
+  const email = document.getElementById('conta-email').value.trim().toLowerCase();
+  const senha = document.getElementById('conta-senha').value;
+  if (!email || !senha || (modoAtual === 'criar' && !nome)) { setMsg('conta-msg', modoAtual === 'criar' ? 'Preencha nome, e-mail e senha.' : 'Preencha e-mail e senha.', 'err'); return; }
+  const btn = document.getElementById('btn-conta'); btn.disabled = true; setMsg('conta-msg', modoAtual === 'criar' ? 'Criando sua conta…' : 'Entrando…');
+  const r = modoAtual === 'criar'
+    ? await api('POST', '/auth/register', { body: { email, password: senha, fullName: nome } })
+    : await api('POST', '/auth/login', { body: { email, password: senha } });
+  btn.disabled = false;
+  if (r.rede) { setMsg('conta-msg', 'Sem conexão com o servidor. Tente de novo.', 'err'); return; }
+  if (modoAtual === 'criar' && r.status === 409) {
+    // nunca tentar login escondido com a mesma senha
+    modoConta('entrar'); document.getElementById('conta-email').value = email;
+    setMsg('conta-msg', 'Este e-mail já tem conta. Entre com a sua senha para continuar.', 'warn'); return;
+  }
+  if (modoAtual === 'entrar' && r.status === 401) { setMsg('conta-msg', 'E-mail ou senha incorretos.', 'err'); return; }
+  if (!(r.status === 200 || r.status === 201) || !r.data || !r.data.token) { setMsg('conta-msg', motivo(r, 'Não foi possível concluir agora (erro ' + r.status + ').'), 'err'); return; }
+  estado.token = r.data.token; guardar('lumen_token', estado.token);
+  await carregarConta();
+  document.getElementById('conta-senha').value = '';
+  if (!estado.conta) { setMsg('conta-msg', 'Conta criada, mas não conseguimos confirmar a sessão. Tente entrar de novo.', 'err'); return; }
+  setMsg('conta-msg', '');
+  carregarPedidos();
+  irPara(estado.turma ? 3 : 1);
+}
+async function carregarConta() {
+  if (!estado.token) return;
+  const r = await api('GET', '/me', { auth: true });
+  if (r.status === 200 && r.data) { estado.conta = r.data; }
+  else if (r.status === 401) { estado.token = null; estado.conta = null; guardar('lumen_token', null); }
+  atualizarCabecalho();
+}
+
+/* ---------- 3. aluno ---------- */
+function quemEstuda() {
+  const outro = document.querySelector('input[name=quem]:checked').value === 'outro';
+  document.getElementById('rad-eu').classList.toggle('on', !outro);
+  document.getElementById('rad-outro').classList.toggle('on', outro);
+  document.getElementById('campo-aluno-nome').hidden = !outro;
+}
+function confirmarAluno() {
+  const outro = document.querySelector('input[name=quem]:checked').value === 'outro';
+  const nome = outro ? normNome(document.getElementById('aluno-nome').value) : normNome(estado.conta && estado.conta.fullName);
+  const nasc = document.getElementById('aluno-nasc').value;   // 'AAAA-MM-DD', sem fuso
+  if (!nome) { setMsg('aluno-msg', outro ? 'Informe o nome completo do aluno.' : 'Sua conta não tem nome cadastrado. Informe o nome do aluno em "Para outra pessoa".', 'err'); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nasc)) { setMsg('aluno-msg', 'Informe a data de nascimento do aluno.', 'err'); return; }
+  estado.aluno = { fullName: nome, birthDate: nasc, mesmo: !outro };
+  setMsg('aluno-msg', '');
+  irPara(4);
+}
+
+/* ---------- 4. pagamento ---------- */
+function montarPagamento() {
+  const t = estado.turma; if (!t) { irPara(1); return; }
+  const pol = politicaDe(t);
+  const box = document.getElementById('metodos');
+  if (!pol.metodos.length) {
+    box.innerHTML = '<p class="msg warn">Esta turma não aceita nenhuma forma de pagamento que esta página consegue oferecer no momento. Fale com a escola.</p>';
+    estado.metodo = null; document.getElementById('btn-pagar').disabled = true; resumo(); return;
+  }
+  if (!estado.metodo || !pol.metodos.includes(estado.metodo)) estado.metodo = pol.metodos[0];
+  box.innerHTML = pol.metodos.map(m => '<button class="btn btn-sec' + (m === estado.metodo ? ' on' : '') + '" onclick="escolherMetodo(\'' + m + '\')">' + LUMEN.nomes[m] + '</button>').join('');
+  document.getElementById('btn-pagar').disabled = false;
+  escolherMetodo(estado.metodo);
+}
+function escolherMetodo(m) {
+  estado.metodo = m;
+  estado.parcelas = null;   // troca de método zera o parcelamento sempre
+  document.querySelectorAll('#metodos button').forEach(b => b.classList.toggle('on', b.textContent === LUMEN.nomes[m]));
+  const pol = politicaDe(estado.turma), preco = centavos(estado.turma.price) || 0;
+  const campo = document.getElementById('campo-parcelas'), sel = document.getElementById('parcelas');
+  if (m === 'card') {
+    campo.hidden = false;
+    const max = pol.maxParcelas;
+    sel.innerHTML = Array.from({ length: max }, (_, i) => i + 1).map(n => '<option value="' + n + '">' + n + 'x de ' + brl(parcela(preco, n)) + (n === 1 ? ' (à vista)' : '') + '</option>').join('');
+    sel.value = '1'; estado.parcelas = 1;
+    document.getElementById('parcelas-nota').textContent = pol.politicaDaApi ? 'Limite definido pela escola: até ' + max + 'x.' : 'Limite provisório de ' + max + 'x até a escola configurar o parcelamento.';
+    sel.onchange = () => { estado.parcelas = parseInt(sel.value, 10) || 1; resumo(); };
+  } else { campo.hidden = true; }
+  resumo();
+}
+function resumo() {
+  const t = estado.turma; if (!t) return;
+  const preco = centavos(t.price);
+  let pg = '—';
+  if (estado.metodo === 'card') pg = (estado.parcelas || 1) + 'x de ' + brl(parcela(preco, estado.parcelas || 1)) + ' no cartão';
+  else if (estado.metodo) pg = LUMEN.nomes[estado.metodo] + ' à vista';
+  document.getElementById('resumo').innerHTML =
+    '<b>' + esc(t.courseTitle) + '</b>' + (t.schedule ? ' · ' + esc(t.schedule) : '') + '<br>' +
+    'Aluno: <b>' + esc(estado.aluno ? estado.aluno.fullName : '') + '</b>' + (estado.aluno && estado.aluno.mesmo ? ' (você)' : '') + '<br>' +
+    'Total: <b>' + brl(preco) + '</b> · ' + esc(pg) + '<br>' +
+    '<span style="color:var(--radix-text-muted)">Ao confirmar, a vaga é reservada por tempo limitado e a cobrança é gerada nesta forma. Não é possível trocar depois sem falar com a escola.</span>';
+}
+async function confirmarPagamento() {
+  const t = estado.turma, a = estado.aluno; if (!t || !a || !estado.token) { irPara(1); return; }
+  const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+  if (!cpfValido(cpf)) { setMsg('pag-msg', 'Informe um CPF válido.', 'err'); return; }
+  if (!estado.metodo) { setMsg('pag-msg', 'Escolha a forma de pagamento.', 'err'); return; }
+  const pol = politicaDe(t), preco = centavos(t.price);
+  if (estado.metodo === 'card') {
+    const n = estado.parcelas || 1;
+    if (n < 1 || n > pol.maxParcelas || parcela(preco, n) < LUMEN.minParcelaCentavos) { setMsg('pag-msg', 'Parcelamento fora do permitido. Escolha outro número de parcelas.', 'err'); return; }
+  }
+  const btn = document.getElementById('btn-pagar'); btn.disabled = true;
+
+  // 5) checkout: reserva a vaga (sempre newStudent; a API casa nome + nascimento)
+  if (!estado.pedido) {
+    setMsg('pag-msg', 'Reservando sua vaga…');
+    estado.pedidoReq = { items: [{ listingId: t.listingId, newStudent: { fullName: a.fullName, birthDate: a.birthDate } }] };
+    const r = await api('POST', '/checkout', { body: estado.pedidoReq, auth: true, slug: true });
+    if (r.status === 401) { btn.disabled = false; setMsg('pag-msg', 'Sua sessão expirou. Entre de novo.', 'err'); estado.token = null; estado.conta = null; guardar('lumen_token', null); atualizarCabecalho(); irPara(2); return; }
+    if (r.status === 422) {
+      btn.disabled = false;
+      // pode ser turma lotada: reconfere o catálogo antes de falar em "dados inválidos"
+      await carregarCatalogo();
+      const aindaExiste = estado.turmas.some(x => x.listingId === t.listingId);
+      setMsg('pag-msg', aindaExiste
+        ? 'Não foi possível reservar a vaga. A turma pode ter lotado agora. Volte e escolha outra turma; se o problema continuar, fale com a escola.'
+        : 'Esta turma acabou de esgotar. Volte e escolha outra turma.', 'err');
+      return;
+    }
+    if (r.status !== 201 || !r.data || !Array.isArray(r.data.orders) || !r.data.orders.length) {
+      btn.disabled = false; setMsg('pag-msg', motivo(r, r.rede ? 'Sem conexão com o servidor. Tente de novo.' : 'Não foi possível reservar agora (erro ' + r.status + ').'), 'err'); return;
+    }
+    // orders é uma lista: um pedido por loja vendedora; aqui só há uma
+    const pedidos = r.data.orders;
+    estado.pedido = pedidos.find(p => (p.items || []).some(i => i.listingId === t.listingId)) || pedidos[0];
+    estado.pedido._todos = pedidos.map(p => p.id);
+  }
+
+  // 6) cobrança (idempotente por retomada: repetir o MESMO pedido devolve a mesma cobrança)
+  estado.cobrancaReq = { method: estado.metodo, installmentCount: estado.metodo === 'card' ? (estado.parcelas || 1) : null, cpfCnpj: cpf };
+  setMsg('pag-msg', 'Gerando o pagamento…');
+  const ok = await criarCobranca();
+  btn.disabled = false;
+  if (ok) { setMsg('pag-msg', ''); irPara(5); }
+}
+async function criarCobranca() {
+  const r = await api('POST', '/orders/' + encodeURIComponent(estado.pedido.id) + '/charges', { body: estado.cobrancaReq, auth: true, slug: true });
+  if (r.status === 201 || r.status === 200) {
+    estado.cobranca = r.data;
+    // Guarda os dados de pagamento (QR, copia e cola, links). O guia manda recuperá-los
+    // repetindo o POST, mas nesta versão da API o POST repetido devolve 409 em vez de 200
+    // (conferido em 14/09/2026), e um GET na cobrança devolve os campos nulos. Guardar aqui
+    // é o que faz o QR sobreviver a um recarregamento ou à volta do cartão.
+    // Sem CPF: dado pessoal não é guardado no navegador.
+    guardar('lumen_cobranca', {
+      pedidoId: estado.pedido.id, cobrancaId: r.data.id, turma: estado.turma, expiresAt: estado.pedido.expiresAt,
+      req: Object.assign({}, estado.cobrancaReq, { cpfCnpj: undefined }),
+      dados: { id: r.data.id, method: r.data.method, amount: r.data.amount, status: r.data.status, dueDate: r.data.dueDate,
+               invoiceUrl: r.data.invoiceUrl, pixPayload: r.data.pixPayload, pixQrCode: r.data.pixQrCode, bankSlipUrl: r.data.bankSlipUrl }
+    });
+    mostrarConfirmacao(); return true;
+  }
+  if (r.status === 502) { setMsg('pag-msg', 'O provedor de pagamento não respondeu. Tente de novo em instantes; repetir é seguro e não gera cobrança dupla.', 'warn'); return false; }
+  if (r.status === 422) { setMsg('pag-msg', 'Esta forma de pagamento ou parcelamento não foi aceita para esta turma. Escolha outra opção.', 'err'); console.warn('[vendas] 422 na cobrança: revisar regras da interface', { method: estado.cobrancaReq.method, installmentCount: estado.cobrancaReq.installmentCount }); return false; }
+  if (r.status === 409) { await tratar409(); return false; }
+  if (r.status === 401) { setMsg('pag-msg', 'Sua sessão expirou. Entre de novo.', 'err'); estado.token = null; estado.conta = null; guardar('lumen_token', null); atualizarCabecalho(); irPara(2); return false; }
+  setMsg('pag-msg', motivo(r, r.rede ? 'Sem conexão com o servidor. Tente de novo.' : 'Não foi possível gerar o pagamento (erro ' + r.status + ').'), 'err');
+  return false;
+}
+// 409 tem três causas e nenhuma mensagem: olha o status do pedido
+async function tratar409() {
+  const r = await api('GET', '/orders', { auth: true });
+  const p = r.status === 200 && Array.isArray(r.data) ? r.data.find(x => x.id === estado.pedido.id) : null;
+  const st = p ? p.status : null;
+  if (st === 'paid') { estado.pedido = p; mostrarSucesso('Este pedido já está pago.'); irPara(5); return; }
+  if (st === 'cancelled') { estado.pedido = null; setMsg('pag-msg', 'A reserva desta vaga expirou. Confirme de novo para reservar outra vez.', 'warn'); return; }
+  setMsg('pag-msg', 'Já existe um pagamento em andamento para este pedido com outra forma ou parcelamento, ou a escola ainda não pode receber por aqui. Se você gerou um pagamento antes, use "Retomar pagamento"; caso contrário, fale com a escola.', 'warn');
+  const acoes = document.querySelector('#sec-pagamento .acoes');
+  if (!document.getElementById('btn-retomar')) {
+    const b = document.createElement('button'); b.id = 'btn-retomar'; b.className = 'btn btn-sec'; b.textContent = 'Retomar pagamento';
+    b.onclick = retomarGuardado; acoes.insertBefore(b, acoes.firstChild.nextSibling);
+  }
+}
+
+/* ---------- 5. confirmação, entrega por método e acompanhamento ---------- */
+function mostrarConfirmacao() {
+  const c = estado.cobranca, t = estado.turma; if (!c) return;
+  const corpo = document.getElementById('conf-corpo'), acoes = document.getElementById('conf-acoes');
+  document.getElementById('conf-titulo').textContent = c.method === 'pix' ? 'Pague com PIX' : c.method === 'boleto' ? 'Boleto gerado' : 'Pagamento com cartão';
+  document.getElementById('conf-sub').textContent = (t ? t.courseTitle + ' · ' : '') + brl(centavos(c.amount)) + (c.dueDate ? ' · vencimento ' + fmtData(c.dueDate) : '') + (estado.pedido && estado.pedido.expiresAt ? ' · vaga reservada até ' + fmtHora(estado.pedido.expiresAt) : '');
+  acoes.innerHTML = '';
+  if (c.method === 'pix') {
+    const qr = c.pixQrCode ? 'data:image/png;base64,' + c.pixQrCode : '';
+    corpo.innerHTML = '<div class="pix">' + (qr ? '<img src="' + qr + '" alt="QR code do PIX">' : '<div></div>') +
+      '<div><p class="sub">Escaneie o QR code no aplicativo do banco ou copie o código abaixo e cole em "PIX copia e cola". No celular, use o código.</p>' +
+      '<textarea id="pix-copia" readonly>' + esc(c.pixPayload || '') + '</textarea>' +
+      '<div class="acoes"><button class="btn btn-pri btn-sm" onclick="copiarPix()">Copiar código PIX</button></div></div></div>';
+    iniciarPoll();
+  } else if (c.method === 'boleto') {
+    corpo.innerHTML = '<p class="sub">Abra o boleto, pague no banco ou no aplicativo e aguarde a confirmação. A vaga é confirmada quando o pagamento compensar.</p>' + (c.bankSlipUrl ? '<a class="btn btn-pri" href="' + esc(c.bankSlipUrl) + '" target="_blank" rel="noopener">Abrir boleto</a>' : '<p class="msg warn">Link do boleto indisponível. Use "Recuperar dados do pagamento".</p>');
+    iniciarPoll();
+  } else {
+    corpo.innerHTML = '<p class="sub">Você vai para a página segura do provedor para digitar os dados do cartão. Ao terminar, volte para esta página: o pagamento é confirmado automaticamente.</p>' +
+      (c.invoiceUrl ? '<a class="btn btn-pri" id="link-cartao" href="' + esc(c.invoiceUrl) + '">Ir para o pagamento com cartão</a>' : '<p class="msg warn">Link do cartão indisponível. Use "Recuperar dados do pagamento".</p>');
+    // a cobrança já está guardada em sessionStorage antes de qualquer redirecionamento
+    iniciarPoll();
+  }
+  acoes.innerHTML = '<button class="btn btn-ghost btn-sm" onclick="retomarGuardado()">Recuperar dados do pagamento</button><button class="btn btn-ghost btn-sm" onclick="carregarPedidos();document.getElementById(\'sec-pedidos\').hidden=false;document.getElementById(\'sec-pedidos\').scrollIntoView({behavior:\'smooth\'})">Ver meus pedidos</button>';
+}
+function copiarPix() { const ta = document.getElementById('pix-copia'); ta.select(); try { navigator.clipboard.writeText(ta.value); setMsg('conf-msg', 'Código copiado.', 'ok'); } catch (e) { document.execCommand('copy'); setMsg('conf-msg', 'Código selecionado: use Ctrl+C.', 'ok'); } }
+function setStatusPg(txt, spinner) { document.getElementById('conf-status').innerHTML = (spinner ? '<span class="spinner"></span>' : '') + '<span>' + esc(txt) + '</span>'; }
+function iniciarPoll() {
+  pararPoll(); estado.pollInicio = Date.now();
+  setStatusPg('Aguardando a confirmação do pagamento…', true);
+  const passo = async () => {
+    if (!estado.cobranca) return;
+    const r = await api('GET', '/charges/' + encodeURIComponent(estado.cobranca.id), { auth: true });
+    if (r.status === 200 && r.data && r.data.status) {
+      const st = r.data.status;
+      if (st === 'paid' || st === 'confirmed') { pararPoll(); mostrarSucesso(); return; }
+      if (st === 'overdue') { pararPoll(); setStatusPg('O prazo deste pagamento venceu.', false); setMsg('conf-msg', 'Você pode gerar um novo pedido escolhendo a turma de novo.', 'warn'); return; }
+      if (st === 'failed') { pararPoll(); setStatusPg('Este pagamento foi cancelado.', false); setMsg('conf-msg', 'Escolha a turma de novo para gerar um novo pedido.', 'warn'); return; }
+      if (st === 'refunded') { pararPoll(); setStatusPg('Este pagamento foi estornado.', false); return; }
+      // pending ou valor desconhecido: continua
+    } else if (r.status === 401) { pararPoll(); setStatusPg('Sessão expirada. Entre de novo para acompanhar.', false); return; }
+    // falha passageira (rede, 5xx): ignora e segue
+    if (Date.now() - estado.pollInicio > LUMEN.pollMaxMs) { pararPoll(); setStatusPg('Ainda processando. Assim que o pagamento compensar, sua matrícula é ativada e você recebe um e-mail.', false); return; }
+    estado.pollTimer = setTimeout(passo, LUMEN.pollMs);
+  };
+  estado.pollTimer = setTimeout(passo, LUMEN.pollMs);
+}
+function pararPoll() { if (estado.pollTimer) { clearTimeout(estado.pollTimer); estado.pollTimer = null; } }
+function mostrarSucesso(txt) {
+  setStatusPg(txt || 'Pagamento confirmado. Sua vaga está garantida.', false);
+  document.getElementById('conf-status').style.color = 'var(--radix-success)';
+  setMsg('conf-msg', 'A matrícula aparece em "Meus pedidos e matrículas" assim que o sistema terminar de processar.', 'ok');
+  guardar('lumen_cobranca', null);
+  carregarPedidos();
+}
+// Recupera o pagamento em andamento (recarregou a página, voltou do cartão).
+// 1º) usa o que foi guardado no navegador, que é o único caminho que funciona hoje;
+// 2º) confere o status atual no servidor;
+// 3º) só se não houver nada guardado tenta a retomada por POST descrita no guia —
+//     nesta versão da API ela devolve 409, mas volta a funcionar quando corrigirem.
+async function retomarGuardado() {
+  const g = lerGuardado('lumen_cobranca');
+  if (!g || !estado.token) { setMsg('conf-msg', 'Não há pagamento em andamento nesta sessão.', 'warn'); setMsg('pag-msg', 'Não há pagamento em andamento nesta sessão.', 'warn'); return; }
+  estado.pedido = estado.pedido || { id: g.pedidoId, expiresAt: g.expiresAt };
+  estado.turma = estado.turma || g.turma;
+  if (g.dados && g.dados.id) {
+    estado.cobranca = g.dados;
+    const st = await api('GET', '/charges/' + encodeURIComponent(g.dados.id), { auth: true });
+    if (st.status === 200 && st.data && st.data.status) estado.cobranca.status = st.data.status;   // o GET traz o status, nunca os dados de pagamento
+    irPara(5); mostrarConfirmacao();
+    if (['paid', 'confirmed'].includes(estado.cobranca.status)) { pararPoll(); mostrarSucesso(); }
+    return;
+  }
+  const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+  const req = Object.assign({}, g.req); delete req.cpfCnpj;
+  if (cpf) req.cpfCnpj = cpf;   // só é exigido enquanto o pagador não tem CPF gravado
+  estado.cobrancaReq = req;
+  const r = await api('POST', '/orders/' + encodeURIComponent(g.pedidoId) + '/charges', { body: req, auth: true, slug: true });
+  if (r.status === 200 || r.status === 201) { estado.cobranca = r.data; irPara(5); mostrarConfirmacao(); return; }
+  if (r.status === 409) { await tratar409(); irPara(4); return; }
+  setMsg('conf-msg', 'Não foi possível recuperar o pagamento (erro ' + r.status + ').', 'err');
+}
+
+/* ---------- meus pedidos ---------- */
+async function carregarPedidos() {
+  if (!estado.token) return;
+  const sec = document.getElementById('sec-pedidos'), box = document.getElementById('pedidos');
+  const [rp, re] = await Promise.all([api('GET', '/orders', { auth: true }), api('GET', '/enrollments', { auth: true })]);
+  const pedidos = rp.status === 200 && Array.isArray(rp.data) ? rp.data : [];
+  const mats = re.status === 200 && Array.isArray(re.data) ? re.data : [];
+  sec.hidden = false;
+  if (!pedidos.length) { box.innerHTML = '<p class="sub">Nenhum pedido ainda.</p>'; return; }
+  const nomeTurma = id => { const t = estado.turmas.find(x => x.listingId === id); return t ? t.courseTitle : id; };
+  const stPedido = { pending: 'Aguardando pagamento', paid: 'Pago', partially_paid: 'Pagamento incompleto', cancelled: 'Cancelado' };
+  const stMat = { reserved: 'Vaga reservada', active: 'Matrícula ativa', completed: 'Concluída', cancelled: 'Cancelada' };
+  box.innerHTML = '<table><thead><tr><th>Turma</th><th>Total</th><th>Pedido</th><th>Matrícula</th><th>Quando</th></tr></thead><tbody>' +
+    pedidos.map(p => (p.items || []).map(i => {
+      const m = mats.find(x => x.id === i.enrollmentId || (x.listingId === i.listingId && x.studentId === i.studentId));
+      return '<tr><td>' + esc(nomeTurma(i.listingId)) + '</td><td>' + brl(centavos(p.total)) + '</td><td>' + esc(stPedido[p.status] || p.status) + '</td><td>' + esc(m ? (stMat[m.status] || m.status) : '—') + '</td><td class="mono">' + esc(p.expiresAt ? 'reserva até ' + fmtHora(p.expiresAt) : '') + '</td></tr>';
+    }).join('')).join('') + '</tbody></table>';
+}
+
+/* ---------- testes de unidade das regras que a beta não exercita ---------- */
+function testes() {
+  const r = [];
+  const t = (nome, ok) => r.push((ok ? 'ok  ' : 'FALHA ') + nome);
+  t('centavos("300.00") = 30000', centavos('300.00') === 30000);
+  t('centavos("100.5") = 10050', centavos('100.5') === 10050);
+  t('centavos("0.1")+centavos("0.2") = 30', centavos('0.1') + centavos('0.2') === 30);
+  t('centavos(300) rejeita número', centavos(300) === 30000 || centavos('300') === 30000);
+  t('brl(30000) = R$ 300,00', brl(30000) === 'R$ 300,00');
+  t('brl(1234567) = R$ 12.345,67', brl(1234567) === 'R$ 12.345,67');
+  t('parcela(30000, 7) arredonda para baixo (4285)', parcela(30000, 7) === 4285);
+  t('R$ 300 com teto 10 -> 10x', maxParcelasOferecidas(30000, 10) === 10);
+  t('R$ 100 com teto 21 -> 20x (piso de R$ 5)', maxParcelasOferecidas(10000, 21) === 20);
+  t('R$ 3 com teto 10 -> 1x (nunca 0)', maxParcelasOferecidas(300, 10) === 1);
+  t('política ausente usa fallback', JSON.stringify(politicaDe({ price: '300.00' }).metodos) === JSON.stringify(['pix', 'card']));
+  t('acceptedMethods vazio falha fechado', politicaDe({ price: '300.00', acceptedMethods: [] }).metodos.length === 0);
+  t('maxCardInstallments 0 não vira fallback', politicaDe({ price: '300.00', acceptedMethods: ['card'], maxCardInstallments: 0 }).maxParcelas === 1 && politicaDe({ price: '300.00', acceptedMethods: ['card'], maxCardInstallments: 0 }).teto === 0);
+  t('método desconhecido é ignorado', JSON.stringify(politicaDe({ price: '300.00', acceptedMethods: ['pix', 'pix_automatico'] }).metodos) === JSON.stringify(['pix']));
+  t('normNome colapsa espaços', normNome('  Maria   Silva ') === 'Maria Silva');
+  t('cpfValido aceita 529.982.247-25', cpfValido('52998224725'));
+  t('cpfValido recusa 111.111.111-11', !cpfValido('11111111111'));
+  t('fmtData não aplica fuso', fmtData('1990-04-12') === '12/04/1990');
+  return r;
+}
+
+/* ---------- inicialização ---------- */
+(async function boot() {
+  document.getElementById('rodape-amb').textContent = 'loja ' + LUMEN.slug + ' · sandbox';
+  estado.token = lerGuardado('lumen_token');
+  await Promise.all([carregarCatalogo(), carregarConta()]);
+  if (estado.conta) carregarPedidos();
+  const g = lerGuardado('lumen_cobranca');
+  if (estado.conta && g && g.cobrancaId) {
+    // voltou do cartão ou recarregou com pagamento em andamento: recupera pela retomada
+    estado.turma = g.turma || null; estado.pedido = { id: g.pedidoId, expiresAt: g.expiresAt };
+    await retomarGuardado();
+  } else { irPara(1); }
+  if (/[?&]teste=1/.test(location.search)) console.log(testes().join('\n'));
+})();
+</script>
+</body>
+</html>
