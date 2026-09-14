@@ -8,11 +8,61 @@
           "key": "Content-Security-Policy-Report-Only",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https://bvvfalzwpwvkoghmjvom.supabase.co; media-src 'self' blob:; connect-src 'self' https://bvvfalzwpwvkoghmjvom.supabase.co wss://bvvfalzwpwvkoghmjvom.supabase.co https://cdn.jsdelivr.net; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://challenges.cloudflare.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
         },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Permissions-Policy", "value": "camera=(self), microphone=(), geolocation=(), payment=()" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(self), microphone=(), geolocation=(), payment=()"
+        }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/lumen/storefront/:slug",
+      "destination": "https://lumen-app-production-9917.up.railway.app/storefront/:slug"
+    },
+    {
+      "source": "/api/lumen/storefront/:slug/listings/:id",
+      "destination": "https://lumen-app-production-9917.up.railway.app/storefront/:slug/listings/:id"
+    },
+    {
+      "source": "/api/lumen/auth/:acao(register|login)",
+      "destination": "https://lumen-app-production-9917.up.railway.app/auth/:acao"
+    },
+    {
+      "source": "/api/lumen/me",
+      "destination": "https://lumen-app-production-9917.up.railway.app/me"
+    },
+    {
+      "source": "/api/lumen/checkout",
+      "destination": "https://lumen-app-production-9917.up.railway.app/checkout"
+    },
+    {
+      "source": "/api/lumen/orders",
+      "destination": "https://lumen-app-production-9917.up.railway.app/orders"
+    },
+    {
+      "source": "/api/lumen/orders/:id/charges",
+      "destination": "https://lumen-app-production-9917.up.railway.app/orders/:id/charges"
+    },
+    {
+      "source": "/api/lumen/charges/:id",
+      "destination": "https://lumen-app-production-9917.up.railway.app/charges/:id"
+    },
+    {
+      "source": "/api/lumen/enrollments",
+      "destination": "https://lumen-app-production-9917.up.railway.app/enrollments"
     }
   ]
 }
