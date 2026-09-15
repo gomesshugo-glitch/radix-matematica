@@ -534,8 +534,9 @@ const KEY = 'mockup_revisao_final_v3';
    aqui é só a interface. */
 const ACESSO = { modo: 'anon', status: 'anon', semanasMax: 0 };
 const OFERTA = {
+  matricula: '/vendas',                    // página de matrícula: escolhe a turma e paga
   precoPresencial: 'R$ 300,00', precoOnline: 'R$ 69,90', whatsapp: '5584998131870',
-  msg: 'Olá, Hugo! Fiz a degustação da plataforma Radix e quero garantir minha vaga na Revisão Final.',
+  msg: 'Olá! Quero garantir minha vaga na Revisão Final do Radix Matemática.',
   zapUrl() { return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(this.msg); }
 };
 function definirAcesso(status) {
@@ -583,14 +584,15 @@ const app = {
   htmlOferta() {
     return '<div class="kpis kpis-2 my-a"><div class="kpi"><div class="v">' + OFERTA.precoPresencial + '</div><div class="l">Revisão presencial</div></div>' +
       '<div class="kpi"><div class="v">' + OFERTA.precoOnline + '</div><div class="l">Revisão online</div></div></div>' +
-      '<div class="acts"><button type="button" class="btn btn-pri" onclick="window.open(OFERTA.zapUrl(), \'_blank\', \'noopener\')">Quero garantir minha vaga</button></div>';
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="location.href=OFERTA.matricula">Quero garantir minha vaga</button>' +
+      '<button type="button" class="btn btn-ghost" onclick="window.open(OFERTA.zapUrl(), \'_blank\', \'noopener\')">Falar com o atendimento</button></div>';
   },
   bloqueada(n) {
     this.abrirModal(
       '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
       '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">' + this._xFechar() +
       '<h3 id="modal-titulo">A Semana ' + n + ' faz parte da Revisão Final</h3>' +
-      '<p class="sub">Na degustação você monta e acompanha a Semana 1 como amostra. As semanas 2 a 7, com a dose calculada para o seu perfil e os mini-simulados, ficam liberadas para os alunos da Revisão Final.</p>' +
+      '<p class="sub">Você monta e acompanha a Semana 1 como amostra. As semanas 2 a 7, com a dose calculada para o seu perfil e os mini-simulados, ficam liberadas para quem está matriculado na Revisão Final.</p>' +
       this.htmlOferta() +
       '<div class="q-nav"><span class="esp"></span><button type="button" class="btn btn-ghost btn-sm" onclick="app.fecharModal()">Fechar</button></div></div></div>');
   },
@@ -603,19 +605,19 @@ const app = {
     return '<div class="q-wrap"><span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span>' +
       '<h2>Seu plano das 7 semanas até a prova de Matemática</h2>' +
       '<p class="sub">Um roteiro montado a partir do seu ponto de partida, do seu tempo disponível e dos temas de maior incidência no ENEM: atividades dosadas por semana, mini-simulado no fim de cada uma e ajuste automático conforme o seu desempenho.</p>' +
-      '<p class="sub">O plano faz parte da plataforma Radix. Entre com a sua conta para abrir o seu. Se ainda não é aluno, conheça a plataforma por 7 dias.</p>' +
+      '<p class="sub">O plano faz parte da Revisão Final do Radix. Entre com a sua conta para abrir o seu. Se ainda não é aluno, faça sua matrícula: o plano é liberado junto com o acesso.</p>' +
       '<div class="acts"><button type="button" class="btn btn-pri" onclick="location.href=\'/?voltar=revisao-final\'">Entrar no app</button>' +
-      '<button type="button" class="btn btn-sec" onclick="location.href=\'/?degustacao=1\'">Conhecer por 7 dias</button></div></div>';
+      '<button type="button" class="btn btn-sec" onclick="location.href=OFERTA.matricula">Quero me matricular</button></div></div>';
   },
   htmlBloqueado() {
     const st = ACESSO.status;
     const titulo = st === 'expirado' ? 'Sua degustação terminou' : st === 'pendente' ? 'Seu cadastro está aguardando aprovação' : st === 'bloqueado' ? 'Acesso bloqueado' : 'Seu acesso ao plano não está liberado';
     const texto = st === 'expirado' ? 'Você conheceu a Semana 1 do plano durante a degustação. Para ter as 7 semanas com a dose calculada para o seu perfil, garanta sua vaga na Revisão Final.'
-      : st === 'pendente' ? 'Assim que o professor aprovar o seu cadastro, o plano das 7 semanas fica disponível aqui.'
-      : st === 'bloqueado' ? 'Fale com o professor Hugo Gomes para regularizar sua situação.'
+      : st === 'pendente' ? 'Assim que o professor aprovar o seu cadastro, o plano das 7 semanas fica disponível aqui. Se preferir não esperar, faça sua matrícula: o acesso é liberado com o pagamento.'
+      : st === 'bloqueado' ? 'Fale com o atendimento do Radix para regularizar sua situação.'
       : 'Abra o app para ver a situação da sua conta.';
     return '<div class="q-wrap"><span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span><h2>' + titulo + '</h2><p class="sub">' + texto + '</p>' +
-      (st === 'expirado' ? this.htmlOferta() : '') +
+      (st === 'expirado' || st === 'pendente' ? this.htmlOferta() : '') +
       '<div class="acts"><button type="button" class="btn btn-sec" onclick="location.href=\'/\'">Ir para o app</button></div></div>';
   },
   demoExemplo() {
