@@ -1074,6 +1074,13 @@
   /* ===================================================================
      STATUS SCREENS (aguardando / bloqueado / upload foto)
      =================================================================== */
+  /* Faixa "nova versão do app" (15/09/2026) */
+  .faixa-versao {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 99998;
+    background: var(--radix-surface); color: var(--radix-text); border: 1px solid var(--radix-line);
+    border-radius: 12px; padding: 10px 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    display: flex; gap: 12px; align-items: center; font-size: 14px; max-width: calc(100vw - 32px);
+  }
   .status-screen {
     min-height: 100vh;
     display: flex; align-items: center; justify-content: center;
@@ -8879,6 +8886,44 @@ function _comResolucoes(nome) {
 }
 ['renderTelaGerenciar', 'renderGerenciarQuestoes', 'abrirCadastroQuestao', 'abrirResolucaoIA', 'gerarResolucaoIApublicada', 'gerarResolucaoLote'].forEach(_comResolucoes);
 
+// ===== Versão do app (15/09/2026) =====
+// Uma aluna com a aba aberta há dias rodava o código de antes de 04/09 (quando o bucket
+// de materiais ficou privado) e via "HTTP 400" ao baixar PDF. O HTML é servido com
+// must-revalidate, mas uma aba que nunca recarrega nunca revalida. Aqui o app compara o
+// ETag de "/" (muda a cada publicação) a cada 10 min e ao voltar para a aba. Se mudou,
+// mostra a faixa "Nova versão" e, quando o aluno volta para a aba numa tela sem trabalho
+// em andamento (fora de simulado, conferência, cadastro, edição), recarrega sozinho.
+const VERSAO_CHECK_MS = 10 * 60 * 1000;
+const VERSAO_TELAS_SEGURAS = ['home', 'cronograma', 'videoaulas', 'meus-simulados', 'desempenho', 'minhas-revisoes', 'reportes', 'historico-notif'];
+let _versaoEtag = null, _versaoNova = false;
+async function _versaoNoServidor() {
+  try {
+    const r = await fetch('/?v=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+    if (!r.ok) return null;
+    return r.headers.get('etag') || r.headers.get('last-modified') || null;
+  } catch (e) { return null; }
+}
+async function verificarVersao(motivo) {
+  const v = await _versaoNoServidor();
+  if (!v) return;
+  if (_versaoEtag === null) { _versaoEtag = v; return; }
+  if (v === _versaoEtag) return;
+  if (!_versaoNova) { _versaoNova = true; _mostrarFaixaVersao(); }
+  const telaSegura = !state.usuario || !state.view || VERSAO_TELAS_SEGURAS.includes(state.view);
+  const semModal = !document.querySelector('.modal-overlay');
+  if (motivo === 'visibilidade' && telaSegura && semModal) location.reload();
+}
+function _mostrarFaixaVersao() {
+  if (document.getElementById('faixa-versao')) return;
+  const d = document.createElement('div');
+  d.id = 'faixa-versao'; d.className = 'faixa-versao'; d.setAttribute('role', 'status');
+  d.innerHTML = '<span>Nova versão do app disponível.</span><button class="btn btn-primary" style="padding:8px 14px;font-size:13px;" onclick="location.reload()">Atualizar agora</button>';
+  document.body.appendChild(d);
+}
+verificarVersao('inicio');
+setInterval(() => verificarVersao('periodico'), VERSAO_CHECK_MS);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') verificarVersao('visibilidade'); });
+
 function mostrarApp() {
   document.getElementById('view-login').classList.add('hidden');
   document.getElementById('view-app').classList.remove('hidden');
@@ -15825,7 +15870,7 @@ function _ldgRender() {
       '<button class="btn btn-secondary" style="padding:8px 14px;font-size:12.5px;" onclick="renderLeadsDegustacao()">Atualizar</button>' +
     '</div>' +
     (tot === 0
-      ? '<div class="ldg-empty">Nenhum lead em degustação. A degustação de 7 dias foi encerrada em 15/09/2026; esta tela guarda o histórico de quem chegou por ela.</div>'
+      ? '<div class="ldg-empty">Nenhum lead ainda. Quem clicar em "Conhecer a plataforma por 7 dias" na página inicial aparece aqui.</div>'
       : (lista.length === 0
         ? '<div class="ldg-empty">Nenhum lead neste filtro.</div>'
         : '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table"><thead><tr>' +
