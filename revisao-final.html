@@ -112,6 +112,11 @@
 
   /* ---------- layout ---------- */
   .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+  /* Modo embutido: o app já dá cabeçalho, fundo e respiro. A página só entrega o miolo. */
+  body.embutido{background:transparent;padding-bottom:0;min-height:0}
+  body.embutido .top,body.embutido .bnav,body.embutido #aviso-login{display:none!important}
+  body.embutido .wrap{max-width:100%;padding:0}
+  body.embutido footer{display:none}
   .layout{display:grid;grid-template-columns:1fr;gap:var(--sp-6);align-items:start}
   .col-main{min-width:0}
   .col-side{min-width:0;display:none}
@@ -533,6 +538,32 @@ const KEY = 'mockup_revisao_final_v3';
    O banco aplica a mesma regra (policies deg_restr_revisao_*, migration 12);
    aqui é só a interface. */
 const ACESSO = { modo: 'anon', status: 'anon', semanasMax: 0 };
+
+/* ---------- Modo embutido (15/09/2026) ----------
+   Com ?embutido=1 a página roda dentro do app, numa moldura. Ela esconde o
+   próprio cabeçalho, avisa a altura ao app e pede ao app para navegar quando o
+   destino é fora do plano. Sem o parâmetro, nada disso acontece. */
+const EMBUTIDO = /[?&]embutido=1/.test(location.search) && window.parent !== window;
+function _avisarAltura() {
+  if (!EMBUTIDO) return;
+  const alt = Math.ceil(document.documentElement.getBoundingClientRect().height) + 8;
+  try { window.parent.postMessage({ radix: 'plano-altura', altura: alt }, location.origin); } catch (e) {}
+}
+// Pede ao app para sair do plano (a moldura não deve navegar sozinha).
+function _pedirNavegacao(destino) {
+  if (!EMBUTIDO) { location.href = destino; return; }
+  try { window.parent.postMessage({ radix: 'plano-navegar', destino: destino }, location.origin); } catch (e) { location.href = destino; }
+}
+if (EMBUTIDO) {
+  document.documentElement.classList.add('embutido');
+  addEventListener('DOMContentLoaded', () => document.body.classList.add('embutido'));
+  addEventListener('resize', _avisarAltura);
+  // qualquer mudança no conteúdo remede a altura
+  addEventListener('DOMContentLoaded', () => {
+    try { new MutationObserver(() => _avisarAltura()).observe(document.body, { childList: true, subtree: true, attributes: true }); } catch (e) {}
+    setInterval(_avisarAltura, 1200);   // rede de segurança para animações e fontes
+  });
+}
 const OFERTA = {
   matricula: '/vendas',                    // página de matrícula: escolhe a turma e paga
   precoPresencial: 'R$ 300,00', precoOnline: 'R$ 69,90', whatsapp: '5584998131870',
@@ -584,7 +615,7 @@ const app = {
   htmlOferta() {
     return '<div class="kpis kpis-2 my-a"><div class="kpi"><div class="v">' + OFERTA.precoPresencial + '</div><div class="l">Revisão presencial</div></div>' +
       '<div class="kpi"><div class="v">' + OFERTA.precoOnline + '</div><div class="l">Revisão online</div></div></div>' +
-      '<div class="acts"><button type="button" class="btn btn-pri" onclick="location.href=OFERTA.matricula">Quero garantir minha vaga</button>' +
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="_pedirNavegacao(OFERTA.matricula)">Quero garantir minha vaga</button>' +
       '<button type="button" class="btn btn-ghost" onclick="window.open(OFERTA.zapUrl(), \'_blank\', \'noopener\')">Falar com o atendimento</button></div>';
   },
   bloqueada(n) {
@@ -607,7 +638,7 @@ const app = {
       '<p class="sub">Um roteiro montado a partir do seu ponto de partida, do seu tempo disponível e dos temas de maior incidência no ENEM: atividades dosadas por semana, mini-simulado no fim de cada uma e ajuste automático conforme o seu desempenho.</p>' +
       '<p class="sub">O plano faz parte da Revisão Final do Radix. Entre com a sua conta para abrir o seu. Se ainda não é aluno, faça sua matrícula: o plano é liberado junto com o acesso.</p>' +
       '<div class="acts"><button type="button" class="btn btn-pri" onclick="location.href=\'/?voltar=revisao-final\'">Entrar no app</button>' +
-      '<button type="button" class="btn btn-sec" onclick="location.href=OFERTA.matricula">Quero me matricular</button></div></div>';
+      '<button type="button" class="btn btn-sec" onclick="_pedirNavegacao(OFERTA.matricula)">Quero me matricular</button></div></div>';
   },
   htmlBloqueado() {
     const st = ACESSO.status;
@@ -618,7 +649,7 @@ const app = {
       : 'Abra o app para ver a situação da sua conta.';
     return '<div class="q-wrap"><span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span><h2>' + titulo + '</h2><p class="sub">' + texto + '</p>' +
       (st === 'expirado' || st === 'pendente' ? this.htmlOferta() : '') +
-      '<div class="acts"><button type="button" class="btn btn-sec" onclick="location.href=\'/\'">Ir para o app</button></div></div>';
+      '<div class="acts"><button type="button" class="btn btn-sec" onclick="_pedirNavegacao(\'/\')">Ir para o app</button></div></div>';
   },
   demoExemplo() {
     const dif = {};
@@ -1029,7 +1060,9 @@ const app = {
       const card = document.querySelector('[data-atv="' + opts.flash + '"]');
       if (card && card.classList) card.classList.add('flash');
     }
+    this._posAltura();
   },
+  _posAltura() { if (typeof _avisarAltura === 'function') setTimeout(_avisarAltura, 60); },
   renderComCarregamento(msg, ms) {
     const root = document.getElementById('root');
     root.innerHTML = '<div class="q-wrap" role="status" aria-live="polite"><p class="sub my-c">' + esc(msg) + '</p>' +

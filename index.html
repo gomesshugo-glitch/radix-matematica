@@ -7306,6 +7306,46 @@ const MATRICULA = {
   url: '/vendas',
   abrir() { window.location.href = this.url; }
 };
+/* ---------- Plano da Revisão Final dentro do app (15/09/2026) ----------
+   A página /revisao-final continua sendo a dona do plano; aqui ela entra numa
+   moldura em modo embutido, sem o cabeçalho dela. A altura vem por mensagem,
+   porque conteúdo em moldura não empurra a página sozinho. Só aceitamos
+   mensagem da própria origem. */
+const PLANO = {
+  url: '/revisao-final?embutido=1',
+  _ouvindo: false,
+  ouvir() {
+    if (this._ouvindo) return;
+    this._ouvindo = true;
+    window.addEventListener('message', (e) => {
+      if (e.origin !== window.location.origin) return;           // só a nossa origem
+      const d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.radix === 'plano-altura') {
+        const f = document.getElementById('plano-moldura');
+        const alt = Number(d.altura);
+        if (f && alt > 0 && alt < 40000) f.style.height = alt + 'px';
+      } else if (d.radix === 'plano-navegar' && typeof d.destino === 'string') {
+        // lista fechada: a moldura não escolhe para onde o app vai
+        if (d.destino === '/') renderHome();
+        else if (d.destino === '/vendas') MATRICULA.abrir();
+      }
+    });
+  }
+};
+function renderPlanoRevisao() {
+  state.view = 'plano-revisao';
+  PLANO.ouvir();
+  const main = document.getElementById('main-content');
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Revisão Final</div>
+    <h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></span>Meu plano da Revisão Final</h2>
+    <iframe id="plano-moldura" title="Plano da Revisão Final" src="${PLANO.url}"
+            style="width:100%;border:none;height:720px;display:block;background:transparent;overflow:hidden"
+            scrolling="no" loading="eager"></iframe>
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 const DEGUSTACAO = {
   dias: 7,
   precoPresencial: 'R$ 300,00',            // Revisão presencial
@@ -7733,14 +7773,12 @@ async function iniciarSessao() {
   // Retorno pos-login: /?voltar=<chave> leva o aluno de volta para onde ele
   // estava antes de entrar (ex.: landing/pagina da Revisao Final). Lista fechada
   // de destinos, sempre no mesmo dominio, para o parametro nao virar redirect aberto.
-  const _voltarPara = { 'revisao-final': '/revisao-final' };
+  // Retorno pós-login: hoje o plano é uma tela do app, então abrimos a tela em vez
+  // de mandar o aluno para fora. Lista fechada de destinos.
   const _voltar = new URLSearchParams(window.location.search).get('voltar');
-  if (_voltar && _voltarPara[_voltar]) {
-    window.location.replace(_voltarPara[_voltar]);
-    return;
-  }
   await carregarDados();
   mostrarApp();
+  if (_voltar === 'revisao-final' && typeof renderPlanoRevisao === 'function') renderPlanoRevisao();
   } catch (e) {
     console.error('iniciarSessao falhou:', e);
     if (typeof setMsg === 'function') setMsg('Erro ao entrar: ' + (e?.message || e), 'var(--radix-red)');
@@ -9360,7 +9398,7 @@ function renderDashboardAluno() {
             <span>Vídeo-aulas</span>
             <small>Aulas e materiais</small>
           </div>
-          <div class="dash-atalho" onclick="window.location.href='/revisao-final'">
+          <div class="dash-atalho" onclick="renderPlanoRevisao()">
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <span>Revisão Final</span>
             <small>${state.degustacao ? 'Amostra: Semana 1 do plano das 7 semanas' : 'Seu plano das 7 semanas até o ENEM'}</small>
@@ -18984,7 +19022,7 @@ function _chipsTemasSemana(s) {
   if (!s || !Array.isArray(s.temas) || !s.temas.length) return '';
   const chips = s.temas.map((id, i) => '<span class="cron-tema' + (i === s.temas.length - 1 ? ' geo' : '') + '">' + _nomeCurtoTema(id) + '</span>').join('');
   const link = (s.revisaoN && state.usuario && state.usuario.perfil !== 'professor')
-    ? '<a class="cron-plano-link" href="/revisao-final" onclick="event.stopPropagation()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
+    ? '<a class="cron-plano-link" style="cursor:pointer" onclick="event.stopPropagation();renderPlanoRevisao()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
   return '<div class="cron-temas">' + chips + '</div>' + link;
 }
 function renderSemanaCard(s, mostrarProgresso) {
