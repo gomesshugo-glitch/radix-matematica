@@ -6137,11 +6137,11 @@
       </div>
 
       <div class="mk-deg-cta">
-        <button type="button" class="mk-deg-btn" onclick="abrirDegustacao()">
-          Conhecer a plataforma por 7 dias
+        <button type="button" class="mk-deg-btn" onclick="MATRICULA.abrir()">
+          Quero me matricular
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
-        <div class="mk-deg-sub">Grátis e sem compromisso. Amostra de questões do ENEM com gabarito comentado, simulado e a Semana 1 do plano da Revisão Final.</div>
+        <div class="mk-deg-sub">Escolha a turma, pague e receba seu acesso. Banco de questões do ENEM com gabarito comentado, simulados, cronograma e o plano da Revisão Final.</div>
       </div>
     </div>
 
@@ -6177,11 +6177,6 @@
       <div id="form-signup" class="hidden">
         <div class="mk-form-title" id="signup-titulo">Crie sua conta.</div>
         <div class="mk-form-sub" id="signup-sub">Preencha os dados para liberar o acesso à plataforma.</div>
-        <div id="signup-deg-banner" class="signup-deg-banner hidden">
-          <b>Degustação de 7 dias.</b> Você entra na hora, sem aprovação prévia, com uma amostra do banco de questões, simulado e a Semana 1 do plano da Revisão Final.
-          <a onclick="definirModoCadastro(false)">Sou aluno Radix, quero o cadastro regular</a>
-        </div>
-
         <div class="mk-field">
           <label>Nome completo</label>
           <input type="text" id="signup-nome" placeholder="Seu nome">
@@ -6212,7 +6207,7 @@
           Ao se cadastrar, você confirma o uso da plataforma Radix de Matemática.
         </p>
         <p id="signup-link-deg" style="font-size:13px;text-align:center;margin-top:6px;">
-          Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#1565C0)">Conheça a plataforma por 7 dias</a>
+          Ainda não é aluno? <a onclick="MATRICULA.abrir()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#1565C0)">Faça sua matrícula</a>
         </p>
       </div>
 
@@ -7299,6 +7294,11 @@ async function sbContar(tabela, ajustar) {
 // Cadastro novo de aluno entra direto por DEGUSTACAO.dias com acesso à amostra
 // (questões/materiais marcados no banco). O que ele enxerga é decidido pela RLS
 // (fn_status_atual / fn_pode_ver_questao); aqui é só interface e conversão.
+// Página de matrícula (checkout). Substituiu a degustação de 7 dias em 15/09/2026.
+const MATRICULA = {
+  url: '/vendas',
+  abrir() { window.location.href = this.url; }
+};
 const DEGUSTACAO = {
   dias: 7,
   precoPresencial: 'R$ 300,00',            // Revisão presencial
@@ -7325,26 +7325,16 @@ function trocarAba(aba, manterModo) {
   if (!manterModo) definirModoCadastro(false);
 }
 
-// Cadastro em dois modos: regular (fica pendente até o professor aprovar) ou
-// degustação (entra na hora por DEGUSTACAO.dias; só quem clicou no botão).
+// Etapa 11 (15/09/2026): só existe o cadastro regular. Quem se cadastra fica
+// pendente até o professor liberar; quem quer entrar agora usa a matrícula paga.
+// A função continua existindo porque trocarAba() a chama.
 let _signupDegustacao = false;
-function definirModoCadastro(deg) {
-  _signupDegustacao = !!deg;
+function definirModoCadastro() {
+  _signupDegustacao = false;
   const $ = id => document.getElementById(id);
-  if ($('signup-deg-banner')) $('signup-deg-banner').classList.toggle('hidden', !deg);
-  if ($('signup-link-deg')) $('signup-link-deg').classList.toggle('hidden', !!deg);
-  if ($('signup-titulo')) $('signup-titulo').textContent = deg ? 'Comece sua degustação.' : 'Crie sua conta.';
-  if ($('signup-sub')) $('signup-sub').textContent = deg
-    ? 'Preencha os dados e entre agora. Sem aprovação prévia, sem cartão.'
-    : 'Preencha os dados para liberar o acesso à plataforma.';
-  if ($('signup-btn-txt')) $('signup-btn-txt').textContent = deg ? 'Começar minha degustação' : 'Criar conta';
-}
-function abrirDegustacao() {
-  trocarAba('signup', true);
-  definirModoCadastro(true);
-  const el = document.getElementById('form-signup');
-  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  setTimeout(() => { const i = document.getElementById('signup-nome'); if (i) i.focus(); }, 350);
+  if ($('signup-titulo')) $('signup-titulo').textContent = 'Crie sua conta.';
+  if ($('signup-sub')) $('signup-sub').textContent = 'Preencha os dados para liberar o acesso à plataforma.';
+  if ($('signup-btn-txt')) $('signup-btn-txt').textContent = 'Criar conta';
 }
 
 function setMsg(texto, cor) {
@@ -7481,7 +7471,7 @@ async function fazerCadastro() {
   setMsg('Criando sua conta...');
   const { data, error } = await sb.auth.signUp({
     email, password: senha,
-    options: Object.assign({ data: Object.assign({ nome, telefone: whats, cpf }, _signupDegustacao ? { degustacao: true } : {}) }, await _captchaOpts())
+    options: Object.assign({ data: { nome, telefone: whats, cpf } }, await _captchaOpts())
   });
   if (error) {
     setMsg(mensagemAmigavelErroAuth(error, 'cadastro'), 'var(--radix-red)');
@@ -7490,9 +7480,7 @@ async function fazerCadastro() {
   // Telefone e CPF vão no metadata do cadastro; o trigger handle_novo_usuario grava
   // os dois no perfil (Etapa 4: o UPDATE direto que existia aqui era ignorado pela RLS).
   if (data.user && !data.session) {
-    setMsg(_signupDegustacao
-      ? 'Conta criada! Confirme seu e-mail e faça login para começar a degustação.'
-      : 'Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
+    setMsg('Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
     trocarAba('signin');
     document.getElementById('signin-email').value = email;
   } else {
@@ -7885,7 +7873,9 @@ function mostrarTelaAguardandoAprovacao(perfil) {
           Você receberá um e-mail assim que for liberado.
         </p>
         <div class="status-meta">E-mail cadastrado: <b>${_escHtml(perfil.email)}</b></div>
-        <button class="btn btn-secondary" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
+        <p class="status-msg" style="margin-bottom:14px">Não quer esperar? Faça sua matrícula e o acesso é liberado com o pagamento.</p>
+        <a class="btn btn-primary" href="${MATRICULA.url}">Fazer minha matrícula</a>
+        <button class="btn btn-secondary" style="margin-top:10px" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
       </div>
     </div>
   `;
@@ -7913,7 +7903,8 @@ function mostrarTelaDegustacaoExpirada(perfil) {
           <div class="deg-preco"><span>Revisão presencial</span><b>${DEGUSTACAO.precoPresencial}</b></div>
           <div class="deg-preco"><span>Revisão online</span><b>${DEGUSTACAO.precoOnline}</b></div>
         </div>
-        ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Quero garantir minha vaga</a>` : ''}
+        <a class="btn btn-primary" href="${MATRICULA.url}">Quero garantir minha vaga</a>
+        ${DEGUSTACAO.whatsapp ? `<a class="btn btn-secondary" style="margin-top:10px" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Falar com o atendimento</a>` : ''}
         <button class="btn btn-secondary" style="margin-top:10px" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
       </div>
     </div>
@@ -7925,7 +7916,7 @@ function _bannerDegustacao() {
   return `
     <div class="deg-banner" role="status">
       <div class="deg-banner-txt"><b>Modo degustação</b> · ${d === 1 ? 'último dia' : 'faltam ' + d + ' dias'}. Você está vendo uma amostra: questões do ENEM com gabarito comentado, simulado de até 15 questões e a Semana 1 do plano da Revisão Final.</div>
-      ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary deg-banner-btn" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Garantir minha vaga · ${DEGUSTACAO.preco}</a>` : ''}
+      <a class="btn btn-primary deg-banner-btn" href="${MATRICULA.url}">Garantir minha vaga · ${DEGUSTACAO.preco}</a>
     </div>`;
 }
 function mostrarTelaBloqueado(perfil) {
@@ -22366,7 +22357,8 @@ function fazerMiniSimulado(temaId) {
   if (session) {
     await iniciarSessao();
   } else if (new URLSearchParams(window.location.search).get('degustacao') === '1') {
-    abrirDegustacao();
+    // link antigo da degustação: hoje leva para a matrícula
+    MATRICULA.abrir();
   }
 })();
 
