@@ -113,9 +113,9 @@
   /* ---------- layout ---------- */
   .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
   /* Modo embutido: o app já dá cabeçalho, fundo e respiro. A página só entrega o miolo. */
-  body.embutido{background:transparent;padding-bottom:0;min-height:0}
+  body.embutido{background:var(--bg);padding-bottom:0;min-height:0}   /* fundo proprio: o plano e escuro e o app pode estar no tema claro */
   body.embutido .top,body.embutido .bnav,body.embutido #aviso-login{display:none!important}
-  body.embutido .wrap{max-width:100%;padding:0}
+  body.embutido .wrap{max-width:100%;padding:16px}
   body.embutido footer{display:none}
   .layout{display:grid;grid-template-columns:1fr;gap:var(--sp-6);align-items:start}
   .col-main{min-width:0}
