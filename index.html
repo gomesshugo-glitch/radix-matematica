@@ -19466,38 +19466,38 @@ function _simCss() {
     '.sim-warn{border:1px solid var(--sim-amber);background:var(--sim-amber-bg);border-radius:16px;padding:14px 16px;margin:0 0 18px}',
     '.sim-warn b{color:var(--sim-amber)}',
     '.sim-warn span{color:var(--sim-tx2);font-size:13px;text-wrap:pretty}',
-    '.enem-list{display:flex;flex-direction:column;gap:12px;margin-top:2px}',
+    // Grade: ~4 por linha em tela larga, 3 em media, 1 no celular.
+    '.enem-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:2px}',
     '.enem-cover{--ec-dark:#14477e;--ec-mid:#bcd8ef;--ec-base:#dbe9f7;display:block;width:100%;text-align:left;',
     'padding:0;font-family:inherit;cursor:pointer;position:relative;border:1px solid rgba(10,40,80,.28);',
-    'border-radius:14px;overflow:hidden;background-color:var(--ec-base);',
+    'border-radius:12px;overflow:hidden;background-color:var(--ec-base);',
     'background-image:repeating-linear-gradient(112deg,rgba(255,255,255,.55) 0 1px,rgba(255,255,255,0) 1px 6px);',
     'transition:transform .12s,box-shadow .15s,border-color .15s}',
-    '.enem-cover:hover{transform:translateY(-2px);box-shadow:0 12px 28px -14px rgba(0,0,0,.55);border-color:rgba(10,40,80,.5)}',
+    '.enem-cover:hover{transform:translateY(-2px);box-shadow:0 10px 22px -12px rgba(0,0,0,.5);border-color:rgba(10,40,80,.5)}',
     '.enem-cover:focus-visible{outline:2px solid var(--sim-focus);outline-offset:3px}',
-    '.ec-top{display:block;background:var(--ec-mid);padding:9px 14px 8px;text-align:center;',
+    '.ec-top{display:block;background:var(--ec-mid);padding:7px 10px 6px;text-align:center;',
     'border-bottom:1px solid rgba(10,40,80,.18)}',
-    '.ec-t1{display:block;font-size:12.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;',
+    '.ec-t1{display:block;font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;',
     'color:var(--ec-dark);line-height:1.15}',
-    '.ec-t2{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;',
-    'color:var(--ec-dark);opacity:.8;margin-top:3px;line-height:1.2}',
-    '.ec-body{display:flex;align-items:center;gap:6px;padding:12px 16px}',
-    '.ec-mark{display:inline-block;font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1;white-space:nowrap}',
+    '.ec-t2{display:block;font-size:8px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;',
+    'color:var(--ec-dark);opacity:.8;margin-top:2px;line-height:1.2}',
+    '.ec-body{display:flex;align-items:center;gap:6px;padding:10px 12px}',
+    '.ec-mark{display:inline-block;font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1;white-space:nowrap}',
     '.ec-mark b{font-weight:800;color:var(--ec-dark)}',
     '.ec-mark i{font-style:normal;font-weight:500;color:#8c9bb0}',
-    '.ec-slash{display:block;flex:none;margin-left:auto;width:13px;height:50px;border-radius:2px;',
+    '.ec-slash{display:block;flex:none;margin-left:auto;width:10px;height:36px;border-radius:2px;',
     'background:rgba(255,255,255,.85);transform:skewX(-18deg)}',
-    '.ec-cad{display:block;text-align:right;line-height:1.05;white-space:nowrap;margin-left:16px}',
+    '.ec-cad{display:block;text-align:right;line-height:1.05;white-space:nowrap;margin-left:10px}',
     '.ec-cad span{display:block;color:var(--ec-dark)}',
-    '.ec-cad .c1{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}',
-    '.ec-cad .c2{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;margin:1px 0}',
-    '.ec-cad .c3{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}',
-    '.ec-go{display:block;flex:none;margin-left:14px;font-size:19px;font-weight:800;color:var(--ec-dark);opacity:.45;transition:opacity .15s,transform .15s}',
+    '.ec-cad .c1{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}',
+    '.ec-cad .c2{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;margin:1px 0}',
+    '.ec-cad .c3{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}',
+    '.ec-go{display:block;flex:none;margin-left:8px;font-size:16px;font-weight:800;color:var(--ec-dark);opacity:.45;transition:opacity .15s,transform .15s}',
     '.enem-cover:hover .ec-go{opacity:1;transform:translateX(3px)}',
-    '.ec-aprox{display:inline-flex;align-items:center;flex:none;margin-left:12px;font-size:9.5px;font-weight:800;',
-    'letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;',
-    'background:rgba(146,64,14,.16);color:#7c3d06;white-space:nowrap}',
-    '@media(max-width:520px){.ec-slash{display:none}.ec-mark{font-size:27px}.ec-cad .c2{font-size:22px}',
-    '.ec-body{flex-wrap:wrap}.ec-aprox{margin-left:0;order:3}}',
+    // selo vira faixa no rodape: no card estreito nao cabe ao lado da marca
+    '.ec-aprox{display:block;text-align:center;font-size:8.5px;font-weight:800;letter-spacing:.06em;',
+    'text-transform:uppercase;padding:3px 6px;background:rgba(146,64,14,.14);color:#7c3d06;',
+    'border-top:1px solid rgba(10,40,80,.12)}',
     '@media(max-width:640px){.sim-h1{font-size:21px}.sim-hero .h-t{font-size:22px}.sim-kpi .k-v{font-size:26px}}'
   ].join('');
   document.head.appendChild(s);
@@ -19596,11 +19596,11 @@ async function renderSimuladoTRI() {
             + '</span>'
             + '<span class="ec-body">'
             + '<span class="ec-mark"><b>enem</b><i>' + pr.ano + '</i></span>'
-            + (pr.nota_aproximada ? '<span class="ec-aprox">nota aproximada</span>' : '')
             + '<span class="ec-slash"></span>'
             + '<span class="ec-cad"><span class="c1">Caderno</span><span class="c2">' + pr.caderno + '</span><span class="c3">' + corN + '</span></span>'
             + '<span class="ec-go" aria-hidden="true">&#8594;</span>'
             + '</span>'
+            + (pr.nota_aproximada ? '<span class="ec-aprox">nota aproximada</span>' : '')
             + '</button>';
         }).join('')
       + '</div>'
@@ -21120,6 +21120,7 @@ function _questaoIdDoErro(e) {
 // Abre a questão do erro (só leitura): enunciado, alternativas com o gabarito e o que
 // o aluno marcou da última vez, e a resolução. erroId pode ser null (ficha nova).
 async function verQuestaoDoErro(erroId, qidDireto, opts) {
+  if (typeof _simCss === 'function') _simCss();
   const e = erroId ? (state.cadernoErros || []).find(x => x.id === erroId) : null;
   const qid = qidDireto || _questaoIdDoErro(e);
   if (!qid) { alert('Este erro não está ligado a uma questão do banco. Registros feitos à mão não têm questão para abrir.'); return; }
@@ -21154,10 +21155,20 @@ async function verQuestaoDoErro(erroId, qidDireto, opts) {
   else if (marcada === q.correta) resumo = '<strong>' + (triMarc ? 'Você marcou ' : 'Na última vez você marcou ') + letra(marcada) + ') e acertou.</strong> Gabarito: ' + letra(q.correta) + ')';
   else resumo = '<strong>Você marcou ' + letra(marcada) + ').</strong> Gabarito: ' + letra(q.correta) + ')';
   const dif = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[q.dificuldade] || '';
+  // Caderno de erros: só faz sentido quando o aluno errou (ou deixou em branco)
+  // e a questão NÃO veio de uma ficha do caderno (aí ela já está registrada).
+  const errouAqui = marcada != null && marcada !== q.correta;
+  const podeCad = !erroId && errouAqui && state.usuario && state.usuario.perfil === 'aluno';
+  const btnCad = podeCad
+    ? '<div style="margin-top:12px;"><button type="button" class="sim-btn sim-btn-erro sim-btn-sm"'
+      + ' onclick="fecharQuestaoDoErro();abrirModalErroDaQuestao(' + qid + ')">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+      + ' Adicionar ao caderno de erros</button></div>'
+    : '';
   const old = document.getElementById('modal-caderno-questao'); if (old) old.remove();
   const html = `
     <div class="modal-overlay" id="modal-caderno-questao" onclick="if(event.target===this)fecharQuestaoDoErro()">
-      <div class="modal" style="max-width:780px;padding:22px 26px;max-height:92vh;overflow:auto;">
+      <div class="modal sim-wrap" style="max-width:780px;padding:22px 26px;max-height:92vh;overflow:auto;">
         <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--radix-line);margin-bottom:16px;">
           <div class="qno-badge">${qid}</div>
           <div style="flex:1;min-width:0;">
@@ -21171,8 +21182,11 @@ async function verQuestaoDoErro(erroId, qidDireto, opts) {
           ${imgs}
           <div class="alternativas ${altsImg ? 'alts-em-imagem' : ''}">${alts}</div>
           <div class="explicacao" style="margin-top:14px;">
-            ${resumo}<br>
-            <strong>${opts && opts.rotulo ? 'Gabarito comentado:' : 'Explicação:'}</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
+            ${resumo}
+            ${btnCad}
+            <div style="margin-top:12px;">
+              <strong>${opts && opts.rotulo ? 'Gabarito comentado:' : 'Explicação:'}</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
+            </div>
             ${q.explicacaoImg ? '<div class="explicacao-img-wrap"><img class="explicacao-img" src="' + q.explicacaoImg + '" alt="resolução"></div>' : ''}
           </div>
         </div>
