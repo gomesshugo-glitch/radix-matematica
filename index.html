@@ -19354,10 +19354,14 @@ function _simCss() {
     // preenchimentos/divisores: no escuro sao branco-transparente; no claro,
     // preto-transparente (senao sumiriam no fundo claro).
     '--sim-fill:rgba(255,255,255,.06);--sim-fill-2:rgba(255,255,255,.12);--sim-hair:rgba(255,255,255,.06);',
+    '--sim-ok-bg:rgba(52,211,153,.16);--sim-ok-tx:#34d399;',
+    '--sim-err-bg:rgba(255,122,92,.16);--sim-err-tx:#ff9b82;',
     '--sim-seg-on-bg:#eaf1ff;--sim-seg-on-tx:#0e1a36}',
     'body.theme-light .sim-wrap{--sim-fill:rgba(15,23,42,.05);--sim-fill-2:rgba(15,23,42,.09);',
     '--sim-hair:rgba(15,23,42,.08);--sim-seg-on-bg:#0f172a;--sim-seg-on-tx:#fff;',
     '--sim-amber-bg:rgba(180,83,9,.13);--sim-amber:#92400e;',
+    '--sim-ok-bg:rgba(4,120,87,.10);--sim-ok-tx:#047857;',
+    '--sim-err-bg:rgba(185,28,28,.09);--sim-err-tx:#b91c1c;',
     '--sim-shadow:0 1px 2px rgba(20,26,43,.05),0 8px 24px rgba(20,26,43,.06)}',
     '.sim-wrap :focus-visible{outline:2px solid var(--sim-focus);outline-offset:2px;border-radius:8px}',
     '.sim-h1{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--sim-tx);margin:2px 0 4px;line-height:1.2}',
@@ -19429,6 +19433,26 @@ function _simCss() {
     '.sim-legend i{width:8px;height:8px;border-radius:2px;display:block;flex:none}',
     '.sim-empty{background:var(--sim-card);border:1px dashed var(--sim-line-2);border-radius:16px;padding:44px 24px;text-align:center;color:var(--sim-mut)}',
     '.sim-empty b{display:block;color:var(--sim-tx);font-size:15px;margin-bottom:6px;letter-spacing:-.01em}',
+    '.sim-tblwrap{overflow-x:auto}',
+    '.sim-tbl{width:100%;border-collapse:collapse;font-size:13px}',
+    '.sim-tbl th{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sim-mut);',
+    'text-align:left;padding:0 16px 9px 0;white-space:nowrap;border-bottom:1px solid var(--sim-line)}',
+    '.sim-tbl td{padding:10px 16px 10px 0;border-bottom:1px solid var(--sim-hair);color:var(--sim-tx);',
+    'font-variant-numeric:tabular-nums;vertical-align:middle;white-space:nowrap}',
+    '.sim-tbl tbody tr:last-child td{border-bottom:0}',
+    '.sim-tbl th:last-child,.sim-tbl td:last-child{padding-right:0;text-align:right}',
+    '.sim-qn{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;padding:0 8px;',
+    'background:var(--sim-card-2);border-radius:8px;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}',
+    '.sim-res{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700}',
+    '.sim-res::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}',
+    '.sim-res.ok{background:var(--sim-ok-bg);color:var(--sim-ok-tx)}',
+    '.sim-res.err{background:var(--sim-err-bg);color:var(--sim-err-tx)}',
+    '.sim-res.nul{background:var(--sim-fill);color:var(--sim-mut)}',
+    '.sim-res.blank{background:var(--sim-amber-bg);color:var(--sim-amber)}',
+    '.sim-alt{font-weight:700}.sim-alt.err{color:var(--sim-err-tx)}',
+    '.sim-warn{border:1px solid var(--sim-amber);background:var(--sim-amber-bg);border-radius:16px;padding:14px 16px;margin:0 0 18px}',
+    '.sim-warn b{color:var(--sim-amber)}',
+    '.sim-warn span{color:var(--sim-tx2);font-size:13px;text-wrap:pretty}',
     '.enem-list{display:flex;flex-direction:column;gap:12px;margin-top:2px}',
     '.enem-cover{--ec-dark:#14477e;--ec-mid:#bcd8ef;--ec-base:#dbe9f7;display:block;width:100%;text-align:left;',
     'padding:0;font-family:inherit;cursor:pointer;position:relative;border:1px solid rgba(10,40,80,.28);',
@@ -19670,38 +19694,82 @@ async function triVerResultado(id) {
 }
 async function renderResultadoTRI(j, tempo) {
   state.view = 'simulado-tri-resultado';
-  _triCss();
+  _triCss(); _simCss();
   const main = document.getElementById('main-content');
   const itens = (j.itens || []).slice();
   // Questões do banco ligadas aos itens (enem_item.questao_id, migration 17). Sem ligação, sem botão.
   const mapaQ = await _triMapaQuestoes(j.co_prova);
-  const _triBtnQ = (x) => mapaQ[x.posicao]
-    ? '<br><button type="button" class="btn btn-secondary" style="padding:3px 9px;font-size:11.5px;margin-top:4px;white-space:nowrap" onclick="triVerQuestao(' + mapaQ[x.posicao] + ',' + x.posicao + ',\'' + (x.resposta || '.') + '\',' + (j.ano || 0) + ')">Ver questão</button>'
+  const _btnQ = (x) => mapaQ[x.posicao]
+    ? '<button type="button" class="sim-btn sim-btn-outline sim-btn-sm" onclick="triVerQuestao(' + mapaQ[x.posicao] + ',' + x.posicao + ',\'' + (x.resposta || '.') + '\',' + (j.ano || 0) + ')">Ver questão</button>'
     : '';
   const prior = itens.filter(x => x.acertou === false && x.chance != null && x.chance >= 50).sort((a, b) => b.chance - a.chance);
   const porDif = itens.filter(x => !x.anulado).sort((a, b) => (a.dificuldade || 0) - (b.dificuldade || 0));
+  const anuladas = itens.filter(x => x.anulado);
   const nota = Number(j.nota).toFixed(1).replace('.', ',');
   const resp = (x) => x.resposta === '.' ? 'em branco' : x.resposta;
-  main.innerHTML = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Resultado</div>'
-    + '<h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success">' + _triIco('target') + '</span>Resultado · ' + _escHtml(j.descricao || '') + '</h2>'
-    + '<div class="tri-kpis">'
-    + '<div class="tri-kpi"><div class="v">' + nota + '</div><div class="l">Nota TRI</div></div>'
-    + '<div class="tri-kpi"><div class="v tri-ok">' + j.acertos + '</div><div class="l">Acertos</div></div>'
-    + '<div class="tri-kpi"><div class="v tri-err">' + j.erros + '</div><div class="l">Erros</div></div>'
-    + '<div class="tri-kpi"><div class="v">' + j.brancos + '</div><div class="l">Em branco</div></div>'
-    + '<div class="tri-kpi"><div class="v">' + _triTempo(tempo) + '</div><div class="l">Tempo</div></div>'
+
+  const pr = (TRI.provas || []).find(x => x.co_prova === j.co_prova);
+  const aprox = (pr && pr.nota_aproximada) || /aproximada/i.test(j.descricao || '');
+  const aviso = aprox
+    ? '<div class="sim-warn"><b>Nota aproximada.</b> <span>Para o ENEM ' + (j.ano || '') + ' o INEP publicou parâmetros de questão inconsistentes; esta nota usa parâmetros recalibrados a partir das respostas e das notas oficiais de milhares de participantes deste caderno. Nas outras provas a nota reproduz exatamente a do INEP.</span></div>'
+    : '';
+
+  const tabPrior = '<div class="sim-tblwrap"><table class="sim-tbl"><thead><tr>'
+    + '<th>Questão</th><th>Sua resposta</th><th>Gabarito</th><th>Chance de acerto</th><th>Dificuldade</th><th></th>'
+    + '</tr></thead><tbody>'
+    + prior.map(x => '<tr>'
+        + '<td><span class="sim-qn">' + x.posicao + '</span></td>'
+        + '<td><span class="sim-alt err">' + resp(x) + '</span></td>'
+        + '<td><span class="sim-alt">' + x.gabarito + '</span></td>'
+        + '<td>' + x.chance + '%</td>'
+        + '<td>' + x.dificuldade + '</td>'
+        + '<td>' + _btnQ(x) + '</td></tr>').join('')
+    + '</tbody></table></div>';
+
+  const tabTudo = '<div class="sim-tblwrap"><table class="sim-tbl"><thead><tr>'
+    + '<th>Questão</th><th>Resultado</th><th>Sua resposta</th><th>Gabarito</th><th>Dificuldade</th><th>Chance</th><th></th>'
+    + '</tr></thead><tbody>'
+    + porDif.map(x => '<tr>'
+        + '<td><span class="sim-qn">' + x.posicao + '</span></td>'
+        + '<td><span class="sim-res ' + (x.acertou ? 'ok' : (x.resposta === '.' ? 'blank' : 'err')) + '">' + (x.acertou ? 'acertou' : (x.resposta === '.' ? 'em branco' : 'errou')) + '</span></td>'
+        + '<td><span class="sim-alt' + (x.acertou ? '' : ' err') + '">' + (x.resposta === '.' ? '—' : x.resposta) + '</span></td>'
+        + '<td><span class="sim-alt">' + x.gabarito + '</span></td>'
+        + '<td>' + x.dificuldade + '</td>'
+        + '<td>' + x.chance + '%</td>'
+        + '<td>' + _btnQ(x) + '</td></tr>').join('')
+    + anuladas.map(x => '<tr>'
+        + '<td><span class="sim-qn">' + x.posicao + '</span></td>'
+        + '<td><span class="sim-res nul">anulada</span></td>'
+        + '<td colspan="4" style="color:var(--radix-text-muted);white-space:normal">anulada pelo INEP, não entra na nota</td>'
+        + '<td>' + _btnQ(x) + '</td></tr>').join('')
+    + '</tbody></table></div>';
+
+  main.innerHTML = '<div class="sim-wrap">'
+    + '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Resultado</div>'
+    + '<h1 class="sim-h1">Resultado · ' + _escHtml(j.descricao || '') + '</h1>'
+    + '<div class="sim-kpis">'
+    + '<div class="sim-kpi"><div class="k-l">Nota TRI</div><div class="k-v">' + nota + '</div><div class="k-c">escala 0–1000</div></div>'
+    + '<div class="sim-kpi"><div class="k-l">Acertos</div><div class="k-v">' + j.acertos + '</div><div class="k-c">de 45 questões</div></div>'
+    + '<div class="sim-kpi"><div class="k-l">Erros</div><div class="k-v">' + j.erros + '</div><div class="k-c">' + j.brancos + ' em branco</div></div>'
+    + '<div class="sim-kpi"><div class="k-l">Tempo</div><div class="k-v">' + _triTempo(tempo) + '</div><div class="k-c">do início ao envio</div></div>'
     + '</div>'
-    + ((() => { const pr = (TRI.provas || []).find(x => x.co_prova === j.co_prova); const aprox = (pr && pr.nota_aproximada) || /aproximada/i.test(j.descricao || ''); return aprox ? '<div class="tri-card" style="border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.07)"><b style="color:#b45309">Nota aproximada.</b> <span style="color:var(--radix-text-2);font-size:13px">Para o ENEM ' + (j.ano || '') + ' o INEP publicou parâmetros de questão inconsistentes; esta nota usa parâmetros recalibrados a partir das respostas e das notas oficiais de milhares de participantes deste caderno. Nas outras provas a nota reproduz exatamente a do INEP.</span></div>' : ''; })())
-    + '<div class="tri-card"><b>Revisão prioritária</b> <span style="color:var(--radix-text-muted);font-size:13px">erros em questões que estavam ao seu alcance (chance de acerto de 50% ou mais na sua proficiência). É aqui que a nota sobe mais rápido.</span>'
-    + (prior.length ? '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Questão</th><th>Sua resposta</th><th>Gabarito</th><th>Chance de acerto</th><th>Dificuldade</th></tr></thead><tbody>' + prior.map(x => '<tr><td><b>' + x.posicao + '</b>' + _triBtnQ(x) + '</td><td class="tri-err">' + resp(x) + '</td><td>' + x.gabarito + '</td><td>' + x.chance + '%</td><td>' + x.dificuldade + '</td></tr>').join('') + '</tbody></table></div>'
-      : '<p style="color:var(--radix-text-muted);margin:8px 0 0">Nenhum erro em questões ao seu alcance. Os erros que ficaram são em questões acima do seu nível atual.</p>')
+    + aviso
+    + '<div class="sim-card"><div class="sim-card-head"><div>'
+      + '<div class="sim-card-t">Revisão prioritária</div>'
+      + '<div class="sim-card-s">Erros em questões que estavam ao seu alcance — chance de acerto de 50% ou mais na sua proficiência. É aqui que a nota sobe mais rápido.</div>'
+      + '</div></div>'
+    + (prior.length ? tabPrior
+        : '<p style="color:var(--radix-text-muted);font-size:13px;margin:0;text-wrap:pretty">Nenhum erro em questões ao seu alcance. Os erros que ficaram são em questões acima do seu nível atual.</p>')
     + '</div>'
-    + '<div class="tri-card"><b>Correção questão a questão</b> <span style="color:var(--radix-text-muted);font-size:13px">da mais fácil à mais difícil pela calibração oficial; a dificuldade está na mesma escala da nota. Em "Ver questão" você abre o enunciado e o gabarito comentado.</span>'
-    + '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Questão</th><th>Resultado</th><th>Sua resposta</th><th>Gabarito</th><th>Dificuldade</th><th>Chance</th></tr></thead><tbody>'
-    + porDif.map(x => '<tr><td><b>' + x.posicao + '</b>' + _triBtnQ(x) + '</td><td class="' + (x.acertou ? 'tri-ok' : 'tri-err') + '">' + (x.acertou ? 'acertou' : (x.resposta === '.' ? 'em branco' : 'errou')) + '</td><td>' + (x.resposta === '.' ? '—' : x.resposta) + '</td><td>' + x.gabarito + '</td><td>' + x.dificuldade + '</td><td>' + x.chance + '%</td></tr>').join('')
-    + itens.filter(x => x.anulado).map(x => '<tr><td><b>' + x.posicao + '</b>' + _triBtnQ(x) + '</td><td colspan="5" style="color:var(--radix-text-muted)">anulada pelo INEP, não entra na nota</td></tr>').join('')
-    + '</tbody></table></div></div>'
-    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button class="btn btn-secondary" onclick="renderSimuladoTRI()">Voltar aos simulados</button></div>';
+    + '<div class="sim-card"><div class="sim-card-head"><div>'
+      + '<div class="sim-card-t">Correção questão a questão</div>'
+      + '<div class="sim-card-s">Da mais fácil à mais difícil pela calibração oficial — a dificuldade está na mesma escala da nota. Em “Ver questão” você abre o enunciado e o gabarito comentado.</div>'
+      + '</div></div>'
+    + tabTudo
+    + '</div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px">'
+      + '<button class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">Voltar aos simulados</button></div>'
+    + '</div>';
   window.scrollTo(0, 0);
 }
 
