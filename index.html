@@ -676,7 +676,7 @@
     cursor: pointer; border: 1px solid transparent !important;
     transition: transform .05s, filter .15s;
     font-family: inherit !important;
-    background: var(--radix-grad-brand) !important;
+    background: var(--radix-cyan) !important;
     color: #0e1a36 !important;
     box-shadow: 0 8px 24px -10px rgba(34,211,238,0.55) !important;
     margin-top: 0 !important;
@@ -3766,7 +3766,7 @@
   cursor: pointer;
   border: 1px solid transparent !important;
   transition: transform .1s, filter .15s, box-shadow .15s !important;
-  background: var(--radix-grad-brand) !important;
+  background: var(--radix-cyan) !important;
   color: #0e1a36 !important;
   box-shadow: 0 8px 24px -10px rgba(34,211,238,.45) !important;
 }
@@ -19326,6 +19326,15 @@ async function renderHistoricoSimulados() { return renderSimulados('plataforma')
 // Matemática (136 a 180) e marca aqui. As marcações vão para simulado_tri pelas
 // funções fn_simulado_tri_* (a nota é calculada no servidor por fn_nota_tri).
 const TRI = { provas: null, tentativas: null, atual: null, timer: null, salvarT: null };
+// Paleta da capa por cor do caderno (o ENEM usa a cor pra identificar o caderno).
+const _EC_CORES = {
+  azul:    { dark: '#14477e', mid: '#bcd8ef', base: '#dbe9f7' },
+  amarelo: { dark: '#8a6206', mid: '#f3e2ae', base: '#fbf3d9' },
+  branco:  { dark: '#3f4a5a', mid: '#dfe4ea', base: '#f0f3f7' },
+  rosa:    { dark: '#96305c', mid: '#f2cbdd', base: '#fbe6ef' },
+  cinza:   { dark: '#414b57', mid: '#d9dee4', base: '#eceff3' },
+  verde:   { dark: '#136b45', mid: '#bfe6d3', base: '#ddf3e8' }
+};
 // =========================================================
 // SIMULADOS — refino visual (FONTE ÚNICA dos tokens destas telas)
 // Casa com a identidade do app: dark + Inter + paleta --radix-*.
@@ -19341,7 +19350,15 @@ function _simCss() {
     '--sim-line:var(--radix-line);--sim-line-2:var(--radix-line-2);',
     '--sim-tx:var(--radix-text);--sim-tx2:var(--radix-text-2);--sim-mut:var(--radix-text-muted);',
     '--sim-accent:var(--radix-cyan);--sim-amber-bg:rgba(251,191,36,.16);--sim-amber:var(--radix-warning);',
-    '--sim-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);--sim-focus:var(--radix-blue)}',
+    '--sim-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);--sim-focus:var(--radix-blue);',
+    // preenchimentos/divisores: no escuro sao branco-transparente; no claro,
+    // preto-transparente (senao sumiriam no fundo claro).
+    '--sim-fill:rgba(255,255,255,.06);--sim-fill-2:rgba(255,255,255,.12);--sim-hair:rgba(255,255,255,.06);',
+    '--sim-seg-on-bg:#eaf1ff;--sim-seg-on-tx:#0e1a36}',
+    'body.theme-light .sim-wrap{--sim-fill:rgba(15,23,42,.05);--sim-fill-2:rgba(15,23,42,.09);',
+    '--sim-hair:rgba(15,23,42,.08);--sim-seg-on-bg:#0f172a;--sim-seg-on-tx:#fff;',
+    '--sim-amber-bg:rgba(180,83,9,.13);--sim-amber:#92400e;',
+    '--sim-shadow:0 1px 2px rgba(20,26,43,.05),0 8px 24px rgba(20,26,43,.06)}',
     '.sim-wrap :focus-visible{outline:2px solid var(--sim-focus);outline-offset:2px;border-radius:8px}',
     '.sim-h1{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--sim-tx);margin:2px 0 4px;line-height:1.2}',
     '.sim-lead{font-size:13.5px;color:var(--sim-mut);margin:0 0 18px;max-width:72ch;text-wrap:pretty}',
@@ -19352,7 +19369,7 @@ function _simCss() {
     '.sim-btn-primary{background:var(--sim-accent);color:#0e1a36;font-weight:800}',
     '.sim-btn-primary:hover{filter:brightness(1.07)}',
     '.sim-btn-outline{border-color:var(--sim-line-2);color:var(--sim-tx)}',
-    '.sim-btn-outline:hover{background:rgba(255,255,255,.07)}',
+    '.sim-btn-outline:hover{background:var(--sim-fill)}',
     '.sim-btn-ghost{color:var(--sim-mut);padding-left:8px;padding-right:8px}',
     '.sim-btn-ghost:hover{color:var(--sim-tx)}',
     '.sim-btn-sm{padding:7px 14px;font-size:13px}',
@@ -19363,7 +19380,7 @@ function _simCss() {
     '.sim-tab.on{color:var(--sim-accent);border-bottom-color:var(--sim-accent)}',
     '.sim-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:0 0 18px}',
     '.sim-kpi{background:var(--sim-card);border:1px solid var(--sim-line);border-radius:16px;padding:16px 18px;box-shadow:var(--sim-shadow)}',
-    '.sim-kpi .k-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sim-mut)}',
+    '.sim-kpi .k-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sim-mut);line-height:1.3;min-height:2.6em}',
     '.sim-kpi .k-v{font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--sim-tx);',
     'font-variant-numeric:tabular-nums;margin:8px 0 2px;line-height:1.1}',
     '.sim-kpi .k-c{font-size:12.5px;color:var(--sim-mut);font-variant-numeric:tabular-nums;text-wrap:pretty}',
@@ -19376,11 +19393,11 @@ function _simCss() {
     'font-size:13px;display:inline-flex;align-items:center;gap:4px}',
     '.sim-link:hover{text-decoration:underline}',
     '.sim-segs{display:flex;gap:8px;flex-wrap:wrap}',
-    '.sim-seg{display:inline-flex;gap:2px;padding:3px;background:rgba(255,255,255,.06);border-radius:10px}',
+    '.sim-seg{display:inline-flex;gap:2px;padding:3px;background:var(--sim-fill);border-radius:10px}',
     '.sim-seg button{border:0;background:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:12px;',
     'font-weight:700;color:var(--sim-mut);transition:background .15s,color .15s}',
     '.sim-seg button:hover{color:var(--sim-tx)}',
-    '.sim-seg button.on{background:#eaf1ff;color:#0e1a36}',
+    '.sim-seg button.on{background:var(--sim-seg-on-bg);color:var(--sim-seg-on-tx)}',
     '.sim-hero{background:var(--radix-grad-hero,linear-gradient(135deg,#1fc8ff,#3b82f6 50%,#1e40af));',
     'border-radius:18px;padding:20px 22px;color:#fff;margin:0 0 18px}',
     '.sim-hero .h-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.88)}',
@@ -19395,11 +19412,11 @@ function _simCss() {
     '.sim-btn-onhero{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}',
     '.sim-btn-onhero:hover{background:rgba(255,255,255,.26)}',
     '.sim-pill{display:inline-flex;align-items:center;border-radius:999px;font-size:12px;font-weight:700;',
-    'padding:4px 12px;background:rgba(255,255,255,.08);color:var(--sim-tx);font-variant-numeric:tabular-nums}',
+    'padding:4px 12px;background:var(--sim-fill-2);color:var(--sim-tx);font-variant-numeric:tabular-nums}',
     '.sim-badge{display:inline-flex;align-items:center;border-radius:999px;font-size:10.5px;font-weight:700;',
     'letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;background:var(--sim-amber-bg);color:var(--sim-amber)}',
     '.sim-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 22px}',
-    '.sim-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}',
+    '.sim-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--sim-hair)}',
     '.sim-tile{flex:none;min-width:48px;height:38px;display:inline-flex;align-items:center;justify-content:center;',
     'padding:0 9px;background:var(--sim-card-2);border-radius:10px;font-size:15px;font-weight:800;',
     'letter-spacing:-.01em;color:var(--sim-tx);font-variant-numeric:tabular-nums}',
@@ -19412,6 +19429,38 @@ function _simCss() {
     '.sim-legend i{width:8px;height:8px;border-radius:2px;display:block;flex:none}',
     '.sim-empty{background:var(--sim-card);border:1px dashed var(--sim-line-2);border-radius:16px;padding:44px 24px;text-align:center;color:var(--sim-mut)}',
     '.sim-empty b{display:block;color:var(--sim-tx);font-size:15px;margin-bottom:6px;letter-spacing:-.01em}',
+    '.enem-list{display:flex;flex-direction:column;gap:12px;margin-top:2px}',
+    '.enem-cover{--ec-dark:#14477e;--ec-mid:#bcd8ef;--ec-base:#dbe9f7;display:block;width:100%;text-align:left;',
+    'padding:0;font-family:inherit;cursor:pointer;position:relative;border:1px solid rgba(10,40,80,.28);',
+    'border-radius:14px;overflow:hidden;background-color:var(--ec-base);',
+    'background-image:repeating-linear-gradient(112deg,rgba(255,255,255,.55) 0 1px,rgba(255,255,255,0) 1px 6px);',
+    'transition:transform .12s,box-shadow .15s,border-color .15s}',
+    '.enem-cover:hover{transform:translateY(-2px);box-shadow:0 12px 28px -14px rgba(0,0,0,.55);border-color:rgba(10,40,80,.5)}',
+    '.enem-cover:focus-visible{outline:2px solid var(--sim-focus);outline-offset:3px}',
+    '.ec-top{display:block;background:var(--ec-mid);padding:9px 14px 8px;text-align:center;',
+    'border-bottom:1px solid rgba(10,40,80,.18)}',
+    '.ec-t1{display:block;font-size:12.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;',
+    'color:var(--ec-dark);line-height:1.15}',
+    '.ec-t2{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;',
+    'color:var(--ec-dark);opacity:.8;margin-top:3px;line-height:1.2}',
+    '.ec-body{display:flex;align-items:center;gap:6px;padding:12px 16px}',
+    '.ec-mark{display:inline-block;font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1;white-space:nowrap}',
+    '.ec-mark b{font-weight:800;color:var(--ec-dark)}',
+    '.ec-mark i{font-style:normal;font-weight:500;color:#8c9bb0}',
+    '.ec-slash{display:block;flex:none;margin-left:auto;width:13px;height:50px;border-radius:2px;',
+    'background:rgba(255,255,255,.85);transform:skewX(-18deg)}',
+    '.ec-cad{display:block;text-align:right;line-height:1.05;white-space:nowrap;margin-left:16px}',
+    '.ec-cad span{display:block;color:var(--ec-dark)}',
+    '.ec-cad .c1{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}',
+    '.ec-cad .c2{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;margin:1px 0}',
+    '.ec-cad .c3{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}',
+    '.ec-go{display:block;flex:none;margin-left:14px;font-size:19px;font-weight:800;color:var(--ec-dark);opacity:.45;transition:opacity .15s,transform .15s}',
+    '.enem-cover:hover .ec-go{opacity:1;transform:translateX(3px)}',
+    '.ec-aprox{display:inline-flex;align-items:center;flex:none;margin-left:12px;font-size:9.5px;font-weight:800;',
+    'letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;',
+    'background:rgba(146,64,14,.16);color:#7c3d06;white-space:nowrap}',
+    '@media(max-width:520px){.ec-slash{display:none}.ec-mark{font-size:27px}.ec-cad .c2{font-size:22px}',
+    '.ec-body{flex-wrap:wrap}.ec-aprox{margin-left:0;order:3}}',
     '@media(max-width:640px){.sim-h1{font-size:21px}.sim-hero .h-t{font-size:22px}.sim-kpi .k-v{font-size:26px}}'
   ].join('');
   document.head.appendChild(s);
@@ -19496,12 +19545,27 @@ async function renderSimuladoTRI() {
     + '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Provas disponíveis</div>'
       + '<div class="sim-card-s">' + nProvas + (nProvas === 1 ? ' prova' : ' provas') + ' · Matemática · questões 136 a 180 · ~2h30 cada</div></div>'
       + (feitas.length ? '<button class="sim-link" onclick="document.getElementById(\'sim-minhas-notas\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">Ver histórico →</button>' : '')
-      + '</div><div class="sim-rows">'
-      + TRI.provas.map(pr => '<div class="sim-row"><span class="sim-tile">' + pr.ano + '</span>'
-          + '<span class="sim-row-main"><span class="sim-row-t">caderno ' + pr.caderno + ' ' + _triCor(pr.cor) + '</span>'
-          + (pr.nota_aproximada ? '<span class="sim-badge">nota aproximada</span>' : '')
-          + '</span>'
-          + '<button class="sim-btn sim-btn-outline sim-btn-sm" onclick="triIniciar(' + pr.co_prova + ')">Começar</button></div>').join('')
+      + '</div><div class="enem-list">'
+      + TRI.provas.map(pr => {
+          const corN = _triCor(pr.cor);
+          const ec = _EC_CORES[corN] || _EC_CORES.azul;
+          return '<button type="button" class="enem-cover"'
+            + ' style="--ec-dark:' + ec.dark + ';--ec-mid:' + ec.mid + ';--ec-base:' + ec.base + '"'
+            + ' onclick="triIniciar(' + pr.co_prova + ')"'
+            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + '">'
+            + '<span class="ec-top">'
+            + '<span class="ec-t1">Exame Nacional do Ensino Médio</span>'
+            + '<span class="ec-t2">Prova de Matemática e suas Tecnologias</span>'
+            + '</span>'
+            + '<span class="ec-body">'
+            + '<span class="ec-mark"><b>enem</b><i>' + pr.ano + '</i></span>'
+            + (pr.nota_aproximada ? '<span class="ec-aprox">nota aproximada</span>' : '')
+            + '<span class="ec-slash"></span>'
+            + '<span class="ec-cad"><span class="c1">Caderno</span><span class="c2">' + pr.caderno + '</span><span class="c3">' + corN + '</span></span>'
+            + '<span class="ec-go" aria-hidden="true">&#8594;</span>'
+            + '</span>'
+            + '</button>';
+        }).join('')
       + '</div>'
       + (temAprox ? '<div class="sim-note"><b style="color:var(--radix-text)">Nota aproximada:</b> nesses anos o INEP publicou parâmetros inconsistentes. A nota usa parâmetros recalibrados a partir dos resultados oficiais — serve pra acompanhar a evolução, mas pode variar um pouco da nota real.</div>' : '')
       + '</div>'
@@ -19727,7 +19791,7 @@ async function renderSimulados(aba) {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Registrar nota externa
       </button>
-      ${state.degustacao ? '' : `<button class="sim-btn sim-btn-ghost" onclick="renderSimuladoTRI()">ENEM oficial com nota TRI →</button>`}
+      ${state.degustacao ? '' : `<button class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">ENEM oficial com nota TRI →</button>`}
     </div>
 
     <!-- Abas: sublinhado, sem pílula preenchida -->
