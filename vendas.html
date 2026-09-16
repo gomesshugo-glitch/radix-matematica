@@ -34,8 +34,6 @@
   .chip.warn { background: rgba(251,191,36,.15); color: var(--radix-warning); }
   .chip.err { background: rgba(255,94,58,.15); color: var(--radix-coral); }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 22px 20px 60px; }
-  .sandbox { border-left: 3px solid var(--radix-warning); background: rgba(251,191,36,.08); padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; margin-bottom: 22px; color: var(--radix-text-2); }
-  .sandbox b { color: var(--radix-text); }
   .passos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
   .passo { flex: 1; min-width: 140px; padding: 10px 12px; border-radius: 10px; background: var(--radix-surface); border: 1px solid var(--radix-line); font-size: 12px; color: var(--radix-text-muted); font-weight: 600; }
   .passo b { display: block; font-size: 13px; color: var(--radix-text-2); margin-top: 2px; }
@@ -121,10 +119,50 @@
   .modal-cx h3 { font-size: 19px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 10px; }
   .passos-txt { margin: 4px 0 14px 18px; font-size: 14px; line-height: 1.7; color: var(--radix-text-2); }
   .passos-txt b { color: var(--radix-text); }
+  /* ---------- TEMA CLARO ----------
+     Mesma paleta e mesma preferência salva do app (chave radix-theme), para quem
+     vem de lá não ver a cor mudar no meio do caminho. */
+  body.theme-light {
+    --radix-bg: #f1f5fb; --radix-bg-2: #e8eff8; --radix-surface: #ffffff;
+    --radix-surface-2: #f1f5fb; --radix-surface-3: #e0e7f2;
+    --radix-line: rgba(15,23,42,0.08); --radix-line-2: rgba(15,23,42,0.14);
+    --radix-text: #0f172a; --radix-text-2: #334155; --radix-text-muted: #64748b;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(59,130,246,.06), transparent 60%),
+      var(--radix-bg);
+  }
+  body.theme-light header.top { background: rgba(255,255,255,.88); }
+  /* campos e áreas de digitar ficam brancos, não cinza */
+  body.theme-light .campo input, body.theme-light .campo select,
+  body.theme-light .radios label, body.theme-light .pix textarea { background: #fff; }
+  body.theme-light .turma { background: #fff; }
+  body.theme-light .resumo { background: #fff; }
+  /* sombras do escuro são pesadas demais sobre fundo claro */
+  body.theme-light .menu { box-shadow: 0 14px 34px rgba(15,23,42,.14); }
+  body.theme-light .modal-cx { box-shadow: 0 24px 60px rgba(15,23,42,.20); }
+  body.theme-light .modal-fundo { background: rgba(15,23,42,.45); }
+  body.theme-light .menu-btn { background: #fff; }
+  body.theme-light .btn-ghost { background: #fff; }
+  /* no claro, o cinza do botão comum é quase o mesmo do selecionado:
+     o escolhido ganha um fundo azulado para se separar de verdade */
+  body.theme-light .abas button.on, body.theme-light .metodos button.on { background: rgba(34,211,238,.14); }
+  body.theme-light .passo { background: #fff; }
+  body.theme-light .passo.on { background: rgba(34,211,238,.10); }
+  /* o botão do tema troca o ícone conforme o tema atual */
+  .tema-btn .ico-sol { display: none; }
+  .tema-btn .ico-lua { display: block; }
+  body.theme-light .tema-btn .ico-sol { display: block; }
+  body.theme-light .tema-btn .ico-lua { display: none; }
   @media (max-width: 640px) { .pix { grid-template-columns: 1fr; } .pix img { margin: 0 auto; } .linha { grid-template-columns: 1fr; } .menu { min-width: 220px; } .menu-btn .rotulo { display: none; } }
 </style>
 </head>
 <body>
+<script>
+  // Aplica o tema salvo antes de desenhar, senão a tela pisca escura e vira clara.
+  // Mesma chave do app (radix-theme): quem escolheu lá chega aqui com a escolha feita.
+  try { if (localStorage.getItem('radix-theme') === 'light') document.body.classList.add('theme-light'); } catch (e) {}
+</script>
 <header class="top">
   <div class="top-in">
     <div class="brand">
@@ -132,6 +170,14 @@
       <span>Radix Matemática<small>Matrícula</small></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
+
+      <!-- TEMA: mesma preferência do app -->
+      <button class="menu-btn tema-btn" id="btn-tema" onclick="alternarTema()" title="Alternar tema claro e escuro" aria-label="Alternar tema claro e escuro">
+        <span class="ic" aria-hidden="true">
+          <svg class="ico-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="ico-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
 
       <!-- AJUDA: sempre disponível, mesmo sem conta -->
       <div class="menu-wrap">
@@ -185,12 +231,6 @@
 </header>
 
 <main class="wrap">
-  <div class="sandbox" id="aviso-sandbox">
-    <b>Página de teste. Isto não é uma matrícula do Radix.</b><br>
-    As turmas e os preços abaixo são de um catálogo de demonstração da plataforma Lumen, não do curso Radix, e o pagamento roda em ambiente de homologação: nenhuma cobrança real é feita e nenhuma vaga é garantida.<br>
-    <b>Não use seu CPF real nem a senha que você usa no Radix.</b> A conta criada aqui fica gravada na plataforma Lumen e não pode ser apagada por esta página. Para se matricular de verdade, fale com o atendimento do Radix pelo WhatsApp (84) 99813-1870.
-  </div>
-
   <div class="passos" id="passos">
     <div class="passo" data-p="1">1<b>Turma</b></div>
     <div class="passo" data-p="2">2<b>Sua conta</b></div>
@@ -373,6 +413,14 @@ function atualizarCabecalho() {
   wrap.hidden = false;
 }
 
+/* ---------- tema claro e escuro ---------- */
+function alternarTema() {
+  const claro = document.body.classList.toggle('theme-light');
+  try { localStorage.setItem('radix-theme', claro ? 'light' : 'dark'); } catch (e) {}
+  const b = document.getElementById('btn-tema');
+  if (b) b.setAttribute('aria-label', claro ? 'Mudar para o tema escuro' : 'Mudar para o tema claro');
+}
+
 /* ---------- menus do cabeçalho ---------- */
 function fecharMenus(exceto) {
   ['ajuda', 'conta'].forEach(m => {
@@ -482,7 +530,10 @@ async function carregarCatalogo() {
 function politicaDe(t) {
   const metodosAceitos = ('acceptedMethods' in t) ? (Array.isArray(t.acceptedMethods) ? t.acceptedMethods : []) : LUMEN.fallbackMetodos;
   const teto = ('maxCardInstallments' in t) ? (Number.isInteger(t.maxCardInstallments) ? t.maxCardInstallments : 0) : LUMEN.fallbackMaxParcelas;
-  const metodos = metodosAceitos.filter(m => LUMEN.metodosRenderizaveis.includes(m));   // interseção com o que sabemos mostrar
+  // Interseção com o que sabemos mostrar, na NOSSA ordem de preferência: PIX primeiro.
+  // A API devolve ["card","pix"] e o primeiro da lista vira o padrão da tela; no PIX o
+  // dinheiro cai na hora e sem taxa de cartão, então ele fica na frente.
+  const metodos = LUMEN.metodosRenderizaveis.filter(m => metodosAceitos.includes(m));
   const preco = centavos(t.price) || 0;
   return { metodos, teto, maxParcelas: maxParcelasOferecidas(preco, teto), politicaDaApi: ('acceptedMethods' in t) };
 }
@@ -815,7 +866,7 @@ function testes() {
 
 /* ---------- inicialização ---------- */
 (async function boot() {
-  document.getElementById('rodape-amb').textContent = 'loja ' + LUMEN.slug + ' · sandbox';
+  document.getElementById('rodape-amb').textContent = 'Revisão Final ENEM 2026';
   document.getElementById('rodape-whats').href = RADIX.zapUrl();
   document.getElementById('link-whats').href = RADIX.zapUrl();
   estado.token = lerGuardado('lumen_token');
