@@ -19354,13 +19354,13 @@ function _simCss() {
     // preenchimentos/divisores: no escuro sao branco-transparente; no claro,
     // preto-transparente (senao sumiriam no fundo claro).
     '--sim-fill:rgba(255,255,255,.06);--sim-fill-2:rgba(255,255,255,.12);--sim-hair:rgba(255,255,255,.06);',
-    '--sim-ok-bg:rgba(52,211,153,.16);--sim-ok-tx:#34d399;',
+    '--sim-ok-bg:rgba(52,211,153,.16);--sim-ok-tx:#34d399;--sim-roxo:#c084fc;',
     '--sim-err-bg:rgba(255,122,92,.16);--sim-err-tx:#ff9b82;',
     '--sim-seg-on-bg:#eaf1ff;--sim-seg-on-tx:#0e1a36}',
     'body.theme-light .sim-wrap{--sim-fill:rgba(15,23,42,.05);--sim-fill-2:rgba(15,23,42,.09);',
     '--sim-hair:rgba(15,23,42,.08);--sim-seg-on-bg:#0f172a;--sim-seg-on-tx:#fff;',
     '--sim-amber-bg:rgba(180,83,9,.13);--sim-amber:#92400e;',
-    '--sim-ok-bg:rgba(4,120,87,.10);--sim-ok-tx:#047857;',
+    '--sim-ok-bg:rgba(4,120,87,.10);--sim-ok-tx:#047857;--sim-roxo:#7e22ce;',
     '--sim-err-bg:rgba(185,28,28,.09);--sim-err-tx:#b91c1c;',
     '--sim-shadow:0 1px 2px rgba(20,26,43,.05),0 8px 24px rgba(20,26,43,.06)}',
     '.sim-wrap :focus-visible{outline:2px solid var(--sim-focus);outline-offset:2px;border-radius:8px}',
@@ -19434,13 +19434,25 @@ function _simCss() {
     '.sim-empty{background:var(--sim-card);border:1px dashed var(--sim-line-2);border-radius:16px;padding:44px 24px;text-align:center;color:var(--sim-mut)}',
     '.sim-empty b{display:block;color:var(--sim-tx);font-size:15px;margin-bottom:6px;letter-spacing:-.01em}',
     '.sim-tblwrap{overflow-x:auto}',
-    '.sim-tbl{width:100%;border-collapse:collapse;font-size:13px}',
-    '.sim-tbl th{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sim-mut);',
-    'text-align:left;padding:0 16px 9px 0;white-space:nowrap;border-bottom:1px solid var(--sim-line)}',
-    '.sim-tbl td{padding:10px 16px 10px 0;border-bottom:1px solid var(--sim-hair);color:var(--sim-tx);',
+    // !important aqui e proposital: existe um 'th{background/color !important}'
+    // global (paleta antiga) que senao devolve a faixa azul com texto ciano.
+    '.sim-tbl{width:100%;border-collapse:collapse;font-size:13px;background:transparent !important;border:0 !important}',
+    '.sim-wrap .sim-tbl th{background:transparent !important;color:var(--sim-mut) !important;font-size:10.5px !important;',
+    'font-weight:700 !important;letter-spacing:.1em;text-transform:uppercase;text-align:left !important;',
+    'padding:0 14px 9px 0 !important;white-space:nowrap;border-bottom:1px solid var(--sim-line) !important}',
+    '.sim-wrap .sim-tbl td{background:transparent !important;color:var(--sim-tx) !important;font-size:13px !important;',
+    'padding:9px 14px 9px 0 !important;border-bottom:1px solid var(--sim-hair) !important;',
     'font-variant-numeric:tabular-nums;vertical-align:middle;white-space:nowrap}',
-    '.sim-tbl tbody tr:last-child td{border-bottom:0}',
-    '.sim-tbl th:last-child,.sim-tbl td:last-child{padding-right:0;text-align:right}',
+    // colunas abracam o conteudo; a ultima (acoes) absorve a sobra e vai pra direita
+    '.sim-tbl th,.sim-tbl td{width:1%}',
+    '.sim-tbl th:first-child,.sim-tbl td:first-child{padding-left:2px !important}',
+    '.sim-tbl th:last-child,.sim-tbl td:last-child{width:auto;padding-right:0 !important;text-align:right !important}',
+    '.sim-tbl tbody tr:last-child td{border-bottom:0 !important}',
+    '.sim-tbl tbody tr:hover td{background:var(--sim-fill) !important}',
+    '.sim-acoes{display:inline-flex;gap:6px;justify-content:flex-end;flex-wrap:nowrap;white-space:nowrap}',
+    '.sim-acoes .sim-btn{padding:6px 11px;font-size:12.5px}',
+    '.sim-btn-erro{background:transparent;border-color:var(--sim-roxo);color:var(--sim-roxo)}',
+    '.sim-btn-erro:hover{background:var(--sim-roxo);color:#fff}',
     '.sim-qn{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;padding:0 8px;',
     'background:var(--sim-card-2);border-radius:8px;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}',
     '.sim-res{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700}',
@@ -19449,7 +19461,8 @@ function _simCss() {
     '.sim-res.err{background:var(--sim-err-bg);color:var(--sim-err-tx)}',
     '.sim-res.nul{background:var(--sim-fill);color:var(--sim-mut)}',
     '.sim-res.blank{background:var(--sim-amber-bg);color:var(--sim-amber)}',
-    '.sim-alt{font-weight:700}.sim-alt.err{color:var(--sim-err-tx)}',
+    '.sim-alt{font-weight:700}.sim-alt.err{color:var(--sim-err-tx)}.sim-alt.ok{color:var(--sim-ok-tx)}',
+    '.sim-seta{color:var(--sim-mut);margin:0 7px;font-weight:400}',
     '.sim-warn{border:1px solid var(--sim-amber);background:var(--sim-amber-bg);border-radius:16px;padding:14px 16px;margin:0 0 18px}',
     '.sim-warn b{color:var(--sim-amber)}',
     '.sim-warn span{color:var(--sim-tx2);font-size:13px;text-wrap:pretty}',
@@ -19699,14 +19712,27 @@ async function renderResultadoTRI(j, tempo) {
   const itens = (j.itens || []).slice();
   // Questões do banco ligadas aos itens (enem_item.questao_id, migration 17). Sem ligação, sem botão.
   const mapaQ = await _triMapaQuestoes(j.co_prova);
-  const _btnQ = (x) => mapaQ[x.posicao]
-    ? '<button type="button" class="sim-btn sim-btn-outline sim-btn-sm" onclick="triVerQuestao(' + mapaQ[x.posicao] + ',' + x.posicao + ',\'' + (x.resposta || '.') + '\',' + (j.ano || 0) + ')">Ver questão</button>'
-    : '';
+  // Acoes da linha: ver a questao e, quando errou (ou deixou em branco),
+  // mandar direto pro caderno de erros.
+  const _btnQ = (x) => {
+    const qid = mapaQ[x.posicao];
+    if (!qid) return '';
+    let h = '<button type="button" class="sim-btn sim-btn-outline sim-btn-sm" onclick="triVerQuestao(' + qid + ',' + x.posicao + ',\'' + (x.resposta || '.') + '\',' + (j.ano || 0) + ')">Ver questão</button>';
+    if (x.acertou === false) {
+      h += '<button type="button" class="sim-btn sim-btn-erro sim-btn-sm" title="Adicionar esta questão ao seu caderno de erros" onclick="abrirModalErroDaQuestao(' + qid + ')">+ Caderno</button>';
+    }
+    return '<span class="sim-acoes">' + h + '</span>';
+  };
   const prior = itens.filter(x => x.acertou === false && x.chance != null && x.chance >= 50).sort((a, b) => b.chance - a.chance);
   const porDif = itens.filter(x => !x.anulado).sort((a, b) => (a.dificuldade || 0) - (b.dificuldade || 0));
   const anuladas = itens.filter(x => x.anulado);
   const nota = Number(j.nota).toFixed(1).replace('.', ',');
   const resp = (x) => x.resposta === '.' ? 'em branco' : x.resposta;
+  // Acertou: so a letra. Errou/branco: "sua -> gabarito", o erro fica obvio.
+  const _respGab = (x) => x.acertou
+    ? '<span class="sim-alt">' + x.gabarito + '</span>'
+    : '<span class="sim-alt err">' + (x.resposta === '.' ? '—' : x.resposta) + '</span>'
+      + '<span class="sim-seta">→</span><span class="sim-alt ok">' + x.gabarito + '</span>';
 
   const pr = (TRI.provas || []).find(x => x.co_prova === j.co_prova);
   const aprox = (pr && pr.nota_aproximada) || /aproximada/i.test(j.descricao || '');
@@ -19715,32 +19741,30 @@ async function renderResultadoTRI(j, tempo) {
     : '';
 
   const tabPrior = '<div class="sim-tblwrap"><table class="sim-tbl"><thead><tr>'
-    + '<th>Questão</th><th>Sua resposta</th><th>Gabarito</th><th>Chance de acerto</th><th>Dificuldade</th><th></th>'
+    + '<th>Questão</th><th>Resposta → gabarito</th><th>Chance</th><th>Dificuldade</th><th></th>'
     + '</tr></thead><tbody>'
     + prior.map(x => '<tr>'
         + '<td><span class="sim-qn">' + x.posicao + '</span></td>'
-        + '<td><span class="sim-alt err">' + resp(x) + '</span></td>'
-        + '<td><span class="sim-alt">' + x.gabarito + '</span></td>'
+        + '<td>' + _respGab(x) + '</td>'
         + '<td>' + x.chance + '%</td>'
         + '<td>' + x.dificuldade + '</td>'
         + '<td>' + _btnQ(x) + '</td></tr>').join('')
     + '</tbody></table></div>';
 
   const tabTudo = '<div class="sim-tblwrap"><table class="sim-tbl"><thead><tr>'
-    + '<th>Questão</th><th>Resultado</th><th>Sua resposta</th><th>Gabarito</th><th>Dificuldade</th><th>Chance</th><th></th>'
+    + '<th>Questão</th><th>Resultado</th><th>Resposta → gabarito</th><th>Dificuldade</th><th>Chance</th><th></th>'
     + '</tr></thead><tbody>'
     + porDif.map(x => '<tr>'
         + '<td><span class="sim-qn">' + x.posicao + '</span></td>'
         + '<td><span class="sim-res ' + (x.acertou ? 'ok' : (x.resposta === '.' ? 'blank' : 'err')) + '">' + (x.acertou ? 'acertou' : (x.resposta === '.' ? 'em branco' : 'errou')) + '</span></td>'
-        + '<td><span class="sim-alt' + (x.acertou ? '' : ' err') + '">' + (x.resposta === '.' ? '—' : x.resposta) + '</span></td>'
-        + '<td><span class="sim-alt">' + x.gabarito + '</span></td>'
+        + '<td>' + _respGab(x) + '</td>'
         + '<td>' + x.dificuldade + '</td>'
         + '<td>' + x.chance + '%</td>'
         + '<td>' + _btnQ(x) + '</td></tr>').join('')
     + anuladas.map(x => '<tr>'
         + '<td><span class="sim-qn">' + x.posicao + '</span></td>'
         + '<td><span class="sim-res nul">anulada</span></td>'
-        + '<td colspan="4" style="color:var(--radix-text-muted);white-space:normal">anulada pelo INEP, não entra na nota</td>'
+        + '<td colspan="3" style="color:var(--radix-text-muted);white-space:normal">anulada pelo INEP, não entra na nota</td>'
         + '<td>' + _btnQ(x) + '</td></tr>').join('')
     + '</tbody></table></div>';
 
