@@ -7230,7 +7230,7 @@ async function carregarDadosProfessor() {
   const TAM = 1000;
   const [, perfisRes, totResp, totCorretas, totSim, sim] = await Promise.all([
     carregarCronogramaCustom(),
-    sb.from('perfis').select('id, nome, email'),
+    sb.from('perfis').select('id, nome, email, turma, status, perfil'),
     sbContar('respostas'),
     sbContar('respostas', q => q.eq('correto', true)),
     sbContar('simulados_realizados'),
@@ -7238,6 +7238,7 @@ async function carregarDadosProfessor() {
   ]);
   const perfilMap = {};
   ((perfisRes && perfisRes.data) || []).forEach(p => perfilMap[p.id] = p);
+  state.perfisMapa = perfilMap;   // usado pela tela de Simulados do professor
   state.totais = { respostas: totResp, corretas: totCorretas, simulados: totSim };
 
   // respostas: páginas em paralelo com base no total contado
@@ -9086,6 +9087,10 @@ function renderHome() {
         <div class="quick-card" onclick="renderRelatorioProfessor()">
           <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
           <div><h3>Relatórios</h3><p>Ranking, evolução, top erradas</p></div>
+        </div>
+        <div class="quick-card" onclick="renderSimuladosProfessor()">
+          <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div><h3>Simulados</h3><p>ENEM com TRI, bancas externas e plataforma</p></div>
         </div>
         <div class="quick-card" onclick="renderMetricasAlunos()">
           <div class="icon icon-success"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
@@ -19821,7 +19826,289 @@ function triVerQuestao(qid, posicao, resposta, ano) {
   verQuestaoDoErro(null, qid, { rotulo: 'QUESTÃO ' + posicao + ' · ENEM ' + ano, marcada: resposta });
 }
 
+// ====================================================================
+// SIMULADOS — VISÃO DO PROFESSOR (16/09/2026)
+// Reúne num lugar só o que os alunos vêm fazendo de simulado:
+//   • ENEM oficial com nota TRI feito na plataforma  -> simulado_tri
+//   • notas de bancas externas registradas pelo aluno -> simulado_externo
+//   • simulados montados no app                       -> simulados_realizados
+//     (esse já vem em state.historicoSimulados no carregamento do professor)
+// As três tabelas já liberam leitura para o professor por RLS (is_professor()),
+// então não foi preciso mexer em policy.
+// ====================================================================
+
+async function carregarSimuladosProfessor(forcar) {
+  if (state._simProf && !forcar) return state._simProf;
+  const [tri, ext, provas] = await Promise.all([
+    sbTodas(() => sb.from('simulado_tri')
+      .select('id, aluno_id, co_prova, iniciado_em, enviado_em, tempo_seg, nota, acertos, erros, brancos')
+      .order('iniciado_em', { ascending: false })),
+    sbTodas(() => sb.from('simulado_externo').select('*').order('data_realizacao', { ascending: false })),
+    sb.from('enem_prova').select('co_prova, ano, cor, aplicacao, descricao')
+  ]);
+  const mapaProva = {};
+  (((provas || {}).data) || []).forEach(p => { mapaProva[p.co_prova] = p; });
+  state._simProf = { tri: tri || [], ext: ext || [], provas: mapaProva };
+  return state._simProf;
+}
+
+function _spPerfil(id) { return (state.perfisMapa && state.perfisMapa[id]) || null; }
+function _spNome(id) { const p = _spPerfil(id); return p && p.nome ? p.nome : 'Aluno'; }
+function _spTurmaId(id) { const p = _spPerfil(id); return (p && p.turma) || ''; }
+function _spTurmaNome(id) {
+  const t = turmaPorId(_spTurmaId(id));
+  return t ? t.nome.split('—')[0].trim() : '—';
+}
+function _spData(d) { return d ? new Date(d).toLocaleDateString('pt-BR') : '—'; }
+function _spTempo(seg) {
+  if (seg == null || seg === '') return '—';
+  const s = Number(seg);
+  if (!isFinite(s) || s <= 0) return '—';
+  const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60);
+  return h ? h + 'h' + String(m).padStart(2, '0') : m + ' min';
+}
+function _spProvaNome(co) {
+  const p = (state._simProf && state._simProf.provas[co]) || null;
+  if (!p) return 'Prova ' + co;
+  if (p.descricao) return p.descricao.replace(/\s*\(prova \d+\)\s*$/, '');
+  return 'ENEM ' + p.ano + (p.cor ? ' ' + p.cor : '');
+}
+function _spDias(d) {
+  if (!d) return null;
+  return Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+}
+
+// Alunos considerados na tela: aluno aprovado (a degustação não faz simulado).
+function _spAlunos(turma) {
+  const m = state.perfisMapa || {};
+  return Object.keys(m).map(k => m[k])
+    .filter(p => p && p.perfil === 'aluno' && p.status === 'aprovado')
+    .filter(p => !turma || p.turma === turma)
+    .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'));
+}
+
+// Consolida os três tipos por aluno.
+function _spResumo(d, alunos) {
+  const porAluno = {};
+  alunos.forEach(a => { porAluno[a.id] = { perfil: a, tri: [], ext: [], plat: [] }; });
+  (d.tri || []).forEach(s => { const r = porAluno[s.aluno_id]; if (r && s.enviado_em) r.tri.push(s); });
+  (d.ext || []).forEach(s => { const r = porAluno[s.aluno_id]; if (r) r.ext.push(s); });
+  (state.historicoSimulados || []).forEach(s => { const r = porAluno[s.aluno_id]; if (r) r.plat.push(s); });
+  return Object.keys(porAluno).map(function (k) {
+    const r = porAluno[k];
+    const notas = [];
+    r.tri.forEach(s => { if (s.nota != null) notas.push({ n: Number(s.nota), d: s.enviado_em }); });
+    r.ext.forEach(s => { if (s.tri_mat != null) notas.push({ n: Number(s.tri_mat), d: s.data_realizacao }); });
+    notas.sort((a, b) => new Date(b.d) - new Date(a.d));
+    const datas = []
+      .concat(r.tri.map(s => s.enviado_em))
+      .concat(r.ext.map(s => s.data_realizacao))
+      .concat(r.plat.map(s => s.data))
+      .filter(Boolean)
+      .sort((a, b) => new Date(b) - new Date(a));
+    r.ultimaNota = notas.length ? notas[0].n : null;
+    r.melhorNota = notas.length ? Math.max.apply(null, notas.map(x => x.n)) : null;
+    r.ultima = datas[0] || null;
+    r.total = r.tri.length + r.ext.length + r.plat.length;
+    return r;
+  });
+}
+
+function _spKpi(valor, rotulo, sub) {
+  return '<div class="sim-kpi"><div style="font-size:26px;font-weight:800;letter-spacing:-.02em;">' + valor + '</div>' +
+    '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sim-mut);margin-top:2px;">' + rotulo + '</div>' +
+    (sub ? '<div class="sim-card-s" style="margin-top:6px;">' + sub + '</div>' : '') + '</div>';
+}
+
+function _spVazio(texto) { return '<div class="sim-empty">' + texto + '</div>'; }
+
+function _spTabela(cabecalhos, linhas, vazio) {
+  if (!linhas.length) return _spVazio(vazio);
+  return '<div class="sim-tblwrap"><table class="sim-tbl"><thead><tr>' +
+    cabecalhos.map(h => '<th>' + h + '</th>').join('') +
+    '</tr></thead><tbody>' + linhas.join('') + '</tbody></table></div>';
+}
+
+async function renderSimuladosProfessor(aba) {
+  state.view = 'simulados-professor';
+  _simCss();
+  const validas = ['alunos', 'tri', 'externos', 'plataforma'];
+  state._spAba = validas.indexOf(aba) >= 0 ? aba
+               : (validas.indexOf(state._spAba) >= 0 ? state._spAba : 'alunos');
+  const main = document.getElementById('main-content');
+  const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Simulados</div>';
+  main.innerHTML = '<div class="sim-wrap">' + bc + '<h1 class="sim-h1">Simulados dos alunos</h1>' +
+    '<div class="sim-card">Carregando os simulados…</div></div>';
+
+  const d = await carregarSimuladosProfessor();
+  const turma = state._spTurma || '';
+  const alunos = _spAlunos(turma);
+  const idsNaTurma = {};
+  alunos.forEach(a => { idsNaTurma[a.id] = true; });
+  const daTurma = (x) => !turma || idsNaTurma[x.aluno_id];
+
+  const tri = (d.tri || []).filter(daTurma);
+  const triEnviados = tri.filter(s => s.enviado_em);
+  const triAndamento = tri.filter(s => !s.enviado_em);
+  const ext = (d.ext || []).filter(daTurma);
+  const plat = (state.historicoSimulados || []).filter(daTurma);
+  const resumo = _spResumo(d, alunos);
+
+  // ---- KPIs ----
+  const em30 = (data) => { const n = _spDias(data); return n != null && n <= 30; };
+  const nos30 = triEnviados.filter(s => em30(s.enviado_em)).length
+              + ext.filter(s => em30(s.data_realizacao)).length
+              + plat.filter(s => em30(s.data)).length;
+  const ativos = resumo.filter(r => em30(r.ultima)).length;
+  const semNada = resumo.filter(r => r.total === 0).length;
+  const notas90 = []
+    .concat(triEnviados.filter(s => s.nota != null && _spDias(s.enviado_em) <= 90).map(s => Number(s.nota)))
+    .concat(ext.filter(s => s.tri_mat != null && _spDias(s.data_realizacao) <= 90).map(s => Number(s.tri_mat)));
+  const mediaMT = notas90.length ? Math.round(notas90.reduce((a, b) => a + b, 0) / notas90.length) : null;
+
+  const kpis = '<div class="sim-kpis">' +
+    _spKpi(nos30, 'Simulados em 30 dias', 'ENEM com TRI, bancas externas e plataforma somados') +
+    _spKpi(ativos + '<span style="font-size:15px;color:var(--sim-mut);font-weight:700;"> de ' + alunos.length + '</span>', 'Alunos ativos', 'fizeram algum simulado nos últimos 30 dias') +
+    _spKpi(mediaMT == null ? '—' : mediaMT, 'Média em Matemática', notas90.length ? ('nota TRI, ' + notas90.length + ' registro' + (notas90.length > 1 ? 's' : '') + ' nos últimos 90 dias') : 'sem nota TRI nos últimos 90 dias') +
+    _spKpi(semNada, 'Nunca fizeram', semNada === 1 ? 'aluno sem nenhum simulado registrado' : 'alunos sem nenhum simulado registrado') +
+    '</div>';
+
+  // ---- filtro de turma ----
+  const opcoes = ['<option value="">Todas as turmas</option>']
+    .concat(TURMAS.map(t => '<option value="' + t.id + '"' + (turma === t.id ? ' selected' : '') + '>' + _escHtml(t.nome) + '</option>')).join('');
+  const filtro = '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 18px;">' +
+    '<select id="sp-turma" onchange="state._spTurma=this.value;renderSimuladosProfessor()" ' +
+    'style="padding:9px 12px;border-radius:10px;border:1px solid var(--sim-line);background:var(--sim-card);color:var(--sim-tx);font-size:13px;">' + opcoes + '</select>' +
+    '<button class="sim-btn sim-btn-outline sim-btn-sm" onclick="carregarSimuladosProfessor(true).then(()=>renderSimuladosProfessor())">Atualizar</button>' +
+    '<span class="sim-card-s">' + alunos.length + ' aluno' + (alunos.length === 1 ? '' : 's') + ' aprovado' + (alunos.length === 1 ? '' : 's') + (turma ? ' nesta turma' : '') + '</span>' +
+    '</div>';
+
+  // ---- abas ----
+  const rotulos = [
+    ['alunos', 'Por aluno'],
+    ['tri', 'ENEM com TRI' + (triEnviados.length ? ' (' + triEnviados.length + ')' : '')],
+    ['externos', 'Bancas externas' + (ext.length ? ' (' + ext.length + ')' : '')],
+    ['plataforma', 'Na plataforma' + (plat.length ? ' (' + plat.length + ')' : '')]
+  ];
+  const abas = '<div class="sim-tabs" role="tablist">' + rotulos.map(r =>
+    '<button class="sim-tab ' + (state._spAba === r[0] ? 'on' : '') + '" role="tab" aria-selected="' + (state._spAba === r[0]) +
+    '" onclick="renderSimuladosProfessor(\'' + r[0] + '\')">' + r[1] + '</button>').join('') + '</div>';
+
+  main.innerHTML = '<div class="sim-wrap">' + bc +
+    '<h1 class="sim-h1">Simulados dos alunos</h1>' +
+    '<p class="sim-lead">O que a turma vem fazendo: o ENEM oficial com nota TRI da plataforma, as notas de bancas externas que os alunos registram e os simulados montados aqui dentro.</p>' +
+    filtro + kpis + abas + '<div id="sp-conteudo"></div></div>';
+
+  const alvo = document.getElementById('sp-conteudo');
+  if (state._spAba === 'alunos') alvo.innerHTML = _spAbaAlunos(resumo);
+  else if (state._spAba === 'tri') alvo.innerHTML = _spAbaTri(triEnviados, triAndamento);
+  else if (state._spAba === 'externos') alvo.innerHTML = _spAbaExternos(ext);
+  else alvo.innerHTML = _spAbaPlataforma(plat);
+}
+
+function _spAbaAlunos(resumo) {
+  const ordenado = resumo.slice().sort(function (a, b) {
+    if (!a.ultima && !b.ultima) return String(a.perfil.nome || '').localeCompare(String(b.perfil.nome || ''), 'pt-BR');
+    if (!a.ultima) return 1;
+    if (!b.ultima) return -1;
+    return new Date(b.ultima) - new Date(a.ultima);
+  });
+  const linhas = ordenado.map(function (r) {
+    const dias = _spDias(r.ultima);
+    const atraso = dias == null ? '' : (dias > 30 ? ' sim-warn' : '');
+    const quando = r.ultima ? (_spData(r.ultima) + (dias != null ? ' <span style="color:var(--sim-mut)">(' + (dias === 0 ? 'hoje' : dias + ' d') + ')</span>' : '')) : '<span style="color:var(--sim-mut)">nunca</span>';
+    return '<tr><td>' + _escHtml(r.perfil.nome || 'Aluno') + '</td>' +
+      '<td style="color:var(--sim-mut)">' + _spTurmaNome(r.perfil.id) + '</td>' +
+      '<td>' + (r.tri.length || '—') + '</td>' +
+      '<td>' + (r.ext.length || '—') + '</td>' +
+      '<td>' + (r.plat.length || '—') + '</td>' +
+      '<td>' + (r.ultimaNota == null ? '—' : Math.round(r.ultimaNota)) + '</td>' +
+      '<td>' + (r.melhorNota == null ? '—' : Math.round(r.melhorNota)) + '</td>' +
+      '<td class="' + atraso + '">' + quando + '</td></tr>';
+  });
+  const nunca = resumo.filter(r => r.total === 0).length;
+  const nota = nunca
+    ? '<div class="sim-card-s" style="margin-top:12px;">' + nunca + ' aluno' + (nunca > 1 ? 's' : '') + ' ainda sem simulado algum ' + (nunca > 1 ? 'aparecem' : 'aparece') + ' no fim da lista.</div>'
+    : '';
+  return '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Cada aluno e o que já fez</div>' +
+    '<div class="sim-card-s">As notas são de Matemática: a do ENEM com TRI da plataforma e a que o aluno registra das bancas externas.</div></div></div>' +
+    _spTabela(['Aluno', 'Turma', 'TRI', 'Externos', 'Plataforma', 'Última nota', 'Melhor nota', 'Último simulado'], linhas,
+      'Nenhum aluno aprovado nesta turma.') + nota + '</div>';
+}
+
+function _spAbaTri(enviados, andamento) {
+  const linhas = enviados.map(function (s) {
+    return '<tr><td>' + _escHtml(_spNome(s.aluno_id)) + '</td>' +
+      '<td style="color:var(--sim-mut)">' + _spTurmaNome(s.aluno_id) + '</td>' +
+      '<td>' + _escHtml(_spProvaNome(s.co_prova)) + '</td>' +
+      '<td><span class="sim-qn">' + (s.nota == null ? '—' : Math.round(s.nota)) + '</span></td>' +
+      '<td>' + (s.acertos == null ? '—' : s.acertos + '/45') + '</td>' +
+      '<td>' + _spTempo(s.tempo_seg) + '</td>' +
+      '<td>' + _spData(s.enviado_em) + '</td></tr>';
+  });
+  const notas = enviados.filter(s => s.nota != null).map(s => Number(s.nota));
+  const media = notas.length ? Math.round(notas.reduce((a, b) => a + b, 0) / notas.length) : null;
+  const acertos = enviados.filter(s => s.acertos != null).map(s => Number(s.acertos));
+  const mediaAc = acertos.length ? (acertos.reduce((a, b) => a + b, 0) / acertos.length).toFixed(1).replace('.', ',') : null;
+  const resumo = notas.length
+    ? 'Média da nota: <b>' + media + '</b> · média de acertos: <b>' + mediaAc + ' de 45</b> em ' + notas.length + ' simulado' + (notas.length > 1 ? 's' : '') + '.'
+    : 'Ainda sem simulado enviado.';
+  const emAndamento = andamento.length
+    ? '<div class="sim-card" style="margin-top:14px;"><div class="sim-card-t">Em andamento</div>' +
+      '<div class="sim-card-s" style="margin-bottom:10px;">Começaram e ainda não enviaram o gabarito.</div>' +
+      _spTabela(['Aluno', 'Prova', 'Começou em'], andamento.map(s =>
+        '<tr><td>' + _escHtml(_spNome(s.aluno_id)) + '</td><td>' + _escHtml(_spProvaNome(s.co_prova)) + '</td><td>' + _spData(s.iniciado_em) + '</td></tr>'), '') + '</div>'
+    : '';
+  return '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">ENEM oficial com nota TRI</div>' +
+    '<div class="sim-card-s">' + resumo + '</div></div></div>' +
+    _spTabela(['Aluno', 'Turma', 'Prova', 'Nota', 'Acertos', 'Tempo', 'Data'], linhas,
+      'Nenhum aluno enviou um ENEM com nota TRI ainda.') + '</div>' + emAndamento;
+}
+
+function _spAbaExternos(ext) {
+  const cel = (v) => v == null ? '<span style="color:var(--sim-mut)">—</span>' : Math.round(Number(v));
+  const linhas = ext.map(function (s) {
+    return '<tr><td>' + _escHtml(_spNome(s.aluno_id)) + '</td>' +
+      '<td style="color:var(--sim-mut)">' + _spTurmaNome(s.aluno_id) + '</td>' +
+      '<td>' + _escHtml(bancaLabel(s)) + '</td>' +
+      '<td>' + cel(s.tri_mat) + '</td>' +
+      '<td>' + cel(s.tri_ling) + '</td>' +
+      '<td>' + cel(s.tri_hum) + '</td>' +
+      '<td>' + cel(s.tri_nat) + '</td>' +
+      '<td>' + cel(s.tri_red) + '</td>' +
+      '<td>' + _spData(s.data_realizacao) + '</td></tr>';
+  });
+  const comMat = ext.filter(s => s.tri_mat != null).map(s => Number(s.tri_mat));
+  const media = comMat.length ? Math.round(comMat.reduce((a, b) => a + b, 0) / comMat.length) : null;
+  return '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Notas de bancas externas</div>' +
+    '<div class="sim-card-s">' + (comMat.length
+      ? ('Média de Matemática: <b>' + media + '</b> em ' + comMat.length + ' registro' + (comMat.length > 1 ? 's' : '') + '. Quem registra é o próprio aluno.')
+      : 'Nenhuma nota de Matemática registrada ainda.') + '</div></div></div>' +
+    _spTabela(['Aluno', 'Turma', 'Banca', 'MT', 'LC', 'CH', 'CN', 'Redação', 'Data'], linhas,
+      'Nenhum aluno registrou nota de banca externa.') + '</div>';
+}
+
+function _spAbaPlataforma(plat) {
+  const linhas = plat.slice(0, 300).map(function (s) {
+    const pct = s.percentual != null ? Math.round(Number(s.percentual)) : (s.total ? Math.round(s.acertos / s.total * 100) : null);
+    return '<tr><td>' + _escHtml(s.aluno || _spNome(s.aluno_id)) + '</td>' +
+      '<td style="color:var(--sim-mut)">' + _spTurmaNome(s.aluno_id) + '</td>' +
+      '<td>' + s.acertos + ' de ' + s.total + '</td>' +
+      '<td>' + (pct == null ? '—' : pct + '%') + '</td>' +
+      '<td>' + _spTempo(s.tempoUsado) + '</td>' +
+      '<td>' + _spData(s.data) + '</td></tr>';
+  });
+  const pcts = plat.map(s => s.percentual != null ? Number(s.percentual) : (s.total ? s.acertos / s.total * 100 : null)).filter(x => x != null);
+  const media = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
+  return '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Simulados montados na plataforma</div>' +
+    '<div class="sim-card-s">' + (pcts.length ? ('Aproveitamento médio: <b>' + media + '%</b> em ' + pcts.length + ' simulado' + (pcts.length > 1 ? 's' : '') + '.') : 'Nenhum simulado feito na plataforma ainda.') +
+    (plat.length > 300 ? ' Mostrando os 300 mais recentes.' : '') + '</div></div></div>' +
+    _spTabela(['Aluno', 'Turma', 'Acertos', 'Aproveitamento', 'Tempo', 'Data'], linhas,
+      'Nenhum simulado feito na plataforma.') + '</div>';
+}
+
 async function renderSimulados(aba) {
+  if (state.usuario && state.usuario.perfil === 'professor') return renderSimuladosProfessor(aba);
   state.view = 'meus-simulados';
   _simCss();
   const abasValidas = ['externos', 'plataforma', 'metas'];
