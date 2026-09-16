@@ -19350,7 +19350,16 @@ function _simCss() {
     '--sim-line:var(--radix-line);--sim-line-2:var(--radix-line-2);',
     '--sim-tx:var(--radix-text);--sim-tx2:var(--radix-text-2);--sim-mut:var(--radix-text-muted);',
     '--sim-accent:var(--radix-cyan);--sim-amber-bg:rgba(251,191,36,.16);--sim-amber:var(--radix-warning);',
-    '--sim-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);--sim-focus:var(--radix-blue);',
+    '--sim-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);--sim-focus:#3D7BE0;',
+    // gradiente da marca: uma superfície cheia por tela (o hero) e nada mais
+    '--sim-grad:linear-gradient(105deg,#2BAEE8,#3D7BE0 52%,#4B54D8);',
+    // botão primário: o mais escuro possível no claro, o mais claro no escuro
+    '--sim-pri-bg:#eaf1ff;--sim-pri-tx:#10151F;',
+    '--sim-link:#67e8f9;--sim-link-2:#67e8f9;',
+    '--sim-tile-bg:rgba(255,255,255,.08);--sim-tile-tx:var(--radix-text);',
+    '--sim-azul-bg:rgba(59,130,246,.22);--sim-azul-tx:#bfdbfe;',
+    '--sim-verde-bg:rgba(52,211,153,.18);--sim-verde-tx:#6ee7b7;',
+    '--sim-grid:rgba(255,255,255,.07);--sim-axis:#8aa0c9;',
     // preenchimentos/divisores: no escuro sao branco-transparente; no claro,
     // preto-transparente (senao sumiriam no fundo claro).
     '--sim-fill:rgba(255,255,255,.06);--sim-fill-2:rgba(255,255,255,.12);--sim-hair:rgba(255,255,255,.06);',
@@ -19358,30 +19367,47 @@ function _simCss() {
     '--sim-err-bg:rgba(255,122,92,.16);--sim-err-tx:#ff9b82;',
     '--sim-seg-on-bg:#eaf1ff;--sim-seg-on-tx:#0e1a36}',
     'body.theme-light .sim-wrap{--sim-fill:rgba(15,23,42,.05);--sim-fill-2:rgba(15,23,42,.09);',
-    '--sim-hair:rgba(15,23,42,.08);--sim-seg-on-bg:#0f172a;--sim-seg-on-tx:#fff;',
-    '--sim-amber-bg:rgba(180,83,9,.13);--sim-amber:#92400e;',
-    '--sim-ok-bg:rgba(4,120,87,.10);--sim-ok-tx:#047857;--sim-roxo:#7e22ce;',
+    '--sim-hair:#F3F4F9;--sim-line:rgba(20,26,43,.07);--sim-line-2:#DDE1EC;',
+    '--sim-seg-on-bg:#10151F;--sim-seg-on-tx:#fff;',
+    '--sim-tx:#141A2B;--sim-tx2:#4A5265;--sim-mut:#6B7488;',
+    '--sim-amber-bg:#FFF0E2;--sim-amber:#A45B15;',
+    '--sim-ok-bg:#DFF5F1;--sim-ok-tx:#0A6F5C;--sim-roxo:#7e22ce;',
     '--sim-err-bg:rgba(185,28,28,.09);--sim-err-tx:#b91c1c;',
-    '--sim-shadow:0 1px 2px rgba(20,26,43,.05),0 8px 24px rgba(20,26,43,.06)}',
+    '--sim-pri-bg:#10151F;--sim-pri-tx:#fff;',
+    // teal de ação. O #0E9BB5 da paleta dá 3,3:1 sobre o card branco — abaixo
+    // dos 4,5 exigidos para texto de 13px; por isso o tom escuro nos dois papéis.
+    '--sim-link:#0B7F95;--sim-link-2:#0B7F95;',
+    '--sim-tile-bg:#EEF2FA;--sim-tile-tx:#2E3A5C;',
+    '--sim-azul-bg:#E4EEFC;--sim-azul-tx:#1554A8;',
+    '--sim-verde-bg:#DFF5F1;--sim-verde-tx:#0A6F5C;',
+    '--sim-grid:#EEF0F6;--sim-axis:#A3ABBB;',
+    '--sim-shadow:0 1px 2px rgba(20,26,43,.05),0 8px 24px rgba(20,26,43,.05)}',
     '.sim-wrap :focus-visible{outline:2px solid var(--sim-focus);outline-offset:2px;border-radius:8px}',
+    // breadcrumb desta tela: menor que o global e com o "Início" em teal.
+    // O !important é para vencer o '.breadcrumb a{color:var(--radix-cyan)!important}' antigo.
+    '.sim-wrap .breadcrumb{font-size:12.5px;color:var(--sim-mut);margin-bottom:14px}',
+    '.sim-wrap .breadcrumb a{color:var(--sim-link) !important;font-weight:600}',
     '.sim-h1{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--sim-tx);margin:2px 0 4px;line-height:1.2}',
     '.sim-lead{font-size:13.5px;color:var(--sim-mut);margin:0 0 18px;max-width:72ch;text-wrap:pretty}',
     '.sim-btn{display:inline-flex;align-items:center;gap:8px;border-radius:10px;padding:10px 16px;',
     'font-size:13.5px;font-weight:700;letter-spacing:-.01em;cursor:pointer;border:1px solid transparent;',
     'background:none;color:inherit;line-height:1.2;transition:background .15s,border-color .15s,color .15s,filter .15s}',
     '.sim-btn svg{display:block;flex:none}',
-    '.sim-btn-primary{background:var(--sim-accent);color:#0e1a36;font-weight:800}',
-    '.sim-btn-primary:hover{filter:brightness(1.07)}',
+    '.sim-btn-primary{background:var(--sim-pri-bg);color:var(--sim-pri-tx);font-weight:800}',
+    '.sim-btn-primary:hover{filter:brightness(1.18)}',
     '.sim-btn-outline{border-color:var(--sim-line-2);color:var(--sim-tx)}',
     '.sim-btn-outline:hover{background:var(--sim-fill)}',
     '.sim-btn-ghost{color:var(--sim-mut);padding-left:8px;padding-right:8px}',
     '.sim-btn-ghost:hover{color:var(--sim-tx)}',
     '.sim-btn-sm{padding:7px 14px;font-size:13px}',
+    // contorno que vira sólido no hover — usado nas linhas de lista
+    '.sim-btn-fill{border-color:var(--sim-line-2);color:var(--sim-tx2)}',
+    '.sim-btn-fill:hover{background:var(--sim-pri-bg);border-color:var(--sim-pri-bg);color:var(--sim-pri-tx)}',
     '.sim-tabs{display:flex;gap:20px;border-bottom:1px solid var(--sim-line);margin:0 0 18px;flex-wrap:wrap}',
     '.sim-tab{background:none;border:0;padding:0 0 10px;margin-bottom:-1px;cursor:pointer;font-size:13.5px;',
     'font-weight:600;color:var(--sim-mut);border-bottom:2px solid transparent;transition:color .15s,border-color .15s}',
     '.sim-tab:hover{color:var(--sim-tx2)}',
-    '.sim-tab.on{color:var(--sim-accent);border-bottom-color:var(--sim-accent)}',
+    '.sim-tab.on{color:var(--sim-link-2);border-bottom-color:var(--sim-link-2)}',
     '.sim-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:0 0 18px}',
     '.sim-kpi{background:var(--sim-card);border:1px solid var(--sim-line);border-radius:16px;padding:16px 18px;box-shadow:var(--sim-shadow)}',
     '.sim-kpi .k-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sim-mut);line-height:1.3;min-height:2.6em}',
@@ -19393,7 +19419,7 @@ function _simCss() {
     '.sim-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}',
     '.sim-card-t{font-size:16px;font-weight:700;letter-spacing:-.01em;color:var(--sim-tx)}',
     '.sim-card-s{font-size:12.5px;color:var(--sim-mut);margin-top:3px;text-wrap:pretty;font-variant-numeric:tabular-nums}',
-    '.sim-link{background:none;border:0;padding:0;cursor:pointer;color:var(--sim-accent);font-weight:600;',
+    '.sim-link{background:none;border:0;padding:0;cursor:pointer;color:var(--sim-link);font-weight:600;',
     'font-size:13px;display:inline-flex;align-items:center;gap:4px}',
     '.sim-link:hover{text-decoration:underline}',
     '.sim-segs{display:flex;gap:8px;flex-wrap:wrap}',
@@ -19402,13 +19428,13 @@ function _simCss() {
     'font-weight:700;color:var(--sim-mut);transition:background .15s,color .15s}',
     '.sim-seg button:hover{color:var(--sim-tx)}',
     '.sim-seg button.on{background:var(--sim-seg-on-bg);color:var(--sim-seg-on-tx)}',
-    '.sim-hero{background:var(--radix-grad-hero,linear-gradient(135deg,#1fc8ff,#3b82f6 50%,#1e40af));',
+    '.sim-hero{background:var(--sim-grad);',
     'border-radius:18px;padding:20px 22px;color:#fff;margin:0 0 18px}',
     '.sim-hero .h-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.88)}',
     '.sim-hero .h-t{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:6px 0 10px;color:#fff;text-wrap:pretty;line-height:1.2}',
     '.sim-hero .h-m{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}',
     '.sim-hero .h-w{font-size:12.5px;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums}',
-    '.sim-hero .sim-pill{background:rgba(255,255,255,.2);color:#fff}',
+    '.sim-hero .sim-pill{background:rgba(255,255,255,.18);color:#fff}',
     '.sim-hero :focus-visible{outline-color:#fff}',
     '.sim-hero-acts{display:flex;gap:10px;flex-wrap:wrap}',
     '.sim-btn-hero{background:#fff;color:#0e1a36;font-weight:800}',
@@ -19422,10 +19448,17 @@ function _simCss() {
     '.sim-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 22px}',
     '.sim-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--sim-hair)}',
     '.sim-tile{flex:none;min-width:48px;height:38px;display:inline-flex;align-items:center;justify-content:center;',
-    'padding:0 9px;background:var(--sim-card-2);border-radius:10px;font-size:15px;font-weight:800;',
-    'letter-spacing:-.01em;color:var(--sim-tx);font-variant-numeric:tabular-nums}',
+    'padding:0 9px;background:var(--sim-tile-bg);border-radius:10px;font-size:15px;font-weight:800;',
+    'letter-spacing:-.01em;color:var(--sim-tile-tx);font-variant-numeric:tabular-nums}',
     '.sim-row-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
-    '.sim-row-t{font-size:14px;font-weight:600;color:var(--sim-tx)}',
+    '.sim-row-t{font-size:14px;font-weight:600;color:var(--sim-tx);letter-spacing:-.01em;font-variant-numeric:tabular-nums}',
+    '.sim-pill-azul{background:var(--sim-azul-bg);color:var(--sim-azul-tx)}',
+    '.sim-pill-verde{background:var(--sim-verde-bg);color:var(--sim-verde-tx)}',
+    // a linha inteira reage ao mouse e ao teclado
+    '.sim-row{transition:background .12s}',
+    '.sim-row:hover{background:var(--sim-fill)}',
+    '.sim-row:focus-within{background:var(--sim-fill)}',
+    '@media(max-width:640px){.sim-row{padding:14px 0}.sim-row .sim-btn{min-height:44px}}',
     '.sim-note{font-size:12px;color:var(--sim-mut);margin-top:14px;padding-top:12px;border-top:1px solid var(--sim-line);text-wrap:pretty}',
     '.sim-chart{position:relative;height:280px}',
     '.sim-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--sim-line)}',
@@ -19466,41 +19499,6 @@ function _simCss() {
     '.sim-warn{border:1px solid var(--sim-amber);background:var(--sim-amber-bg);border-radius:16px;padding:14px 16px;margin:0 0 18px}',
     '.sim-warn b{color:var(--sim-amber)}',
     '.sim-warn span{color:var(--sim-tx2);font-size:13px;text-wrap:pretty}',
-    // Grade: ~4 por linha em tela larga, 3 em media, 1 no celular.
-    '.enem-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:2px}',
-    '.enem-cover{--ec-dark:#14477e;--ec-mid:#bcd8ef;--ec-base:#dbe9f7;display:block;width:100%;text-align:left;',
-    'padding:0;font-family:inherit;cursor:pointer;position:relative;border:1px solid rgba(10,40,80,.28);',
-    'border-radius:12px;overflow:hidden;background-color:var(--ec-base);',
-    'background-image:repeating-linear-gradient(112deg,rgba(255,255,255,.55) 0 1px,rgba(255,255,255,0) 1px 6px);',
-    'transition:transform .12s,box-shadow .15s,border-color .15s}',
-    '.enem-cover:hover{transform:translateY(-2px);box-shadow:0 10px 22px -12px rgba(0,0,0,.5);border-color:rgba(10,40,80,.5)}',
-    '.enem-cover:focus-visible{outline:2px solid var(--sim-focus);outline-offset:3px}',
-    '.ec-top{display:block;background:var(--ec-mid);padding:7px 10px 6px;text-align:center;',
-    'border-bottom:1px solid rgba(10,40,80,.18)}',
-    '.ec-t1{display:block;font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;',
-    'color:var(--ec-dark);line-height:1.15}',
-    '.ec-t2{display:block;font-size:8px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;',
-    'color:var(--ec-dark);opacity:.8;margin-top:2px;line-height:1.2}',
-    '.ec-body{display:flex;align-items:center;gap:6px;padding:10px 12px}',
-    '.ec-mark{display:inline-block;font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1;white-space:nowrap}',
-    '.ec-mark b{font-weight:800;color:var(--ec-dark)}',
-    '.ec-mark i{font-style:normal;font-weight:500;color:#8c9bb0}',
-    '.ec-slash{display:block;flex:none;margin-left:auto;width:10px;height:36px;border-radius:2px;',
-    'background:rgba(255,255,255,.85);transform:skewX(-18deg)}',
-    '.ec-cad{display:block;text-align:right;line-height:1.05;white-space:nowrap;margin-left:10px}',
-    '.ec-cad span{display:block;color:var(--ec-dark)}',
-    '.ec-cad .c1{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}',
-    '.ec-cad .c2{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;margin:1px 0}',
-    '.ec-cad .c3{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}',
-    '.ec-go{display:block;flex:none;margin-left:8px;font-size:16px;font-weight:800;color:var(--ec-dark);opacity:.45;transition:opacity .15s,transform .15s}',
-    '.enem-cover:hover .ec-go{opacity:1;transform:translateX(3px)}',
-    // selo vira faixa no rodape: no card estreito nao cabe ao lado da marca
-    '.ec-aplic{display:block;text-align:center;font-size:8.5px;font-weight:800;letter-spacing:.06em;',
-    'text-transform:uppercase;padding:3px 6px;background:rgba(8,145,178,.14);color:#0e5f74;',
-    'border-top:1px solid rgba(10,40,80,.12)}',
-    '.ec-aprox{display:block;text-align:center;font-size:8.5px;font-weight:800;letter-spacing:.06em;',
-    'text-transform:uppercase;padding:3px 6px;background:rgba(146,64,14,.14);color:#7c3d06;',
-    'border-top:1px solid rgba(10,40,80,.12)}',
     '@media(max-width:640px){.sim-h1{font-size:21px}.sim-hero .h-t{font-size:22px}.sim-kpi .k-v{font-size:26px}}'
   ].join('');
   document.head.appendChild(s);
@@ -19593,27 +19591,21 @@ async function renderSimuladoTRI() {
     + '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Provas disponíveis</div>'
       + '<div class="sim-card-s">' + nProvas + (nProvas === 1 ? ' prova' : ' provas') + ' · Matemática · questões 136 a 180 · ~2h30 cada</div></div>'
       + (feitas.length ? '<button class="sim-link" onclick="document.getElementById(\'sim-minhas-notas\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">Ver histórico →</button>' : '')
-      + '</div><div class="enem-list">'
+      + '</div><div class="sim-rows">'
       + TRI.provas.map(pr => {
           const corN = _triCor(pr.cor);
-          const ec = _EC_CORES[corN] || _EC_CORES.azul;
-          return '<button type="button" class="enem-cover"'
-            + ' style="--ec-dark:' + ec.dark + ';--ec-mid:' + ec.mid + ';--ec-base:' + ec.base + '"'
+          const ap = _triAplic(pr);
+          return '<div class="sim-row">'
+            + '<span class="sim-tile">' + pr.ano + '</span>'
+            + '<span class="sim-row-main">'
+            + '<span class="sim-row-t">caderno ' + pr.caderno + ' ' + corN + '</span>'
+            + (ap ? '<span class="sim-pill sim-pill-azul">' + _escHtml(ap) + '</span>' : '')
+            + (pr.nota_aproximada ? '<span class="sim-badge">nota aproximada</span>' : '')
+            + '</span>'
+            + '<button type="button" class="sim-btn sim-btn-outline sim-btn-fill sim-btn-sm"'
             + ' onclick="triIniciar(' + pr.co_prova + ')"'
-            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + (_triAplic(pr) ? ', ' + _triAplic(pr) : '') + '">'
-            + '<span class="ec-top">'
-            + '<span class="ec-t1">Exame Nacional do Ensino Médio</span>'
-            + '<span class="ec-t2">Prova de Matemática e suas Tecnologias</span>'
-            + '</span>'
-            + '<span class="ec-body">'
-            + '<span class="ec-mark"><b>enem</b><i>' + pr.ano + '</i></span>'
-            + '<span class="ec-slash"></span>'
-            + '<span class="ec-cad"><span class="c1">Caderno</span><span class="c2">' + pr.caderno + '</span><span class="c3">' + corN + '</span></span>'
-            + '<span class="ec-go" aria-hidden="true">&#8594;</span>'
-            + '</span>'
-            + (_triAplic(pr) ? '<span class="ec-aplic">' + _escHtml(_triAplic(pr)) + '</span>' : '')
-            + (pr.nota_aproximada ? '<span class="ec-aprox">nota aproximada</span>' : '')
-            + '</button>';
+            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + (ap ? ', ' + ap : '') + '">Começar</button>'
+            + '</div>';
         }).join('')
       + '</div>'
       + (TRI.provas.some(x => _triAplic(x)) ? '<div class="sim-note"><b style="color:var(--radix-text)">Mais de uma aplicação por ano:</b> além da prova que a maioria fez, o INEP aplica a mesma área em outras datas. <b>Reaplicação / PPL</b> é a segunda aplicação, usada por quem teve problema na data oficial e pelas pessoas privadas de liberdade. <b>Belém · Ananindeua · Marituba</b> é a aplicação própria dessas cidades em 2025, por causa da COP30. São provas diferentes, com questões diferentes, e a nota sai na mesma escala.</div>' : '')
@@ -20600,6 +20592,16 @@ async function excluirSimulado(simId) {
 }
 
 // Gráfico de linha da evolução por área (Chart.js já carregado no app)
+// O Chart.js pinta no canvas e não resolve var(--…); lemos o valor calculado
+// do próprio .sim-wrap pra grade e eixos seguirem o tema.
+function _simVar(nome, padrao) {
+  try {
+    const el = document.querySelector('.sim-wrap');
+    if (!el) return padrao;
+    const v = getComputedStyle(el).getPropertyValue(nome).trim();
+    return v || padrao;
+  } catch (e) { return padrao; }
+}
 function _renderGraficoSimulados(sims, modo) {
   const el = document.getElementById('chart-sim-ext');
   if (!el || !window.Chart) return;
@@ -20653,11 +20655,11 @@ function _renderGraficoSimulados(sims, modo) {
       scales: {
         y: { min: 0, max: yMax,
              border: { display: false },
-             grid: { color: 'rgba(255,255,255,.07)', drawTicks: false },
-             ticks: { stepSize: yStep, font: { size: 11 }, color: '#8aa0c9', padding: 8 } },
+             grid: { color: _simVar('--sim-grid', 'rgba(255,255,255,.07)'), drawTicks: false },
+             ticks: { stepSize: yStep, font: { size: 11 }, color: _simVar('--sim-axis', '#8aa0c9'), padding: 8 } },
         x: { border: { display: false },
              grid: { display: false },
-             ticks: { font: { size: 11 }, color: '#8aa0c9', padding: 4 } }
+             ticks: { font: { size: 11 }, color: _simVar('--sim-axis', '#8aa0c9'), padding: 4 } }
       }
     }
   });
