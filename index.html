@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -91,14 +91,15 @@
   }
   .modal p { color: var(--radix-text-2); }
 
-  /* botões: gradiente ciano-azul */
+  /* botões: primário SÓLIDO. O gradiente fica reservado para UM destaque
+     por tela (hero), em vez de se repetir em todos os botões. */
   .btn, .login-box button {
-    background: var(--radix-grad-brand) !important;
+    background: var(--radix-cyan) !important;
     color: #0e1a36 !important;
-    box-shadow: 0 8px 24px -10px rgba(34,211,238,.45);
+    box-shadow: 0 6px 16px -10px rgba(34,211,238,.55);
     font-weight: 700 !important;
   }
-  .btn:hover, .login-box button:hover { filter: brightness(1.08); background: var(--radix-grad-brand) !important; }
+  .btn:hover, .login-box button:hover { filter: brightness(1.08); background: var(--radix-cyan) !important; }
   .btn-secondary {
     background: var(--radix-surface-2) !important;
     color: var(--radix-text) !important;
@@ -106,8 +107,8 @@
     box-shadow: none !important;
   }
   .btn-secondary:hover { background: var(--radix-surface-3) !important; filter: none; }
-  .btn-danger { background: linear-gradient(135deg, #ff8a7a 0%, #ff5e3a 100%) !important; color: #fff !important; }
-  .btn-success { background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important; color: #052e16 !important; }
+  .btn-danger { background: var(--radix-coral, #ff7a5c) !important; color: #fff !important; }
+  .btn-success { background: var(--radix-success, #34d399) !important; color: #052e16 !important; }
 
   /* header com gradiente brand */
   header {
@@ -6572,11 +6573,11 @@ function bancaLabel(sim) {
 }
 
 const AREAS_ENEM = [
-  { id: 'mat',  nome: 'Matemática',  cor: '#0891b2', qMax: 45 },
-  { id: 'ling', nome: 'Linguagens',  cor: '#f59e0b', qMax: 45 },
-  { id: 'hum',  nome: 'Humanas',     cor: '#7e22ce', qMax: 45 },
-  { id: 'nat',  nome: 'Natureza',    cor: '#10b981', qMax: 45 },
-  { id: 'red',  nome: 'Redação',     cor: '#dc2626', qMax: null }, // só nota
+  { id: 'mat',  nome: 'Matemática',  cor: '#2E86D8', qMax: 45 },
+  { id: 'ling', nome: 'Linguagens',  cor: '#E8A33D', qMax: 45 },
+  { id: 'hum',  nome: 'Humanas',     cor: '#8B5CF0', qMax: 45 },
+  { id: 'nat',  nome: 'Natureza',    cor: '#18A67C', qMax: 45 },
+  { id: 'red',  nome: 'Redação',     cor: '#E2566F', qMax: null }, // só nota
 ];
 
 // =========================================================
@@ -19325,14 +19326,110 @@ async function renderHistoricoSimulados() { return renderSimulados('plataforma')
 // Matemática (136 a 180) e marca aqui. As marcações vão para simulado_tri pelas
 // funções fn_simulado_tri_* (a nota é calculada no servidor por fn_nota_tri).
 const TRI = { provas: null, tentativas: null, atual: null, timer: null, salvarT: null };
+// =========================================================
+// SIMULADOS — refino visual (FONTE ÚNICA dos tokens destas telas)
+// Casa com a identidade do app: dark + Inter + paleta --radix-*.
+// Regras: UM gradiente por tela (só o hero), hierarquia de botões
+// (sólido > contorno > texto), abas sublinhadas, KPIs uniformes,
+// gráfico sem moldura e sem grade vertical.
+// =========================================================
+function _simCss() {
+  if (document.getElementById('sim-ui-css')) return;
+  const s = document.createElement('style'); s.id = 'sim-ui-css';
+  s.textContent = [
+    '.sim-wrap{--sim-card:var(--radix-surface);--sim-card-2:var(--radix-surface-2);',
+    '--sim-line:var(--radix-line);--sim-line-2:var(--radix-line-2);',
+    '--sim-tx:var(--radix-text);--sim-tx2:var(--radix-text-2);--sim-mut:var(--radix-text-muted);',
+    '--sim-accent:var(--radix-cyan);--sim-amber-bg:rgba(251,191,36,.16);--sim-amber:var(--radix-warning);',
+    '--sim-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);--sim-focus:var(--radix-blue)}',
+    '.sim-wrap :focus-visible{outline:2px solid var(--sim-focus);outline-offset:2px;border-radius:8px}',
+    '.sim-h1{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--sim-tx);margin:2px 0 4px;line-height:1.2}',
+    '.sim-lead{font-size:13.5px;color:var(--sim-mut);margin:0 0 18px;max-width:72ch;text-wrap:pretty}',
+    '.sim-btn{display:inline-flex;align-items:center;gap:8px;border-radius:10px;padding:10px 16px;',
+    'font-size:13.5px;font-weight:700;letter-spacing:-.01em;cursor:pointer;border:1px solid transparent;',
+    'background:none;color:inherit;line-height:1.2;transition:background .15s,border-color .15s,color .15s,filter .15s}',
+    '.sim-btn svg{display:block;flex:none}',
+    '.sim-btn-primary{background:var(--sim-accent);color:#0e1a36;font-weight:800}',
+    '.sim-btn-primary:hover{filter:brightness(1.07)}',
+    '.sim-btn-outline{border-color:var(--sim-line-2);color:var(--sim-tx)}',
+    '.sim-btn-outline:hover{background:rgba(255,255,255,.07)}',
+    '.sim-btn-ghost{color:var(--sim-mut);padding-left:8px;padding-right:8px}',
+    '.sim-btn-ghost:hover{color:var(--sim-tx)}',
+    '.sim-btn-sm{padding:7px 14px;font-size:13px}',
+    '.sim-tabs{display:flex;gap:20px;border-bottom:1px solid var(--sim-line);margin:0 0 18px;flex-wrap:wrap}',
+    '.sim-tab{background:none;border:0;padding:0 0 10px;margin-bottom:-1px;cursor:pointer;font-size:13.5px;',
+    'font-weight:600;color:var(--sim-mut);border-bottom:2px solid transparent;transition:color .15s,border-color .15s}',
+    '.sim-tab:hover{color:var(--sim-tx2)}',
+    '.sim-tab.on{color:var(--sim-accent);border-bottom-color:var(--sim-accent)}',
+    '.sim-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:0 0 18px}',
+    '.sim-kpi{background:var(--sim-card);border:1px solid var(--sim-line);border-radius:16px;padding:16px 18px;box-shadow:var(--sim-shadow)}',
+    '.sim-kpi .k-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sim-mut)}',
+    '.sim-kpi .k-v{font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--sim-tx);',
+    'font-variant-numeric:tabular-nums;margin:8px 0 2px;line-height:1.1}',
+    '.sim-kpi .k-c{font-size:12.5px;color:var(--sim-mut);font-variant-numeric:tabular-nums;text-wrap:pretty}',
+    '.sim-card{background:var(--sim-card);border:1px solid var(--sim-line);border-radius:16px;padding:16px 18px;',
+    'box-shadow:var(--sim-shadow);margin:0 0 18px}',
+    '.sim-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}',
+    '.sim-card-t{font-size:16px;font-weight:700;letter-spacing:-.01em;color:var(--sim-tx)}',
+    '.sim-card-s{font-size:12.5px;color:var(--sim-mut);margin-top:3px;text-wrap:pretty;font-variant-numeric:tabular-nums}',
+    '.sim-link{background:none;border:0;padding:0;cursor:pointer;color:var(--sim-accent);font-weight:600;',
+    'font-size:13px;display:inline-flex;align-items:center;gap:4px}',
+    '.sim-link:hover{text-decoration:underline}',
+    '.sim-segs{display:flex;gap:8px;flex-wrap:wrap}',
+    '.sim-seg{display:inline-flex;gap:2px;padding:3px;background:rgba(255,255,255,.06);border-radius:10px}',
+    '.sim-seg button{border:0;background:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:12px;',
+    'font-weight:700;color:var(--sim-mut);transition:background .15s,color .15s}',
+    '.sim-seg button:hover{color:var(--sim-tx)}',
+    '.sim-seg button.on{background:#eaf1ff;color:#0e1a36}',
+    '.sim-hero{background:var(--radix-grad-hero,linear-gradient(135deg,#1fc8ff,#3b82f6 50%,#1e40af));',
+    'border-radius:18px;padding:20px 22px;color:#fff;margin:0 0 18px}',
+    '.sim-hero .h-l{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.88)}',
+    '.sim-hero .h-t{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:6px 0 10px;color:#fff;text-wrap:pretty;line-height:1.2}',
+    '.sim-hero .h-m{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}',
+    '.sim-hero .h-w{font-size:12.5px;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums}',
+    '.sim-hero .sim-pill{background:rgba(255,255,255,.2);color:#fff}',
+    '.sim-hero :focus-visible{outline-color:#fff}',
+    '.sim-hero-acts{display:flex;gap:10px;flex-wrap:wrap}',
+    '.sim-btn-hero{background:#fff;color:#0e1a36;font-weight:800}',
+    '.sim-btn-hero:hover{filter:brightness(.94)}',
+    '.sim-btn-onhero{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}',
+    '.sim-btn-onhero:hover{background:rgba(255,255,255,.26)}',
+    '.sim-pill{display:inline-flex;align-items:center;border-radius:999px;font-size:12px;font-weight:700;',
+    'padding:4px 12px;background:rgba(255,255,255,.08);color:var(--sim-tx);font-variant-numeric:tabular-nums}',
+    '.sim-badge{display:inline-flex;align-items:center;border-radius:999px;font-size:10.5px;font-weight:700;',
+    'letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;background:var(--sim-amber-bg);color:var(--sim-amber)}',
+    '.sim-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 22px}',
+    '.sim-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}',
+    '.sim-tile{flex:none;min-width:48px;height:38px;display:inline-flex;align-items:center;justify-content:center;',
+    'padding:0 9px;background:var(--sim-card-2);border-radius:10px;font-size:15px;font-weight:800;',
+    'letter-spacing:-.01em;color:var(--sim-tx);font-variant-numeric:tabular-nums}',
+    '.sim-row-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.sim-row-t{font-size:14px;font-weight:600;color:var(--sim-tx)}',
+    '.sim-note{font-size:12px;color:var(--sim-mut);margin-top:14px;padding-top:12px;border-top:1px solid var(--sim-line);text-wrap:pretty}',
+    '.sim-chart{position:relative;height:280px}',
+    '.sim-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--sim-line)}',
+    '.sim-legend span{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--sim-mut)}',
+    '.sim-legend i{width:8px;height:8px;border-radius:2px;display:block;flex:none}',
+    '.sim-empty{background:var(--sim-card);border:1px dashed var(--sim-line-2);border-radius:16px;padding:44px 24px;text-align:center;color:var(--sim-mut)}',
+    '.sim-empty b{display:block;color:var(--sim-tx);font-size:15px;margin-bottom:6px;letter-spacing:-.01em}',
+    '@media(max-width:640px){.sim-h1{font-size:21px}.sim-hero .h-t{font-size:22px}.sim-kpi .k-v{font-size:26px}}'
+  ].join('');
+  document.head.appendChild(s);
+}
+// Data/hora curta, sem segundos: "15/09, 22:11"
+function _triQuando(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+       + ', ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
 function _triCss() {
   if (document.getElementById('tri-css')) return;
   const s = document.createElement('style'); s.id = 'tri-css';
-  s.textContent = '.tri-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin:12px 0}'
-    + '.tri-q{display:flex;align-items:center;gap:6px;background:var(--radix-surface);border:1px solid var(--radix-line);border-radius:10px;padding:6px 8px}'
+  s.textContent = '.tri-grid{columns:216px;column-gap:20px;margin:12px 0}'
+    + '.tri-q{display:flex;align-items:center;gap:6px;background:var(--radix-surface);border:1px solid var(--radix-line);border-radius:10px;padding:6px 8px;margin:0 0 8px;break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid}'
     + '.tri-q .n{width:34px;font-weight:800;color:var(--radix-text-muted);font-size:13px}'
     + '.tri-q button{width:32px;height:32px;border-radius:50%;border:1px solid var(--radix-line-2,#e5e7eb);background:transparent;color:var(--radix-text);font-weight:700;cursor:pointer;padding:0}'
-    + '.tri-q button.on{background:var(--radix-grad-brand,linear-gradient(135deg,#22d3ee,#3b82f6));color:#0e1a36;border-color:transparent}'
+    + '.tri-q button.on{background:var(--radix-cyan,#22d3ee);color:#0e1a36;border-color:transparent;font-weight:800}'
     + '.tri-q.branco .n{color:var(--radix-coral,#ff7a5c)}'
     + '.tri-top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:10px 0}'
     + '.tri-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;display:inline-flex;align-items:center;gap:6px}'
@@ -19354,28 +19451,69 @@ function _triTempo(s) { if (s == null) return '—'; s = Math.round(s); const h 
 function _triNomeProva(cp) { const pr = (TRI.provas || []).find(x => x.co_prova === cp); return pr ? 'ENEM ' + pr.ano + ' · caderno ' + pr.caderno + ' ' + _triCor(pr.cor) : 'prova ' + cp; }
 async function renderSimuladoTRI() {
   state.view = 'simulado-tri';
-  _triCss(); clearInterval(TRI.timer);
+  _triCss(); _simCss(); clearInterval(TRI.timer);
   const main = document.getElementById('main-content');
   const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimulados()">Simulados</a> / ENEM oficial com nota TRI</div>';
-  const titulo = '<h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success">' + _triIco('target') + '</span>Simulado ENEM oficial com nota TRI</h2>';
-  if (state.degustacao) { main.innerHTML = bc + titulo + '<div class="tri-card">O simulado com nota TRI faz parte da Revisão Final. Na degustação ele não está liberado.</div>'; return; }
-  main.innerHTML = bc + titulo + '<p style="color:var(--radix-text-muted)">Carregando…</p>';
+  const titulo = '<h1 class="sim-h1">Simulado ENEM oficial com nota TRI</h1>';
+  const env = (inner) => '<div class="sim-wrap">' + bc + titulo + inner + '</div>';
+  if (state.degustacao) { main.innerHTML = env('<div class="sim-card">O simulado com nota TRI faz parte da Revisão Final. Na degustação ele não está liberado.</div>'); return; }
+  main.innerHTML = env('<p class="sim-lead">Carregando…</p>');
   const [p, t] = await Promise.all([
     sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada').eq('area', 'MT').not('pdf_url', 'is', null).order('ano', { ascending: false }).order('caderno'),
-    sb.from('simulado_tri').select('id, co_prova, iniciado_em, enviado_em, nota, acertos, erros, brancos, tempo_seg').eq('aluno_id', state.usuario.id).order('iniciado_em', { ascending: false })
+    sb.from('simulado_tri').select('id, co_prova, iniciado_em, enviado_em, nota, acertos, erros, brancos, tempo_seg, respostas').eq('aluno_id', state.usuario.id).order('iniciado_em', { ascending: false })
   ]);
-  if (p.error) { main.innerHTML = bc + titulo + '<div class="tri-card">Não consegui carregar as provas: ' + _escHtml(p.error.message) + '</div>'; return; }
+  if (p.error) { main.innerHTML = env('<div class="sim-card">Não consegui carregar as provas: ' + _escHtml(p.error.message) + '</div>'); return; }
   TRI.provas = p.data || []; TRI.tentativas = t.data || [];
   const abertas = TRI.tentativas.filter(x => !x.enviado_em), feitas = TRI.tentativas.filter(x => x.enviado_em);
-  main.innerHTML = bc + titulo
-    + '<p style="color:var(--radix-text-2);max-width:760px">Escolha um caderno, abra o PDF oficial do INEP, resolva as 45 questões de Matemática (136 a 180) e marque aqui. A nota sai pelo mesmo modelo do ENEM, com os parâmetros oficiais de cada questão. Reserve cerca de 2 horas e meia.</p>'
-    + (abertas.length ? '<div class="tri-card"><b>Em andamento</b>' + abertas.map(a => '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap"><span>' + _escHtml(_triNomeProva(a.co_prova)) + ' · iniciado em ' + new Date(a.iniciado_em).toLocaleString('pt-BR') + '</span><span style="display:flex;gap:6px"><button class="btn" onclick="triContinuar(\'' + a.id + '\')">Continuar</button><button class="btn btn-secondary" onclick="triCancelar(\'' + a.id + '\')">Descartar</button></span></div>').join('') + '</div>' : '')
-    + '<div class="tri-card"><b>Provas disponíveis</b><div class="tri-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">'
-    + TRI.provas.map(pr => '<div class="tri-q" style="justify-content:space-between"><span><b>ENEM ' + pr.ano + '</b> · caderno ' + pr.caderno + ' ' + _triCor(pr.cor) + (pr.nota_aproximada ? ' <span title="Para este ano o INEP publicou parâmetros inconsistentes; a nota usa parâmetros recalibrados a partir dos resultados oficiais e é aproximada." style="display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:rgba(245,158,11,.16);color:#b45309;vertical-align:middle">nota aproximada</span>' : '') + '<br><small style="color:var(--radix-text-muted)">Matemática, questões 136 a 180</small></span><button class="btn" style="width:auto;height:auto;border-radius:8px;padding:8px 12px" onclick="triIniciar(' + pr.co_prova + ')">Começar</button></div>').join('')
-    + '</div></div>'
-    + '<div class="tri-card"><b>Minhas notas</b>' + (feitas.length
-      ? '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Prova</th><th>Data</th><th>Nota TRI</th><th>Acertos</th><th>Tempo</th><th></th></tr></thead><tbody>' + feitas.map(f => '<tr><td>' + _escHtml(_triNomeProva(f.co_prova)) + '</td><td>' + new Date(f.enviado_em).toLocaleDateString('pt-BR') + '</td><td><b>' + Number(f.nota).toFixed(1).replace('.', ',') + '</b></td><td>' + f.acertos + '/45</td><td>' + _triTempo(f.tempo_seg) + '</td><td><button class="btn btn-secondary" onclick="triVerResultado(\'' + f.id + '\')">Ver relatório</button></td></tr>').join('') + '</tbody></table></div>'
-      : '<p style="color:var(--radix-text-muted);margin:8px 0 0">Nenhum simulado enviado ainda.</p>') + '</div>';
+  const nProvas = TRI.provas.length;
+  const heroA = abertas[0] || null;          // hero = a tentativa aberta mais recente
+  const outras = abertas.slice(1);           // demais tentativas abertas viram linhas
+  const _marc = (a) => (a && a.respostas) ? a.respostas.split('').filter(c => c !== '.').length : 0;
+  const temAprox = TRI.provas.some(x => x.nota_aproximada);
+
+  main.innerHTML = env(
+      '<p class="sim-lead">Escolha um caderno, abra o PDF oficial do INEP, resolva as 45 questões de Matemática (136 a 180) e marque aqui. A nota sai pelo mesmo modelo do ENEM, com os parâmetros oficiais de cada questão. Reserve cerca de 2 horas e meia.</p>'
+    + (heroA
+        ? '<div class="sim-hero">'
+          + '<div class="h-l">Simulado em andamento</div>'
+          + '<div class="h-t">' + _escHtml(_triNomeProva(heroA.co_prova)) + '</div>'
+          + '<div class="h-m"><span class="sim-pill">questão ' + Math.min(_marc(heroA) + 1, 45) + ' de 45</span>'
+          + '<span class="h-w">iniciado em ' + _triQuando(heroA.iniciado_em) + '</span></div>'
+          + '<div class="sim-hero-acts">'
+          + '<button class="sim-btn sim-btn-hero" onclick="triContinuar(\'' + heroA.id + '\')">Continuar de onde parei</button>'
+          + '<button class="sim-btn sim-btn-onhero" onclick="triCancelar(\'' + heroA.id + '\')">Descartar</button>'
+          + '</div></div>'
+        : '')
+    + (outras.length
+        ? '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Outras tentativas em andamento</div>'
+          + '<div class="sim-card-s">' + outras.length + ' em aberto</div></div></div><div class="sim-rows">'
+          + outras.map(a => '<div class="sim-row"><span class="sim-row-main"><span class="sim-row-t">' + _escHtml(_triNomeProva(a.co_prova)) + '</span>'
+              + '<span class="sim-card-s" style="margin:0">' + _marc(a) + ' de 45 · ' + _triQuando(a.iniciado_em) + '</span></span>'
+              + '<button class="sim-btn sim-btn-outline sim-btn-sm" onclick="triContinuar(\'' + a.id + '\')">Continuar</button>'
+              + '<button class="sim-btn sim-btn-ghost sim-btn-sm" onclick="triCancelar(\'' + a.id + '\')">Descartar</button></div>').join('')
+          + '</div></div>'
+        : '')
+    + '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Provas disponíveis</div>'
+      + '<div class="sim-card-s">' + nProvas + (nProvas === 1 ? ' prova' : ' provas') + ' · Matemática · questões 136 a 180 · ~2h30 cada</div></div>'
+      + (feitas.length ? '<button class="sim-link" onclick="document.getElementById(\'sim-minhas-notas\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">Ver histórico →</button>' : '')
+      + '</div><div class="sim-rows">'
+      + TRI.provas.map(pr => '<div class="sim-row"><span class="sim-tile">' + pr.ano + '</span>'
+          + '<span class="sim-row-main"><span class="sim-row-t">caderno ' + pr.caderno + ' ' + _triCor(pr.cor) + '</span>'
+          + (pr.nota_aproximada ? '<span class="sim-badge">nota aproximada</span>' : '')
+          + '</span>'
+          + '<button class="sim-btn sim-btn-outline sim-btn-sm" onclick="triIniciar(' + pr.co_prova + ')">Começar</button></div>').join('')
+      + '</div>'
+      + (temAprox ? '<div class="sim-note"><b style="color:var(--radix-text)">Nota aproximada:</b> nesses anos o INEP publicou parâmetros inconsistentes. A nota usa parâmetros recalibrados a partir dos resultados oficiais — serve pra acompanhar a evolução, mas pode variar um pouco da nota real.</div>' : '')
+      + '</div>'
+    + '<div class="sim-card" id="sim-minhas-notas"><div class="sim-card-head"><div><div class="sim-card-t">Minhas notas</div>'
+      + '<div class="sim-card-s">' + (feitas.length ? feitas.length + (feitas.length === 1 ? ' simulado enviado' : ' simulados enviados') : 'nenhum enviado ainda') + '</div></div></div>'
+      + (feitas.length
+        ? '<div class="tri-tab-wrap"><table class="tri-tab"><thead><tr><th>Prova</th><th>Data</th><th>Nota TRI</th><th>Acertos</th><th>Tempo</th><th></th></tr></thead><tbody>'
+          + feitas.map(f => '<tr><td>' + _escHtml(_triNomeProva(f.co_prova)) + '</td><td>' + new Date(f.enviado_em).toLocaleDateString('pt-BR') + '</td><td><b>' + Number(f.nota).toFixed(1).replace('.', ',') + '</b></td><td>' + f.acertos + '/45</td><td>' + _triTempo(f.tempo_seg) + '</td><td><button class="sim-btn sim-btn-outline sim-btn-sm" onclick="triVerResultado(\'' + f.id + '\')">Ver relatório</button></td></tr>').join('')
+          + '</tbody></table></div>'
+        : '<p style="color:var(--radix-text-muted);font-size:13px;margin:0">Nenhum simulado enviado ainda. Escolha uma prova acima pra começar.</p>')
+      + '</div>'
+  );
 }
 async function triIniciar(coProva) {
   radixShowLoading('Preparando o simulado…');
@@ -19400,21 +19538,24 @@ function _triLinha(i, r) {
 }
 function renderGabaritoTRI() {
   state.view = 'simulado-tri-gabarito';
-  _triCss();
+  _triCss(); _simCss();
   const a = TRI.atual; const main = document.getElementById('main-content');
   const marcadas = a.resp.filter(x => x !== '.').length;
-  main.innerHTML = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Gabarito</div>'
-    + '<h2 class="section-title"><span class="section-title-accent"></span><span class="st-ico success">' + _triIco('doc') + '</span>ENEM ' + a.prova.ano + ' · caderno ' + a.prova.caderno + ' ' + _triCor(a.prova.cor) + ' · Matemática' + (a.prova.nota_aproximada ? ' <small style="font-size:13px;font-weight:700;color:#b45309">(nota aproximada)</small>' : '') + '</h2>'
+  main.innerHTML = '<div class="sim-wrap">'
+    + '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Gabarito</div>'
+    + '<h1 class="sim-h1">ENEM ' + a.prova.ano + ' · caderno ' + a.prova.caderno + ' ' + _triCor(a.prova.cor) + ' · Matemática'
+      + (a.prova.nota_aproximada ? ' <span class="sim-badge" style="vertical-align:middle;margin-left:8px">nota aproximada</span>' : '') + '</h1>'
     + '<div class="tri-top">'
-    + '<a class="btn" href="' + _escHtml(a.prova.pdf_url) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">' + _triIco('doc') + ' Abrir a prova (PDF do INEP)</a>'
+    + '<a class="sim-btn sim-btn-outline" href="' + _escHtml(a.prova.pdf_url) + '" target="_blank" rel="noopener" style="text-decoration:none">' + _triIco('doc') + ' Abrir a prova (PDF do INEP)</a>'
     + '<span class="tri-timer" id="tri-timer" title="Tempo decorrido desde o início">' + _triIco('clock') + ' 00:00:00</span>'
-    + '<span id="tri-progresso" style="color:var(--radix-text-muted)">' + marcadas + ' de 45 marcadas</span>'
+    + '<span id="tri-progresso" class="sim-card-s" style="margin:0">' + marcadas + ' de 45 marcadas</span>'
     + '</div>'
-    + '<p style="color:var(--radix-text-2);font-size:13px">Questões 136 a 180. Suas marcações são salvas automaticamente; você pode sair e continuar depois. Clique de novo na letra para desmarcar. O que ficar em branco conta como erro.</p>'
+    + '<p class="sim-lead" style="margin:0 0 12px">Questões 136 a 180, na ordem do caderno — as colunas seguem de cima para baixo, como no gabarito oficial. As marcações são salvas automaticamente; você pode sair e continuar depois. Clique de novo na letra para desmarcar. O que ficar em branco conta como erro.</p>'
     + '<div class="tri-grid" id="tri-grid">' + a.resp.map((r, i) => _triLinha(i, r)).join('') + '</div>'
-    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">'
-    + '<button class="btn" style="background:var(--radix-grad-brand,linear-gradient(135deg,#22d3ee,#3b82f6));color:#0e1a36;font-weight:800;padding:10px 18px" onclick="triEnviar()">Enviar e calcular a nota</button>'
-    + '<button class="btn btn-secondary" onclick="renderSimuladoTRI()">Sair e continuar depois</button>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">'
+    + '<button class="sim-btn sim-btn-primary" onclick="triEnviar()">Enviar e calcular a nota</button>'
+    + '<button class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">Sair e continuar depois</button>'
+    + '</div>'
     + '</div>';
   clearInterval(TRI.timer);
   const tick = () => {
@@ -19521,6 +19662,7 @@ function triVerQuestao(qid, posicao, resposta, ano) {
 
 async function renderSimulados(aba) {
   state.view = 'meus-simulados';
+  _simCss();
   const abasValidas = ['externos', 'plataforma', 'metas'];
   state._simAba = abasValidas.includes(aba) ? aba
                 : (abasValidas.includes(state._simAba) ? state._simAba : 'externos');
@@ -19564,44 +19706,35 @@ async function renderSimulados(aba) {
     return state.metaAluno[campo] != null;
   }));
 
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Simulados</div>
-    <h2 class="section-title">
-      <span class="section-title-accent"></span>
-      <span class="st-ico success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span>
-      Simulados
-    </h2>
+  // Contexto dos KPIs (mesma estrutura nos três cards)
+  const metaMat = (state.metaAluno && state.metaAluno.meta_tri_mat != null)
+    ? Math.round(Number(state.metaAluno.meta_tri_mat)) : null;
+  const ultimoTriMat = (ultimo && ultimo.tri_mat != null)
+    ? Math.round(Number(ultimo.tri_mat)) : null;
 
-    <!-- Ações principais -->
-    <div style="display:flex;gap:10px;margin:0 0 14px;flex-wrap:wrap;">
-      <button class="btn" style="background:var(--radix-grad-brand,linear-gradient(135deg,#22d3ee,#3b82f6));color:#0e1a36;font-weight:800;padding:10px 18px;display:inline-flex;align-items:center;gap:6px;" onclick="abrirSimuladoConfig()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>
+  main.innerHTML = `
+    <div class="sim-wrap">
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Simulados</div>
+    <h1 class="sim-h1">Simulados</h1>
+
+    <!-- Ações: primária (sólida) · secundária (contorno) · terciária (texto) -->
+    <div style="display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap;align-items:center;">
+      <button class="sim-btn sim-btn-primary" onclick="abrirSimuladoConfig()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>
         Fazer simulado agora
       </button>
-      <button class="btn btn-secondary" style="padding:10px 18px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" onclick="abrirModalSimulado(null)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <button class="sim-btn sim-btn-outline" onclick="abrirModalSimulado(null)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Registrar nota externa
       </button>
-      ${state.degustacao ? '' : `<button class="btn btn-secondary" style="padding:10px 18px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" onclick="renderSimuladoTRI()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        ENEM oficial com nota TRI
-      </button>`}
+      ${state.degustacao ? '' : `<button class="sim-btn sim-btn-ghost" onclick="renderSimuladoTRI()">ENEM oficial com nota TRI →</button>`}
     </div>
 
-    <!-- Abas -->
-    <div style="display:flex;gap:4px;padding:4px;background:var(--radix-bg-2,#f3f4f6);border-radius:10px;width:max-content;max-width:100%;margin-bottom:16px;">
-      <button onclick="renderSimulados('externos')"
-              style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='externos'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-        Bancas externas${total > 0 ? ` (${total})` : ''}
-      </button>
-      <button onclick="renderSimulados('plataforma')"
-              style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='plataforma'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-        Feitos na plataforma${daPlataforma.length > 0 ? ` (${daPlataforma.length})` : ''}
-      </button>
-      <button onclick="renderSimulados('metas')"
-              style="padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;${abaAtiva==='metas'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-        🎯 Minha meta
-      </button>
+    <!-- Abas: sublinhado, sem pílula preenchida -->
+    <div class="sim-tabs" role="tablist">
+      <button class="sim-tab ${abaAtiva==='externos'?'on':''}" role="tab" aria-selected="${abaAtiva==='externos'}" onclick="renderSimulados('externos')">Bancas externas${total > 0 ? ` (${total})` : ''}</button>
+      <button class="sim-tab ${abaAtiva==='plataforma'?'on':''}" role="tab" aria-selected="${abaAtiva==='plataforma'}" onclick="renderSimulados('plataforma')">Feitos na plataforma${daPlataforma.length > 0 ? ` (${daPlataforma.length})` : ''}</button>
+      <button class="sim-tab ${abaAtiva==='metas'?'on':''}" role="tab" aria-selected="${abaAtiva==='metas'}" onclick="renderSimulados('metas')">Minha meta</button>
     </div>
 
     ${abaAtiva === 'metas' ? _htmlMinhaMeta() : abaAtiva === 'plataforma' ? `
@@ -19614,47 +19747,46 @@ async function renderSimulados(aba) {
       Notas dos simulados que você fez em bancas externas (Evolucional, SAS, Somos, ENEM antigos etc.).
     </p>
 
-    <!-- KPIs -->
-    <div class="stats-grid" style="margin-bottom:18px;">
-      <div class="stat-card"><div class="label">Simulados registrados</div><div class="value">${total}</div></div>
-      <div class="stat-card"><div class="label">Média TRI (Matemática)</div><div class="value" style="color:var(--radix-cyan);">${mediaMatTri != null ? mediaMatTri : '—'}</div></div>
-      <div class="stat-card"><div class="label">Último simulado</div><div class="value" style="font-size:14px;">${bancaMaisRecente}<br><small style="color:var(--radix-text-muted);font-weight:400;">${dataMaisRecente}</small></div></div>
+    <!-- KPIs: micro-rótulo · número · contexto (mesma estrutura nos três) -->
+    <div class="sim-kpis">
+      <div class="sim-kpi">
+        <div class="k-l">Simulados registrados</div>
+        <div class="k-v">${total}</div>
+        <div class="k-c">bancas externas</div>
+      </div>
+      <div class="sim-kpi">
+        <div class="k-l">Média TRI · Matemática</div>
+        <div class="k-v">${mediaMatTri != null ? mediaMatTri : '—'}</div>
+        <div class="k-c">${metaMat != null ? `meta: ${metaMat}` : 'sem meta definida'}</div>
+      </div>
+      <div class="sim-kpi">
+        <div class="k-l">Último simulado</div>
+        <div class="k-v">${ultimoTriMat != null ? ultimoTriMat : '—'}</div>
+        <div class="k-c">${ultimo ? `${dataMaisRecente} · ${bancaMaisRecente}` : '—'}</div>
+      </div>
     </div>
 
     ${total === 0 ? `
-      <div style="text-align:center;padding:48px 24px;background:var(--radix-surface-2, #fff);border:1px dashed var(--radix-line, #e5e7eb);border-radius:14px;color:var(--radix-text-muted);">
-        <div style="font-size:44px;margin-bottom:10px;">📊</div>
-        <p style="margin:0 0 6px;font-weight:700;color:var(--radix-text);">Nenhum simulado registrado ainda</p>
-        <p style="margin:0;font-size:13px;">Clique em <b>Registrar nota externa</b> pra adicionar o primeiro e começar a acompanhar sua evolução.</p>
+      <div class="sim-empty">
+        <b>Nenhum simulado registrado ainda</b>
+        <p style="margin:0;font-size:13px;">Clique em <span style="color:var(--radix-text);font-weight:600;">Registrar nota externa</span> pra adicionar o primeiro e acompanhar sua evolução.</p>
       </div>
     ` : `
-      <!-- Gráfico de evolução (TRI ou Acertos — nem toda banca entrega TRI) -->
-      <div style="background:var(--radix-surface-2, #fff);border:1px solid var(--radix-line, #e5e7eb);border-radius:14px;padding:16px 18px;margin-bottom:18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-          <span style="font-size:13.5px;font-weight:700;color:var(--radix-text);">📈 Evolução</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <!-- Visão: geral (todas juntas) ou por área (com a meta) -->
-            <div style="display:flex;gap:4px;padding:3px;background:var(--radix-bg-2,#f3f4f6);border-radius:8px;">
-              <button onclick="state._simGraficoVisao='geral';renderMeusSimulados();"
-                      style="padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${visaoGraf==='geral'?'background:var(--radix-surface,#fff);color:var(--radix-text,#111);box-shadow:0 1px 3px rgba(0,0,0,.12);':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-                Visão geral
-              </button>
-              <button onclick="state._simGraficoVisao='areas';renderMeusSimulados();"
-                      title="${temAlgumaMeta ? 'Um gráfico por área, com a linha da sua meta' : 'Defina sua meta na aba 🎯 pra ver a linha de referência'}"
-                      style="padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${visaoGraf==='areas'?'background:var(--radix-surface,#fff);color:var(--radix-text,#111);box-shadow:0 1px 3px rgba(0,0,0,.12);':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-                Por área${temAlgumaMeta ? ' 🎯' : ''}
-              </button>
+      <!-- Evolução -->
+      <div class="sim-card">
+        <div class="sim-card-head">
+          <div>
+            <div class="sim-card-t">Evolução</div>
+            <div class="sim-card-s">Ordem cronológica · escala ${modoGraf === 'tri' ? '0–1000 (TRI)' : '0–45 (acertos)'}${temAlgumaMeta ? ' · use “Por área” para comparar com sua meta' : ''}</div>
+          </div>
+          <div class="sim-segs">
+            <div class="sim-seg">
+              <button class="${visaoGraf==='geral'?'on':''}" onclick="state._simGraficoVisao='geral';renderMeusSimulados();">Visão geral</button>
+              <button class="${visaoGraf==='areas'?'on':''}" title="${temAlgumaMeta ? 'Um gráfico por área, com a linha da sua meta' : 'Defina sua meta na aba Minha meta pra ver a linha de referência'}" onclick="state._simGraficoVisao='areas';renderMeusSimulados();">Por área</button>
             </div>
-            <!-- Métrica: TRI ou acertos -->
-            <div style="display:flex;gap:4px;padding:3px;background:var(--radix-bg-2,#f3f4f6);border-radius:8px;">
-              <button onclick="state._simGraficoModo='tri';renderMeusSimulados();"
-                      style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='tri'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-                Nota TRI
-              </button>
-              <button onclick="state._simGraficoModo='acertos';renderMeusSimulados();"
-                      style="padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;${modoGraf==='acertos'?'background:var(--radix-cyan,#22d3ee);color:#0e1a36;':'background:transparent;color:var(--radix-text-muted,#6b7280);'}">
-                Acertos
-              </button>
+            <div class="sim-seg">
+              <button class="${modoGraf==='tri'?'on':''}" onclick="state._simGraficoModo='tri';renderMeusSimulados();">Nota TRI</button>
+              <button class="${modoGraf==='acertos'?'on':''}" onclick="state._simGraficoModo='acertos';renderMeusSimulados();">Acertos</button>
             </div>
           </div>
         </div>
@@ -19667,17 +19799,9 @@ async function renderSimulados(aba) {
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;">
             ${_htmlCardsPorArea(sims, modoGraf)}
           </div>
-          <div style="font-size:11.5px;color:var(--radix-text-muted);text-align:right;margin-top:8px;">
-            ${temAlgumaMeta ? 'Linha tracejada = sua meta · ' : ''}escala ${modoGraf === 'tri' ? '0–1000 (TRI)' : '0–45 (acertos)'}
-          </div>
         ` : `
-          <div style="position:relative;height:280px;">
-            <canvas id="chart-sim-ext"></canvas>
-          </div>
-          <div style="font-size:11.5px;color:var(--radix-text-muted);text-align:right;margin-top:6px;">
-            Ordem cronológica · escala ${modoGraf === 'tri' ? '0–1000 (TRI)' : '0–45 (acertos)'}
-            ${temAlgumaMeta ? ' · <b>Veja "Por área"</b> pra comparar com sua meta' : ''}
-          </div>
+          <div class="sim-chart"><canvas id="chart-sim-ext"></canvas></div>
+          <div class="sim-legend" id="sim-legend"></div>
         `}
       </div>
 
@@ -19687,6 +19811,7 @@ async function renderSimulados(aba) {
       </div>
     `}
     `}
+    </div>
   `;
 
   // Sobe pra topo (herda scroll da tela anterior senão)
@@ -20330,9 +20455,12 @@ function _renderGraficoSimulados(sims, modo) {
       backgroundColor: a.cor + '22',
       tension: 0.25,
       spanGaps: true,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      borderWidth: 2
+      borderWidth: 2,
+      pointRadius: 3.5,
+      pointHoverRadius: 5,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: a.cor,
+      pointBorderWidth: 2
     };
   }).filter(Boolean);
 
@@ -20345,7 +20473,7 @@ function _renderGraficoSimulados(sims, modo) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+        legend: { display: false },
         tooltip: { callbacks: { label: c => {
           if (c.parsed.y == null) return `${c.dataset.label}: —`;
           return ehTri
@@ -20354,11 +20482,20 @@ function _renderGraficoSimulados(sims, modo) {
         } } }
       },
       scales: {
-        y: { min: 0, max: yMax, ticks: { stepSize: yStep, font: { size: 11 } } },
-        x: { ticks: { font: { size: 11 } } }
+        y: { min: 0, max: yMax,
+             border: { display: false },
+             grid: { color: 'rgba(255,255,255,.07)', drawTicks: false },
+             ticks: { stepSize: yStep, font: { size: 11 }, color: '#8aa0c9', padding: 8 } },
+        x: { border: { display: false },
+             grid: { display: false },
+             ticks: { font: { size: 11 }, color: '#8aa0c9', padding: 4 } }
       }
     }
   });
+  // Legenda própria: abaixo do gráfico, após divisor (quadradinhos de 8px).
+  const lg = document.getElementById('sim-legend');
+  if (lg) lg.innerHTML = datasets.map(d =>
+    '<span><i style="background:' + d.borderColor + '"></i>' + d.label + '</span>').join('');
 }
 
 // Helpers
