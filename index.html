@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -19495,6 +19495,9 @@ function _simCss() {
     '.ec-go{display:block;flex:none;margin-left:8px;font-size:16px;font-weight:800;color:var(--ec-dark);opacity:.45;transition:opacity .15s,transform .15s}',
     '.enem-cover:hover .ec-go{opacity:1;transform:translateX(3px)}',
     // selo vira faixa no rodape: no card estreito nao cabe ao lado da marca
+    '.ec-aplic{display:block;text-align:center;font-size:8.5px;font-weight:800;letter-spacing:.06em;',
+    'text-transform:uppercase;padding:3px 6px;background:rgba(8,145,178,.14);color:#0e5f74;',
+    'border-top:1px solid rgba(10,40,80,.12)}',
     '.ec-aprox{display:block;text-align:center;font-size:8.5px;font-weight:800;letter-spacing:.06em;',
     'text-transform:uppercase;padding:3px 6px;background:rgba(146,64,14,.14);color:#7c3d06;',
     'border-top:1px solid rgba(10,40,80,.12)}',
@@ -19533,6 +19536,14 @@ function _triIco(n) {
   return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (d[n] || d.target) + '</svg>';
 }
 function _triCor(c) { c = String(c || '').toLowerCase(); return c === 'amarela' ? 'amarelo' : c; }
+// rótulo curto da aplicação da prova; vazio na 1ª aplicação (o caso comum)
+function _triAplic(pr) { const a = String((pr && pr.aplicacao) || 'regular').toLowerCase();
+  if (a === 'reaplicacao_ppl') return 'Reaplicação / PPL';
+  if (a === 'reaplicacao') return 'Reaplicação';
+  if (a === 'ppl') return 'PPL';
+  if (a === 'belem') return 'Belém · Ananindeua · Marituba';
+  if (a === 'digital') return 'Digital';
+  return ''; }
 function _triTempo(s) { if (s == null) return '—'; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return (h ? h + 'h' : '') + String(m).padStart(2, '0') + 'min'; }
 function _triNomeProva(cp) { const pr = (TRI.provas || []).find(x => x.co_prova === cp); return pr ? 'ENEM ' + pr.ano + ' · caderno ' + pr.caderno + ' ' + _triCor(pr.cor) : 'prova ' + cp; }
 async function renderSimuladoTRI() {
@@ -19545,7 +19556,7 @@ async function renderSimuladoTRI() {
   if (state.degustacao) { main.innerHTML = env('<div class="sim-card">O simulado com nota TRI faz parte da Revisão Final. Na degustação ele não está liberado.</div>'); return; }
   main.innerHTML = env('<p class="sim-lead">Carregando…</p>');
   const [p, t] = await Promise.all([
-    sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada').eq('area', 'MT').not('pdf_url', 'is', null).order('ano', { ascending: false }).order('caderno'),
+    sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao').eq('area', 'MT').not('pdf_url', 'is', null).order('ano', { ascending: false }).order('caderno'),
     sb.from('simulado_tri').select('id, co_prova, iniciado_em, enviado_em, nota, acertos, erros, brancos, tempo_seg, respostas').eq('aluno_id', state.usuario.id).order('iniciado_em', { ascending: false })
   ]);
   if (p.error) { main.innerHTML = env('<div class="sim-card">Não consegui carregar as provas: ' + _escHtml(p.error.message) + '</div>'); return; }
@@ -19589,7 +19600,7 @@ async function renderSimuladoTRI() {
           return '<button type="button" class="enem-cover"'
             + ' style="--ec-dark:' + ec.dark + ';--ec-mid:' + ec.mid + ';--ec-base:' + ec.base + '"'
             + ' onclick="triIniciar(' + pr.co_prova + ')"'
-            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + '">'
+            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + (_triAplic(pr) ? ', ' + _triAplic(pr) : '') + '">'
             + '<span class="ec-top">'
             + '<span class="ec-t1">Exame Nacional do Ensino Médio</span>'
             + '<span class="ec-t2">Prova de Matemática e suas Tecnologias</span>'
@@ -19600,10 +19611,12 @@ async function renderSimuladoTRI() {
             + '<span class="ec-cad"><span class="c1">Caderno</span><span class="c2">' + pr.caderno + '</span><span class="c3">' + corN + '</span></span>'
             + '<span class="ec-go" aria-hidden="true">&#8594;</span>'
             + '</span>'
+            + (_triAplic(pr) ? '<span class="ec-aplic">' + _escHtml(_triAplic(pr)) + '</span>' : '')
             + (pr.nota_aproximada ? '<span class="ec-aprox">nota aproximada</span>' : '')
             + '</button>';
         }).join('')
       + '</div>'
+      + (TRI.provas.some(x => _triAplic(x)) ? '<div class="sim-note"><b style="color:var(--radix-text)">Mais de uma aplicação por ano:</b> além da prova que a maioria fez, o INEP aplica a mesma área em outras datas. <b>Reaplicação / PPL</b> é a segunda aplicação, usada por quem teve problema na data oficial e pelas pessoas privadas de liberdade. <b>Belém · Ananindeua · Marituba</b> é a aplicação própria dessas cidades em 2025, por causa da COP30. São provas diferentes, com questões diferentes, e a nota sai na mesma escala.</div>' : '')
       + (temAprox ? '<div class="sim-note"><b style="color:var(--radix-text)">Nota aproximada:</b> nesses anos o INEP publicou parâmetros inconsistentes. A nota usa parâmetros recalibrados a partir dos resultados oficiais — serve pra acompanhar a evolução, mas pode variar um pouco da nota real.</div>' : '')
       + '</div>'
     + '<div class="sim-card" id="sim-minhas-notas"><div class="sim-card-head"><div><div class="sim-card-t">Minhas notas</div>'
@@ -19627,7 +19640,7 @@ async function triContinuar(id) {
   const { data: t, error } = await sb.from('simulado_tri').select('id, co_prova, respostas, iniciado_em, enviado_em').eq('id', id).single();
   if (error || !t) { alert('Tentativa não encontrada.'); return; }
   if (t.enviado_em) { triVerResultado(id); return; }
-  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada').eq('area', 'MT'); TRI.provas = p.data || []; }
+  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao').eq('area', 'MT'); TRI.provas = p.data || []; }
   const prova = TRI.provas.find(x => x.co_prova === t.co_prova) || { ano: '', cor: '', caderno: '', pdf_url: '' };
   const resp = (t.respostas && t.respostas.length === 45 ? t.respostas : '.'.repeat(45)).split('');
   TRI.atual = { id: t.id, co_prova: t.co_prova, prova, resp, inicio: new Date(t.iniciado_em).getTime() };
@@ -19644,7 +19657,7 @@ function renderGabaritoTRI() {
   const marcadas = a.resp.filter(x => x !== '.').length;
   main.innerHTML = '<div class="sim-wrap">'
     + '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimuladoTRI()">Simulado TRI</a> / Gabarito</div>'
-    + '<h1 class="sim-h1">ENEM ' + a.prova.ano + ' · caderno ' + a.prova.caderno + ' ' + _triCor(a.prova.cor) + ' · Matemática'
+    + '<h1 class="sim-h1">ENEM ' + a.prova.ano + ' · caderno ' + a.prova.caderno + ' ' + _triCor(a.prova.cor) + ' · Matemática' + (_triAplic(a.prova) ? ' · ' + _triAplic(a.prova) : '')
       + (a.prova.nota_aproximada ? ' <span class="sim-badge" style="vertical-align:middle;margin-left:8px">nota aproximada</span>' : '') + '</h1>'
     + '<div class="tri-top">'
     + '<a class="sim-btn sim-btn-outline" href="' + _escHtml(a.prova.pdf_url) + '" target="_blank" rel="noopener" style="text-decoration:none">' + _triIco('doc') + ' Abrir a prova (PDF do INEP)</a>'
