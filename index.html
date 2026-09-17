@@ -6137,7 +6137,7 @@
         </div>
       </div>
 
-      <div class="mk-deg-cta">
+      <div class="mk-deg-cta hidden">
         <button type="button" class="mk-deg-btn" onclick="abrirDegustacao()">
           Conhecer a plataforma por 7 dias
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -6212,7 +6212,7 @@
         <p style="font-size:12px;color:var(--radix-text-muted);text-align:center;margin-top:14px;">
           Ao se cadastrar, você confirma o uso da plataforma Radix de Matemática.
         </p>
-        <p id="signup-link-deg" style="font-size:13px;text-align:center;margin-top:6px;">
+        <p id="signup-link-deg" class="hidden" style="font-size:13px;text-align:center;margin-top:6px;">
           Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#1565C0)">Conheça a plataforma por 7 dias</a>
         </p>
       </div>
@@ -7341,7 +7341,17 @@ function definirModoCadastro(deg) {
     : 'Preencha os dados para liberar o acesso à plataforma.';
   if ($('signup-btn-txt')) $('signup-btn-txt').textContent = deg ? 'Começar minha degustação' : 'Criar conta';
 }
+// ============================================================
+// DEGUSTAÇÃO (teste de 7 dias) — DESCONTINUADA em 16/09/2026.
+// A feature continua no código de propósito: quem já está em teste
+// segue até a data dele expirar, e os painéis de leads/conversão
+// continuam valendo para consulta do histórico.
+// Só a ENTRADA de alunos novos está fechada.
+// Para reabrir, basta voltar esta constante para true.
+// ============================================================
+const DEGUSTACAO_ABERTA = false;
 function abrirDegustacao() {
+  if (!DEGUSTACAO_ABERTA) return;   // não entram testes novos
   trocarAba('signup', true);
   definirModoCadastro(true);
   const el = document.getElementById('form-signup');
@@ -16549,7 +16559,7 @@ function renderListaAlunos(perfis, statusAtual) {
                         </button>
                       `}
 
-                      ${statusAtual === 'pendente' ? `
+                      ${statusAtual === 'pendente' && DEGUSTACAO_ABERTA ? `
                         <button class="btn-icon" title="Liberar período de teste (avisa o aluno por e-mail)" style="color:var(--radix-cyan,#0891b2);" onclick="liberarDegustacao('${p.id}')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </button>
@@ -16592,6 +16602,7 @@ function renderListaAlunos(perfis, statusAtual) {
 // entra na hora, com a amostra do banco, e recebe o e-mail de aviso — quem
 // dispara o e-mail e o banco (trigger trg_email_aluno_status), nao esta tela.
 async function liberarDegustacao(alunoId) {
+  if (!DEGUSTACAO_ABERTA) { alert('O período de teste de 7 dias foi descontinuado.'); return; }
   const p = (state._alunoListaAtual || []).find(x => x.id === alunoId) || {};
   const nome = p.nome || 'este aluno';
   const dias = (typeof DEGUSTACAO !== 'undefined' && DEGUSTACAO.dias) ? DEGUSTACAO.dias : 7;
@@ -19504,6 +19515,40 @@ function _simCss() {
     '.sim-warn{border:1px solid var(--sim-amber);background:var(--sim-amber-bg);border-radius:16px;padding:14px 16px;margin:0 0 18px}',
     '.sim-warn b{color:var(--sim-amber)}',
     '.sim-warn span{color:var(--sim-tx2);font-size:13px;text-wrap:pretty}',
+    // Capas do caderno do ENEM: grade de ~4 por linha em tela larga, 3 em
+    // media, 1 no celular — a lista nao estica conforme entram mais provas.
+    '.enem-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:2px}',
+    '.enem-cover{--ec-dark:#14477e;--ec-mid:#bcd8ef;--ec-base:#dbe9f7;display:block;width:100%;text-align:left;',
+    'padding:0;font-family:inherit;cursor:pointer;position:relative;border:1px solid rgba(10,40,80,.28);',
+    'border-radius:12px;overflow:hidden;background-color:var(--ec-base);',
+    'background-image:repeating-linear-gradient(112deg,rgba(255,255,255,.55) 0 1px,rgba(255,255,255,0) 1px 6px);',
+    'transition:transform .12s,box-shadow .15s,border-color .15s}',
+    '.enem-cover:hover{transform:translateY(-2px);box-shadow:0 10px 22px -12px rgba(0,0,0,.5);border-color:rgba(10,40,80,.5)}',
+    '.enem-cover:focus-visible{outline:2px solid var(--sim-focus);outline-offset:3px}',
+    '.ec-top{display:block;background:var(--ec-mid);padding:7px 10px 6px;text-align:center;',
+    'border-bottom:1px solid rgba(10,40,80,.18)}',
+    '.ec-t1{display:block;font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;',
+    'color:var(--ec-dark);line-height:1.15}',
+    '.ec-t2{display:block;font-size:8px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;',
+    'color:var(--ec-dark);opacity:.8;margin-top:2px;line-height:1.2}',
+    '.ec-t3{display:block;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;',
+    'color:var(--ec-dark);margin-top:3px;line-height:1.2}',
+    '.ec-body{display:flex;align-items:center;gap:6px;padding:10px 12px}',
+    '.ec-mark{display:inline-block;font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1;white-space:nowrap}',
+    '.ec-mark b{font-weight:800;color:var(--ec-dark)}',
+    '.ec-mark i{font-style:normal;font-weight:500;color:#8c9bb0}',
+    '.ec-slash{display:block;flex:none;margin-left:auto;width:10px;height:36px;border-radius:2px;',
+    'background:rgba(255,255,255,.85);transform:skewX(-18deg)}',
+    '.ec-cad{display:block;text-align:right;line-height:1.05;white-space:nowrap;margin-left:10px}',
+    '.ec-cad span{display:block;color:var(--ec-dark)}',
+    '.ec-cad .c1{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}',
+    '.ec-cad .c2{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;margin:1px 0}',
+    '.ec-cad .c3{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}',
+    '.ec-go{display:block;flex:none;margin-left:8px;font-size:16px;font-weight:800;color:var(--ec-dark);opacity:.45;transition:opacity .15s,transform .15s}',
+    '.enem-cover:hover .ec-go{opacity:1;transform:translateX(3px)}',
+    '.ec-aprox{display:block;text-align:center;font-size:8.5px;font-weight:800;letter-spacing:.06em;',
+    'text-transform:uppercase;padding:3px 6px;background:rgba(146,64,14,.14);color:#7c3d06;',
+    'border-top:1px solid rgba(10,40,80,.12)}',
     '@media(max-width:640px){.sim-h1{font-size:21px}.sim-hero .h-t{font-size:22px}.sim-kpi .k-v{font-size:26px}}'
   ].join('');
   document.head.appendChild(s);
@@ -19540,13 +19585,54 @@ function _triIco(n) {
 }
 function _triCor(c) { c = String(c || '').toLowerCase(); return c === 'amarela' ? 'amarelo' : c; }
 // rótulo curto da aplicação da prova; vazio na 1ª aplicação (o caso comum)
-function _triAplic(pr) { const a = String((pr && pr.aplicacao) || 'regular').toLowerCase();
-  if (a === 'reaplicacao_ppl') return 'Reaplicação / PPL';
-  if (a === 'reaplicacao') return 'Reaplicação';
-  if (a === 'ppl') return 'PPL';
-  if (a === 'belem') return 'Belém · Ananindeua · Marituba';
-  if (a === 'digital') return 'Digital';
-  return ''; }
+// Identifica a aplicação da prova (PPL, reaplicação, COP30/Belém, digital).
+// Robusta de propósito: se a coluna `aplicacao` vier vazia OU com um valor que
+// não conhecemos, ainda assim tenta identificar — antes disso a prova aparecia
+// sem distinção nenhuma, que foi o caso da PPL e da de COP30.
+const _TRI_APLIC_MAPA = {
+  reaplicacao_ppl: 'Reaplicação / PPL',
+  reaplicacao:     'Reaplicação',
+  ppl:             'PPL',
+  belem:           'COP30 · Belém',
+  cop30:           'COP30 · Belém',
+  cop30_belem:     'COP30 · Belém',
+  cop_30:          'COP30 · Belém',
+  enem_cop30:      'COP30 · Belém',
+  digital:         'Digital'
+};
+function _triAplic(pr) {
+  const raw = String((pr && pr.aplicacao) || '').trim();
+  const a = raw.toLowerCase().replace(/[\s-]+/g, '_');
+  if (a && a !== 'regular' && a !== 'normal' && a !== '1' && a !== '1a' && a !== 'primeira') {
+    if (_TRI_APLIC_MAPA[a]) return _TRI_APLIC_MAPA[a];
+    // Valor novo no banco: mostra humanizado em vez de sumir com a informação.
+    return raw.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
+              .replace(/\S/, c => c.toUpperCase());
+  }
+  // Coluna vazia: deduz da descrição da prova, que costuma trazer o rótulo.
+  const d = String((pr && pr.descricao) || '').toLowerCase();
+  if (/cop\s*-?\s*30|bel[éeÉE]m|ananindeua|marituba/.test(d)) return 'COP30 · Belém';
+  if (/reaplica/.test(d) && /ppl/.test(d)) return 'Reaplicação / PPL';
+  if (/\bppl\b/.test(d)) return 'PPL';
+  if (/reaplica/.test(d)) return 'Reaplicação';
+  if (/digital/.test(d)) return 'Digital';
+  return '';
+}
+// Ordem SEMPRE igual: ano mais novo primeiro e, dentro do mesmo ano, a aplicação
+// regular antes da PPL/reaplicação. (A ordem do banco é por caderno, que não tem
+// relação com a aplicação — dava sequência inconsistente entre os anos.)
+const _TRI_ORDEM_APLIC = ['', 'Digital', 'COP30 · Belém', 'Reaplicação', 'PPL', 'Reaplicação / PPL'];
+function _triOrdenarProvas(arr) {
+  const rank = (pr) => {
+    const i = _TRI_ORDEM_APLIC.indexOf(_triAplic(pr));
+    return i === -1 ? _TRI_ORDEM_APLIC.length : i;   // aplicação nova vai pro fim
+  };
+  return (arr || []).slice().sort((a, b) =>
+    (Number(b.ano || 0) - Number(a.ano || 0))
+    || (rank(a) - rank(b))
+    || String(a.caderno || '').localeCompare(String(b.caderno || ''), 'pt-BR', { numeric: true })
+  );
+}
 function _triTempo(s) { if (s == null) return '—'; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return (h ? h + 'h' : '') + String(m).padStart(2, '0') + 'min'; }
 function _triNomeProva(cp) { const pr = (TRI.provas || []).find(x => x.co_prova === cp); return pr ? 'ENEM ' + pr.ano + ' · caderno ' + pr.caderno + ' ' + _triCor(pr.cor) : 'prova ' + cp; }
 async function renderSimuladoTRI() {
@@ -19563,7 +19649,7 @@ async function renderSimuladoTRI() {
     sb.from('simulado_tri').select('id, co_prova, iniciado_em, enviado_em, nota, acertos, erros, brancos, tempo_seg, respostas').eq('aluno_id', state.usuario.id).order('iniciado_em', { ascending: false })
   ]);
   if (p.error) { main.innerHTML = env('<div class="sim-card">Não consegui carregar as provas: ' + _escHtml(p.error.message) + '</div>'); return; }
-  TRI.provas = p.data || []; TRI.tentativas = t.data || [];
+  TRI.provas = _triOrdenarProvas(p.data); TRI.tentativas = t.data || [];
   const abertas = TRI.tentativas.filter(x => !x.enviado_em), feitas = TRI.tentativas.filter(x => x.enviado_em);
   const nProvas = TRI.provas.length;
   const heroA = abertas[0] || null;          // hero = a tentativa aberta mais recente
@@ -19596,21 +19682,28 @@ async function renderSimuladoTRI() {
     + '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Provas disponíveis</div>'
       + '<div class="sim-card-s">' + nProvas + (nProvas === 1 ? ' prova' : ' provas') + ' · Matemática · questões 136 a 180 · ~2h30 cada</div></div>'
       + (feitas.length ? '<button class="sim-link" onclick="document.getElementById(\'sim-minhas-notas\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">Ver histórico →</button>' : '')
-      + '</div><div class="sim-rows">'
+      + '</div><div class="enem-list">'
       + TRI.provas.map(pr => {
           const corN = _triCor(pr.cor);
           const ap = _triAplic(pr);
-          return '<div class="sim-row">'
-            + '<span class="sim-tile">' + pr.ano + '</span>'
-            + '<span class="sim-row-main">'
-            + '<span class="sim-row-t">caderno ' + pr.caderno + ' ' + corN + '</span>'
-            + (ap ? '<span class="sim-pill sim-pill-azul">' + _escHtml(ap) + '</span>' : '')
-            + (pr.nota_aproximada ? '<span class="sim-badge">nota aproximada</span>' : '')
-            + '</span>'
-            + '<button type="button" class="sim-btn sim-btn-outline sim-btn-fill sim-btn-sm"'
+          const ec = _EC_CORES[corN] || _EC_CORES.azul;
+          return '<button type="button" class="enem-cover"'
+            + ' style="--ec-dark:' + ec.dark + ';--ec-mid:' + ec.mid + ';--ec-base:' + ec.base + '"'
             + ' onclick="triIniciar(' + pr.co_prova + ')"'
-            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + (ap ? ', ' + ap : '') + '">Começar</button>'
-            + '</div>';
+            + ' aria-label="Começar ENEM ' + pr.ano + ', caderno ' + pr.caderno + ' ' + corN + (ap ? ', ' + ap : '') + '">'
+            + '<span class="ec-top">'
+            + '<span class="ec-t1">Exame Nacional do Ensino Médio</span>'
+            + '<span class="ec-t2">Prova de Matemática e suas Tecnologias</span>'
+            + (ap ? '<span class="ec-t3">' + _escHtml(ap) + '</span>' : '')
+            + '</span>'
+            + '<span class="ec-body">'
+            + '<span class="ec-mark"><b>enem</b><i>' + pr.ano + '</i></span>'
+            + '<span class="ec-slash"></span>'
+            + '<span class="ec-cad"><span class="c1">Caderno</span><span class="c2">' + pr.caderno + '</span><span class="c3">' + corN + '</span></span>'
+            + '<span class="ec-go" aria-hidden="true">&#8594;</span>'
+            + '</span>'
+            + (pr.nota_aproximada ? '<span class="ec-aprox">nota aproximada</span>' : '')
+            + '</button>';
         }).join('')
       + '</div>'
       + (TRI.provas.some(x => _triAplic(x)) ? '<div class="sim-note"><b style="color:var(--radix-text)">Mais de uma aplicação por ano:</b> além da prova que a maioria fez, o INEP aplica a mesma área em outras datas. <b>Reaplicação / PPL</b> é a segunda aplicação, usada por quem teve problema na data oficial e pelas pessoas privadas de liberdade. <b>Belém · Ananindeua · Marituba</b> é a aplicação própria dessas cidades em 2025, por causa da COP30. São provas diferentes, com questões diferentes, e a nota sai na mesma escala.</div>' : '')
@@ -19637,7 +19730,7 @@ async function triContinuar(id) {
   const { data: t, error } = await sb.from('simulado_tri').select('id, co_prova, respostas, iniciado_em, enviado_em').eq('id', id).single();
   if (error || !t) { alert('Tentativa não encontrada.'); return; }
   if (t.enviado_em) { triVerResultado(id); return; }
-  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao').eq('area', 'MT'); TRI.provas = p.data || []; }
+  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao').eq('area', 'MT'); TRI.provas = _triOrdenarProvas(p.data); }
   const prova = TRI.provas.find(x => x.co_prova === t.co_prova) || { ano: '', cor: '', caderno: '', pdf_url: '' };
   const resp = (t.respostas && t.respostas.length === 45 ? t.respostas : '.'.repeat(45)).split('');
   TRI.atual = { id: t.id, co_prova: t.co_prova, prova, resp, inicio: new Date(t.iniciado_em).getTime() };
