@@ -1885,7 +1885,8 @@ const app = {
       '<div class="kpis kpis-2"><div class="kpi"><div class="v">' + p.meta + '/45</div><div class="l">meta</div></div>' +
       '<div class="kpi"><div class="v">' + (p.horasDia * p.dias.length).toFixed(1).replace('.', ',') + 'h</div><div class="l">por semana</div></div></div>' +
       '<p class="meta my-b">' + p.dias.map(i => DIAS_LONGOS[i]).join(', ') + '</p>' +
-      '<button type="button" class="btn btn-sec btn-sm btn-block" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">' + ic('edit', 14) + ' Reajustar perfil</button>';
+      '<button type="button" class="btn btn-sec btn-sm btn-block" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">' + ic('edit', 14) + ' Reajustar perfil</button>' +
+      '<button type="button" class="btn btn-danger btn-sm btn-block mt-6" onclick="app.resetar()">' + ic('refresh', 14) + ' Recomeçar do zero</button>';
   },
 
   /* ---------------- PÓS-PROVA ---------------- */
