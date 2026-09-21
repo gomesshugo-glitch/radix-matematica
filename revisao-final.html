@@ -46,6 +46,20 @@
   /* os dois lugares que dependiam do fundo escuro */
   html.claro .chk[aria-checked="true"]{color:#ffffff}
   html.claro .atv.done .atv-titulo{text-decoration-color:rgba(15,23,42,.35)}
+  /* Caixas que tinham fundo escuro fixo e não seguiam a paleta. No tema claro
+     o cartão do próximo passo vira claro com um anel ciano; aviso e dica
+     continuam escuros de propósito (é o padrão), só o texto é que clareia. */
+  html.claro .next{background:linear-gradient(150deg,#ffffff 0%,#eff6fe 55%,#e6f1fb 100%);box-shadow:0 0 0 1px rgba(8,145,178,.30),0 18px 44px -24px rgba(15,23,42,.28)}
+  html.claro .next::before{background:radial-gradient(600px 200px at 100% 0%,rgba(8,145,178,.10),transparent 60%)}
+  html.claro .next.done{background:linear-gradient(150deg,#f5fbf8,#eef6f2);box-shadow:0 0 0 1px rgba(4,120,87,.24),var(--sh-1)}
+  html.claro .atv:hover{background:#eef3fb}
+  html.claro .tip::after{color:#e8eef9}
+  html.claro .toast{color:#f1f4fc}
+  html.claro .toast small{color:rgba(241,244,252,.74)}
+  /* recomeçar o plano do zero (fica no fim da aba Perfil) */
+  .recomecar{margin-top:var(--sp-6);padding-top:var(--sp-5);border-top:1px solid var(--line)}
+  .recomecar .t{font-size:var(--fs-sm);font-weight:700;margin-bottom:2px}
+  .recomecar .sub{margin-bottom:var(--sp-3)}
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
   body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-md);line-height:var(--lh);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(var(--nav-h) + 24px);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -1182,16 +1196,26 @@ const app = {
       '</div></div></div>');
   },
   _confirmarOk() { const cb = this._confirmCb; this._confirmCb = null; this.fecharModal(); if (cb) cb(); },
-  resetar(confirmado) {
+  async resetar(confirmado) {
     const self = this;
-    if (!confirmado) return this.confirmar({ titulo: 'Zerar todos os dados?', perigo: true, ok: 'Zerar tudo',
-      texto: 'Perfil, atividades concluídas, mini-simulados e planos congelados serão apagados deste navegador. Não dá para desfazer.' }, () => self.resetar(true));
+    if (!confirmado) return this.confirmar({ titulo: 'Recomeçar do zero?', perigo: true, ok: 'Recomeçar',
+      texto: 'Suas respostas do diagnóstico, as atividades registradas e os planos das semanas serão apagados do app e deste navegador. Não dá para desfazer.' }, () => self.resetar(true));
+    // Quem manda é o servidor: se a limpeza falhar lá, os dados antigos voltam no
+    // próximo acesso. Então só limpo aqui depois que o app confirmar. E derrubo o
+    // salvamento em espera, senão ele grava de novo o que acabou de ser apagado.
+    if (typeof SYNC !== 'undefined' && SYNC.ativo) {
+      try { clearTimeout(SYNC._timer); await SYNC.apagarTudo(); }
+      catch (e) {
+        console.warn('[recomecar] falha ao limpar no app:', e);
+        this.toast('erro', 'Não consegui limpar no app', 'Nada foi apagado. Confira a conexão e tente de novo.');
+        return;
+      }
+    }
     this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
     this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false; this._evoSel = null;
-    if (typeof SYNC !== 'undefined') SYNC.apagarTudo();
     try { localStorage.removeItem(KEY); } catch (e) { this.toast('erro', 'Não consegui limpar o armazenamento', 'Verifique as permissões do navegador.'); }
     this.render({ modo: 'tela' });
-    this.toast('', 'Dados zerados', 'Comece pelo questionário para montar um novo roteiro.');
+    this.toast('', 'Tudo zerado', 'Comece pelo questionário para montar um novo roteiro.');
   },
   recalcularSemana(n, confirmado) {
     if (!this.liberada(n)) { this.bloqueada(n); return; }
@@ -1748,7 +1772,10 @@ const app = {
       '<div class="stat"><div class="v">' + (p.horasDia * p.dias.length).toFixed(1).replace('.', ',') + 'h</div><div class="l">POR SEMANA</div></div>' +
       '<div class="stat"><div class="v v-dias">' + p.dias.map(i => DIAS_SEMANA[i]).join(' · ') + '</div><div class="l">DIAS DE ESTUDO</div></div></div>' +
       '<p class="sub my-a">Mudou a rotina ou evoluiu mais rápido? Reajuste: as semanas futuras recalculam na hora; semanas já iniciadas mantêm o plano fixado.</p>' +
-      '<button type="button" class="btn btn-sec" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">' + ic('edit', 15) + ' Reajustar meu perfil</button>';
+      '<button type="button" class="btn btn-sec" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">' + ic('edit', 15) + ' Reajustar meu perfil</button>' +
+      '<div class="recomecar"><div class="t">Recomeçar do zero</div>' +
+      '<p class="sub">Respondeu só para testar? Dá para apagar tudo e começar de novo: as suas respostas, as atividades já registradas e os planos das semanas.</p>' +
+      '<button type="button" class="btn btn-danger btn-sm" onclick="app.resetar()">' + ic('refresh', 14) + ' Recomeçar do zero</button></div>';
   },
   htmlPerfilCompacto() {
     const p = this.perfil;
@@ -1909,7 +1936,8 @@ const SYNC = {
     if (!this.ativo) return;
     const uid = this.uid, sb = this.sb;
     for (const t of ['revisao_progresso', 'revisao_mini', 'revisao_plano', 'revisao_perfil']) {
-      await sb.from(t).delete().eq('aluno_id', uid);
+      const r = await sb.from(t).delete().eq('aluno_id', uid);
+      if (r.error) throw r.error;
     }
   },
 

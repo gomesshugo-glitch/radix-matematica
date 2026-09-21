@@ -6006,6 +6006,20 @@
   }
 
 
+  /* ---------- Atalho em destaque: Revisão Final ----------
+     O cartão inverte contra o fundo para saltar à vista: branco com dourado no
+     tema escuro, preto com dourado no claro. */
+  .dash-atalho.rf-ouro{background:#ffffff!important;border:1px solid #d4af37!important;box-shadow:0 10px 26px -16px rgba(212,175,55,.75)}
+  .dash-atalho.rf-ouro:hover{border-color:#c9a227!important;box-shadow:0 12px 30px -14px rgba(212,175,55,.85)}
+  .dash-atalho.rf-ouro span{color:#111827!important}
+  .dash-atalho.rf-ouro small{color:#7a6320!important}
+  .dash-atalho.rf-ouro .dash-atalho-icon{background:rgba(212,175,55,.20)!important;color:#96701a!important}
+  body.theme-light .dash-atalho.rf-ouro{background:#0b1020!important;border-color:#d4af37!important;box-shadow:0 10px 26px -16px rgba(11,16,32,.55)}
+  body.theme-light .dash-atalho.rf-ouro:hover{border-color:#e6c250!important;box-shadow:0 12px 30px -14px rgba(11,16,32,.65)}
+  body.theme-light .dash-atalho.rf-ouro span{color:#f2dc95!important}
+  body.theme-light .dash-atalho.rf-ouro small{color:rgba(242,220,149,.78)!important}
+  body.theme-light .dash-atalho.rf-ouro .dash-atalho-icon{background:rgba(212,175,55,.20)!important;color:#e8c766!important}
+
   /* ---------- Revisão Final embutida (aluno) ---------- */
   .rf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
   .rf-h2{font-size:20px;font-weight:800;margin:0 0 4px}
@@ -9469,7 +9483,7 @@ function renderDashboardAluno() {
             <span>Vídeo-aulas</span>
             <small>Aulas e materiais</small>
           </div>
-          <div class="dash-atalho" onclick="renderRevisaoFinal()">
+          <div class="dash-atalho rf-ouro" onclick="renderRevisaoFinal()">
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <span>Revisão Final</span>
             <small>${state.degustacao ? 'Amostra: Semana 1 do plano das 7 semanas' : 'Seu plano das 7 semanas até o ENEM'}</small>
