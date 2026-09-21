@@ -6006,6 +6006,18 @@
   }
 
 
+  /* ---------- Gabaritos dos mini-simulados (professor) ---------- */
+  .rvp-gab{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--radix-border,rgba(255,255,255,.06))}
+  .rvp-gab:last-child{border-bottom:0}
+  .rvp-gab .sem{font-size:13px;font-weight:800;white-space:nowrap}
+  .rvp-gab .sem small{display:block;font-weight:600;color:var(--radix-text-muted,#8fa3cc)}
+  .rvp-gab input{width:100%;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;text-transform:uppercase;font-size:15px;padding:9px 12px;border-radius:8px;border:1px solid var(--radix-border,rgba(255,255,255,.14));background:var(--radix-surface-2,#223464);color:var(--radix-text,#eaf1ff)}
+  .rvp-gab input:focus{outline:2px solid var(--radix-cyan,#22d3ee);outline-offset:1px}
+  .rvp-gab .st{font-size:12px;white-space:nowrap;min-width:92px;text-align:right}
+  .rvp-gab .st.ok{color:var(--radix-success,#34d399)}
+  .rvp-gab .st.warn{color:var(--radix-warning,#fbbf24)}
+  @media (max-width:640px){.rvp-gab{grid-template-columns:1fr;gap:6px}.rvp-gab .st{text-align:left}}
+
   /* ---------- Atalho em destaque: Revisão Final ----------
      O cartão inverte contra o fundo para saltar à vista: branco com dourado no
      tema escuro, preto com dourado no claro. */
@@ -9168,7 +9180,90 @@ function _rvpRender() {
   }
   html += '<details class="card rvp-card"><summary><b>Ainda não começaram</b> · ' + naoComecaram.length + ' aluno' + (naoComecaram.length === 1 ? '' : 's') + ' aprovado' + (naoComecaram.length === 1 ? '' : 's') + ' sem questionário</summary>' +
     (naoComecaram.length ? '<ul class="rvp-lista">' + naoComecaram.map(x => '<li>' + esc(x.nome) + ' <small class="rvp-muted">' + esc(RVP.nomeTurma(x.turma)) + '</small></li>').join('') + '</ul>' : '<p class="rvp-muted">Todos começaram.</p>') + '</details>';
+  html += '<div class="card rvp-card" id="rvp-gabaritos"><h3>Gabaritos dos mini-simulados</h3>' +
+    '<p class="rvp-muted">Carregando…</p></div>';
   el.innerHTML = html;
+  _rvpCarregarGabaritos();
+}
+
+// ============================================================
+// Gabarito oficial do mini-simulado (21/09/2026)
+// O mini é feito no papel: 15 questões, 3 por tema, na ordem dos temas da
+// semana. O aluno lança o cartão-resposta dele na página do plano e a correção
+// sai daqui. Sem gabarito publicado, as respostas ficam guardadas esperando.
+// ============================================================
+async function _rvpCarregarGabaritos() {
+  const box = document.getElementById('rvp-gabaritos');
+  if (!box) return;
+  const [g, m] = await Promise.all([
+    sb.from('revisao_mini_gabarito').select('semana,gabarito,atualizado_em'),
+    sb.from('revisao_mini').select('semana')
+  ]);
+  if (g.error) {
+    box.innerHTML = '<h3>Gabaritos dos mini-simulados</h3><p class="rvp-muted">Não consegui carregar: ' + RVP.esc(g.error.message) + '</p>';
+    return;
+  }
+  const porSemana = {};
+  (g.data || []).forEach(x => { porSemana[x.semana] = x.gabarito; });
+  const lancados = {};
+  (m.data || []).forEach(x => { lancados[x.semana] = (lancados[x.semana] || 0) + 1; });
+
+  box.innerHTML = '<h3>Gabaritos dos mini-simulados</h3>' +
+    '<p class="rvp-muted">15 letras de A a E, na ordem das questões. São 3 questões por tema, seguindo os temas da semana com a geometria no fim. Publicado o gabarito, os cartões que os alunos já lançaram são corrigidos sozinhos.</p>' +
+    '<div style="margin-top:10px">' +
+    RVP.SEMANAS.map(s => {
+      const g0 = porSemana[s.n] || '';
+      const qtd = lancados[s.n] || 0;
+      const st = g0
+        ? '<span class="st ok">publicado</span>'
+        : '<span class="st warn">' + (qtd ? qtd + ' aguardando' : 'sem gabarito') + '</span>';
+      return '<div class="rvp-gab">' +
+        '<span class="sem">Semana ' + s.n + '<small>' + qtd + ' lançamento' + (qtd === 1 ? '' : 's') + '</small></span>' +
+        '<input id="gab-' + s.n + '" value="' + RVP.esc(g0) + '" maxlength="15" spellcheck="false" autocomplete="off"' +
+        ' placeholder="ABCBEADCDDCBAEE" aria-label="Gabarito da Semana ' + s.n + '"' +
+        ' onkeydown="if(event.key===\'Enter\')_rvpSalvarGabarito(' + s.n + ')">' +
+        st + '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">' +
+      '<button class="btn btn-primary" onclick="_rvpSalvarGabaritos()">Salvar gabaritos</button>' +
+      '<span class="rvp-muted" id="gab-msg" style="font-size:13px"></span>' +
+    '</div>';
+}
+
+async function _rvpSalvarGabarito(n) { return _rvpSalvarGabaritos(n); }
+
+async function _rvpSalvarGabaritos(apenas) {
+  const msg = document.getElementById('gab-msg');
+  const semanas = apenas ? [{ n: apenas }] : RVP.SEMANAS;
+  const linhas = [];
+  for (const s of semanas) {
+    const el = document.getElementById('gab-' + s.n);
+    if (!el) continue;
+    const v = (el.value || '').toUpperCase().replace(/[^A-E]/g, '');
+    if (!v) continue;
+    if (v.length !== 15) {
+      if (msg) { msg.textContent = 'Semana ' + s.n + ': são 15 letras de A a E (essa tem ' + v.length + ').'; msg.style.color = 'var(--radix-red)'; }
+      el.focus();
+      return;
+    }
+    el.value = v;
+    linhas.push({ semana: s.n, gabarito: v, atualizado_em: new Date().toISOString(), atualizado_por: state.usuario ? state.usuario.id : null });
+  }
+  if (!linhas.length) {
+    if (msg) { msg.textContent = 'Nada para salvar.'; msg.style.color = ''; }
+    return;
+  }
+  if (msg) { msg.textContent = 'Salvando…'; msg.style.color = ''; }
+  const r = await sb.from('revisao_mini_gabarito').upsert(linhas, { onConflict: 'semana' });
+  if (r.error) {
+    if (msg) { msg.textContent = 'Não consegui salvar: ' + r.error.message; msg.style.color = 'var(--radix-red)'; }
+    return;
+  }
+  const aviso = linhas.length === 1 ? 'Gabarito da Semana ' + linhas[0].semana + ' publicado.' : linhas.length + ' gabaritos publicados.';
+  await _rvpCarregarGabaritos();   // redesenha o bloco; a mensagem entra depois
+  const msg2 = document.getElementById('gab-msg');
+  if (msg2) { msg2.textContent = aviso; msg2.style.color = 'var(--radix-success)'; }
 }
 
 function _rvpDetalhe(l) {

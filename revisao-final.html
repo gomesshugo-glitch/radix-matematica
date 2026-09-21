@@ -60,6 +60,26 @@
   .recomecar{margin-top:var(--sp-6);padding-top:var(--sp-5);border-top:1px solid var(--line)}
   .recomecar .t{font-size:var(--fs-sm);font-weight:700;margin-bottom:2px}
   .recomecar .sub{margin-bottom:var(--sp-3)}
+  /* cartão-resposta do mini-simulado */
+  .cr-tema{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);margin:var(--sp-4) 0 var(--sp-2)}
+  .cr-tema:first-child{margin-top:var(--sp-2)}
+  .cr-linha{display:flex;align-items:center;gap:var(--sp-3);padding:3px 0}
+  .cr-n{width:30px;flex-shrink:0;font-size:var(--fs-sm);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .cr-ops{display:flex;gap:6px;flex-wrap:wrap}
+  .cr-op{width:38px;height:38px;border-radius:50%;border:1px solid var(--line-2);background:transparent;color:var(--text-2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;transition:background var(--dur),border-color var(--dur),color var(--dur)}
+  .cr-op:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan-2)}
+  .cr-op[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:#061125}
+  .cr-op:disabled{cursor:default}
+  .cr-linha.certa .cr-op[aria-pressed="true"]{background:var(--green);color:#052e1f}
+  .cr-linha.errada .cr-op[aria-pressed="true"]{background:var(--red);color:#3b0a12}
+  .cr-linha.errada .cr-op.gab{border-color:var(--green);color:var(--green);border-width:2px}
+  .cr-marca{font-size:var(--fs-xs);font-weight:700;margin-left:auto;padding-left:var(--sp-2)}
+  .cr-linha.certa .cr-marca{color:var(--green)}
+  .cr-linha.errada .cr-marca{color:var(--red)}
+  .cr-resumo{display:flex;align-items:baseline;gap:var(--sp-2);margin-bottom:var(--sp-1)}
+  .cr-resumo .n{font-size:var(--fs-2xl);font-weight:800;line-height:1}
+  .cr-portema{display:flex;flex-wrap:wrap;gap:6px;margin:var(--sp-3) 0 0}
+  .cr-sem-gab{border-left:3px solid var(--amber);padding:2px 0 2px var(--sp-3);font-size:var(--fs-sm);color:var(--text-2);margin:var(--sp-3) 0}
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
   body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-md);line-height:var(--lh);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(var(--nav-h) + 24px);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -563,6 +583,18 @@ function esc(x) {
    ============================================================ */
 const KEY = 'mockup_revisao_final_v3';
 
+/* ---------- Gabarito oficial do mini (21/09/2026) ----------
+   O mini é feito no papel: 15 questões, 3 por tema, na ordem dos temas da
+   semana (os 4 do roteiro e a geometria por último). O professor publica o
+   gabarito na tabela revisao_mini_gabarito; aqui só corrigimos o que o aluno
+   lançou. Sem gabarito publicado, as respostas ficam guardadas e a correção
+   sai sozinha quando ele chegar. */
+const GABARITOS = {};
+function temaDaQuestao(sem, i) {          // i de 0 a 14
+  const lista = sem.temas.concat([sem.geo.id]);
+  return lista[Math.floor(i / 3)];
+}
+
 /* ---------- Etapa 10 (10/09/2026): acesso por status ----------
    completo  = aprovado / professor (7 semanas)
    amostra   = degustação (só a Semana 1; as outras mostram o convite)
@@ -1014,62 +1046,116 @@ const app = {
 
   /* ---------- mini-simulado: registrar, ver, editar, excluir ---------- */
   _miniTmp: {},
+  /* ---------- Cartão-resposta do mini-simulado ----------
+     O mini é feito no papel. Aqui o aluno lança o que marcou nas 15 questões e
+     a plataforma corrige contra o gabarito oficial da semana. São 3 questões
+     por tema, na ordem dos temas da semana (a geometria fecha). */
+  corrigirMini(n, resp) {
+    const gab = GABARITOS[n];
+    if (!gab || !resp) return null;
+    const sem = SEMANAS.find(s => s.n === n);
+    const porTema = {};
+    sem.temas.concat([sem.geo.id]).forEach(id => { porTema[id] = 0; });
+    let total = 0;
+    const certas = [];
+    for (let i = 0; i < CONFIG.MINI_QTDE; i++) {
+      const acertou = resp[i] === gab[i];
+      certas.push(acertou);
+      if (acertou) { porTema[temaDaQuestao(sem, i)]++; total++; }
+    }
+    return { porTema: porTema, total: total, certas: certas, gabarito: gab };
+  },
+
   modalMini(n) {
     if (!this.liberada(n)) { this.bloqueada(n); return; }
     const sem = SEMANAS.find(s => s.n === n);
-    const lista = sem.temas.concat([sem.geo.id]);
     const existente = this.minis[n];
-    this._miniTmp = {};
-    lista.forEach(id => { this._miniTmp[id] = existente ? (existente.porTema[id] != null ? existente.porTema[id] : null) : null; });
+    const gab = GABARITOS[n];
+    // '-' = em branco. Reaproveita o que já foi lançado.
+    this._miniTmp = (existente && existente.resp) ? existente.resp.split('') : new Array(CONFIG.MINI_QTDE).fill('-');
+    const corr = (existente && existente.resp) ? this.corrigirMini(n, existente.resp) : null;
     const self = this;
+
+    let linhas = '';
+    for (let i = 0; i < CONFIG.MINI_QTDE; i++) {
+      const tema = temaDaQuestao(sem, i);
+      if (i % CONFIG.MINI_POR_TEMA === 0) linhas += '<div class="cr-tema">' + esc(T(tema).nome) + '</div>';
+      const marcada = this._miniTmp[i];
+      const estado = corr ? (corr.certas[i] ? ' certa' : ' errada') : '';
+      linhas += '<div class="cr-linha' + estado + '" data-q="' + i + '">' +
+        '<span class="cr-n">' + (i + 1) + '</span><div class="cr-ops">' +
+        ['A','B','C','D','E'].map(function (L) {
+          const on = marcada === L;
+          const ehGab = corr && corr.gabarito[i] === L;
+          return '<button type="button" class="cr-op' + (ehGab ? ' gab' : '') + '" aria-pressed="' + on + '"' +
+                 ' aria-label="Questão ' + (i + 1) + ', alternativa ' + L + '"' +
+                 ' data-q="' + i + '" data-l="' + L + '" onclick="app._miniSet(this)">' + L + '</button>';
+        }).join('') + '</div>' +
+        (corr ? '<span class="cr-marca">' + (corr.certas[i] ? 'acertou' : 'gabarito ' + corr.gabarito[i]) + '</span>' : '') +
+        '</div>';
+    }
+
+    const cabeca = corr
+      ? '<div class="cr-resumo"><span class="n">' + corr.total + '</span><span class="sub">de ' + CONFIG.MINI_QTDE + ' acertos</span></div>' +
+        '<div class="cr-portema">' + sem.temas.concat([sem.geo.id]).map(function (id) {
+          return '<span class="chip ' + (corr.porTema[id] >= 2 ? 'chip-ok' : 'chip-neutro') + '">' + esc(T(id).nome) + ' ' + corr.porTema[id] + '/' + CONFIG.MINI_POR_TEMA + '</span>';
+        }).join('') + '</div>'
+      : '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema. Marque o que você respondeu na prova.</p>' +
+        (gab ? '' : '<p class="cr-sem-gab">O gabarito desta semana ainda não foi publicado. Pode lançar as suas respostas: a correção aparece sozinha assim que o professor publicar.</p>');
+
     this.abrirModal(
       '<div class="overlay" onclick="if(event.target===this)app.fecharModal()">' +
       '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">' + this._xFechar() +
-      '<h3 id="modal-titulo">' + (existente ? 'Resultado do mini · Semana ' + n : 'Mini-simulado da Semana ' + n) + '</h3>' +
-      '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema. ' + (existente ? 'Ajuste o que precisar — o diagnóstico e a evolução recalculam na hora.' : 'Registre seus acertos por tema (0 a ' + CONFIG.MINI_POR_TEMA + ').') + '</p>' +
-      lista.map(id =>
-        '<div class="tema-linha"><span class="nome">' + esc(T(id).nome) + '</span>' +
-        '<div class="seg" role="group" aria-label="Acertos em ' + esc(T(id).nome) + '">' +
-        [0,1,2,3].map(v => {
-          const on = self._miniTmp[id] === v;
-          return '<button type="button" class="' + (on?'sf':'sn') + '" aria-pressed="' + on + '" data-mini="' + id + '" data-v="' + v + '" onclick="app._miniSet(this)">' + v + '</button>';
-        }).join('') + '</div></div>'
-      ).join('') +
+      '<h3 id="modal-titulo">' + (corr ? 'Resultado do mini · Semana ' + n : 'Mini-simulado da Semana ' + n) + '</h3>' +
+      cabeca + linhas +
       '<p class="q-erro" id="mini-erro" aria-live="polite"></p>' +
       '<div class="q-nav">' +
         (existente ? '<button type="button" class="btn btn-danger btn-sm" onclick="app.excluirMini(' + n + ')">Excluir lançamento</button>' : '') +
         '<span class="esp"></span>' +
-        '<button type="button" class="btn btn-ghost btn-sm" onclick="app.fecharModal()">Cancelar</button>' +
-        '<button type="button" class="btn btn-pri btn-sm" onclick="app.salvarMini(' + n + ')">' + (existente ? 'Salvar alterações' : 'Salvar resultado') + '</button>' +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="app.fecharModal()">' + (corr ? 'Fechar' : 'Cancelar') + '</button>' +
+        '<button type="button" class="btn btn-pri btn-sm" onclick="app.salvarMini(' + n + ')">' + (existente ? 'Salvar alterações' : (gab ? 'Corrigir e salvar' : 'Salvar respostas')) + '</button>' +
       '</div></div></div>'
     );
   },
+
   _miniSet(btn) {
-    const id = btn.getAttribute('data-mini'), v = parseInt(btn.getAttribute('data-v'));
-    this._miniTmp[id] = v;
-    document.querySelectorAll('[data-mini="' + id + '"]').forEach(b => {
-      const on = parseInt(b.getAttribute('data-v')) === v;
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      b.className = on ? 'sf' : 'sn';
+    const i = parseInt(btn.getAttribute('data-q')), L = btn.getAttribute('data-l');
+    // clicar de novo na mesma letra desmarca (questão em branco)
+    this._miniTmp[i] = (this._miniTmp[i] === L) ? '-' : L;
+    const marcada = this._miniTmp[i];
+    document.querySelectorAll('.cr-op[data-q="' + i + '"]').forEach(function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-l') === marcada ? 'true' : 'false');
     });
   },
+
   salvarMini(n) {
     if (!this.liberada(n)) { this.bloqueada(n); return; }
-    const faltam = Object.keys(this._miniTmp).filter(id => this._miniTmp[id] == null);
-    if (faltam.length) {
-      document.getElementById('mini-erro').textContent = 'Preencha os acertos de: ' + faltam.map(id => T(id).nome).join(', ') + '.';
+    const resp = this._miniTmp.join('');
+    const brancos = this._miniTmp.filter(function (x) { return x === '-'; }).length;
+    if (brancos === CONFIG.MINI_QTDE) {
+      document.getElementById('mini-erro').textContent = 'Marque pelo menos uma resposta.';
       return;
     }
     this.congelarSemana(n);
-    let total = 0; Object.keys(this._miniTmp).forEach(id => { total += this._miniTmp[id]; });
-    this.minis[n] = { porTema: Object.assign({}, this._miniTmp), total, em: new Date().toISOString() };
+    const corr = this.corrigirMini(n, resp);
+    const anterior = this.minis[n];
+    this.minis[n] = {
+      resp: resp,
+      porTema: corr ? corr.porTema : (anterior ? anterior.porTema : {}),
+      total: corr ? corr.total : (anterior ? anterior.total : 0),
+      em: new Date().toISOString()
+    };
     this.salvar();
     this.fecharModal();
     this.render({ foco: 'mini:' + n });
-    const dose = this.dosePara(SEMANAS[n-1]);
+    if (!corr) {
+      this.toast('', 'Respostas guardadas', 'A correção sai assim que o gabarito da Semana ' + n + ' for publicado.');
+      return;
+    }
+    const dose = this.dosePara(SEMANAS[n - 1]);
     const tudoFeito = dose.itens.every(it => this.feito(it.key));
     if (tudoFeito) this.celebrarSemana(n);
-    else this.toast('ok', 'Mini-simulado registrado', total + '/' + CONFIG.MINI_QTDE + ' acertos. Diagnóstico atualizado na seção Evolução.');
+    else this.toast('ok', 'Mini-simulado corrigido', corr.total + '/' + CONFIG.MINI_QTDE + ' acertos' + (brancos ? ' (' + brancos + ' em branco)' : '') + '. Diagnóstico atualizado na seção Evolução.');
   },
 
   proximaAtividade(n) {
@@ -1867,6 +1953,11 @@ const SYNC = {
       sb.from('revisao_mini').select('*').eq('aluno_id', uid),
       sb.from('revisao_plano').select('*').eq('aluno_id', uid)
     ]);
+    // gabaritos oficiais: lista pública para quem está logado
+    try {
+      const g = await sb.from('revisao_mini_gabarito').select('semana,gabarito');
+      if (!g.error) (g.data || []).forEach(x => { GABARITOS[x.semana] = x.gabarito; });
+    } catch (e) { console.warn('[sync] gabaritos indisponiveis:', e); }
     if (rp.error) throw rp.error;
     if (rp.data) {
       const r = rp.data;
@@ -1874,7 +1965,7 @@ const SYNC = {
       app.ov = {};
       (rg.data || []).forEach(x => { app.ov[x.atividade_key] = { dia: x.dia == null ? undefined : x.dia, done: x.feito_em || null, hits: x.acertos, total: x.total }; });
       app.minis = {};
-      (rm.data || []).forEach(x => { app.minis[x.semana] = { porTema: x.acertos_por_tema || {}, total: x.total, em: x.feito_em }; });
+      (rm.data || []).forEach(x => { app.minis[x.semana] = { porTema: x.acertos_por_tema || {}, total: x.total, em: x.feito_em, resp: x.respostas || null }; });
       app.planos = {};
       (rpl.data || []).forEach(x => { app.planos[x.semana] = Object.assign({}, x.plano || {}, { budget: x.budget, totalMin: x.total_min, congelado: true, criadoEm: x.criado_em }); });
       app.salvarLocal();
@@ -1910,7 +2001,7 @@ const SYNC = {
       });
       if (rows.length) { const r = await sb.from('revisao_progresso').upsert(rows, { onConflict: 'aluno_id,atividade_key' }); if (r.error) throw r.error; }
 
-      const minis = Object.keys(app.minis).filter(n => app.liberada(parseInt(n))).map(n => ({ aluno_id: uid, semana: parseInt(n), acertos_por_tema: app.minis[n].porTema || {}, total: app.minis[n].total, feito_em: app.minis[n].em || new Date().toISOString() }));
+      const minis = Object.keys(app.minis).filter(n => app.liberada(parseInt(n))).map(n => ({ aluno_id: uid, semana: parseInt(n), acertos_por_tema: app.minis[n].porTema || {}, respostas: app.minis[n].resp || null, total: app.minis[n].total, feito_em: app.minis[n].em || new Date().toISOString() }));
       if (minis.length) { const r = await sb.from('revisao_mini').upsert(minis); if (r.error) throw r.error; }
       const semMini = Object.keys(app.minis).map(Number);
       await sb.from('revisao_mini').delete().eq('aluno_id', uid).not('semana', 'in', '(' + (semMini.length ? semMini.join(',') : '0') + ')');
@@ -1967,6 +2058,13 @@ const SYNC = {
     if (logado === null) logado = SYNC.uid ? await ini : false;
   } catch (e) { console.warn('[sync] indisponível:', e); }
   if (!logado) definirAcesso('anon');
+  // Gabarito publicado depois do lançamento: corrige agora o que ficou pendente.
+  Object.keys(app.minis).forEach(function (n) {
+    const m = app.minis[n];
+    if (!m || !m.resp) return;
+    const c = app.corrigirMini(parseInt(n), m.resp);
+    if (c && c.total !== m.total) { m.porTema = c.porTema; m.total = c.total; app.salvar(); }
+  });
   app.podarLocal();
   const demoBar = document.querySelector('.demo');
   if (demoBar && logado && !SYNC.demo) demoBar.hidden = true;   // aluno real usa a data real
