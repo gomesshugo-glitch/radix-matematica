@@ -27,6 +27,25 @@
     --fs-xs:12px; --fs-sm:14px; --fs-md:16px; --fs-lg:18px; --fs-xl:22px; --fs-2xl:28px;
     --lh:1.55; --dur:.16s; --nav-h:64px;
   }
+
+  /* ---------- Tema claro (21/09/2026) ----------
+     Dentro do app a moldura recebe o tema por mensagem e segue o app. A paleta
+     é a mesma do tema claro do index; os acentos escurecem para ter contraste
+     sobre fundo claro. Sozinha, a página continua escura. */
+  html.claro{
+    --bg:#f1f5fb; --bg-deep:#e8eff8;
+    --s1:#ffffff; --s2:#f4f7fc; --s3:#e4ebf6;
+    --line:rgba(15,23,42,.10); --line-2:rgba(15,23,42,.20);
+    --text:#0f172a; --text-2:#334155; --muted:#5b6b86;
+    --cyan:#0e7490; --cyan-2:#0891b2; --blue:#2563eb; --coral:#c2410c;
+    --red:#dc2626; --green:#047857; --amber:#b45309; --violet:#6d28d9;
+    --sh-1:0 1px 2px rgba(15,23,42,.06),0 6px 18px -12px rgba(15,23,42,.22);
+    --sh-2:0 2px 6px rgba(15,23,42,.08),0 18px 40px -22px rgba(15,23,42,.28);
+    --sh-glow:0 0 0 1px rgba(8,145,178,.35),0 18px 48px -20px rgba(8,145,178,.32);
+  }
+  /* os dois lugares que dependiam do fundo escuro */
+  html.claro .chk[aria-checked="true"]{color:#ffffff}
+  html.claro .atv.done .atv-titulo{text-decoration-color:rgba(15,23,42,.35)}
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
   body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-md);line-height:var(--lh);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(var(--nav-h) + 24px);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -564,6 +583,18 @@ if (EMBUTIDO) {
     setInterval(_avisarAltura, 1200);   // rede de segurança para animações e fontes
   });
 }
+// O app é dono do tema: a moldura recebe claro/escuro e obedece.
+function _aplicarTema(tema) {
+  document.documentElement.classList.toggle('claro', tema === 'claro');
+  _avisarAltura();
+}
+addEventListener('message', function (ev) {
+  if (ev.origin !== location.origin || ev.source !== window.parent) return;
+  const d = ev.data;
+  if (!d || d.radix !== 'plano-tema') return;
+  _aplicarTema(d.tema === 'claro' ? 'claro' : 'escuro');
+});
+
 const OFERTA = {
   matricula: '/vendas',                    // página de matrícula: escolhe a turma e paga
   precoPresencial: 'R$ 300,00', precoOnline: 'R$ 69,90', whatsapp: '5584998131870',
@@ -838,8 +869,24 @@ const app = {
     box.appendChild(el);
     setTimeout(() => el.remove(), 4500);
   },
-  demoAbrir(temaId) {
-    this.toast('', 'Demonstração', 'No app real: abre o banco de questões filtrado em "' + (T(temaId)||{nome:'?'}).nome + '".');
+  // Dentro do app, pede a tela do banco já filtrada no tema. Fora dele, entra
+  // no app pelo mesmo caminho (?tema=). Sem acesso, explica onde as questões estão.
+  abrirAtividade(temaId) {
+    const nome = (T(temaId) || { nome: 'o tema' }).nome;
+    if (EMBUTIDO) {
+      try {
+        window.parent.postMessage({ radix: 'plano-abrir-tema', tema: temaId }, location.origin);
+        this.toast('ok', 'Abrindo as questões', 'Banco filtrado em ' + nome + '.');
+      } catch (e) {
+        this.toast('erro', 'Não consegui abrir', 'Procure ' + nome + ' no banco de questões do app.');
+      }
+      return;
+    }
+    if (ACESSO.modo === 'completo' || ACESSO.modo === 'amostra') {
+      location.href = '/?tema=' + encodeURIComponent(temaId);
+      return;
+    }
+    this.toast('', 'As questões ficam no app', 'Entre na sua conta para abrir ' + nome + '.');
   },
 
   concluir(key) {
@@ -1469,7 +1516,7 @@ const app = {
       '<span>' + ic(prox.tipo === 'v' ? 'play' : 'book', 15) + ' ' + (prox.tipo === 'v' ? 'Vídeo-aula' : 'Questões no banco') + '</span>' +
       '<span>' + ic('cal', 15) + ' ' + DIAS_LONGOS[this.diaDe(prox)] + ' ' + fmtCurto(addDias(dt(sem.ini), this.diaDe(prox))) + '</span></div>' +
       '<p class="just">' + just + '</p>' +
-      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.demoAbrir(\'' + prox.temaId + '\')">Abrir atividade</button>' +
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.abrirAtividade(\'' + prox.temaId + '\')">Abrir atividade</button>' +
       '<button type="button" class="btn btn-sec" data-foco="next:' + prox.key + '" onclick="app.concluir(\'' + prox.key + '\')">Marcar concluída</button></div></div>';
   },
   htmlProgresso(sem, dose) {
@@ -1515,7 +1562,7 @@ const app = {
         (estado === 'late' && !done ? '<span class="chip chip-atraso">Atrasada</span>' : '') +
         (done && o.total ? '<span class="ok">' + o.hits + '/' + o.total + ' acertos</span>' : (done ? '<span class="ok">Concluída</span>' : '')) +
         extras.join('') + '</div></div>' +
-      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.demoAbrir(\'' + it.temaId + '\')">Abrir atividade</button>' + sel + '</div>' : '') +
+      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\')">Abrir atividade</button>' + sel + '</div>' : '') +
       '</article>';
   },
   htmlAgenda(sem, dose, atualN) {
@@ -1898,6 +1945,10 @@ const SYNC = {
   const aviso = document.getElementById('aviso-login');
   if (aviso) aviso.hidden = true;   // a tela sem sessão já traz o botão de entrar
   app.render({ modo: 'tela' });
+  // Avisa o app que a moldura está de pé, para ele mandar o tema.
+  if (EMBUTIDO) {
+    try { window.parent.postMessage({ radix: 'plano-pronto' }, location.origin); } catch (e) {}
+  }
 })();
 </script>
 </body>

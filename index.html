@@ -6006,6 +6006,17 @@
   }
 
 
+  /* ---------- Revisão Final embutida (aluno) ---------- */
+  .rf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
+  .rf-h2{font-size:20px;font-weight:800;margin:0 0 4px}
+  .rf-sub{color:var(--radix-text-muted,#8fa3cc);font-size:13.5px;margin:0;max-width:62ch;line-height:1.5}
+  .rf-moldura{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--radix-border,rgba(255,255,255,.10));background:var(--radix-surface,#19284e);min-height:420px}
+  .rf-moldura iframe{display:block;width:100%;border:0;height:560px;transition:height .18s ease}
+  .rf-aviso{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;color:var(--radix-text-muted,#8fa3cc);font-size:14px;line-height:1.6;background:var(--radix-surface,#19284e)}
+  .rf-spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--radix-line-2,rgba(255,255,255,.14));border-top-color:var(--radix-cyan,#22d3ee);animation:rf-gira .8s linear infinite}
+  @keyframes rf-gira{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.rf-spin{animation:none}.rf-moldura iframe{transition:none}}
+
   /* ---------- Painel Revisão Final (professor) ---------- */
   .rvp-muted{color:var(--radix-text-muted,#8fa3cc)}
   .rvp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
@@ -6263,6 +6274,8 @@ function applyTheme(theme) {
   } else {
     document.body.classList.remove('theme-light');
   }
+  // A Revisão Final roda numa moldura própria: o tema tem que chegar nela também.
+  try { RF_EMBED.mandarTema(); } catch (e) {}
 }
 function toggleTheme() {
   const current = document.body.classList.contains('theme-light') ? 'light' : 'dark';
@@ -7759,14 +7772,16 @@ async function iniciarSessao() {
   // Retorno pos-login: /?voltar=<chave> leva o aluno de volta para onde ele
   // estava antes de entrar (ex.: landing/pagina da Revisao Final). Lista fechada
   // de destinos, sempre no mesmo dominio, para o parametro nao virar redirect aberto.
-  const _voltarPara = { 'revisao-final': '/revisao-final' };
-  const _voltar = new URLSearchParams(window.location.search).get('voltar');
-  if (_voltar && _voltarPara[_voltar]) {
-    window.location.replace(_voltarPara[_voltar]);
-    return;
-  }
+  const _q = new URLSearchParams(window.location.search);
+  const _voltar = _q.get('voltar');
+  const _temaURL = _q.get('tema');
+  state._destinoInicial =
+      (_voltar === 'revisao-final') ? { tela: 'revisao-final' }
+    : (_temaURL)                    ? { tela: 'tema', tema: _temaURL }
+    : null;
   await carregarDados();
   mostrarApp();
+  _abrirDestinoInicial();
   } catch (e) {
     console.error('iniciarSessao falhou:', e);
     if (typeof setMsg === 'function') setMsg('Erro ao entrar: ' + (e?.message || e), 'var(--radix-red)');
@@ -8919,6 +8934,111 @@ function mostrarApp() {
   setTimeout(() => { atualizarBadgePendentes(); atualizarBadgeLista(); }, 200);
 }
 
+// ============================================================
+// REVISÃO FINAL — a página do aluno dentro do app (21/09/2026)
+// /revisao-final roda numa moldura com ?embutido=1: ela esconde o próprio
+// cabeçalho, avisa a altura e pede ao app para navegar. Quem manda na
+// navegação e no tema é o app. Fora da moldura a página continua de pé
+// sozinha (link da landing, visitante sem sessão).
+// ============================================================
+const RF_EMBED = {
+  ORIGEM: location.origin,
+  SRC: '/revisao-final?embutido=1',
+  frame() { return document.getElementById('rf-frame'); },
+
+  // O app é dono do tema: a moldura recebe claro/escuro por mensagem.
+  mandarTema() {
+    const f = this.frame();
+    if (!f || !f.contentWindow) return;
+    const tema = document.body.classList.contains('theme-light') ? 'claro' : 'escuro';
+    try { f.contentWindow.postMessage({ radix: 'plano-tema', tema: tema }, this.ORIGEM); } catch (e) {}
+  },
+
+  // "Abrir atividade" no plano cai no banco de questões já filtrado no tema.
+  async abrirTemaDoPlano(temaId) {
+    if (typeof TEMAS === 'undefined' || !TEMAS.some(t => t.id === temaId)) {
+      console.warn('[revisao] tema desconhecido:', temaId);
+      return;
+    }
+    // abrirTema() lê state.questoes e essa tela não passa por _comBanco.
+    if (!state.questoesPronto && state.questoesPromise) {
+      radixShowLoading('Carregando banco de questões…');
+      try { await state.questoesPromise; } finally { radixHideLoading(); }
+    }
+    abrirTema(temaId);
+  },
+
+  navegar(destino) {
+    if (destino === '/') { renderHome(); return; }
+    if (destino === '/vendas') { window.location.href = '/vendas'; return; }
+    console.warn('[revisao] destino fora da lista:', destino);
+  },
+
+  aoReceber(ev) {
+    if (ev.origin !== RF_EMBED.ORIGEM) return;
+    const f = RF_EMBED.frame();
+    if (!f || ev.source !== f.contentWindow) return;
+    const d = ev.data;
+    if (!d || !d.radix) return;
+    if (d.radix === 'plano-altura') {
+      const alt = Math.max(320, Math.min(20000, parseInt(d.altura, 10) || 0));
+      if (alt) f.style.height = alt + 'px';
+      return;
+    }
+    if (d.radix === 'plano-pronto')      { RF_EMBED.mandarTema(); return; }
+    if (d.radix === 'plano-navegar')     { RF_EMBED.navegar(String(d.destino || '')); return; }
+    if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || '')); return; }
+  }
+};
+window.addEventListener('message', RF_EMBED.aoReceber);
+
+function renderRevisaoFinal() {
+  state.view = 'revisao-final';
+  const main = document.getElementById('main-content');
+  const sub = state.degustacao
+    ? 'Amostra da Revisão Final: a Semana 1 do plano das sete semanas.'
+    : (state.usuario && state.usuario.perfil === 'professor')
+      ? 'Esta é a tela que o aluno vê. O acompanhamento da turma fica no painel da Revisão Final.'
+      : 'Seu plano das sete semanas até a prova de Matemática, em 15 de novembro.';
+  main.innerHTML =
+    '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Revisão Final</div>' +
+    '<div class="rf-head">' +
+      '<div><h2 class="rf-h2">Revisão Final ENEM 2026</h2><p class="rf-sub">' + sub + '</p></div>' +
+      '<a class="btn btn-secondary" href="/revisao-final" target="_blank" rel="noopener">Abrir em outra aba</a>' +
+    '</div>' +
+    '<div class="rf-moldura">' +
+      '<div class="rf-aviso" id="rf-aviso"><span class="rf-spin"></span><span>Carregando seu plano…</span></div>' +
+      '<iframe id="rf-frame" src="' + RF_EMBED.SRC + '" title="Revisão Final ENEM 2026"></iframe>' +
+    '</div>';
+
+  const f = document.getElementById('rf-frame');
+  let abriu = false;
+  f.addEventListener('load', function () {
+    abriu = true;
+    const a = document.getElementById('rf-aviso');
+    if (a) a.remove();
+    RF_EMBED.mandarTema();
+  });
+  setTimeout(function () {
+    if (abriu) return;
+    const a = document.getElementById('rf-aviso');
+    if (a) a.innerHTML = 'O plano está demorando a abrir. ' +
+      '<a href="/revisao-final">Abrir a página inteira</a>.';
+  }, 9000);
+}
+
+// Destino pedido na URL (?voltar=revisao-final, ?tema=<id>), resolvido depois
+// que o app já está montado.
+function _abrirDestinoInicial() {
+  const d = state._destinoInicial;
+  state._destinoInicial = null;
+  if (!d) return;
+  try {
+    if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
+    if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema); return; }
+  } catch (e) { console.warn('[destino inicial]', e); }
+}
+
 // ========== RENDER HOME ==========
 // ============================================================
 // PAINEL DO PROFESSOR — Revisão Final ENEM 2026
@@ -9349,7 +9469,7 @@ function renderDashboardAluno() {
             <span>Vídeo-aulas</span>
             <small>Aulas e materiais</small>
           </div>
-          <div class="dash-atalho" onclick="window.location.href='/revisao-final'">
+          <div class="dash-atalho" onclick="renderRevisaoFinal()">
             <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <span>Revisão Final</span>
             <small>${state.degustacao ? 'Amostra: Semana 1 do plano das 7 semanas' : 'Seu plano das 7 semanas até o ENEM'}</small>
@@ -18974,7 +19094,7 @@ function _chipsTemasSemana(s) {
   if (!s || !Array.isArray(s.temas) || !s.temas.length) return '';
   const chips = s.temas.map((id, i) => '<span class="cron-tema' + (i === s.temas.length - 1 ? ' geo' : '') + '">' + _nomeCurtoTema(id) + '</span>').join('');
   const link = (s.revisaoN && state.usuario && state.usuario.perfil !== 'professor')
-    ? '<a class="cron-plano-link" href="/revisao-final" onclick="event.stopPropagation()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
+    ? '<a class="cron-plano-link" href="/revisao-final" onclick="event.stopPropagation();event.preventDefault();renderRevisaoFinal()">Abrir meu plano da Semana ' + s.revisaoN + ' →</a>' : '';
   return '<div class="cron-temas">' + chips + '</div>' + link;
 }
 function renderSemanaCard(s, mostrarProgresso) {
