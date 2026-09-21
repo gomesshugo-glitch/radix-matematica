@@ -657,7 +657,7 @@ function definirAcesso(status) {
 const app = {
   perfil: null, ov: {}, minis: {}, planos: {},
   semanaSel: null,
-  qStep: 0, _qTemp: null, _editando: false,
+  qStep: 0, _qTemp: null, _editando: false, _apagando: false,
 
   carregar() {
     try {
@@ -1287,20 +1287,36 @@ const app = {
     if (!confirmado) return this.confirmar({ titulo: 'Recomeçar do zero?', perigo: true, ok: 'Recomeçar',
       texto: 'Suas respostas do diagnóstico, as atividades registradas e os planos das semanas serão apagados do app e deste navegador. Não dá para desfazer.' }, () => self.resetar(true));
     // Quem manda é o servidor: se a limpeza falhar lá, os dados antigos voltam no
-    // próximo acesso. Então só limpo aqui depois que o app confirmar. E derrubo o
-    // salvamento em espera, senão ele grava de novo o que acabou de ser apagado.
-    if (typeof SYNC !== 'undefined' && SYNC.ativo) {
-      try { clearTimeout(SYNC._timer); await SYNC.apagarTudo(); }
-      catch (e) {
+    // próximo acesso. Então apago lá, CONFIRO o que sobrou, e só limpo este
+    // navegador se o servidor ficou realmente vazio.
+    const conectado = (typeof SYNC !== 'undefined') && SYNC.ativo;
+    if (conectado) {
+      this._apagando = true;                 // trava o sincronismo enquanto isso
+      clearTimeout(SYNC._timer);
+      let sobrou;
+      try {
+        sobrou = await SYNC.apagarTudo();
+      } catch (e) {
         console.warn('[recomecar] falha ao limpar no app:', e);
+        this._apagando = false;
         this.toast('erro', 'Não consegui limpar no app', 'Nada foi apagado. Confira a conexão e tente de novo.');
+        return;
+      }
+      if (sobrou > 0) {
+        this._apagando = false;
+        this.toast('erro', 'Não consegui apagar tudo', 'Sobraram ' + sobrou + ' registros no app, então não mexi em nada aqui. Fale com o professor.');
         return;
       }
     }
     this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
     this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false; this._evoSel = null;
     try { localStorage.removeItem(KEY); } catch (e) { this.toast('erro', 'Não consegui limpar o armazenamento', 'Verifique as permissões do navegador.'); }
+    this._apagando = false;
     this.render({ modo: 'tela' });
+    if (!conectado) {
+      this.toast('erro', 'Apaguei só neste navegador', 'Você não está conectado ao app. Entre na sua conta e recomece de novo, senão o plano antigo volta.');
+      return;
+    }
     this.toast('', 'Tudo zerado', 'Comece pelo questionário para montar um novo roteiro.');
   },
   recalcularSemana(n, confirmado) {
@@ -1979,6 +1995,7 @@ const SYNC = {
 
   agendar() {
     if (!this.ativo) return;
+    if (app._apagando) return;       // não regravar o que está sendo apagado
     this.status('salvando');
     clearTimeout(this._timer);
     const self = this;
@@ -1987,6 +2004,7 @@ const SYNC = {
 
   async empurrar() {
     if (!this.ativo) return;
+    if (app._apagando) return;       // idem: o reset manda enquanto durar
     const uid = this.uid, sb = this.sb, p = app.perfil;
     try {
       if (p) {
@@ -2023,13 +2041,25 @@ const SYNC = {
     }
   },
 
+  // Devolve quantos registros SOBRARAM no servidor. Zero = apagou mesmo.
+  // O supabase-js não acusa erro quando o delete não pega nenhuma linha (a RLS
+  // filtra em silêncio), então conferir depois é a única garantia.
   async apagarTudo() {
-    if (!this.ativo) return;
+    if (!this.ativo) throw new Error('sem sessão ativa');
     const uid = this.uid, sb = this.sb;
-    for (const t of ['revisao_progresso', 'revisao_mini', 'revisao_plano', 'revisao_perfil']) {
+    const tabelas = ['revisao_progresso', 'revisao_mini', 'revisao_plano', 'revisao_perfil'];
+    for (const t of tabelas) {
       const r = await sb.from(t).delete().eq('aluno_id', uid);
       if (r.error) throw r.error;
     }
+    let sobrou = 0;
+    for (const t of tabelas) {
+      const c = await sb.from(t).select('aluno_id', { count: 'exact', head: true }).eq('aluno_id', uid);
+      if (c.error) throw c.error;
+      sobrou += (c.count || 0);
+    }
+    if (sobrou) console.warn('[recomecar] sobraram', sobrou, 'registros no servidor');
+    return sobrou;
   },
 
   status(s) {
