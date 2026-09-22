@@ -476,7 +476,6 @@ const CONFIG = {
   MIN_VIDEO: 25,
   MIN_MINI: 50,
   MINI_QTDE: 15, MINI_POR_TEMA: 3,
-  Q_SEMANA: 45,                         // questões do roteiro da semana (o que o material prevê)
   AMOSTRA_MIN_Q: 10,                    // reclassificação: mínimo de questões...
   AMOSTRA_MIN_FONTES: 2                 // ...ou mínimo de avaliações distintas
 };
@@ -864,9 +863,9 @@ const app = {
     }
 
     // questões do roteiro: floor proporcional + sobra distribuída 1 a 1 em ordem
-    // de prioridade. O roteiro da semana não passa das Q_SEMANA que o material
-    // prevê; o que exceder vira complemento (abaixo), em vez de inflar um tema.
-    const tetoRoteiro = Math.min(restante, CONFIG.Q_SEMANA * CONFIG.MIN_QUESTAO);
+    // de prioridade. Sem teto: o roteiro usa toda a carga que o aluno declarou,
+    // sempre dentro dos temas da semana (decisão do Hugo, 22/09/2026).
+    const tetoRoteiro = restante;
     const somaP = base.reduce((s,b)=>s+b.peso, 0);
     base.forEach(b => { b.questoes = Math.floor((tetoRoteiro * b.peso / somaP) / CONFIG.MIN_QUESTAO); });
     let usado = base.reduce((s,b)=>s+b.questoes, 0) * CONFIG.MIN_QUESTAO;
