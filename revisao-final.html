@@ -60,6 +60,7 @@
   .recomecar{margin-top:var(--sp-6);padding-top:var(--sp-5);border-top:1px solid var(--line)}
   .recomecar .t{font-size:var(--fs-sm);font-weight:700;margin-bottom:2px}
   .recomecar .sub{margin-bottom:var(--sp-3)}
+  .chip-compl{background:rgba(167,139,250,.16);color:var(--violet)}
   /* cartão-resposta do mini-simulado */
   .cr-tema{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);margin:var(--sp-4) 0 var(--sp-2)}
   .cr-tema:first-child{margin-top:var(--sp-2)}
@@ -471,6 +472,8 @@ const CONFIG = {
   MIN_VIDEO: 25,
   MIN_MINI: 50,
   MINI_QTDE: 15, MINI_POR_TEMA: 3,
+  Q_SEMANA: 45,                         // questões do roteiro da semana (o que o material prevê)
+  Q_COMPLEMENTO_MAX: 10,                // por assunto, no complemento, para não virar bloco único
   AMOSTRA_MIN_Q: 10,                    // reclassificação: mínimo de questões...
   AMOSTRA_MIN_FONTES: 2                 // ...ou mínimo de avaliações distintas
 };
@@ -810,7 +813,10 @@ const app = {
     // Orçamento pelos dias que REALMENTE existem na semana. Sem isso, quem
     // marca domingo recebia na Semana 7 (que acaba no sábado da prova) uma
     // carga de 7 dias para caber em 6.
-    const budget = Math.round(p.horasDia * 60 * diasAtivos.length);
+    // TETO DIÁRIO: a capacidade de cada dia é o que o aluno declarou por dia.
+    // O orçamento da semana é a soma dos dias — nenhum dia passa do próprio teto.
+    const capDia = Math.max(CONFIG.MIN_QUESTAO, Math.round(p.horasDia * 60));
+    const budget = capDia * diasAtivos.length;
     const avisos = [], fora = [];
 
     const base = sem.temas.map(id => {
@@ -840,27 +846,66 @@ const app = {
     if (restante < 0) {
       temMini = false; restante = budget;
       avisos.push('Seu tempo semanal não cobre nem o mini-simulado (' + CONFIG.MIN_MINI + ' min). Amplie a disponibilidade no perfil.');
+    } else if (capDia < CONFIG.MIN_MINI) {
+      avisos.push('O mini-simulado leva ' + CONFIG.MIN_MINI + ' min de uma vez, mais que os ' + capDia + ' min que você marcou por dia. Reserve um dia maior para ele.');
     }
 
     // vídeos: só dificuldade efetiva, em ordem de prioridade, e só se sobrar
     // espaço para o vídeo + ao menos 2 questões de prática do próprio tema
     base.forEach(b => { b.video = false; b.questoes = 0; });
     for (const b of base) {
-      if (b.ef.v === -1 && T(b.temaId).video && restante >= CONFIG.MIN_VIDEO + 2*CONFIG.MIN_QUESTAO) {
+      if (b.ef.v === -1 && T(b.temaId).video && restante >= CONFIG.MIN_VIDEO + 2*CONFIG.MIN_QUESTAO
+          && capDia >= CONFIG.MIN_VIDEO) {
         b.video = true; restante -= CONFIG.MIN_VIDEO;
       }
     }
 
-    // questões: floor proporcional (sem mínimo forçado) + sobra distribuída
-    // 1 questão por vez em ordem de prioridade — nunca ultrapassa o restante
+    // questões do roteiro: floor proporcional + sobra distribuída 1 a 1 em ordem
+    // de prioridade. O roteiro da semana não passa das Q_SEMANA que o material
+    // prevê; o que exceder vira complemento (abaixo), em vez de inflar um tema.
+    const tetoRoteiro = Math.min(restante, CONFIG.Q_SEMANA * CONFIG.MIN_QUESTAO);
     const somaP = base.reduce((s,b)=>s+b.peso, 0);
-    base.forEach(b => { b.questoes = Math.floor((restante * b.peso / somaP) / CONFIG.MIN_QUESTAO); });
+    base.forEach(b => { b.questoes = Math.floor((tetoRoteiro * b.peso / somaP) / CONFIG.MIN_QUESTAO); });
     let usado = base.reduce((s,b)=>s+b.questoes, 0) * CONFIG.MIN_QUESTAO;
     let i = 0, guard = 1000;
-    while (restante - usado >= CONFIG.MIN_QUESTAO && guard-- > 0) {
+    while (tetoRoteiro - usado >= CONFIG.MIN_QUESTAO && guard-- > 0) {
       base[i % base.length].questoes++;
       usado += CONFIG.MIN_QUESTAO;
       i++;
+    }
+
+    // Bloco mínimo também no roteiro: em vez de "resolver 1 questão", o tema
+    // fica para o mini e o tempo dele vai para o tema de maior prioridade.
+    const MIN_Q_TEMA = 3;
+    let devolvidas = 0;
+    base.forEach(b => { if (b.questoes > 0 && b.questoes < MIN_Q_TEMA) { devolvidas += b.questoes; b.questoes = 0; } });
+    if (devolvidas) {
+      const destino = base.find(b => b.questoes >= MIN_Q_TEMA);
+      if (destino) destino.questoes += devolvidas;
+      else usado -= devolvidas * CONFIG.MIN_QUESTAO;   // ninguém para absorver: volta ao bolo
+    }
+
+    // complemento: o tempo que sobrou vai para os assuntos que mais caem no
+    // ENEM e que NÃO são da semana, do mais incidente para o menos. As questões
+    // fáceis vêm primeiro (o link abre o banco já filtrado nelas).
+    const comp = [];
+    let sobra = restante - usado;
+    if (sobra >= CONFIG.MIN_QUESTAO) {
+      const naSemana = sem.temas.concat([sem.geo.id]);
+      const candidatos = TEMAS.filter(t => naSemana.indexOf(t.id) === -1 && (t.inc || 0) > 0)
+                              .sort((a,b) => (b.inc||0) - (a.inc||0));
+      for (const t of candidatos) {
+        if (sobra < CONFIG.MIN_QUESTAO) break;
+        const q = Math.min(CONFIG.Q_COMPLEMENTO_MAX, Math.floor(sobra / CONFIG.MIN_QUESTAO));
+        if (q <= 0) break;
+        if (q < 3) {                       // resto pequeno: engrossa o assunto que mais cai
+          if (comp.length) { comp[0].questoes += q; sobra -= q * CONFIG.MIN_QUESTAO; usado += q * CONFIG.MIN_QUESTAO; }
+          break;
+        }
+        comp.push({ temaId: t.id, nome: t.nome, questoes: q, inc: faixaInc(t.id) });
+        sobra -= q * CONFIG.MIN_QUESTAO;
+        usado += q * CONFIG.MIN_QUESTAO;
+      }
     }
 
     base.forEach(b => {
@@ -871,19 +916,70 @@ const app = {
       }
     });
 
+    // ---------- montagem dos blocos, respeitando o TETO DIÁRIO ----------
+    // Cada dia tem a capacidade que o aluno declarou. Um bloco de questões é
+    // fatiado entre os dias quando não cabe num só. O mini fecha o último dia.
+    const dias = diasAtivos.map(d => ({ dia: d, livre: capDia }));
+    if (temMini) dias[dias.length - 1].livre -= CONFIG.MIN_MINI;
+
     const itens = [];
+    function lugarPara(min) {                    // primeiro dia com espaço
+      for (const d of dias) if (d.livre >= min) return d;
+      return null;
+    }
+    // Bloco mínimo: ninguém recebe "resolver 1 questão". Se no dia só couber
+    // menos que isso, o tema espera o próximo dia; e nunca se deixa um resto
+    // pequeno demais para virar bloco sozinho.
+    const MIN_BLOCO = 3;
+    function porDia(b, total, prefixo, extra) {  // fatia o bloco entre os dias
+      let resta = total, parte = 0;
+      for (const d of dias) {
+        if (resta <= 0) break;
+        const cabe = Math.floor(d.livre / CONFIG.MIN_QUESTAO);
+        if (cabe <= 0) continue;
+        if (cabe < MIN_BLOCO && resta > cabe) continue;        // não fatia migalha
+        let q = Math.min(cabe, resta);
+        // nunca deixar um resto de 1 ou 2 para virar bloco sozinho
+        if (resta - q > 0 && resta - q < MIN_BLOCO) {
+          if (resta - MIN_BLOCO >= MIN_BLOCO) q = resta - MIN_BLOCO;   // parte em dois blocos sãos
+          else if (cabe >= resta) q = resta;                            // cabe tudo: leva tudo
+          else continue;                                                // espera um dia com mais espaço
+        }
+        if (q <= 0) continue;
+        parte++;
+        itens.push(Object.assign({
+          key: 's' + sem.n + ':' + b.temaId + ':' + prefixo + parte, temaId: b.temaId, tipo: 'q',
+          questoes: q, min: q * CONFIG.MIN_QUESTAO, titulo: 'Resolver ' + q + ' questões — ' + b.nome,
+          peso: b.peso || 1, geo: !!b.geo, dia: d.dia
+        }, extra || {}));
+        d.livre -= q * CONFIG.MIN_QUESTAO;
+        resta -= q;
+      }
+      return resta;                              // o que não coube em dia nenhum
+    }
+
     base.forEach(b => {
-      if (b.video) itens.push({ key:'s'+sem.n+':'+b.temaId+':v', temaId:b.temaId, tipo:'v',
-        titulo:'Assistir vídeo-aula — ' + b.nome, min:CONFIG.MIN_VIDEO, questoes:0,
-        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v, inc:b.inc });
-      if (b.questoes > 0) itens.push({ key:'s'+sem.n+':'+b.temaId+':q', temaId:b.temaId, tipo:'q', questoes:b.questoes,
-        titulo:'Resolver ' + b.questoes + ' questões — ' + b.nome, min:b.questoes*CONFIG.MIN_QUESTAO,
-        peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v, inc:b.inc });
+      if (b.video) {
+        const d = lugarPara(CONFIG.MIN_VIDEO);
+        if (d) {
+          itens.push({ key:'s'+sem.n+':'+b.temaId+':v', temaId:b.temaId, tipo:'v',
+            titulo:'Assistir vídeo-aula — ' + b.nome, min:CONFIG.MIN_VIDEO, questoes:0,
+            peso:b.peso, geo:b.geo, auto:b.ef.auto, efv:b.ef.v, inc:b.inc, dia:d.dia });
+          d.livre -= CONFIG.MIN_VIDEO;
+        } else { b.video = false; }
+      }
+      if (b.questoes > 0) porDia(b, b.questoes, 'q', { auto:b.ef.auto, efv:b.ef.v, inc:b.inc });
     });
-    itens.forEach((it, idx) => { it.diaDefault = diasAtivos[idx % diasAtivos.length]; });
+
+    comp.forEach(c => {
+      porDia({ temaId:c.temaId, nome:c.nome, peso:1, geo:false }, c.questoes, 'c',
+             { inc:c.inc, complemento:true, nivel:'facil' });
+    });
+
+    itens.forEach(it => { it.diaDefault = it.dia; });
 
     const totalMin = itens.reduce((s,it)=>s+it.min, 0) + (temMini ? CONFIG.MIN_MINI : 0);
-    return { budget, totalMin, itens, avisos, fora, diasAtivos, temMini, congelado:false };
+    return { budget, capDia, totalMin, itens, avisos, fora, diasAtivos, temMini, congelado:false };
   },
 
   /* ---------- congelamento ---------- */
@@ -917,11 +1013,11 @@ const app = {
   },
   // Dentro do app, pede a tela do banco já filtrada no tema. Fora dele, entra
   // no app pelo mesmo caminho (?tema=). Sem acesso, explica onde as questões estão.
-  abrirAtividade(temaId) {
+  abrirAtividade(temaId, nivel) {
     const nome = (T(temaId) || { nome: 'o tema' }).nome;
     if (EMBUTIDO) {
       try {
-        window.parent.postMessage({ radix: 'plano-abrir-tema', tema: temaId }, location.origin);
+        window.parent.postMessage({ radix: 'plano-abrir-tema', tema: temaId, nivel: nivel || '' }, location.origin);
         this.toast('ok', 'Abrindo as questões', 'Banco filtrado em ' + nome + '.');
       } catch (e) {
         this.toast('erro', 'Não consegui abrir', 'Procure ' + nome + ' no banco de questões do app.');
@@ -929,7 +1025,7 @@ const app = {
       return;
     }
     if (ACESSO.modo === 'completo' || ACESSO.modo === 'amostra') {
-      location.href = '/?tema=' + encodeURIComponent(temaId);
+      location.href = '/?tema=' + encodeURIComponent(temaId) + (nivel ? '&nivel=' + encodeURIComponent(nivel) : '');
       return;
     }
     this.toast('', 'As questões ficam no app', 'Entre na sua conta para abrir ' + nome + '.');
@@ -1667,13 +1763,14 @@ const app = {
   },
   _cardAtividade(sem, dose, it, estado) {
     const done = this.feito(it.key), o = this.ov[it.key] || {};
-    const priCls = it.geo ? 'chip-geo' : (it.peso >= 3 ? 'chip-alta' : it.peso >= 2 ? 'chip-padrao' : 'chip-leve');
-    const priTxt = it.geo ? 'Geometria' : (it.peso >= 3 ? 'Prioridade alta' : it.peso >= 2 ? 'Carga padrão' : 'Manutenção');
+    const priCls = it.complemento ? 'chip-compl' : it.geo ? 'chip-geo' : (it.peso >= 3 ? 'chip-alta' : it.peso >= 2 ? 'chip-padrao' : 'chip-leve');
+    const priTxt = it.complemento ? 'Complemento' : it.geo ? 'Geometria' : (it.peso >= 3 ? 'Prioridade alta' : it.peso >= 2 ? 'Carga padrão' : 'Manutenção');
     const nomeTema = it.titulo.split('— ')[1] || it.titulo;
     const tipo = it.tipo === 'v' ? 'Vídeo-aula · ' + it.min + ' min' : it.questoes + ' questões · ~' + it.min + ' min';
     const dia = this.diaDe(it);
     const extras = [];
     if (it.inc && it.inc.rotulo) extras.push('<span class="tip" data-tip="Cai em média ' + it.inc.v.toString().replace('.', ',') + ' questões por prova do ENEM, por isso recebe mais tempo." tabindex="0">' + it.inc.rotulo.toLowerCase().replace('incidência', 'no ENEM') + '</span>');
+    if (it.complemento) extras.push('<span class="tip" data-tip="Seu roteiro da semana coube no tempo e ainda sobrou. Este bloco puxa os assuntos que mais caem no ENEM, começando pelas questões fáceis." tabindex="0">complemento</span>');
     if (it.auto) extras.push('<span class="tip" data-tip="' + (it.efv === -1 ? 'Seus registros neste assunto ficaram abaixo de 50%: a carga aumentou automaticamente.' : 'Seus registros neste assunto passaram de 80%: a carga caiu para manutenção.') + '" tabindex="0">ajustado pelo seu desempenho</span>');
     const nDias = sem.dias || 7;
     const marcados = (dose.diasAtivos && dose.diasAtivos.length ? dose.diasAtivos : [0, 1, 2, 3, 4]).filter(d => d < nDias);
@@ -1688,7 +1785,7 @@ const app = {
         (estado === 'late' && !done ? '<span class="chip chip-atraso">Atrasada</span>' : '') +
         (done && o.total ? '<span class="ok">' + o.hits + '/' + o.total + ' acertos</span>' : (done ? '<span class="ok">Concluída</span>' : '')) +
         extras.join('') + '</div></div>' +
-      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\')">Abrir atividade</button>' + sel + '</div>' : '') +
+      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\'' + (it.nivel ? ', \'' + it.nivel + '\'' : '') + ')">Abrir atividade</button>' + sel + '</div>' : '') +
       '</article>';
   },
   htmlAgenda(sem, dose, atualN) {

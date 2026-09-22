@@ -7803,7 +7803,7 @@ async function iniciarSessao() {
   const _temaURL = _q.get('tema');
   state._destinoInicial =
       (_voltar === 'revisao-final') ? { tela: 'revisao-final' }
-    : (_temaURL)                    ? { tela: 'tema', tema: _temaURL }
+    : (_temaURL)                    ? { tela: 'tema', tema: _temaURL, nivel: _q.get('nivel') || '' }
     : null;
   await carregarDados();
   mostrarApp();
@@ -8981,17 +8981,22 @@ const RF_EMBED = {
   },
 
   // "Abrir atividade" no plano cai no banco de questões já filtrado no tema.
-  async abrirTemaDoPlano(temaId) {
+  async abrirTemaDoPlano(temaId, nivel) {
     if (typeof TEMAS === 'undefined' || !TEMAS.some(t => t.id === temaId)) {
       console.warn('[revisao] tema desconhecido:', temaId);
       return;
     }
+    const nivelOk = ['facil', 'media', 'dificil'].indexOf(nivel) >= 0 ? nivel : '';
     // abrirTema() lê state.questoes e essa tela não passa por _comBanco.
     if (!state.questoesPronto && state.questoesPromise) {
       radixShowLoading('Carregando banco de questões…');
       try { await state.questoesPromise; } finally { radixHideLoading(); }
     }
     abrirTema(temaId);
+    // abrirTema() zera o filtro e renderiza com defer; o nível entra depois.
+    if (nivelOk) setTimeout(function () {
+      if (state.view === 'tema' && typeof selecionarDificuldade === 'function') selecionarDificuldade(nivelOk);
+    }, 80);
   },
 
   navegar(destino) {
@@ -9013,7 +9018,7 @@ const RF_EMBED = {
     }
     if (d.radix === 'plano-pronto')      { RF_EMBED.mandarTema(); return; }
     if (d.radix === 'plano-navegar')     { RF_EMBED.navegar(String(d.destino || '')); return; }
-    if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || '')); return; }
+    if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || ''), String(d.nivel || '')); return; }
   }
 };
 window.addEventListener('message', RF_EMBED.aoReceber);
@@ -9061,7 +9066,7 @@ function _abrirDestinoInicial() {
   if (!d) return;
   try {
     if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
-    if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema); return; }
+    if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel); return; }
   } catch (e) { console.warn('[destino inicial]', e); }
 }
 
