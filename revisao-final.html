@@ -60,7 +60,11 @@
   .recomecar{margin-top:var(--sp-6);padding-top:var(--sp-5);border-top:1px solid var(--line)}
   .recomecar .t{font-size:var(--fs-sm);font-weight:700;margin-bottom:2px}
   .recomecar .sub{margin-bottom:var(--sp-3)}
-  .chip-compl{background:rgba(167,139,250,.16);color:var(--violet)}
+  .sugestao{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-3);background:var(--s1);border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:var(--sp-4);margin-top:var(--sp-4)}
+  .sugestao .ic{color:var(--violet)}
+  .sugestao .t{font-weight:700}
+  .sugestao .s{font-size:var(--fs-sm);color:var(--text-2);margin-top:2px;line-height:var(--lh)}
+  .sug-temas{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-3)}
   /* cartão-resposta do mini-simulado */
   .cr-tema{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);margin:var(--sp-4) 0 var(--sp-2)}
   .cr-tema:first-child{margin-top:var(--sp-2)}
@@ -473,7 +477,6 @@ const CONFIG = {
   MIN_MINI: 50,
   MINI_QTDE: 15, MINI_POR_TEMA: 3,
   Q_SEMANA: 45,                         // questões do roteiro da semana (o que o material prevê)
-  Q_COMPLEMENTO_MAX: 10,                // por assunto, no complemento, para não virar bloco único
   AMOSTRA_MIN_Q: 10,                    // reclassificação: mínimo de questões...
   AMOSTRA_MIN_FONTES: 2                 // ...ou mínimo de avaliações distintas
 };
@@ -885,36 +888,18 @@ const app = {
       else usado -= devolvidas * CONFIG.MIN_QUESTAO;   // ninguém para absorver: volta ao bolo
     }
 
-    // complemento: o tempo que sobrou vai para os assuntos que mais caem no
-    // ENEM e que NÃO são da semana, do mais incidente para o menos. As questões
-    // fáceis vêm primeiro (o link abre o banco já filtrado nelas).
-    const comp = [];
-    let sobra = restante - usado;
-    if (sobra >= CONFIG.MIN_QUESTAO) {
+    // Sobra de tempo: as ações da semana ficam restritas aos temas da semana.
+    // O que sobrar NÃO é agendado; vira uma sugestão no fim da agenda, com os
+    // assuntos que mais caem no ENEM, para o aluno abrir no banco se quiser.
+    const sobra = Math.max(0, restante - usado);
+    let sugestao = null;
+    if (sobra >= 3 * CONFIG.MIN_QUESTAO) {
       const naSemana = sem.temas.concat([sem.geo.id]);
-      const candidatos = TEMAS.filter(t => naSemana.indexOf(t.id) === -1 && (t.inc || 0) > 0)
-                              .sort((a,b) => (b.inc||0) - (a.inc||0));
-      for (const t of candidatos) {
-        if (sobra < CONFIG.MIN_QUESTAO) break;
-        const q = Math.min(CONFIG.Q_COMPLEMENTO_MAX, Math.floor(sobra / CONFIG.MIN_QUESTAO));
-        if (q <= 0) break;
-        if (q < 3) {                       // resto pequeno: engrossa o assunto que mais cai
-          if (comp.length) { comp[0].questoes += q; sobra -= q * CONFIG.MIN_QUESTAO; usado += q * CONFIG.MIN_QUESTAO; }
-          break;
-        }
-        comp.push({ temaId: t.id, nome: t.nome, questoes: q, inc: faixaInc(t.id) });
-        sobra -= q * CONFIG.MIN_QUESTAO;
-        usado += q * CONFIG.MIN_QUESTAO;
-      }
+      const temas = TEMAS.filter(t => naSemana.indexOf(t.id) === -1 && (t.inc || 0) > 0)
+                         .sort((a,b) => (b.inc||0) - (a.inc||0)).slice(0, 4)
+                         .map(t => ({ temaId: t.id, nome: t.nome, inc: faixaInc(t.id) }));
+      sugestao = { minutos: sobra, questoes: Math.floor(sobra / CONFIG.MIN_QUESTAO), temas: temas };
     }
-
-    base.forEach(b => {
-      if (b.questoes === 0 && !b.video) {
-        fora.push({ nome: b.nome, motivo: temMini
-          ? 'Este tema será contemplado apenas no mini-simulado porque seu orçamento semanal foi totalmente distribuído entre as prioridades mais altas.'
-          : 'Sem tempo disponível para este tema nesta semana.' });
-      }
-    });
 
     // ---------- montagem dos blocos, respeitando o TETO DIÁRIO ----------
     // Cada dia tem a capacidade que o aluno declarou. Um bloco de questões é
@@ -971,15 +956,10 @@ const app = {
       if (b.questoes > 0) porDia(b, b.questoes, 'q', { auto:b.ef.auto, efv:b.ef.v, inc:b.inc });
     });
 
-    comp.forEach(c => {
-      porDia({ temaId:c.temaId, nome:c.nome, peso:1, geo:false }, c.questoes, 'c',
-             { inc:c.inc, complemento:true, nivel:'facil' });
-    });
-
     itens.forEach(it => { it.diaDefault = it.dia; });
 
     const totalMin = itens.reduce((s,it)=>s+it.min, 0) + (temMini ? CONFIG.MIN_MINI : 0);
-    return { budget, capDia, totalMin, itens, avisos, fora, diasAtivos, temMini, congelado:false };
+    return { budget, capDia, totalMin, itens, avisos, fora, diasAtivos, temMini, sugestao, congelado:false };
   },
 
   /* ---------- congelamento ---------- */
@@ -1844,7 +1824,18 @@ const app = {
       html += '<details class="concl"><summary><span class="chev">' + ic('chev', 14) + '</span>Concluídas <span class="n n-ok">' + grupos.feitas.length + '</span></summary>' +
         grupos.feitas.map(it => self._cardAtividade(sem, dose, it, 'done')).join('') + '</details>';
     }
+    if (dose.sugestao && !passada) html += this.htmlSugestao(dose.sugestao);
     return html;
+  },
+  // Sugestão de ir além do roteiro. Só aparece quando sobrou tempo na semana e
+  // não entra no progresso: é um convite para o banco, não uma tarefa.
+  htmlSugestao(sg) {
+    return '<div class="sugestao"><span class="ic">' + ic('book', 22) + '</span>' +
+      '<div class="inf"><div class="t">Sobraram ' + this._hm(sg.minutos) + ' na sua semana</div>' +
+      '<div class="s">O roteiro da semana está completo. Se quiser ir além, o banco tem questões fáceis dos assuntos que mais caem no ENEM, dá para resolver umas ' + sg.questoes + ' nesse tempo.</div>' +
+      '<div class="sug-temas">' + sg.temas.map(t =>
+        '<button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + t.temaId + '\', \'facil\')">' + esc(t.nome) + '</button>'
+      ).join('') + '</div></div></div>';
   },
 
   /* ============================================================
