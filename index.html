@@ -7483,6 +7483,25 @@ async function _captchaOpts() {
 
 function mensagemAmigavelErroAuth(err, contexto) {
   const m = String((err && (err.message || err.code || err)) || '').toLowerCase();
+  const cod = String((err && err.code) || '').toLowerCase();
+  // (24/09/2026) Respostas que caíam na mensagem errada. A ordem importa: a de senha
+  // igual à anterior contém "password should" e aparecia como "Senha fraca".
+  if (cod === 'same_password' || m.includes('different from the old')) {
+    return 'A nova senha precisa ser diferente da senha que você usava.';
+  }
+  const espera = m.match(/only request this after (\d+) seconds?/);
+  if (espera) {
+    return 'Por segurança, aguarde ' + espera[1] + ' segundos antes de pedir outro e-mail. '
+      + 'Cada pedido novo cancela o link anterior: use sempre o e-mail mais recente.';
+  }
+  if (cod === 'email_not_confirmed' || m.includes('email not confirmed')) {
+    return 'Seu e-mail ainda não foi confirmado. Abra o e-mail de confirmação do Radix (veja também Spam e Promoções) e toque no link.';
+  }
+  if (contexto === 'recuperacao' && (m.includes('auth session missing') || cod === 'session_not_found'
+      || cod === 'bad_jwt' || m.includes('token is expired') || m.includes('jwt expired') || m.includes('reauthentication'))) {
+    return 'Este link de recuperação não vale mais (expirou ou já foi usado). '
+      + 'Volte à tela de entrada, digite seu e-mail e toque em "Esqueci minha senha" para receber outro.';
+  }
   // Rate limit do SMTP padrão do Supabase (free: poucos e-mails/hora por projeto)
   if (m.includes('rate limit') || m.includes('rate-limit') || m.includes('email rate')
       || m.includes('over_email_send_rate_limit') || m.includes('too many requests') || m.includes('429')) {
@@ -7549,12 +7568,23 @@ async function fazerCadastro() {
   }
   // Telefone e CPF vão no metadata do cadastro; o trigger handle_novo_usuario grava
   // os dois no perfil (Etapa 4: o UPDATE direto que existia aqui era ignorado pela RLS).
-  if (data.user && !data.session) {
-    setMsg(_signupDegustacao
-      ? 'Conta criada! Confirme seu e-mail e faça login para começar a degustação.'
-      : 'Conta criada! Verifique seu e-mail para confirmar e depois faça login.', 'green');
+  // (24/09/2026) E-mail que já tem conta confirmada: o servidor não cria outra e devolve
+  // um usuário sem identidades (para não revelar a conta). Avisar em vez de "Conta criada".
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
     trocarAba('signin');
     document.getElementById('signin-email').value = email;
+    setMsg('Esse e-mail já tem cadastro. Entre com sua senha ou toque em "Esqueci minha senha".', 'var(--radix-red)');
+    return;
+  }
+  if (data.user && !data.session) {
+    // (24/09/2026) trocarAba() limpa a mensagem; antes ela era escrita ANTES da troca e
+    // sumia na hora. O aluno não via o aviso, tentava entrar sem confirmar o e-mail e
+    // recebia "E-mail ou senha incorretos" (visto nos logs do Auth em 23/09).
+    trocarAba('signin');
+    document.getElementById('signin-email').value = email;
+    setMsg(_signupDegustacao
+      ? 'Conta criada! Confirme seu e-mail e faça login para começar a degustação.'
+      : 'Conta criada! Antes de entrar, abra o e-mail que enviamos para ' + email + ' (veja também Spam e Promoções) e toque no link de confirmação.', 'green');
   } else {
     setMsg('Conta criada! Entrando...', 'green');
     await iniciarSessao();
@@ -7571,23 +7601,72 @@ async function fazerLogin() {
   setMsg('Entrando...');
   const { data, error } = await sb.auth.signInWithPassword({ email, password: senha, options: await _captchaOpts() });
   if (error) {
-    setMsg(/captcha/i.test(error.message || '') ? mensagemAmigavelErroAuth(error, 'login') : 'E-mail ou senha incorretos.', 'var(--radix-red)');
+    const cod = String(error.code || '').toLowerCase();
+    const txt = String(error.message || '').toLowerCase();
+    if (cod === 'email_not_confirmed' || txt.includes('email not confirmed')) {
+      // (24/09/2026) Antes aparecia "E-mail ou senha incorretos" e o aluno achava que a
+      // senha estava errada. A senha está certa; falta confirmar o e-mail.
+      _msgConfirmacaoPendente();
+      return;
+    }
+    if (cod === 'invalid_credentials' || txt.includes('invalid login credentials')) {
+      setMsg('E-mail ou senha incorretos. Confira se é o mesmo e-mail do cadastro e digite a senha de novo, sem usar a senha salva no navegador. Se não lembrar, toque em "Esqueci minha senha".', 'var(--radix-red)');
+      return;
+    }
+    setMsg(mensagemAmigavelErroAuth(error, 'login'), 'var(--radix-red)');
     return;
   }
   await iniciarSessao();
 }
 
+// (24/09/2026) Cada pedido novo cancela o link anterior e o servidor recusa pedidos com
+// menos de 60 s. Nos logs, cliques repetidos davam erro e invalidavam o link que o aluno
+// ia abrir. O servidor também não diz se o e-mail tem cadastro (proteção contra varredura
+// de contas), então a mensagem de sucesso não pode afirmar que o e-mail foi enviado.
+let _recuperacaoEnviadaEm = 0, _recuperacaoEmail = '';
 async function esqueciSenha() {
   const email = document.getElementById('signin-email').value.trim().toLowerCase();
   if (!email) {
     setMsg('Digite seu e-mail acima primeiro.', 'var(--radix-red)');
     return;
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setMsg('E-mail inválido. Confira se digitou certo (sem espaços, com @ e domínio).', 'var(--radix-red)');
+    return;
+  }
+  const falta = 60 - Math.round((Date.now() - _recuperacaoEnviadaEm) / 1000);
+  if (email === _recuperacaoEmail && falta > 0) {
+    setMsg('O link já foi pedido para ' + email + '. Aguarde ' + falta + ' segundos antes de pedir outro: cada pedido novo cancela o link anterior.', 'var(--radix-red)');
+    return;
+  }
+  setMsg('Enviando…');
   const { error } = await sb.auth.resetPasswordForEmail(email, Object.assign({
     redirectTo: window.location.origin + window.location.pathname
   }, await _captchaOpts()));
-  if (error) setMsg(mensagemAmigavelErroAuth(error, 'recuperacao'), 'var(--radix-red)');
-  else setMsg('Link de recuperação enviado para seu e-mail.', 'green');
+  if (error) { setMsg(mensagemAmigavelErroAuth(error, 'recuperacao'), 'var(--radix-red)'); return; }
+  _recuperacaoEnviadaEm = Date.now(); _recuperacaoEmail = email;
+  setMsg('Se ' + email + ' tiver cadastro no Radix, o link chega em alguns minutos (veja também Spam e Promoções). '
+    + 'Abra o link do e-mail mais recente: ele vale por 1 hora.', 'green');
+}
+
+// Login recusado por e-mail não confirmado: explica e oferece o reenvio da confirmação.
+function _msgConfirmacaoPendente() {
+  const el = document.getElementById('auth-msg');
+  if (!el) return;
+  el.style.color = 'var(--radix-red)';
+  el.innerHTML = 'Seu e-mail ainda não foi confirmado. Abra o e-mail de confirmação do Radix (veja também Spam e Promoções) e toque no link. '
+    + '<a style="cursor:pointer;font-weight:700;text-decoration:underline;" onclick="reenviarConfirmacao()">Reenviar e-mail de confirmação</a>';
+}
+async function reenviarConfirmacao() {
+  const email = document.getElementById('signin-email').value.trim().toLowerCase();
+  if (!email) { setMsg('Digite seu e-mail acima primeiro.', 'var(--radix-red)'); return; }
+  setMsg('Enviando…');
+  const { error } = await sb.auth.resend({
+    type: 'signup', email,
+    options: Object.assign({ emailRedirectTo: window.location.origin + window.location.pathname }, await _captchaOpts())
+  });
+  if (error) setMsg(mensagemAmigavelErroAuth(error, 'cadastro'), 'var(--radix-red)');
+  else setMsg('Enviamos um novo link de confirmação para ' + email + '. Toque no link do e-mail mais recente e depois entre com sua senha.', 'green');
 }
 
 // ===== Recuperação de senha — modal "Definir nova senha" =====
@@ -7605,8 +7684,10 @@ function abrirModalNovaSenha() {
       <div class="modal" style="max-width:420px;">
         <h2>Defina sua nova senha</h2>
         <p style="font-size:13px;color:var(--radix-text-muted);margin-bottom:10px;">
-          Você clicou no link de recuperação enviado por e-mail. Crie uma nova senha (mínimo 8 caracteres, com letras e números).
+          Crie a nova senha da conta <b id="nsenha-conta" style="color:var(--radix-text);">…</b> (mínimo 8 caracteres, com letras e números). Depois de salvar, você já entra no app.
         </p>
+        <form id="nsenha-form" onsubmit="event.preventDefault(); salvarNovaSenha();">
+        <input type="email" id="nsenha-user" autocomplete="username" readonly style="display:none">
         <div class="form-group">
           <label>Nova senha</label>
           <input type="password" id="nsenha-1" autocomplete="new-password" minlength="8">
@@ -7617,13 +7698,20 @@ function abrirModalNovaSenha() {
         </div>
         <p id="nsenha-msg" style="font-size:13px;min-height:18px;color:var(--radix-red);"></p>
         <div class="modal-acoes">
-          <button class="btn btn-secondary" onclick="cancelarNovaSenha()">Cancelar</button>
-          <button class="btn btn-success" onclick="salvarNovaSenha()">Salvar nova senha</button>
+          <button type="button" class="btn btn-secondary" onclick="cancelarNovaSenha()">Cancelar</button>
+          <button type="submit" class="btn btn-success">Salvar nova senha</button>
         </div>
+        </form>
       </div>
     </div>`;
   document.body.insertAdjacentHTML('beforeend', '<div id="modal-nova-senha">' + html + '</div>');
   document.body.classList.add('modal-open');
+  // Mostra de qual conta é a senha (aluno com dois cadastros trocava de e-mail no login)
+  sb.auth.getSession().then(({ data }) => {
+    const em = (data && data.session && data.session.user && data.session.user.email) || '';
+    const c = document.getElementById('nsenha-conta'); if (c) c.textContent = em || 'sua conta';
+    const u = document.getElementById('nsenha-user'); if (u) u.value = em;
+  }).catch(() => {});
   setTimeout(() => { const i = document.getElementById('nsenha-1'); if (i) i.focus(); }, 60);
 }
 function fecharModalNovaSenha() {
@@ -7643,15 +7731,23 @@ async function salvarNovaSenha() {
   const s2 = (document.getElementById('nsenha-2').value || '');
   if (!senhaForte(s1)) { setM(SENHA_REGRA); return; }
   if (s1 !== s2) { setM('As duas senhas não conferem.'); return; }
+  if (salvarNovaSenha._ocupado) return;
+  salvarNovaSenha._ocupado = true;
   setM('Salvando…');
   try {
     const { error } = await sb.auth.updateUser({ password: s1 });
     if (error) throw error;
+    // (24/09/2026) Entra direto com a sessão do próprio link. Antes o app deslogava e
+    // pedia login de novo; nos logs de 23/09, aluno gravou a senha duas vezes e errou o
+    // login logo em seguida (outro e-mail ou senha antiga salva no navegador).
     fecharModalNovaSenha();
-    try { await sb.auth.signOut(); } catch (e) {}
-    alert('✅ Senha atualizada com sucesso. Faça login com a nova senha.');
+    try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+    alert('Senha atualizada. Da próxima vez, entre com a senha nova.');
+    await iniciarSessao();
   } catch (e) {
     setM(mensagemAmigavelErroAuth(e, 'recuperacao'));
+  } finally {
+    salvarNovaSenha._ocupado = false;
   }
 }
 
@@ -8912,8 +9008,8 @@ async function solicitarTrocaSenha(email) {
   const { error } = await sb.auth.resetPasswordForEmail(email, Object.assign({
     redirectTo: window.location.origin + window.location.pathname
   }, await _captchaOpts()));
-  if (error) { alert('Erro: ' + error.message); return; }
-  alert(`✅ E-mail enviado para ${email}. Verifique sua caixa de entrada (e a pasta de SPAM).`);
+  if (error) { alert(mensagemAmigavelErroAuth(error, 'recuperacao')); return; }
+  alert(`E-mail enviado para ${email}. Verifique sua caixa de entrada (e a pasta de SPAM). Abra o link do e-mail mais recente: ele vale por 1 hora.`);
 }
 
 // Envolve as entradas de tela que usam state.questoes: se o banco ainda não
@@ -23285,10 +23381,11 @@ function fazerMiniSimulado(temaId) {
   //    Suporta os 2 formatos do Supabase: legado (#type=recovery / #access_token)
   //    e PKCE (?code=...). Se for, NÃO entramos no app — abrimos o modal.
   const _hrefURL = window.location.href;
+  // (24/09/2026) Sem o antigo "#access_token=" genérico: o link de confirmação de
+  // cadastro também traz #access_token (com type=signup) e abria "Defina sua nova senha".
   const ehRecovery =
     /[?#&]type=recovery(\b|&|$)/.test(_hrefURL) ||      // legado
-    /[?&]code=[A-Za-z0-9_\-\.]{8,}/.test(_hrefURL) ||   // PKCE: ?code=...
-    /#access_token=/.test(_hrefURL);                     // legado fallback
+    /[?&]code=[A-Za-z0-9_\-\.]{8,}/.test(_hrefURL);     // PKCE: ?code=...
 
   // 1b) Sinais indiretos de "veio de link de recovery mas chegou sem parâmetros"
   //     (config errada de Redirect URLs no Supabase, link expirado redirecionando
@@ -23326,7 +23423,12 @@ function fazerMiniSimulado(temaId) {
   // 4) URL de recuperação → forçar modal, NÃO logar no app (mesmo que haja
   //    sessão recovery ativa, ela só serve p/ updateUser senha).
   if (ehRecovery) {
-    abrirModalNovaSenha();
+    if (session) { abrirModalNovaSenha(); return; }
+    // (24/09/2026) Link recusado pelo servidor (expirado, já usado ou substituído por um
+    // pedido mais novo). Antes o modal abria assim mesmo e só falhava ao salvar, com
+    // "Auth session missing!".
+    _mostrarAvisoRecoveryQuebrado();
+    try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
     return;
   }
 
@@ -23353,28 +23455,23 @@ function fazerMiniSimulado(temaId) {
 //   - Link expirado (>1h) → Supabase redireciona com error_code=otp_expired
 //   - Gmail/Outlook app webview que remove o hash da URL
 function _mostrarAvisoRecoveryQuebrado() {
-  const v = document.getElementById('view-login');
-  if (!v) return;
-  if (document.getElementById('aviso-recovery-quebrado')) return;
-  const html = `
-    <div id="aviso-recovery-quebrado"
-         style="max-width:520px;margin:14px auto 0;padding:14px 18px;border-radius:12px;
+  // (24/09/2026) Entra no topo do formulário de login. Inserido no #view-login (flex em
+  // linha), ele virava uma coluna e empurrava o cartão para fora da tela no celular.
+  const alvo = document.getElementById('form-signin');
+  if (!alvo || document.getElementById('aviso-recovery-quebrado')) return;
+  try { trocarAba('signin'); } catch (e) {}
+  alvo.insertAdjacentHTML('afterbegin', `
+    <div id="aviso-recovery-quebrado" role="alert"
+         style="margin:0 0 18px;padding:12px 14px;border-radius:12px;
                 background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.45);
-                font-size:13px;line-height:1.5;color:var(--radix-text,#111);">
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <span style="font-size:18px;line-height:1;">⚠️</span>
-        <div>
-          <b style="display:block;margin-bottom:4px;">Veio pelo link de recuperação?</b>
-          Não conseguimos abrir a tela de nova senha automaticamente. Isso pode acontecer se:
-          <ul style="margin:6px 0 8px 18px;padding:0;">
-            <li>O link expirou (vale por 1 hora)</li>
-            <li>Você abriu o link pelo app de e-mail no celular (tenta abrir no Chrome/Safari direto)</li>
-          </ul>
-          <b>Solicite um novo link abaixo</b> — digita seu e-mail e clica em "Esqueci minha senha".
-        </div>
-      </div>
-    </div>
-  `;
-  v.insertAdjacentHTML('afterbegin', html);
+                font-size:13px;line-height:1.5;color:var(--radix-text);">
+      <b style="display:block;margin-bottom:4px;">Este link de recuperação não vale mais.</b>
+      Ele vale por 1 hora e só pode ser usado uma vez. Se você pediu mais de um, só o último funciona.
+      <b style="display:block;margin-top:6px;">Digite seu e-mail abaixo e toque em "Esqueci minha senha" para receber outro.</b>
+    </div>`);
+  setTimeout(() => {
+    const a = document.getElementById('aviso-recovery-quebrado');
+    if (a && a.scrollIntoView) a.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
 }
 </script>
