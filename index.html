@@ -6013,6 +6013,8 @@
   .rvp-gab .sem small{display:block;font-weight:600;color:var(--radix-text-muted,#8fa3cc)}
   .rvp-gab input{width:100%;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;text-transform:uppercase;font-size:15px;padding:9px 12px;border-radius:8px;border:1px solid var(--radix-border,rgba(255,255,255,.14));background:var(--radix-surface-2,#223464);color:var(--radix-text,#eaf1ff)}
   .rvp-gab input:focus{outline:2px solid var(--radix-cyan,#22d3ee);outline-offset:1px}
+  /* (24/09/2026) o exemplo era o gabarito real da Semana 1; agora é uma instrução em texto normal */
+  .rvp-gab input::placeholder{letter-spacing:normal;text-transform:none;font-size:13px;color:var(--radix-text-muted,#8fa3cc);opacity:1}
   .rvp-gab .st{font-size:12px;white-space:nowrap;min-width:92px;text-align:right}
   .rvp-gab .st.ok{color:var(--radix-success,#34d399)}
   .rvp-gab .st.warn{color:var(--radix-warning,#fbbf24)}
@@ -9321,7 +9323,7 @@ async function _rvpCarregarGabaritos() {
       return '<div class="rvp-gab">' +
         '<span class="sem">Semana ' + s.n + '<small>' + qtd + ' lançamento' + (qtd === 1 ? '' : 's') + '</small></span>' +
         '<input id="gab-' + s.n + '" value="' + RVP.esc(g0) + '" maxlength="15" spellcheck="false" autocomplete="off"' +
-        ' placeholder="ABCBEADCDDCBAEE" aria-label="Gabarito da Semana ' + s.n + '"' +
+        ' placeholder="Digite as 15 letras (A a E)" aria-label="Gabarito da Semana ' + s.n + '"' +
         ' onkeydown="if(event.key===\'Enter\')_rvpSalvarGabarito(' + s.n + ')">' +
         st + '</div>';
     }).join('') +
