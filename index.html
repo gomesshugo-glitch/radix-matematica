@@ -6006,6 +6006,25 @@
   }
 
 
+  /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
+  #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
+  #radix-sync.on{display:flex}
+  #radix-sync i{width:8px;height:8px;border-radius:50%;background:var(--radix-text-muted,#8fa3cc);flex:none}
+  #radix-sync.salvando i{background:var(--radix-cyan,#22d3ee);animation:rxPulse 1s infinite}
+  #radix-sync.salvo i{background:var(--radix-success,#34d399)}
+  #radix-sync.pendente i,#radix-sync.aviso i{background:var(--radix-warning,#fbbf24)}
+  #radix-sync.erro i{background:var(--radix-coral,#ff7a5c)}
+  #radix-sync button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer;font-weight:600}
+  @keyframes rxPulse{50%{opacity:.35}}
+  .grav-status{margin-top:12px;font-size:12.5px;color:var(--radix-text-muted,#8fa3cc);line-height:1.45}
+  .conf-tripla{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--radix-text-muted,#8fa3cc)}
+  .conf-tripla b{color:var(--radix-text,#eaf1ff);font-size:15px}
+  .conf-itens{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+  .conf-item{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--radix-border,rgba(255,255,255,.12));border-radius:10px}
+  .conf-item-acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .conf-lista{margin:10px 0 0 18px;padding:0;font-size:13px;line-height:1.45}
+  .v3-hero-cont{flex-basis:100%;font-size:13px;opacity:.92}
+
   /* ---------- Gabaritos dos mini-simulados (professor) ---------- */
   .rvp-gab{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--radix-border,rgba(255,255,255,.06))}
   .rvp-gab:last-child{border-bottom:0}
@@ -7202,6 +7221,7 @@ async function _carregarQuestoesDoServidor() {
 async function carregarDados() {
   radixShowLoading('Carregando seus dados…');
   try {
+  if (state.usuario && state.usuario.id) CONFIAB.aoEntrar(state.usuario.id);   // Etapa 1: fila, tentativas, listas, relógio
   // Limpar caches antigos do localStorage (versões anteriores)
   localStorage.removeItem('radix_questoes');
   localStorage.removeItem('radix_questoes_enem25');
@@ -7224,6 +7244,7 @@ async function carregarDados() {
       alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
     }
     state.questoesPronto = true;
+    try { if (state.usuario && state.usuario.perfil !== 'professor') TENTATIVAS.finalizarVencidas(); } catch (e) { console.warn('[tentativas] vencidas:', e); }
     try {
       if (state.usuario && state.usuario.perfil !== 'professor') carregarListaLocal();
       atualizarBadgeLista();
@@ -7247,8 +7268,8 @@ async function carregarDados() {
 
 async function carregarDadosAluno() {
   await Promise.all([carregarProgressoCronograma(), carregarCronogramaCustom(), carregarMateriais(), carregarMateriaisConcluidos(), carregarCadernoErros(), carregarSimuladosExternos(), carregarMetaAluno()]);
-  carregarListaLocal();
-  carregarListasSalvas();
+  await LISTAS_SYNC.carregar();          // listas salvas + seleção (conta; migra as locais uma vez)
+  await TENTATIVAS.carregarRemotas();    // atividades em andamento (conta + aparelho)
 
   // Carrega só as respostas e simulados deste aluno (RLS já filtra)
   const resp = await sbTodas(() => sb.from('respostas')
@@ -8112,6 +8133,7 @@ function mostrarTelaBloqueado(perfil) {
 
 async function logout() {
   await _cacheBancoLimpar();
+  try { CONFIAB.aoSair(); } catch (e) {}
   await sb.auth.signOut();
   state.usuario = null;
   document.getElementById('view-app').classList.add('hidden');
@@ -9161,7 +9183,7 @@ function renderRevisaoFinal() {
 function _abrirDestinoInicial() {
   const d = state._destinoInicial;
   state._destinoInicial = null;
-  if (!d) return;
+  if (!d) { try { if (state.usuario && state.usuario.perfil !== 'professor') TENTATIVAS.oferecerRetomadaAoAbrir(); } catch (e) {} return; }
   try {
     if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
     if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel); return; }
@@ -9597,7 +9619,7 @@ function renderDashboardAluno() {
           <div class="v3-hero-sub">Você está na <b>semana ${semAtual.n}</b> do cronograma${temaSemAtual ? ' — ' + temaSemAtual.nome : (semAtual.titulo ? ' — ' + semAtual.titulo : '')}.</div>
         ` : ''}
         <div class="v3-hero-actions">
-          ${temaSemAtual ? `<button class="v3-btn v3-btn-light" onclick="abrirTema('${temaSemAtual.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>Continuar de onde parei</button>` : ''}
+          ${_htmlBotaoContinuar(temaSemAtual)}
           <button class="v3-btn v3-btn-ghost" onclick="renderCronograma()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Ver cronograma</button>
         </div>
       </div>
@@ -9742,11 +9764,11 @@ function renderDashboardAluno() {
       <div class="dash-card">
         <h3>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-          Progresso por módulo
+          Acertos por módulo
         </h3>
         <div class="chart-wrap"><canvas id="chart-modulo"></canvas></div>
         <div id="chart-mod-empty" class="chart-empty" style="display:none;">
-          Responda algumas questões pra ver seu progresso por módulo.
+          Responda algumas questões pra ver seus acertos por módulo.
         </div>
       </div>
     </div>
@@ -10164,56 +10186,14 @@ async function renderEstatisticasAvancadas() {
 
 // ========== MONTAR LISTA DE QUESTÕES ==========
 
-function carregarListaLocal() {
-  try {
-    const ids = JSON.parse(localStorage.getItem('radix_lista_' + state.usuario.id) || '[]');
-    state.questoesSelecionadas = Array.isArray(ids) ? ids : [];
-  } catch (e) { state.questoesSelecionadas = []; }
-}
 
-function salvarListaLocal() {
-  localStorage.setItem('radix_lista_' + state.usuario.id, JSON.stringify(state.questoesSelecionadas));
-}
 
 // ===== ARQUIVO DE LISTAS SALVAS (várias listas com nome) =====
 // Cada lista é um snapshot {id, nome, questaoIds, criadaEm, ultimoDownloadEm}
 // Persistido em localStorage `radix_listas_<userId>`.
 
-function carregarListasSalvas() {
-  try {
-    const arr = JSON.parse(localStorage.getItem('radix_listas_' + state.usuario.id) || '[]');
-    state.listasSalvas = Array.isArray(arr) ? arr : [];
-  } catch (e) { state.listasSalvas = []; }
-}
 
-function salvarListasSalvasLocal() {
-  localStorage.setItem('radix_listas_' + state.usuario.id, JSON.stringify(state.listasSalvas || []));
-}
 
-// Salva uma nova lista (ou atualiza existente que tenha o mesmo nome).
-// Retorna a entrada salva.
-function salvarListaComoArquivo(nome, questaoIds) {
-  if (!nome || !Array.isArray(questaoIds) || questaoIds.length === 0) return null;
-  if (!Array.isArray(state.listasSalvas)) state.listasSalvas = [];
-  const agora = new Date().toISOString();
-  const existente = state.listasSalvas.find(l => l.nome === nome);
-  if (existente) {
-    existente.questaoIds = questaoIds.slice();
-    existente.ultimoDownloadEm = agora;
-    salvarListasSalvasLocal();
-    return existente;
-  }
-  const nova = {
-    id: Date.now(),
-    nome: nome,
-    questaoIds: questaoIds.slice(),
-    criadaEm: agora,
-    ultimoDownloadEm: agora
-  };
-  state.listasSalvas.unshift(nova);
-  salvarListasSalvasLocal();
-  return nova;
-}
 
 function toggleQuestaoLista(qid) {
   const idx = state.questoesSelecionadas.indexOf(qid);
@@ -10610,7 +10590,7 @@ async function finalizarConferenciaGabarito() {
     correto: d.correto,
     fonte: 'simulado'
   }));
-  await sb.from('respostas').insert(respostasParaSalvar);
+  FILA.enfileirar({ tipo: 'gravar', payload: { tipo: 'respostas', dados: { itens: respostasParaSalvar.map(r => ({ questao_id: r.questao_id, tema: r.tema, resposta_marcada: r.resposta_marcada, correto: r.correto, fonte: r.fonte })) } } });
   // Atualizar cache local
   detalhes.forEach(d => {
     state.respostasAluno.push({
@@ -10924,19 +10904,6 @@ function escolherModoProva() {
 
 let _estudoAtual = null;
 
-function iniciarEstudoDigital(modo) {
-  const ids = (state.questoesSelecionadas || []).slice();
-  const qs = ids.map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
-  if (qs.length === 0) { alert('Sua lista está vazia.'); return; }
-  _estudoAtual = {
-    modo,                          // 'teste' | 'prova'
-    qs,
-    respostas: {},                 // { [qid]: idxAlt }
-    iniciadoEm: new Date().toISOString()
-  };
-  state.view = 'estudo-digital';
-  renderEstudoDigital();
-}
 
 function renderEstudoDigital() {
   const main = document.getElementById('main-content');
@@ -11012,10 +10979,11 @@ function renderEstudoDigital() {
   }).join('');
 
   // Barra de status
-  const podeEncerrar = ehTeste ? true : (respN === total);
+  // (Etapa 1) O Modo Prova pode ser encerrado com questões em branco; a confirmação diz quantas.
+  const podeEncerrar = true;
   const btnEncerrarTxt = ehTeste
     ? '✓ Finalizar estudo'
-    : (podeEncerrar ? '🎯 Encerrar e ver resultado' : `🔒 Responda todas (${respN}/${total})`);
+    : (respN === total ? '🎯 Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="_sairEstudoDigital()">← Banco de Questões</a> / ${tituloModo}</div>
@@ -11035,7 +11003,7 @@ function renderEstudoDigital() {
     </div>
 
     <div style="position:sticky;bottom:0;background:white;padding:14px;border-top:1px solid var(--radix-line);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;box-shadow:0 -4px 12px rgba(0,0,0,0.04);border-radius:12px 12px 0 0;">
-      <button class="btn btn-secondary" onclick="_sairEstudoDigital()">← Sair sem finalizar</button>
+      <button class="btn btn-secondary" onclick="_sairEstudoDigital()">← Sair</button>
       <button id="estudo-btn-encerrar" class="btn" ${podeEncerrar ? `style="background:${corAcento};"` : 'disabled style="opacity:.55;cursor:not-allowed;"'}
               onclick="${podeEncerrar ? '_finalizarEstudoDigital()' : `alert('Responda todas as ${total} questões antes de ver o resultado.')`}">
         ${btnEncerrarTxt}
@@ -11058,31 +11026,7 @@ function renderEstudoDigital() {
   }, 40);
 }
 
-// Modo Teste: registra a resposta no _estudoAtual + chama o responderQuestao
-// padrão (que mostra o gabarito + explicação inline e salva no banco).
-function _responderTeste(qid, idx) {
-  if (!_estudoAtual) return;
-  // Se já respondeu, não permite trocar (responderQuestao já zera o onclick depois)
-  if (_estudoAtual.respostas[qid] !== undefined) return;
-  _estudoAtual.respostas[qid] = idx;
-  responderQuestao(qid, idx);
-  // Atualiza só o contador no header (sem re-render — preserva o feedback inline)
-  _atualizarContadorEstudoSemReRender();
-}
 
-// Modo Prova: só registra a resposta, NÃO mostra feedback.
-// (No final, _finalizarEstudoDigital() abre o relatório.)
-function _responderProva(qid, idx) {
-  if (!_estudoAtual) return;
-  _estudoAtual.respostas[qid] = idx;
-  // Marca visualmente a alternativa selecionada (sem revelar correta/errada)
-  const alts = document.querySelectorAll(`#alts-${qid} .alternativa`);
-  alts.forEach((el, i) => {
-    el.classList.toggle('selecionada', i === idx);
-  });
-  // Atualiza só o contador (não re-render tudo, pra não perder scroll)
-  _atualizarProgressoEstudo();
-}
 
 function _atualizarProgressoEstudo() {
   if (!_estudoAtual) return;
@@ -11091,163 +11035,8 @@ function _atualizarProgressoEstudo() {
   _atualizarContadorEstudoSemReRender();
 }
 
-// Atualiza só o número "respN / total" no header + o botão "Encerrar" no rodapé,
-// sem refazer o resto do DOM (assim o feedback inline do Modo Teste e o scroll ficam).
-function _atualizarContadorEstudoSemReRender() {
-  if (!_estudoAtual) return;
-  const respN = Object.keys(_estudoAtual.respostas).length;
-  const total = _estudoAtual.qs.length;
-  const ehTeste = _estudoAtual.modo === 'teste';
-  const corAcento = ehTeste ? '#a855f7' : '#dc2626';
 
-  // Atualiza o "X / Y" — o header tem uma estrutura conhecida (último div com font-weight:800)
-  // Em vez de selectors frágeis, marco o contador com id próprio. Fallback: busca o número.
-  const contadorEl = document.getElementById('estudo-contador');
-  if (contadorEl) contadorEl.textContent = respN + ' / ' + total;
 
-  // Atualiza o botão "Encerrar" no rodapé (libera no Modo Prova quando atinge total)
-  const btnEnc = document.getElementById('estudo-btn-encerrar');
-  if (btnEnc) {
-    const podeEncerrar = ehTeste ? true : (respN === total);
-    if (podeEncerrar) {
-      btnEnc.disabled = false;
-      btnEnc.style.opacity = '';
-      btnEnc.style.cursor = '';
-      btnEnc.style.background = corAcento;
-      btnEnc.textContent = ehTeste ? '✓ Finalizar estudo' : '🎯 Encerrar e ver resultado';
-      btnEnc.onclick = _finalizarEstudoDigital;
-    } else {
-      btnEnc.disabled = true;
-      btnEnc.style.opacity = '.55';
-      btnEnc.style.cursor = 'not-allowed';
-      btnEnc.style.background = '';
-      btnEnc.textContent = `🔒 Responda todas (${respN}/${total})`;
-      btnEnc.onclick = () => alert(`Responda todas as ${total} questões antes de ver o resultado.`);
-    }
-  }
-}
-
-function _sairEstudoDigital() {
-  if (_estudoAtual && Object.keys(_estudoAtual.respostas).length > 0) {
-    // Confirma antes de jogar fora respostas
-    if (!confirm('Sair do estudo? Suas respostas até aqui não serão salvas.')) return;
-  }
-  _estudoAtual = null;
-  abrirTema('');
-}
-
-async function _finalizarEstudoDigital() {
-  if (!_estudoAtual) return;
-  const { modo, qs, respostas } = _estudoAtual;
-  // Calcula acertos
-  let acertos = 0;
-  const detalhes = qs.map(q => {
-    const minhaResp = respostas[q.id];
-    const correto = minhaResp === q.correta;
-    if (minhaResp !== undefined && correto) acertos++;
-    return { q, minhaResp, correto };
-  });
-  const respondidas = detalhes.filter(d => d.minhaResp !== undefined).length;
-  const total = qs.length;
-  const pct = respondidas > 0 ? Math.round(acertos / respondidas * 100) : 0;
-
-  // No Modo Prova: salvar respostas no banco (não foram salvas durante)
-  // No Modo Teste: já foram salvas pelo responderQuestao a cada clique
-  if (modo === 'prova' && respondidas > 0) {
-    const respostasParaSalvar = detalhes
-      .filter(d => d.minhaResp !== undefined)
-      .map(d => ({
-        aluno_id: state.usuario.id,
-        questao_id: d.q.id,
-        tema: d.q.tema,
-        resposta_marcada: d.minhaResp,
-        correto: d.correto,
-        fonte: 'estudo_prova'
-      }));
-    try {
-      await sb.from('respostas').insert(respostasParaSalvar);
-      // Atualiza cache local
-      detalhes.filter(d => d.minhaResp !== undefined).forEach(d => {
-        state.respostasAluno.push({
-          questaoId: d.q.id, tema: d.q.tema,
-          resposta: d.minhaResp, correto: d.correto,
-          data: new Date().toISOString(),
-          aluno: state.usuario.nome, fonte: 'estudo_prova'
-        });
-      });
-    } catch (e) { console.warn('Erro salvar respostas prova:', e); }
-  }
-
-  // Tela de resultado
-  state.view = 'resultado-estudo';
-  const main = document.getElementById('main-content');
-  const corAcento = modo === 'teste' ? '#a855f7' : '#dc2626';
-  const tituloModo = modo === 'teste' ? 'Modo Teste' : 'Modo Prova';
-
-  // Lista de cada questão com gabarito (especialmente útil em Modo Prova)
-  const difLabelMap = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' };
-  const difCorMap = {
-    facil:   { bg: 'rgba(16,185,129,.12)', fg: '#047857' },
-    media:   { bg: 'rgba(245,158,11,.14)', fg: '#b45309' },
-    dificil: { bg: 'rgba(220,38,38,.12)',  fg: '#b91c1c' }
-  };
-  const detalhesHtml = detalhes.map((d, i) => {
-    const tema = TEMAS.find(t => t.id === d.q.tema);
-    const minhaLetra = d.minhaResp != null ? String.fromCharCode(65 + d.minhaResp) : '—';
-    const certaLetra = String.fromCharCode(65 + d.q.correta);
-    const corLinha = d.minhaResp == null ? '#9ca3af' : (d.correto ? '#10b981' : '#dc2626');
-    const ico = d.minhaResp == null ? '○' : (d.correto ? '✓' : '✗');
-    const corMinha = d.minhaResp == null
-      ? '#9ca3af'
-      : (d.correto ? '#10b981' : '#dc2626');
-    // Chip de dificuldade
-    const dif = d.q.dificuldade;
-    const difLab = difLabelMap[dif];
-    const difCor = difCorMap[dif];
-    const difChip = (difLab && difCor)
-      ? `<span style="display:inline-block;background:${difCor.bg};color:${difCor.fg};font-weight:700;font-size:10.5px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;">${difLab}</span>`
-      : '';
-    const provaTxt = d.q.prova ? ` · ${String(d.q.prova).replace(/[<>&]/g,'')}` : '';
-    return `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--radix-line);font-size:13px;">
-        <div style="color:${corLinha};font-weight:800;font-size:16px;width:24px;text-align:center;">${ico}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;color:var(--radix-text);">
-            Q${String(i+1).padStart(2,'0')} · ${tema ? tema.nome : '—'}${difChip}
-          </div>
-          <div style="color:var(--radix-text-muted);font-size:12px;">
-            Sua: <b style="color:${corMinha};">${minhaLetra}</b> · Gabarito: <b style="color:#10b981;">${certaLetra}</b>${provaTxt}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Resultado do ${tituloModo}</div>
-    <h2 class="section-title" style="margin-top:8px;">
-      <span class="section-title-accent"></span>
-      Resultado · ${tituloModo}
-    </h2>
-    <div class="resultado-box" style="border-left:4px solid ${corAcento};">
-      <div style="color:var(--radix-gray-light);">Você acertou</div>
-      <div class="nota">${acertos}/${total}</div>
-      <div class="nota-detalhe">${pct}% de aproveitamento${respondidas < total ? ` · ${total - respondidas} não respondida(s)` : ''}</div>
-    </div>
-
-    <div style="background:white;border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;">
-      <div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">
-        Detalhamento por questão
-      </div>
-      ${detalhesHtml}
-    </div>
-
-    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;">
-      <button class="btn" onclick="renderHome()">Voltar ao Início</button>
-      <button class="btn btn-secondary" onclick="abrirTema('')">📚 Voltar ao Banco</button>
-    </div>
-  `;
-  _estudoAtual = null;
-}
 
 async function baixarQuestoesFiltradasPDF() {
   const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -12916,49 +12705,6 @@ function renderQuestao(q, numero, modoSimulado) {
   `;
 }
 
-function responderQuestao(qid, idx) {
-  const q = state.questoes.find(x => x.id === qid);
-  const alts = document.querySelectorAll(`#alts-${qid} .alternativa`);
-  alts.forEach((el, i) => {
-    el.classList.remove('selecionada', 'correta', 'errada');
-    if (i === q.correta) el.classList.add('correta');
-    else if (i === idx) el.classList.add('errada');
-    el.onclick = null;
-  });
-  // Botão "Adicionar ao caderno de erros" SÓ aparece quando errou + perfil aluno + tem semana atual
-  const correto2 = idx === q.correta;
-  const semAtualResp = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
-  const podeCaderno = !correto2 && state.usuario?.perfil === 'aluno' && semAtualResp && semAtualResp.n;
-  const btnCaderno = podeCaderno ? `
-    <div style="margin-top:10px;">
-      <button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;" onclick="abrirModalErroDaQuestao(${qid})">
-        📕 Adicionar ao caderno de erros
-      </button>
-    </div>` : '';
-  document.getElementById(`explicacao-${qid}`).innerHTML = `
-    <div class="explicacao">
-      <strong>${idx === q.correta ? '✓ Correto!' : '✗ Resposta incorreta.'}</strong><br>
-      <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
-      <strong>Explicação:</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
-      ${q.explicacaoImg ? `<div class="explicacao-img-wrap"><img class="explicacao-img" src="${q.explicacaoImg}" alt="resolução"></div>` : ''}
-      ${btnCaderno}
-    </div>
-  `;
-  if (q._explOk === false) _preencherExplicacoes([q]);
-  const correto = idx === q.correta;
-  const nova = {
-    questaoId: qid, tema: q.tema,
-    resposta: idx, correto: correto,
-    data: new Date().toISOString(),
-    aluno: state.usuario.nome, fonte: 'estudo'
-  };
-  state.respostasAluno.push(nova);
-  // Salva no Supabase de forma assíncrona (não bloqueia UI)
-  sb.from('respostas').insert({
-    aluno_id: state.usuario.id, questao_id: qid, tema: q.tema,
-    resposta_marcada: idx, correto: correto, fonte: 'estudo'
-  }).then(({ error }) => { if (error) console.warn('Erro salvar resposta:', error); });
-}
 
 // ========== SIMULADO ==========
 function abrirSimuladoConfig() {
@@ -13048,59 +12794,9 @@ function toggleModulo(modId, btn) {
   btn.textContent = allChecked ? 'Selecionar todos' : 'Desmarcar todos';
 }
 
-function iniciarSimulado() {
-  const num = parseInt(document.getElementById('sim-num').value);
-  const tempo = parseInt(document.getElementById('sim-tempo').value);
-  const temas = [...document.querySelectorAll('.tema-check:checked')].map(c => c.value);
-
-  let pool = state.questoes.slice();
-  if (temas.length > 0) pool = pool.filter(q => temas.includes(q.tema));
-  if (pool.length === 0) { alert('Não há questões com esse filtro.'); return; }
-  if (pool.length < num) { alert(`Apenas ${pool.length} questões disponíveis com esses filtros.`); return; }
-
-  pool = pool.sort(() => Math.random() - 0.5).slice(0, num);
-
-  state.simuladoAtual = {
-    questoes: pool,
-    respostas: {},
-    indiceAtual: 0,
-    tempoTotal: tempo * 60,
-    tempoRestante: tempo * 60,
-    iniciadoEm: Date.now(),
-    finalizado: false,
-  };
-  renderSimulado();
-  iniciarCronometro();
-}
 
 let cronometroInterval = null;
-function iniciarCronometro() {
-  if (cronometroInterval) clearInterval(cronometroInterval);
-  cronometroInterval = setInterval(() => {
-    if (!state.simuladoAtual || state.simuladoAtual.finalizado) {
-      clearInterval(cronometroInterval);
-      return;
-    }
-    state.simuladoAtual.tempoRestante--;
-    atualizarCronometroDisplay();
-    if (state.simuladoAtual.tempoRestante <= 0) {
-      clearInterval(cronometroInterval);
-      finalizarSimulado(true);
-    }
-  }, 1000);
-}
 
-function atualizarCronometroDisplay() {
-  const el = document.getElementById('cronometro');
-  if (!el) return;
-  const t = state.simuladoAtual.tempoRestante;
-  const mm = Math.floor(t / 60).toString().padStart(2, '0');
-  const ss = (t % 60).toString().padStart(2, '0');
-  el.textContent = `${mm}:${ss}`;
-  el.classList.remove('aviso', 'critico');
-  if (t < 60) el.classList.add('critico');
-  else if (t < 180) el.classList.add('aviso');
-}
 
 function renderSimulado() {
   state.view = 'simulado';
@@ -13131,6 +12827,10 @@ function renderSimulado() {
       ${sim.indiceAtual === sim.questoes.length - 1
         ? `<button class="btn btn-success" onclick="confirmarFinalizar()">Finalizar Simulado ✓</button>`
         : `<button class="btn" onclick="navSim(1)">Próxima →</button>`}
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="sairSimuladoDepois()">Sair e continuar depois</button>
+      <div style="font-size:12px;color:var(--radix-text-muted);margin-top:6px;">As marcações ficam salvas. O tempo continua contando até o limite.</div>
     </div>
   `;
   atualizarCronometroDisplay();
@@ -13186,85 +12886,10 @@ function renderQuestaoSimulado(q, numero, respostaMarcada) {
   `;
 }
 
-function marcarSimulado(qid, idx) {
-  state.simuladoAtual.respostas[qid] = idx;
-  renderSimulado();
-}
 
-function navSim(delta) {
-  state.simuladoAtual.indiceAtual += delta;
-  renderSimulado();
-}
 
-function irParaQuestaoSim(idx) {
-  state.simuladoAtual.indiceAtual = idx;
-  renderSimulado();
-}
 
-function confirmarFinalizar() {
-  const sim = state.simuladoAtual;
-  const naoRespondidas = sim.questoes.filter(q => sim.respostas[q.id] === undefined).length;
-  let msg = 'Deseja finalizar o simulado?';
-  if (naoRespondidas > 0) msg += `\n\nAtenção: ${naoRespondidas} questão(ões) sem resposta.`;
-  if (confirm(msg)) finalizarSimulado(false);
-}
 
-function finalizarSimulado(porTempo) {
-  if (cronometroInterval) clearInterval(cronometroInterval);
-  const sim = state.simuladoAtual;
-  sim.finalizado = true;
-
-  let acertos = 0;
-  const respostasParaSalvar = [];
-  const detalhes = sim.questoes.map(q => {
-    const resposta = sim.respostas[q.id];
-    const correto = resposta === q.correta;
-    if (correto) acertos++;
-    if (resposta !== undefined) {
-      const nova = {
-        questaoId: q.id, tema: q.tema,
-        resposta, correto,
-        data: new Date().toISOString(),
-        aluno: state.usuario.nome, fonte: 'simulado'
-      };
-      state.respostasAluno.push(nova);
-      respostasParaSalvar.push({
-        aluno_id: state.usuario.id, questao_id: q.id, tema: q.tema,
-        resposta_marcada: resposta, correto: correto, fonte: 'simulado'
-      });
-    }
-    return { questao: q, resposta, correto };
-  });
-
-  const total = sim.questoes.length;
-  const tempoUsado = sim.tempoTotal - sim.tempoRestante;
-  const registro = {
-    id: Date.now(),
-    aluno: state.usuario.nome,
-    data: new Date().toISOString(),
-    acertos, total,
-    percentual: Math.round((acertos / total) * 100),
-    tempoUsado, detalhes,
-  };
-  state.historicoSimulados.push(registro);
-
-  // Salva o simulado e as respostas no Supabase em paralelo
-  Promise.all([
-    sb.from('simulados_realizados').insert({
-      aluno_id: state.usuario.id,
-      total_questoes: total, acertos: acertos,
-      percentual: registro.percentual,
-      tempo_usado_seg: tempoUsado,
-      questoes_ids: sim.questoes.map(q => q.id)
-    }),
-    respostasParaSalvar.length ? sb.from('respostas').insert(respostasParaSalvar) : Promise.resolve()
-  ]).then(results => {
-    results.forEach(r => { if (r?.error) console.warn('Erro salvar simulado:', r.error); });
-  });
-
-  renderResultadoSimulado(registro, porTempo);
-  _preencherExplicacoes(registro.detalhes.map(d => d.questao));
-}
 
 function renderResultadoSimulado(registro, porTempo) {
   state.view = 'resultado';
@@ -13278,8 +12903,10 @@ function renderResultadoSimulado(registro, porTempo) {
     <div class="resultado-box">
       <div style="color:var(--radix-gray-light);">Você acertou</div>
       <div class="nota">${registro.acertos}/${registro.total}</div>
-      <div class="nota-detalhe">${registro.percentual}% de aproveitamento</div>
+      <div class="nota-detalhe">${registro.percentual}% de aproveitamento (sobre as ${registro.total} questões)</div>
+      <div class="conf-tripla"><span><b>${registro.acertos}</b> acertos</span><span><b>${registro.erros != null ? registro.erros : (registro.total - registro.acertos - (registro.brancos || 0))}</b> erros</span><span><b>${registro.brancos || 0}</b> em branco</span></div>
       <div style="margin-top:16px;font-size:14px;color:var(--radix-gray-light);">Tempo usado: ${mm}min ${ss}s</div>
+      ${_htmlStatusGravacao(registro.opId)}
     </div>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;">
       <button class="btn" onclick="renderHome()">Voltar ao Início</button>
@@ -20099,7 +19726,7 @@ function renderGabaritoTRI() {
     + '<div class="tri-grid" id="tri-grid">' + a.resp.map((r, i) => _triLinha(i, r)).join('') + '</div>'
     + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">'
     + '<button class="sim-btn sim-btn-primary" onclick="triEnviar()">Enviar e calcular a nota</button>'
-    + '<button class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">Sair e continuar depois</button>'
+    + '<button class="sim-btn sim-btn-outline" onclick="triSairDepois()">Sair e continuar depois</button>'
     + '</div>'
     + '</div>';
   clearInterval(TRI.timer);
@@ -20110,31 +19737,6 @@ function renderGabaritoTRI() {
   };
   tick(); TRI.timer = setInterval(tick, 1000);
   window.scrollTo(0, 0);
-}
-function triMarcar(i, l) {
-  const a = TRI.atual; if (!a) return;
-  a.resp[i] = a.resp[i] === l ? '.' : l;
-  const el = document.getElementById('tri-q-' + i); if (el) el.outerHTML = _triLinha(i, a.resp[i]);
-  const p = document.getElementById('tri-progresso'); if (p) p.textContent = a.resp.filter(x => x !== '.').length + ' de 45 marcadas';
-  clearTimeout(TRI.salvarT);
-  TRI.salvarT = setTimeout(async () => {
-    const { error } = await sb.rpc('fn_simulado_tri_salvar', { p_id: a.id, p_respostas: a.resp.join('') });
-    if (error) console.warn('[tri] salvar:', error.message);
-  }, 800);
-}
-async function triEnviar() {
-  const a = TRI.atual; if (!a) return;
-  const brancos = a.resp.filter(x => x === '.').length;
-  const aviso = brancos > 0 ? brancos + ' questão(ões) em branco contam como erro. Enviar assim mesmo? Depois do envio não dá para alterar.' : 'Enviar o gabarito e calcular a nota? Depois do envio não dá para alterar.';
-  if (!confirm(aviso)) return;
-  clearTimeout(TRI.salvarT);
-  radixShowLoading('Calculando sua nota TRI…');
-  const tempo = Math.floor((Date.now() - a.inicio) / 1000);
-  const { data, error } = await sb.rpc('fn_simulado_tri_finalizar', { p_id: a.id, p_respostas: a.resp.join(''), p_tempo_seg: tempo });
-  radixHideLoading();
-  if (error) { alert('Não foi possível calcular: ' + error.message); return; }
-  clearInterval(TRI.timer); TRI.atual = null;
-  renderResultadoTRI(data, tempo);
 }
 async function triCancelar(id) {
   if (!confirm('Descartar esta tentativa? As marcações serão apagadas.')) return;
@@ -23362,19 +22964,1069 @@ async function baixarPDFProgressoTudo() {
   await gerarPDFProgresso([], 'Relatorio completo de progresso');
 }
 
-function fazerMiniSimulado(temaId) {
-  // Sorteia até 10 questões do tema e inicia simulado de 10 min
-  let pool = state.questoes.filter(q => q.tema === temaId);
-  if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
-  const num = Math.min(10, pool.length);
-  pool = pool.sort(() => Math.random() - 0.5).slice(0, num);
+
+// ============================================================================
+// ETAPA 1 — CONFIABILIDADE (25/09/2026)
+// O aluno precisa conseguir salvar e retomar o que faz, ver as listas dele em
+// qualquer aparelho e confiar no resultado que aparece. Quatro peças:
+//   RELOGIO     — hora do servidor (o cronômetro não depende do relógio do celular)
+//   FILA        — fila local de gravações (localStorage, por usuário), reenvio
+//                 automático quando a conexão volta, uma requisição por vez,
+//                 operação idempotente no servidor (fn_gravar_lote / op_id)
+//   TENTATIVAS  — andamento de estudo (teste/prova), simulado e mini, salvo
+//                 no aparelho e na conta (tabela tentativa)
+//   LISTAS_SYNC — listas salvas e seleção em construção na conta (lista_aluno)
+// SYNC_UI mostra "Salvando… / Salvo / Pendente de sincronização" num chip
+// discreto. Nada aqui usa emoji; os textos antigos com emoji ficaram como eram.
+// ============================================================================
+
+function rxUuid() {
+  try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+  const h = '0123456789abcdef'; let s = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) s += '-';
+    else if (i === 14) s += '4';
+    else if (i === 19) s += h[(Math.random() * 4 | 0) + 8];
+    else s += h[Math.random() * 16 | 0];
+  }
+  return s;
+}
+function rxLerJson(chave, padrao) {
+  try { const v = JSON.parse(localStorage.getItem(chave)); return v == null ? padrao : v; } catch (e) { return padrao; }
+}
+function rxGravarJson(chave, valor) {
+  try { localStorage.setItem(chave, JSON.stringify(valor)); return true; } catch (e) { console.warn('[local]', chave, e); return false; }
+}
+// Erro transitório (vale reenviar depois) x definitivo (o servidor recusou).
+function rxErroTransitorio(err) {
+  if (!err) return false;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
+  const m = String(err.message || err).toLowerCase();
+  const cod = String(err.code || '');
+  const st = Number(err.status || 0);
+  if (/failed to fetch|networkerror|network request failed|load failed|fetch failed|timeout|timed out|aborted|socket|econn|jwt expired|token is expired|refresh_token/.test(m)) return true;
+  if (st === 408 || st === 425 || st === 429 || st === 401 || st >= 500) return true;
+  if (/^(57014|40001|40P01|53|08)/.test(cod) || /^PGRST(001|002|003)$/.test(cod)) return true;
+  return false;
+}
+function rxMensagemErro(err) {
+  const m = String((err && (err.message || err.details)) || err || 'erro desconhecido');
+  return m.replace(/^TypeError:\s*/i, '').slice(0, 140);
+}
+
+// ---------- RELOGIO ----------
+const RELOGIO = {
+  desvio: 0,                       // ms que somam ao Date.now() para chegar na hora do servidor
+  ok: false,
+  agora() { return Date.now() + this.desvio; },
+  ajustar(isoServidor, enviadoEm) {
+    const s = Date.parse(isoServidor); if (!isFinite(s)) return;
+    const meio = enviadoEm ? (enviadoEm + Date.now()) / 2 : Date.now();
+    this.desvio = s - meio; this.ok = true;
+  },
+  async sincronizar() {
+    try {
+      const t0 = Date.now();
+      const { data, error } = await sb.rpc('fn_agora');
+      if (!error && data) this.ajustar(data, t0);
+    } catch (e) {}
+  }
+};
+
+// ---------- SYNC_UI (chip de estado) ----------
+const SYNC_UI = {
+  _timerOk: null, _mostrarSalvo: false, _aviso: null, _timerAviso: null,
+  el() {
+    let e = document.getElementById('radix-sync');
+    if (!e) {
+      e = document.createElement('div'); e.id = 'radix-sync';
+      e.setAttribute('role', 'status'); e.setAttribute('aria-live', 'polite');
+      document.body.appendChild(e);
+    }
+    return e;
+  },
+  avisar(texto, ms) {
+    this._aviso = texto; clearTimeout(this._timerAviso);
+    this._timerAviso = setTimeout(() => { this._aviso = null; this.atualizar(); }, ms || 6000);
+    this.atualizar();
+  },
+  salvoAgora() {
+    this._mostrarSalvo = true; clearTimeout(this._timerOk);
+    this._timerOk = setTimeout(() => { this._mostrarSalvo = false; this.atualizar(); }, 2500);
+    this.atualizar();
+  },
+  atualizar() {
+    const e = this.el();
+    const itens = (typeof FILA !== 'undefined' && FILA.uid) ? FILA.itens : [];
+    const pend = itens.filter(x => x.estado === 'pendente' || x.estado === 'enviando').length;
+    const err = itens.filter(x => x.estado === 'erro').length;
+    let cls = '', html = '';
+    if (this._aviso) { cls = 'aviso'; html = '<i></i><span>' + _escHtml(this._aviso) + '</span>'; }
+    else if (typeof FILA !== 'undefined' && FILA.emVoo) { cls = 'salvando'; html = '<i></i><span>Salvando…</span>'; }
+    else if (err) {
+      cls = 'erro';
+      html = '<i></i><span>' + err + (err === 1 ? ' gravação não aceita' : ' gravações não aceitas') + '</span>'
+        + '<button type="button" onclick="FILA.repetirErros()">Tentar de novo</button>'
+        + '<button type="button" title="Ver detalhe" onclick="FILA.mostrarErros()">Detalhes</button>';
+    } else if (pend) {
+      cls = 'pendente';
+      html = '<i></i><span>Pendente de sincronização (' + pend + ')</span><button type="button" onclick="FILA.processar()">Tentar agora</button>';
+    } else if (this._mostrarSalvo) { cls = 'salvo'; html = '<i></i><span>Salvo</span>'; }
+    e.className = cls ? ('on ' + cls) : '';
+    e.innerHTML = html;
+    document.querySelectorAll('[data-op]').forEach(el => _atualizarStatusGravacaoDom(el.getAttribute('data-op')));
+  }
+};
+
+// Linha de estado de uma gravação específica (telas de resultado).
+function _htmlStatusGravacao(opId) {
+  if (!opId) return '';
+  return '<div class="grav-status" data-op="' + _escHtml(opId) + '">' + _textoStatusGravacao(opId) + '</div>';
+}
+function _textoStatusGravacao(opId) {
+  const op = (typeof FILA !== 'undefined') ? FILA.itens.find(x => x.id === opId) : null;
+  const fim = FILA.concluidas[opId];
+  if (fim && fim.dados && fim.dados.ja_finalizada) return '<b>Atenção:</b> esta atividade já tinha sido finalizada em outro aparelho ou aba. O resultado guardado na sua conta é o daquela finalização.';
+  if (!op) return fim ? 'Resultado salvo na sua conta.' : 'Resultado salvo na sua conta.';
+  if (op.estado === 'enviando') return 'Resultado calculado. Salvando na sua conta…';
+  if (op.estado === 'erro') return '<b>Não foi possível salvar:</b> ' + _escHtml(op.ultimoErro || 'erro') + ' <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="FILA.repetirErros()">Tentar de novo</button>';
+  return 'Resultado calculado. <b>Pendente de sincronização:</b> será enviado assim que a conexão voltar. <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="FILA.processar()">Tentar agora</button>';
+}
+function _atualizarStatusGravacaoDom(opId) {
+  document.querySelectorAll('[data-op="' + opId + '"]').forEach(el => { el.innerHTML = _textoStatusGravacao(opId); });
+}
+
+// ---------- FILA (gravações pendentes) ----------
+const FILA = {
+  uid: null, itens: [], emVoo: false, _p: null, _timer: null, _falhas: 0, _obs: {}, concluidas: {}, _eventos: false,
+  chave() { return 'radix_fila_' + this.uid; },
+  iniciar(uid) {
+    if (!uid) return;
+    if (this.uid && this.uid !== uid) this.parar();
+    this.uid = uid; this.carregar(); this.ligarEventos(); SYNC_UI.atualizar(); this.agendar(300);
+  },
+  parar() { clearTimeout(this._timer); this.uid = null; this.itens = []; this._obs = {}; SYNC_UI.atualizar(); },
+  carregar() { const v = rxLerJson(this.chave(), []); this.itens = Array.isArray(v) ? v : []; this.itens.forEach(x => { if (x.estado === 'enviando') x.estado = 'pendente'; }); },
+  gravarLocal() { rxGravarJson(this.chave(), this.itens); },
+  ligarEventos() {
+    if (this._eventos) return; this._eventos = true;
+    window.addEventListener('online', () => { this._falhas = 0; this.agendar(200); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.agendar(200); });
+    window.addEventListener('storage', (ev) => {
+      if (!this.uid || this.emVoo || !ev.key || ev.key !== this.chave()) return;
+      this.carregar(); SYNC_UI.atualizar();
+    });
+    setInterval(() => { if (this.uid && this.itens.some(x => x.estado === 'pendente')) this.agendar(0); }, 60000);
+  },
+  agendar(ms) { clearTimeout(this._timer); this._timer = setTimeout(() => this.processar(), ms || 0); },
+  // op = { id?, tipo, payload, chave? }. `chave` faz a operação nova substituir a
+  // pendente de mesma chave (autosave: só o retrato mais novo interessa).
+  enfileirar(op, aoConcluir) {
+    if (!this.uid && state.usuario && state.usuario.id) this.iniciar(state.usuario.id);
+    if (!this.uid) return null;
+    op.id = op.id || rxUuid();
+    if (this.itens.some(x => x.id === op.id)) { if (aoConcluir) this._obs[op.id] = aoConcluir; this.agendar(0); return op.id; }
+    op.estado = 'pendente'; op.criadoEm = op.criadoEm || Date.now(); op.tentativas = 0;
+    if (op.chave) {
+      const i = this.itens.findIndex(x => x.chave === op.chave && x.estado !== 'enviando');
+      if (i >= 0) {
+        const antigo = this.itens[i];
+        this.itens[i] = Object.assign({}, antigo, { tipo: op.tipo, payload: op.payload, estado: 'pendente', ultimoErro: null });
+        if (aoConcluir) this._obs[antigo.id] = aoConcluir;
+        this.gravarLocal(); SYNC_UI.atualizar(); this.agendar(0); return antigo.id;
+      }
+    }
+    this.itens.push(op);
+    if (aoConcluir) this._obs[op.id] = aoConcluir;
+    this.gravarLocal(); SYNC_UI.atualizar(); this.agendar(0);
+    return op.id;
+  },
+  pendentes(prefixoChave) {
+    return this.itens.filter(x => x.estado !== 'erro' && (!prefixoChave || String(x.chave || '').startsWith(prefixoChave)));
+  },
+  repetirErros() { this.itens.forEach(x => { if (x.estado === 'erro') { x.estado = 'pendente'; } }); this._falhas = 0; this.gravarLocal(); SYNC_UI.atualizar(); this.agendar(0); },
+  mostrarErros() {
+    const err = this.itens.filter(x => x.estado === 'erro');
+    if (!err.length) return;
+    const linhas = err.map(x => '<li><b>' + _escHtml(this.rotulo(x)) + '</b><br><span style="color:var(--radix-text-muted)">' + _escHtml(x.ultimoErro || '') + '</span></li>').join('');
+    _modalConfiab('<h2>Gravações não aceitas</h2><p style="font-size:13px;color:var(--radix-text-muted)">O servidor recusou estas gravações. Elas ficam guardadas neste aparelho até você tentar de novo ou descartá-las.</p><ul class="conf-lista">' + linhas + '</ul>',
+      [{ txt: 'Tentar de novo', cls: 'btn-success', fn: () => FILA.repetirErros() },
+       { txt: 'Descartar estas', cls: 'btn-danger', fn: () => { if (confirm('Descartar as gravações recusadas? Elas não serão enviadas.')) FILA.descartarErros(); } },
+       { txt: 'Fechar', cls: 'btn-secondary' }]);
+  },
+  descartarErros() { this.itens = this.itens.filter(x => x.estado !== 'erro'); this.gravarLocal(); SYNC_UI.atualizar(); },
+  rotulo(op) {
+    if (op.tipo === 'gravar') { const t = op.payload && op.payload.tipo; return t === 'simulado' ? 'Resultado de simulado' : t === 'respostas' ? 'Respostas de uma atividade' : 'Resposta de questão'; }
+    if (op.tipo === 'tentativa') return 'Andamento de atividade';
+    if (op.tipo === 'tentativa_descartar') return 'Descarte de atividade';
+    if (op.tipo === 'lista' || op.tipo === 'lista_excluir') return 'Lista de questões';
+    if (op.tipo === 'rpc') return 'Simulado TRI (marcações)';
+    return op.tipo;
+  },
+  proximoAtraso() { const seq = [2000, 5000, 15000, 30000, 60000]; return seq[Math.min(this._falhas, seq.length) - 1] || 2000; },
+  processar() {
+    if (this._p) return this._p;
+    this._p = this._loop().catch(e => console.warn('[fila]', e)).finally(() => { this._p = null; });
+    return this._p;
+  },
+  async _loop() {
+    if (!this.uid) return;
+    let houveSucesso = false;
+    this.emVoo = true; SYNC_UI.atualizar();
+    try {
+      while (this.uid) {
+        const op = this.itens.find(x => x.estado === 'pendente');
+        if (!op) break;
+        // A sessão precisa ser da mesma conta da fila: nunca envia dados de um aluno na sessão de outro.
+        let sess = null;
+        try { sess = (await sb.auth.getSession()).data.session; } catch (e) {}
+        if (!sess || !sess.user || sess.user.id !== this.uid) { this._falhas++; this.agendar(this.proximoAtraso()); break; }
+        op.estado = 'enviando'; SYNC_UI.atualizar();
+        const r = await this.enviar(op);
+        if (r.ok) {
+          this.itens = this.itens.filter(x => x.id !== op.id); this.gravarLocal();
+          this._falhas = 0; houveSucesso = true;
+          this.concluidas[op.id] = { dados: r.dados, em: Date.now() };
+          this.notificar(op, 'salvo', r.dados);
+        } else if (r.transitorio) {
+          op.estado = 'pendente'; op.tentativas = (op.tentativas || 0) + 1; op.ultimoErro = r.erro; this.gravarLocal();
+          this._falhas++; this.notificar(op, 'pendente', null); this.agendar(this.proximoAtraso());
+          break;
+        } else {
+          op.estado = 'erro'; op.tentativas = (op.tentativas || 0) + 1; op.ultimoErro = r.erro; this.gravarLocal();
+          this.notificar(op, 'erro', null);
+        }
+      }
+    } finally {
+      this.emVoo = false;
+      if (houveSucesso) SYNC_UI.salvoAgora(); else SYNC_UI.atualizar();
+    }
+  },
+  async enviar(op) {
+    try {
+      let res;
+      if (op.tipo === 'gravar') {
+        res = await sb.rpc('fn_gravar_lote', { p_op_id: op.id, p_tipo: op.payload.tipo, p_payload: op.payload.dados || {} });
+      } else if (op.tipo === 'tentativa') {
+        res = await sb.rpc('fn_tentativa_salvar', { p: op.payload });
+        if (!res.error && res.data) TENTATIVAS.aoSincronizar(res.data);
+      } else if (op.tipo === 'tentativa_descartar') {
+        res = await sb.rpc('fn_tentativa_descartar', { p_id: op.payload.p_id });
+      } else if (op.tipo === 'rpc') {
+        res = await sb.rpc(op.payload.fn, op.payload.args || {});
+      } else if (op.tipo === 'lista') {
+        const linha = Object.assign({}, op.payload, { aluno_id: this.uid });
+        res = await sb.from('lista_aluno').upsert(linha, { onConflict: 'aluno_id,id' });
+      } else if (op.tipo === 'lista_excluir') {
+        res = await sb.from('lista_aluno').delete().eq('aluno_id', this.uid).eq('id', op.payload.id);
+      } else {
+        return { ok: false, transitorio: false, erro: 'tipo de operação desconhecido: ' + op.tipo };
+      }
+      if (res && res.error) return { ok: false, transitorio: rxErroTransitorio(res.error), erro: rxMensagemErro(res.error) };
+      const dados = res ? res.data : null;
+      if (dados && dados.agora) RELOGIO.ajustar(dados.agora);
+      return { ok: true, dados };
+    } catch (e) {
+      return { ok: false, transitorio: rxErroTransitorio(e), erro: rxMensagemErro(e) };
+    }
+  },
+  notificar(op, estado, dados) {
+    const cb = this._obs[op.id];
+    if (cb) { try { cb(estado, dados, op); } catch (e) { console.warn('[fila] observador', e); } if (estado === 'salvo' || estado === 'erro') delete this._obs[op.id]; }
+    if (op.tipo === 'gravar' && estado === 'salvo') _marcarRespostasSalvas(op.id);
+    _atualizarStatusGravacaoDom(op.id);
+  }
+};
+// Respostas no cache local ganham pendente:false quando a gravação confirma.
+function _marcarRespostasSalvas(opId) {
+  (state.respostasAluno || []).forEach(r => { if (r.opId === opId) r.pendente = false; });
+  (state.historicoSimulados || []).forEach(h => { if (h.opId === opId) h.pendente = false; });
+}
+
+// ---------- modal genérico (mesmas classes do app) ----------
+function _modalConfiab(html, botoes) {
+  _fecharModalConfiab();
+  const acoes = (botoes || []).map((b, i) => '<button type="button" class="btn ' + (b.cls || 'btn-secondary') + '" data-conf-btn="' + i + '">' + _escHtml(b.txt) + '</button>').join('');
+  document.body.insertAdjacentHTML('beforeend',
+    '<div id="modal-confiab"><div class="modal-overlay" style="z-index:9998;"><div class="modal" style="max-width:520px;">' + html
+    + '<div class="modal-acoes">' + acoes + '</div></div></div></div>');
+  document.body.classList.add('modal-open');
+  document.querySelectorAll('#modal-confiab [data-conf-btn]').forEach(btn => {
+    btn.onclick = () => { const b = botoes[Number(btn.getAttribute('data-conf-btn'))]; _fecharModalConfiab(); if (b && b.fn) b.fn(); };
+  });
+}
+function _fecharModalConfiab() {
+  const m = document.getElementById('modal-confiab'); if (m) m.remove();
+  if (!document.getElementById('modal-nova-senha')) document.body.classList.remove('modal-open');
+}
+
+// ---------- TENTATIVAS (andamento de atividades) ----------
+const TENTATIVAS = {
+  uid: null, mapa: {}, _timers: {},
+  ROTULO: { estudo_teste: 'Modo Teste', estudo_prova: 'Modo Prova', simulado: 'Simulado', mini: 'Mini-simulado' },
+  chave() { return 'radix_tent_' + this.uid; },
+  chaveAberta() { return 'radix_tent_aberta_' + this.uid; },
+  iniciar(uid) { this.uid = uid; const v = rxLerJson(this.chave(), {}); this.mapa = (v && typeof v === 'object') ? v : {}; },
+  parar() { Object.values(this._timers).forEach(clearTimeout); this._timers = {}; this.uid = null; this.mapa = {}; },
+  gravarLocal() { if (this.uid) rxGravarJson(this.chave(), this.mapa); },
+  lista() { return Object.values(this.mapa).filter(t => t.status === 'em_andamento').sort((a, b) => String(b.atualizado_em || '').localeCompare(String(a.atualizado_em || ''))); },
+  deTipo(tipos) { return this.lista().filter(t => tipos.includes(t.tipo)); },
+  criar(o) {
+    const agora = RELOGIO.agora();
+    const t = {
+      id: rxUuid(), tipo: o.tipo, origem: o.origem || {}, questoes_ids: o.questoes_ids.slice(), respostas: {}, posicao: 0,
+      iniciado_em: new Date(agora).toISOString(), limite_seg: o.limite_seg || null,
+      termina_em: o.limite_seg ? new Date(agora + o.limite_seg * 1000).toISOString() : null,
+      status: 'em_andamento', versao: 1, atualizado_em: new Date(agora).toISOString(), sync: 'pendente'
+    };
+    this.mapa[t.id] = t; this.gravarLocal(); this.marcarAberta(t.id); this.sincronizar(t.id, true);
+    return t;
+  },
+  responder(id, qid, idx) {
+    const t = this.mapa[id]; if (!t || t.status !== 'em_andamento') return;
+    t.respostas[String(qid)] = { i: idx, t: RELOGIO.agora() };
+    t.atualizado_em = new Date(RELOGIO.agora()).toISOString(); t.sync = 'pendente';
+    this.gravarLocal(); this.sincronizar(id);
+  },
+  posicao(id, p) {
+    const t = this.mapa[id]; if (!t || t.status !== 'em_andamento') return;
+    t.posicao = p; this.gravarLocal(); this.sincronizar(id);
+  },
+  retrato(t) {
+    return { id: t.id, tipo: t.tipo, origem: t.origem, questoes_ids: t.questoes_ids, respostas: t.respostas, posicao: t.posicao, iniciado_em: t.iniciado_em, limite_seg: t.limite_seg };
+  },
+  sincronizar(id, imediato) {
+    clearTimeout(this._timers[id]);
+    const f = () => { const t = this.mapa[id]; if (!t || t.status !== 'em_andamento') return; FILA.enfileirar({ tipo: 'tentativa', chave: 'tent:' + id, payload: this.retrato(t) }); };
+    if (imediato) f(); else this._timers[id] = setTimeout(f, 1200);
+  },
+  mesclar(a, b) {
+    const r = Object.assign({}, a || {});
+    Object.keys(b || {}).forEach(k => {
+      const x = r[k], y = b[k];
+      if (!x || (Number(y && y.t) || 0) >= (Number(x.t) || 0)) r[k] = y;
+    });
+    return r;
+  },
+  // Resposta do servidor a um fn_tentativa_salvar: adota o relógio e a mescla dele.
+  aoSincronizar(resp) {
+    const s = resp && resp.tentativa; if (!s) return;
+    const t = this.mapa[s.id]; if (!t) return;
+    if (resp.conflito) {
+      t.status = s.status; t.sync = 'salvo'; this.gravarLocal(); this.desmarcarAberta(t.id);
+      this._avisarConflito(t);
+      return;
+    }
+    t.respostas = this.mesclar(t.respostas, s.respostas || {});
+    if (s.termina_em) t.termina_em = s.termina_em;
+    if (s.iniciado_em) t.iniciado_em = s.iniciado_em;
+    t.versao = s.versao || t.versao; t.sync = 'salvo';
+    this.gravarLocal(); this.aplicarNoAtivo(t);
+  },
+  _avisarConflito(t) {
+    const ativo = (_estudoAtual && _estudoAtual.tentativaId === t.id) || (state.simuladoAtual && state.simuladoAtual.tentativaId === t.id && !state.simuladoAtual.finalizado);
+    if (!ativo) return;
+    if (_estudoAtual && _estudoAtual.tentativaId === t.id) _estudoAtual = null;
+    if (state.simuladoAtual && state.simuladoAtual.tentativaId === t.id) { state.simuladoAtual.finalizado = true; if (cronometroInterval) clearInterval(cronometroInterval); state.simuladoAtual = null; }
+    _modalConfiab('<h2>Atividade encerrada em outro aparelho</h2><p style="font-size:13px;color:var(--radix-text-muted)">Esta atividade foi ' + (t.status === 'finalizada' ? 'finalizada' : 'descartada') + ' em outro aparelho ou aba. As respostas gravadas lá foram mantidas; esta tela foi fechada para não sobrescrever nada.</p>',
+      [{ txt: 'Ir para o início', cls: 'btn-success', fn: () => renderHome() }]);
+  },
+  // Outro aparelho respondeu: reflete na tela aberta sem perder nada.
+  aplicarNoAtivo(t) {
+    if (_estudoAtual && _estudoAtual.tentativaId === t.id) {
+      let mudou = false;
+      Object.keys(t.respostas).forEach(k => { const qid = Number(k); if (_estudoAtual.respostas[qid] === undefined) { _estudoAtual.respostas[qid] = t.respostas[k].i; mudou = true; } });
+      if (mudou && state.view === 'estudo-digital') { renderEstudoDigital(); if (_estudoAtual.modo === 'teste') _reaplicarFeedbackTeste(); }
+    }
+    const sim = state.simuladoAtual;
+    if (sim && sim.tentativaId === t.id && !sim.finalizado) {
+      if (t.termina_em) sim.terminaEm = Date.parse(t.termina_em);
+      if (t.iniciado_em) sim.iniciadoEm = Date.parse(t.iniciado_em);
+      let mudou = false;
+      Object.keys(t.respostas).forEach(k => { const qid = Number(k); if (sim.respostas[qid] === undefined) { sim.respostas[qid] = t.respostas[k].i; mudou = true; } });
+      if (mudou && state.view === 'simulado') renderSimulado();
+    }
+  },
+  finalizar(id, opId) {
+    const t = this.mapa[id]; if (!t) return;
+    t.status = 'finalizada'; t.fim_op_id = opId; t.atualizado_em = new Date(RELOGIO.agora()).toISOString();
+    clearTimeout(this._timers[id]);
+    this.gravarLocal(); this.desmarcarAberta(id);
+  },
+  descartar(id) {
+    const t = this.mapa[id]; if (!t) return;
+    clearTimeout(this._timers[id]);
+    t.status = 'descartada'; this.desmarcarAberta(id);
+    delete this.mapa[id]; this.gravarLocal();
+    FILA.enfileirar({ tipo: 'tentativa_descartar', chave: 'tent:' + id, payload: { p_id: id } });
+    if (_estudoAtual && _estudoAtual.tentativaId === id) _estudoAtual = null;
+    if (state.simuladoAtual && state.simuladoAtual.tentativaId === id) { if (cronometroInterval) clearInterval(cronometroInterval); state.simuladoAtual = null; }
+  },
+  limparEncerradas() {
+    Object.keys(this.mapa).forEach(id => { const t = this.mapa[id]; if (t.status !== 'em_andamento' && !FILA.pendentes('tent:' + id).length && !FILA.itens.some(x => x.id === t.fim_op_id)) delete this.mapa[id]; });
+    this.gravarLocal();
+  },
+  // Login: junta o que está na conta com o que ficou no aparelho.
+  async carregarRemotas() {
+    if (!this.uid) return;
+    let remotas = null;
+    try {
+      const { data, error } = await sb.from('tentativa').select('*').eq('aluno_id', this.uid).eq('status', 'em_andamento');
+      if (!error) remotas = data || [];
+    } catch (e) {}
+    if (remotas === null) return;                 // sem conexão: fica com o local
+    const vistos = {};
+    remotas.forEach(r => {
+      vistos[r.id] = true;
+      const l = this.mapa[r.id];
+      if (!l) {
+        this.mapa[r.id] = { id: r.id, tipo: r.tipo, origem: r.origem || {}, questoes_ids: r.questoes_ids || [], respostas: r.respostas || {}, posicao: r.posicao || 0,
+          iniciado_em: r.iniciado_em, limite_seg: r.limite_seg, termina_em: r.termina_em, status: 'em_andamento', versao: r.versao, atualizado_em: r.atualizado_em, sync: 'salvo' };
+      } else {
+        l.respostas = this.mesclar(l.respostas, r.respostas || {});
+        l.termina_em = r.termina_em || l.termina_em; l.iniciado_em = r.iniciado_em || l.iniciado_em; l.versao = r.versao || l.versao;
+        if (l.sync !== 'pendente') l.sync = 'salvo';
+      }
+    });
+    // Locais em andamento que a conta não lista: ou nunca subiram (reenviar) ou foram encerradas em outro aparelho.
+    const orfas = Object.values(this.mapa).filter(t => t.status === 'em_andamento' && !vistos[t.id]);
+    if (orfas.length) {
+      let estados = [];
+      try { const { data } = await sb.from('tentativa').select('id, status').in('id', orfas.map(t => t.id)); estados = data || []; } catch (e) {}
+      orfas.forEach(t => {
+        const s = estados.find(x => x.id === t.id);
+        if (s && s.status !== 'em_andamento') { t.status = s.status; this.desmarcarAberta(t.id); delete this.mapa[t.id]; }
+        else this.sincronizar(t.id, true);
+      });
+    }
+    this.gravarLocal();
+  },
+  // Simulados com prazo vencido enquanto o aluno estava fora: fecha uma vez, com as respostas que ficaram.
+  async finalizarVencidas() {
+    const venc = this.lista().filter(t => (t.tipo === 'simulado' || t.tipo === 'mini') && t.termina_em && Date.parse(t.termina_em) <= RELOGIO.agora());
+    if (!venc.length) return;
+    if (!state.questoesPronto && state.questoesPromise) { try { await state.questoesPromise; } catch (e) {} }
+    for (const t of venc) {
+      if (state.simuladoAtual && state.simuladoAtual.tentativaId === t.id) continue;   // a tela ativa cuida
+      const sim = this._montarSimulado(t); if (!sim) continue;
+      state.simuladoAtual = sim;
+      finalizarSimulado(true, { silencioso: true });
+    }
+    SYNC_UI.avisar(venc.length === 1 ? 'Um simulado foi encerrado por tempo esgotado. O resultado está em Simulados.' : venc.length + ' simulados foram encerrados por tempo esgotado. Os resultados estão em Simulados.', 8000);
+    if (state.view === 'home') renderHome();
+  },
+  marcarAberta(id) { try { localStorage.setItem(this.chaveAberta(), id); } catch (e) {} },
+  desmarcarAberta(id) { try { if (localStorage.getItem(this.chaveAberta()) === id) localStorage.removeItem(this.chaveAberta()); } catch (e) {} },
+  aberta() { try { return localStorage.getItem(this.chaveAberta()); } catch (e) { return null; } },
+  rotulo(t) {
+    const total = (t.questoes_ids || []).length, resp = Object.keys(t.respostas || {}).length;
+    let s = this.ROTULO[t.tipo] || t.tipo;
+    if (t.origem && t.origem.temaId) { const tema = TEMAS.find(x => x.id === t.origem.temaId); if (tema) s += ' de ' + tema.nome; }
+    else if (t.origem && t.origem.nome) s += ' · ' + t.origem.nome;
+    s += ' · ' + resp + ' de ' + total + ' respondidas';
+    if (t.termina_em) {
+      const rest = Math.round((Date.parse(t.termina_em) - RELOGIO.agora()) / 1000);
+      s += rest <= 0 ? ' · tempo esgotado' : ' · ' + Math.max(1, Math.round(rest / 60)) + ' min restantes';
+    }
+    return s;
+  },
+  async continuar(id) {
+    const t = this.mapa[id];
+    if (!t || t.status !== 'em_andamento') { alert('Essa atividade não está mais em andamento.'); renderHome(); return; }
+    if (!state.questoesPronto && state.questoesPromise) { radixShowLoading('Carregando questões…'); try { await state.questoesPromise; } finally { radixHideLoading(); } }
+    if (t.tipo === 'estudo_teste' || t.tipo === 'estudo_prova') return _retomarEstudo(t);
+    return _retomarSimulado(t);
+  },
+  _montarSimulado(t) {
+    const qs = (t.questoes_ids || []).map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
+    if (!qs.length) return null;
+    const resp = {}; Object.keys(t.respostas || {}).forEach(k => { resp[Number(k)] = t.respostas[k].i; });
+    const ini = Date.parse(t.iniciado_em) || RELOGIO.agora();
+    const lim = t.limite_seg || 600;
+    return { questoes: qs, respostas: resp, indiceAtual: Math.min(t.posicao || 0, qs.length - 1), tempoTotal: lim, iniciadoEm: ini,
+      terminaEm: t.termina_em ? Date.parse(t.termina_em) : ini + lim * 1000, finalizado: false, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length };
+  },
+  // Pergunta o que fazer com atividades em andamento (dashboard, ao abrir, ao começar outra).
+  modalRetomar(lista, opcoes) {
+    const o = opcoes || {};
+    const ts = (lista && lista.length ? lista : this.lista());
+    if (!ts.length) { if (o.aoNovo) o.aoNovo(); return; }
+    const itens = ts.map(t => '<div class="conf-item"><div><b>' + _escHtml(this.ROTULO[t.tipo] || t.tipo) + '</b><br><span style="font-size:12.5px;color:var(--radix-text-muted)">' + _escHtml(this.rotulo(t).replace(/^[^·]+· ?/, '')) + '</span></div>'
+      + '<div class="conf-item-acoes"><button type="button" class="btn btn-success" style="padding:7px 12px;font-size:12.5px" data-cont="' + t.id + '">Continuar</button>'
+      + '<button type="button" class="btn btn-secondary" style="padding:7px 12px;font-size:12.5px" data-desc="' + t.id + '">Descartar</button></div></div>').join('');
+    const titulo = o.titulo || (ts.length === 1 ? 'Você tem uma atividade em andamento' : 'Você tem ' + ts.length + ' atividades em andamento');
+    const botoes = [];
+    if (o.aoNovo) botoes.push({ txt: o.txtNovo || 'Começar outra (as anteriores continuam salvas)', cls: 'btn-secondary', fn: o.aoNovo });
+    botoes.push({ txt: o.aoNovo ? 'Cancelar' : 'Fechar', cls: 'btn-secondary' });
+    _modalConfiab('<h2>' + _escHtml(titulo) + '</h2>' + (o.texto ? '<p style="font-size:13px;color:var(--radix-text-muted)">' + _escHtml(o.texto) + '</p>' : '') + '<div class="conf-itens">' + itens + '</div>', botoes);
+    document.querySelectorAll('#modal-confiab [data-cont]').forEach(b => { b.onclick = () => { const id = b.getAttribute('data-cont'); _fecharModalConfiab(); TENTATIVAS.continuar(id); }; });
+    document.querySelectorAll('#modal-confiab [data-desc]').forEach(b => { b.onclick = () => {
+      const id = b.getAttribute('data-desc'); const t = TENTATIVAS.mapa[id]; if (!t) return;
+      const teste = t.tipo === 'estudo_teste';
+      if (!confirm('Descartar esta atividade (' + (TENTATIVAS.ROTULO[t.tipo] || t.tipo) + ')?' + (teste ? '\n\nAs respostas que você já deu nela continuam no seu histórico; só o andamento é apagado.' : '\n\nAs marcações desta atividade serão apagadas.'))) return;
+      TENTATIVAS.descartar(id); _fecharModalConfiab();
+      const resto = TENTATIVAS.lista();
+      if (resto.length && !o.aoNovo) TENTATIVAS.modalRetomar(resto, o); else if (o.aoNovo) o.aoNovo(); else if (state.view === 'home') renderHome();
+    }; });
+  },
+  // Ao abrir o app: se a página foi recarregada no meio de uma atividade, oferece continuar.
+  oferecerRetomadaAoAbrir() {
+    const id = this.aberta(); const t = id && this.mapa[id];
+    if (t && t.status === 'em_andamento') this.modalRetomar([t], { titulo: 'Continuar de onde parou?', texto: 'A página foi fechada ou recarregada no meio desta atividade. As marcações ficaram guardadas.' });
+  },
+  // Antes de começar outra atividade do mesmo grupo: não substitui em silêncio.
+  antesDeComecar(tipos, aoNovo) {
+    const ts = this.deTipo(tipos);
+    if (!ts.length) { aoNovo(); return; }
+    this.modalRetomar(ts, { aoNovo, titulo: ts.length === 1 ? 'Você já tem uma atividade em andamento' : 'Você já tem atividades em andamento', texto: 'Continue de onde parou ou comece outra. Nada é apagado sem você pedir.' });
+  }
+};
+
+// ---------- LISTAS_SYNC (listas na conta) ----------
+const LISTAS_SYNC = {
+  uid: null, _timerSel: null,
+  iniciar(uid) { this.uid = uid; },
+  parar() { clearTimeout(this._timerSel); this.uid = null; },
+  chaveSel() { return 'radix_lista_' + this.uid; },
+  chaveListas() { return 'radix_listas_' + this.uid; },
+  chaveFlag() { return 'radix_listas_migradas_' + this.uid; },
+  deLinha(r) { return { id: Number(r.id), nome: r.nome, questaoIds: Array.isArray(r.questao_ids) ? r.questao_ids.slice() : [], criadaEm: r.criado_em, atualizadoEm: r.atualizado_em, ultimoDownloadEm: r.ultimo_download_em }; },
+  paraLinha(l) { return { id: Number(l.id), tipo: 'salva', nome: String(l.nome || '').slice(0, 200), questao_ids: (l.questaoIds || []).slice(0, 500), criado_em: l.criadaEm || new Date().toISOString(), atualizado_em: l.atualizadoEm || new Date().toISOString(), ultimo_download_em: l.ultimoDownloadEm || null }; },
+  mesmosIds(a, b) { a = a || []; b = b || []; return a.length === b.length && a.every((x, i) => x === b[i]); },
+  novoId() { return Date.now() * 1000 + Math.floor(Math.random() * 1000); },
+  // Login: servidor manda; listas locais ainda não migradas sobem uma vez só.
+  async carregar() {
+    if (!this.uid) return;
+    const selLocal = rxLerJson(this.chaveSel(), []);
+    const listasLocal = rxLerJson(this.chaveListas(), []);
+    state.questoesSelecionadas = Array.isArray(selLocal) ? selLocal : [];
+    state.listasSalvas = Array.isArray(listasLocal) ? listasLocal : [];
+    let data = null;
+    try { const r = await sb.from('lista_aluno').select('*').eq('aluno_id', this.uid); if (!r.error) data = r.data || []; } catch (e) {}
+    if (data === null) return;                                    // sem conexão: fica com o cache; migra no próximo login
+    const remotas = data.filter(r => r.tipo === 'salva').map(r => this.deLinha(r));
+    const selRemota = data.find(r => r.tipo === 'selecao');
+    const migrado = localStorage.getItem(this.chaveFlag()) === '1';
+    let listas = remotas.slice();
+    if (!migrado) {
+      const aInserir = [];
+      state.listasSalvas.forEach(l => {
+        if (!l || !l.nome || !Array.isArray(l.questaoIds) || !l.questaoIds.length) return;
+        if (remotas.some(r => r.id === Number(l.id))) return;                                        // já está na conta
+        if (remotas.some(r => r.nome === l.nome && this.mesmosIds(r.questaoIds, l.questaoIds))) return; // cópia exata
+        let nome = l.nome, k = 2;
+        while (remotas.some(r => r.nome === nome) || aInserir.some(r => r.nome === nome)) nome = l.nome + ' (' + (k++) + ')';
+        aInserir.push(Object.assign({}, l, { nome, id: Number(l.id) || this.novoId() }));
+      });
+      let ok = true;
+      if (aInserir.length) {
+        try {
+          const r = await sb.from('lista_aluno').upsert(aInserir.map(l => Object.assign(this.paraLinha(l), { aluno_id: this.uid })), { onConflict: 'aluno_id,id', ignoreDuplicates: true });
+          ok = !r.error; if (r.error) console.warn('[listas] migração:', r.error.message);
+        } catch (e) { ok = false; }
+      }
+      if (ok) { listas = remotas.concat(aInserir); try { localStorage.setItem(this.chaveFlag(), '1'); } catch (e) {} }
+      else { listas = remotas.concat(aInserir); aInserir.forEach(l => FILA.enfileirar({ tipo: 'lista', chave: 'lista:' + l.id, payload: this.paraLinha(l) })); }
+      if ((!selRemota || !(selRemota.questao_ids || []).length) && state.questoesSelecionadas.length) {
+        FILA.enfileirar({ tipo: 'lista', chave: 'lista:0', payload: { id: 0, tipo: 'selecao', nome: null, questao_ids: state.questoesSelecionadas.slice(0, 500), atualizado_em: new Date().toISOString() } });
+      } else if (selRemota) state.questoesSelecionadas = (selRemota.questao_ids || []).slice();
+    } else if (selRemota) {
+      state.questoesSelecionadas = (selRemota.questao_ids || []).slice();
+    }
+    // Alterações feitas sem conexão (ainda na fila) prevalecem sobre o que veio da conta.
+    FILA.itens.forEach(op => {
+      if (op.estado === 'erro') return;
+      if (op.tipo === 'lista' && op.payload) {
+        if (Number(op.payload.id) === 0) state.questoesSelecionadas = (op.payload.questao_ids || []).slice();
+        else { const l = this.deLinha(op.payload); const i = listas.findIndex(x => x.id === l.id); if (i >= 0) listas[i] = l; else listas.push(l); }
+      } else if (op.tipo === 'lista_excluir' && op.payload) listas = listas.filter(x => x.id !== Number(op.payload.id));
+    });
+    state.listasSalvas = listas;
+    this.gravarCache();
+  },
+  gravarCache() {
+    if (!this.uid) return;
+    rxGravarJson(this.chaveSel(), state.questoesSelecionadas || []);
+    rxGravarJson(this.chaveListas(), state.listasSalvas || []);
+  },
+  salvarSelecao() {
+    clearTimeout(this._timerSel);
+    this._timerSel = setTimeout(() => {
+      FILA.enfileirar({ tipo: 'lista', chave: 'lista:0', payload: { id: 0, tipo: 'selecao', nome: null, questao_ids: (state.questoesSelecionadas || []).slice(0, 500), atualizado_em: new Date().toISOString() } });
+    }, 800);
+  },
+  // Compara com o último retrato gravado e sobe só o que mudou (qualquer função que mexa em state.listasSalvas passa por aqui).
+  sincronizarListas(anterior) {
+    const antes = Array.isArray(anterior) ? anterior : [];
+    const agora = state.listasSalvas || [];
+    const semSync = l => JSON.stringify([l.id, l.nome, l.questaoIds, l.ultimoDownloadEm]);
+    agora.forEach(l => {
+      if (!l || !l.nome) return;
+      const a = antes.find(x => x.id === l.id);
+      if (!a || semSync(a) !== semSync(l)) { l.atualizadoEm = new Date().toISOString(); FILA.enfileirar({ tipo: 'lista', chave: 'lista:' + l.id, payload: this.paraLinha(l) }); }
+    });
+    antes.forEach(a => { if (!agora.some(l => l.id === a.id)) FILA.enfileirar({ tipo: 'lista_excluir', chave: 'lista:' + a.id, payload: { id: a.id } }); });
+  }
+};
+
+// ---------- ganchos de entrada e saída ----------
+const CONFIAB = {
+  aoEntrar(uid) {
+    FILA.iniciar(uid); TENTATIVAS.iniciar(uid); LISTAS_SYNC.iniciar(uid);
+    RELOGIO.sincronizar();
+    if (!this._eventos) {
+      this._eventos = true;
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') _tickSimulado(); });
+      window.addEventListener('focus', () => _tickSimulado());
+      window.addEventListener('pageshow', () => _tickSimulado());
+    }
+  },
+  aoSair() {
+    if (cronometroInterval) clearInterval(cronometroInterval);
+    FILA.parar(); TENTATIVAS.parar(); LISTAS_SYNC.parar();
+    _estudoAtual = null; state.simuladoAtual = null;
+    SYNC_UI.atualizar();
+  }
+};
+
+// ============================================================================
+// LISTAS — as funções antigas, agora com cache local + conta
+// ============================================================================
+function carregarListaLocal() {
+  const ids = rxLerJson('radix_lista_' + state.usuario.id, []);
+  state.questoesSelecionadas = Array.isArray(ids) ? ids : [];
+}
+function salvarListaLocal() {
+  rxGravarJson('radix_lista_' + state.usuario.id, state.questoesSelecionadas || []);
+  if (LISTAS_SYNC.uid) LISTAS_SYNC.salvarSelecao();
+}
+function carregarListasSalvas() {
+  const arr = rxLerJson('radix_listas_' + state.usuario.id, []);
+  state.listasSalvas = Array.isArray(arr) ? arr : [];
+}
+function salvarListasSalvasLocal() {
+  const anterior = rxLerJson('radix_listas_' + state.usuario.id, []);
+  rxGravarJson('radix_listas_' + state.usuario.id, state.listasSalvas || []);
+  if (LISTAS_SYNC.uid) LISTAS_SYNC.sincronizarListas(anterior);
+}
+// Salva uma nova lista (ou atualiza a existente de mesmo nome). Retorna a entrada.
+function salvarListaComoArquivo(nome, questaoIds) {
+  if (!nome || !Array.isArray(questaoIds) || questaoIds.length === 0) return null;
+  if (!Array.isArray(state.listasSalvas)) state.listasSalvas = [];
+  const agora = new Date().toISOString();
+  const existente = state.listasSalvas.find(l => l.nome === nome);
+  if (existente) {
+    existente.questaoIds = questaoIds.slice();
+    existente.ultimoDownloadEm = agora;
+    salvarListasSalvasLocal();
+    return existente;
+  }
+  const nova = { id: LISTAS_SYNC.novoId(), nome: nome, questaoIds: questaoIds.slice(), criadaEm: agora, ultimoDownloadEm: agora };
+  state.listasSalvas.unshift(nova);
+  salvarListasSalvasLocal();
+  return nova;
+}
+
+// ============================================================================
+// ESTUDO DIGITAL — Modo Teste / Modo Prova com retomada
+// ============================================================================
+function iniciarEstudoDigital(modo) {
+  const ids = (state.questoesSelecionadas || []).slice();
+  const qs = ids.map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
+  if (qs.length === 0) { alert('Sua lista está vazia.'); return; }
+  TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
+    const t = TENTATIVAS.criar({ tipo: 'estudo_' + modo, origem: { nome: 'Minha lista' }, questoes_ids: qs.map(q => q.id) });
+    _estudoAtual = { modo, qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0 };
+    state.view = 'estudo-digital';
+    renderEstudoDigital();
+  });
+}
+function _retomarEstudo(t) {
+  const qs = (t.questoes_ids || []).map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
+  if (!qs.length) { alert('Nenhuma das questões dessa atividade está mais disponível no banco.'); return; }
+  const resp = {}; Object.keys(t.respostas || {}).forEach(k => { const qid = Number(k); if (qs.some(q => q.id === qid)) resp[qid] = t.respostas[k].i; });
+  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length };
+  TENTATIVAS.marcarAberta(t.id);
+  state.view = 'estudo-digital';
+  renderEstudoDigital();
+  if (_estudoAtual.modo === 'teste') _reaplicarFeedbackTeste();
+  if (_estudoAtual.faltando > 0) SYNC_UI.avisar(_estudoAtual.faltando + (_estudoAtual.faltando === 1 ? ' questão desta atividade não está' : ' questões desta atividade não estão') + ' mais no banco; as demais foram mantidas.', 7000);
+}
+// Modo Teste retomado: mostra o gabarito das já respondidas sem gravar de novo.
+function _reaplicarFeedbackTeste() {
+  if (!_estudoAtual) return;
+  _estudoAtual.qs.forEach(q => { const idx = _estudoAtual.respostas[q.id]; if (idx !== undefined) _mostrarFeedbackQuestao(q, idx); });
+  setTimeout(() => { const main = document.getElementById('main-content'); if (window.renderMathInElement && main) window.renderMathInElement(main, { delimiters: [{ left: '$', right: '$', display: false }], throwOnError: false }); }, 40);
+}
+// Modo Teste: registra no andamento + feedback inline + grava (fila).
+function _responderTeste(qid, idx) {
+  if (!_estudoAtual) return;
+  if (_estudoAtual.respostas[qid] !== undefined) return;
+  _estudoAtual.respostas[qid] = idx;
+  TENTATIVAS.responder(_estudoAtual.tentativaId, qid, idx);
+  responderQuestao(qid, idx, { tentativaId: _estudoAtual.tentativaId });
+  _atualizarContadorEstudoSemReRender();
+}
+// Modo Prova: só registra (no aparelho e na conta), sem feedback.
+function _responderProva(qid, idx) {
+  if (!_estudoAtual) return;
+  _estudoAtual.respostas[qid] = idx;
+  TENTATIVAS.responder(_estudoAtual.tentativaId, qid, idx);
+  const alts = document.querySelectorAll('#alts-' + qid + ' .alternativa');
+  alts.forEach((el, i) => { el.classList.toggle('selecionada', i === idx); });
+  _atualizarProgressoEstudo();
+}
+function _atualizarContadorEstudoSemReRender() {
+  if (!_estudoAtual) return;
+  const respN = Object.keys(_estudoAtual.respostas).length;
+  const total = _estudoAtual.qs.length;
+  const ehTeste = _estudoAtual.modo === 'teste';
+  const corAcento = ehTeste ? '#a855f7' : '#dc2626';
+  const contadorEl = document.getElementById('estudo-contador');
+  if (contadorEl) contadorEl.textContent = respN + ' / ' + total;
+  const btnEnc = document.getElementById('estudo-btn-encerrar');
+  if (btnEnc) {
+    btnEnc.disabled = false; btnEnc.style.opacity = ''; btnEnc.style.cursor = ''; btnEnc.style.background = corAcento;
+    btnEnc.textContent = ehTeste ? '✓ Finalizar estudo' : (respN === total ? '🎯 Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
+    btnEnc.onclick = _finalizarEstudoDigital;
+  }
+}
+// Sair: continuar depois (fica salvo) ou descartar (com confirmação). Diz o estado real das respostas.
+function _sairEstudoDigital() {
+  if (!_estudoAtual) { abrirTema(''); return; }
+  const e = _estudoAtual; const n = Object.keys(e.respostas).length; const tid = e.tentativaId;
+  if (n === 0) { TENTATIVAS.descartar(tid); _estudoAtual = null; abrirTema(''); return; }
+  let status;
+  if (e.modo === 'teste') {
+    const minhas = (state.respostasAluno || []).filter(r => r.tentativaId === tid);
+    const pend = minhas.filter(r => r.pendente).length;
+    status = n + (n === 1 ? ' resposta já registrada' : ' respostas já registradas') + ' no seu histórico'
+      + (pend ? ' (' + (n - pend) + ' salvas, ' + pend + ' pendentes de sincronização)' : ' (todas salvas)') + '.';
+  } else {
+    const t = TENTATIVAS.mapa[tid];
+    status = n + (n === 1 ? ' resposta marcada fica guardada' : ' respostas marcadas ficam guardadas') + ' nesta atividade'
+      + (t && t.sync === 'salvo' ? ' (sincronizada com a sua conta)' : ' (neste aparelho; sincroniza quando a conexão permitir)') + '. Elas só entram no histórico quando você finalizar.';
+  }
+  _modalConfiab('<h2>Sair da atividade?</h2><p style="font-size:13.5px;color:var(--radix-text)">' + _escHtml(status) + '</p><p style="font-size:13px;color:var(--radix-text-muted)">Você pode continuar depois pelo botão "Continuar atividade" no início.</p>',
+    [{ txt: 'Continuar aqui', cls: 'btn-success' },
+     { txt: 'Sair e continuar depois', cls: 'btn-secondary', fn: () => { TENTATIVAS.desmarcarAberta(tid); _estudoAtual = null; abrirTema(''); } },
+     { txt: 'Descartar atividade', cls: 'btn-danger', fn: () => {
+       const msg = e.modo === 'teste' ? 'Descartar esta atividade? As respostas já registradas continuam no seu histórico; só o andamento é apagado.' : 'Descartar esta atividade? As ' + n + ' respostas marcadas serão apagadas.';
+       if (!confirm(msg)) { renderEstudoDigital(); if (e.modo === 'teste') _reaplicarFeedbackTeste(); return; }
+       TENTATIVAS.descartar(tid); _estudoAtual = null; abrirTema('');
+     } }]);
+}
+async function _finalizarEstudoDigital() {
+  if (!_estudoAtual) return;
+  const { modo, qs, respostas, tentativaId } = _estudoAtual;
+  const total = qs.length;
+  const detalhes = qs.map(q => { const minhaResp = respostas[q.id]; const correto = minhaResp !== undefined && minhaResp === q.correta; return { q, minhaResp, correto }; });
+  const respondidas = detalhes.filter(d => d.minhaResp !== undefined).length;
+  const brancos = total - respondidas;
+  if (modo === 'prova' && brancos > 0) {
+    if (!confirm('Você deixou ' + brancos + (brancos === 1 ? ' questão' : ' questões') + ' em branco. Encerrar assim mesmo? Em branco conta como não acertada.')) return;
+  }
+  if (_finalizarEstudoDigital._ocupado) return;
+  _finalizarEstudoDigital._ocupado = true;
+  try {
+    const acertos = detalhes.filter(d => d.correto).length;
+    const erros = respondidas - acertos;
+    // Modo Prova: percentual sobre o total (em branco conta). Modo Teste: sobre as respondidas.
+    const pct = modo === 'prova' ? Math.round(acertos / total * 100) : (respondidas > 0 ? Math.round(acertos / respondidas * 100) : 0);
+    const t = TENTATIVAS.mapa[tentativaId];
+    const opId = (t && (t.fim_op_id = t.fim_op_id || rxUuid())) || rxUuid();
+    const agoraIso = new Date(RELOGIO.agora()).toISOString();
+    const itens = modo === 'prova'
+      ? detalhes.filter(d => d.minhaResp !== undefined).map(d => ({ questao_id: d.q.id, tema: d.q.tema, resposta_marcada: d.minhaResp, correto: d.correto, fonte: 'estudo_prova', respondido_em: agoraIso }))
+      : [];
+    if (modo === 'prova') {
+      detalhes.filter(d => d.minhaResp !== undefined).forEach(d => {
+        state.respostasAluno.push({ questaoId: d.q.id, tema: d.q.tema, resposta: d.minhaResp, correto: d.correto, data: agoraIso, aluno: state.usuario.nome, fonte: 'estudo_prova', pendente: true, opId, tentativaId });
+      });
+    }
+    FILA.enfileirar({ id: opId, tipo: 'gravar', payload: { tipo: 'respostas', dados: { itens, tentativa_id: tentativaId, finaliza: true, tentativa: t ? TENTATIVAS.retrato(t) : null } } });
+    TENTATIVAS.finalizar(tentativaId, opId);
+    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId });
+    _estudoAtual = null;
+  } finally { _finalizarEstudoDigital._ocupado = false; }
+}
+function _renderResultadoEstudo(r) {
+  const { modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId } = r;
+  state.view = 'resultado-estudo';
+  const main = document.getElementById('main-content');
+  const corAcento = modo === 'teste' ? '#a855f7' : '#dc2626';
+  const tituloModo = modo === 'teste' ? 'Modo Teste' : 'Modo Prova';
+  const difLabelMap = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' };
+  const difCorMap = { facil: { bg: 'rgba(16,185,129,.12)', fg: '#047857' }, media: { bg: 'rgba(245,158,11,.14)', fg: '#b45309' }, dificil: { bg: 'rgba(220,38,38,.12)', fg: '#b91c1c' } };
+  const detalhesHtml = detalhes.map((d, i) => {
+    const tema = TEMAS.find(t => t.id === d.q.tema);
+    const minhaLetra = d.minhaResp != null ? String.fromCharCode(65 + d.minhaResp) : '—';
+    const certaLetra = String.fromCharCode(65 + d.q.correta);
+    const corLinha = d.minhaResp == null ? '#9ca3af' : (d.correto ? '#10b981' : '#dc2626');
+    const ico = d.minhaResp == null ? '○' : (d.correto ? '✓' : '✗');
+    const dif = d.q.dificuldade; const difLab = difLabelMap[dif]; const difCor = difCorMap[dif];
+    const difChip = (difLab && difCor) ? '<span style="display:inline-block;background:' + difCor.bg + ';color:' + difCor.fg + ';font-weight:700;font-size:10.5px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;">' + difLab + '</span>' : '';
+    const provaTxt = d.q.prova ? ' · ' + String(d.q.prova).replace(/[<>&]/g, '') : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--radix-line);font-size:13px;">'
+      + '<div style="color:' + corLinha + ';font-weight:800;font-size:16px;width:24px;text-align:center;">' + ico + '</div>'
+      + '<div style="flex:1;min-width:0;"><div style="font-weight:700;color:var(--radix-text);">Q' + String(i + 1).padStart(2, '0') + ' · ' + (tema ? tema.nome : '—') + difChip + '</div>'
+      + '<div style="color:var(--radix-text-muted);font-size:12px;">Sua: <b style="color:' + corLinha + ';">' + minhaLetra + '</b> · Gabarito: <b style="color:#10b981;">' + certaLetra + '</b>' + provaTxt + '</div></div></div>';
+  }).join('');
+  main.innerHTML = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Resultado do ' + tituloModo + '</div>'
+    + '<h2 class="section-title" style="margin-top:8px;"><span class="section-title-accent"></span>Resultado · ' + tituloModo + '</h2>'
+    + '<div class="resultado-box" style="border-left:4px solid ' + corAcento + ';">'
+    + '<div style="color:var(--radix-gray-light);">Você acertou</div><div class="nota">' + acertos + '/' + total + '</div>'
+    + '<div class="nota-detalhe">' + pct + '% de aproveitamento' + (modo === 'prova' ? ' (sobre as ' + total + ' questões)' : (respondidas < total ? ' (sobre as ' + respondidas + ' respondidas)' : '')) + '</div>'
+    + '<div class="conf-tripla"><span><b>' + acertos + '</b> acertos</span><span><b>' + erros + '</b> erros</span><span><b>' + brancos + '</b> em branco</span></div>'
+    + _htmlStatusGravacao(opId)
+    + '</div>'
+    + '<div style="background:white;border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">📚 Voltar ao Banco</button></div>';
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
+}
+
+// ============================================================================
+// RESPONDER QUESTÃO (banco / caderno / Modo Teste) — feedback + gravação na fila
+// ============================================================================
+function _mostrarFeedbackQuestao(q, idx) {
+  const alts = document.querySelectorAll('#alts-' + q.id + ' .alternativa');
+  alts.forEach((el, i) => {
+    el.classList.remove('selecionada', 'correta', 'errada');
+    if (i === q.correta) el.classList.add('correta');
+    else if (i === idx) el.classList.add('errada');
+    el.onclick = null;
+  });
+  const correto = idx === q.correta;
+  const semAtualResp = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  const podeCaderno = !correto && state.usuario?.perfil === 'aluno' && semAtualResp && semAtualResp.n;
+  const btnCaderno = podeCaderno ? '<div style="margin-top:10px;"><button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;" onclick="abrirModalErroDaQuestao(' + q.id + ')">📕 Adicionar ao caderno de erros</button></div>' : '';
+  const box = document.getElementById('explicacao-' + q.id);
+  if (box) box.innerHTML = '<div class="explicacao"><strong>' + (correto ? '✓ Correto!' : '✗ Resposta incorreta.') + '</strong><br>'
+    + '<strong>Gabarito:</strong> ' + String.fromCharCode(65 + q.correta) + ')<br>'
+    + '<strong>Explicação:</strong> <span data-expl="' + q.id + '">' + _htmlExplicacao(q) + '</span>'
+    + (q.explicacaoImg ? '<div class="explicacao-img-wrap"><img class="explicacao-img" src="' + q.explicacaoImg + '" alt="resolução"></div>' : '')
+    + btnCaderno + '</div>';
+  if (q._explOk === false) _preencherExplicacoes([q]);
+}
+function responderQuestao(qid, idx, opts) {
+  const q = state.questoes.find(x => x.id === qid);
+  if (!q) return;
+  _mostrarFeedbackQuestao(q, idx);
+  const correto = idx === q.correta;
+  const o = opts || {};
+  const nova = { questaoId: qid, tema: q.tema, resposta: idx, correto: correto, data: new Date(RELOGIO.agora()).toISOString(), aluno: state.usuario.nome, fonte: 'estudo', pendente: true, opId: null, tentativaId: o.tentativaId || null };
+  state.respostasAluno.push(nova);
+  nova.opId = FILA.enfileirar({ tipo: 'gravar', payload: { tipo: 'resposta', dados: { questao_id: qid, tema: q.tema, resposta_marcada: idx, correto: correto, fonte: 'estudo', tentativa_id: o.tentativaId || null, respondido_em: nova.data } } },
+    (estado) => { if (estado === 'salvo') nova.pendente = false; });
+}
+
+// ============================================================================
+// SIMULADO COMUM E MINI — cronômetro pelo horário de término, retomada, gravação transacional
+// ============================================================================
+function _criarSimulado(pool, tempoMin, tipo, origem) {
+  const t = TENTATIVAS.criar({ tipo, origem, questoes_ids: pool.map(q => q.id), limite_seg: tempoMin * 60 });
   state.simuladoAtual = {
-    questoes: pool, respostas: {}, indiceAtual: 0,
-    tempoTotal: 10 * 60, tempoRestante: 10 * 60,
-    iniciadoEm: Date.now(), finalizado: false,
+    questoes: pool, respostas: {}, indiceAtual: 0, tempoTotal: tempoMin * 60,
+    iniciadoEm: Date.parse(t.iniciado_em), terminaEm: Date.parse(t.termina_em),
+    finalizado: false, tentativaId: t.id, faltando: 0
   };
   renderSimulado();
   iniciarCronometro();
+}
+function iniciarSimulado() {
+  const num = parseInt(document.getElementById('sim-num').value);
+  const tempo = parseInt(document.getElementById('sim-tempo').value);
+  const temas = [...document.querySelectorAll('.tema-check:checked')].map(c => c.value);
+  let pool = state.questoes.slice();
+  if (temas.length > 0) pool = pool.filter(q => temas.includes(q.tema));
+  if (pool.length === 0) { alert('Não há questões com esse filtro.'); return; }
+  if (pool.length < num) { alert('Apenas ' + pool.length + ' questões disponíveis com esses filtros.'); return; }
+  TENTATIVAS.antesDeComecar(['simulado', 'mini'], () => {
+    const sorteio = pool.slice().sort(() => Math.random() - 0.5).slice(0, num);
+    _criarSimulado(sorteio, tempo, 'simulado', { num, tempo, temas });
+  });
+}
+function fazerMiniSimulado(temaId) {
+  let pool = state.questoes.filter(q => q.tema === temaId);
+  if (pool.length === 0) { alert('Não há questões cadastradas para esse tema ainda.'); return; }
+  TENTATIVAS.antesDeComecar(['simulado', 'mini'], () => {
+    const num = Math.min(10, pool.length);
+    const sorteio = pool.slice().sort(() => Math.random() - 0.5).slice(0, num);
+    _criarSimulado(sorteio, 10, 'mini', { temaId });
+  });
+}
+function _retomarSimulado(t) {
+  if (state.simuladoAtual && state.simuladoAtual.tentativaId === t.id && !state.simuladoAtual.finalizado) {
+    renderSimulado(); iniciarCronometro(); TENTATIVAS.marcarAberta(t.id); return;
+  }
+  const sim = TENTATIVAS._montarSimulado(t);
+  if (!sim) { alert('Nenhuma das questões desse simulado está mais disponível no banco.'); return; }
+  state.simuladoAtual = sim;
+  TENTATIVAS.marcarAberta(t.id);
+  if (sim.terminaEm <= RELOGIO.agora()) { finalizarSimulado(true); return; }   // venceu enquanto estava fora: fecha uma vez
+  renderSimulado();
+  iniciarCronometro();
+  if (sim.faltando > 0) SYNC_UI.avisar(sim.faltando + (sim.faltando === 1 ? ' questão deste simulado não está' : ' questões deste simulado não estão') + ' mais no banco; as demais foram mantidas.', 7000);
+}
+let _simuladoTickVinculado = false;
+function iniciarCronometro() {
+  if (cronometroInterval) clearInterval(cronometroInterval);
+  cronometroInterval = setInterval(_tickSimulado, 1000);   // só atualiza a interface; o tempo vem do horário de término
+  _tickSimulado();
+}
+function _segundosRestantes(sim) {
+  return Math.max(0, Math.ceil((sim.terminaEm - RELOGIO.agora()) / 1000));
+}
+function _tickSimulado() {
+  const sim = state.simuladoAtual;
+  if (!sim || sim.finalizado) { if (cronometroInterval) { clearInterval(cronometroInterval); cronometroInterval = null; } return; }
+  sim.tempoRestante = _segundosRestantes(sim);
+  atualizarCronometroDisplay();
+  if (sim.tempoRestante <= 0) finalizarSimulado(true);
+}
+function atualizarCronometroDisplay() {
+  const el = document.getElementById('cronometro');
+  const sim = state.simuladoAtual;
+  if (!el || !sim) return;
+  const t = _segundosRestantes(sim);
+  const hh = Math.floor(t / 3600), mm = Math.floor((t % 3600) / 60), ss = t % 60;
+  el.textContent = (hh ? String(hh).padStart(2, '0') + ':' : '') + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+  el.classList.remove('aviso', 'critico');
+  if (t < 60) el.classList.add('critico');
+  else if (t < 180) el.classList.add('aviso');
+}
+function marcarSimulado(qid, idx) {
+  const sim = state.simuladoAtual; if (!sim || sim.finalizado) return;
+  sim.respostas[qid] = idx;
+  TENTATIVAS.responder(sim.tentativaId, qid, idx);
+  renderSimulado();
+}
+function navSim(delta) {
+  const sim = state.simuladoAtual; if (!sim) return;
+  sim.indiceAtual = Math.max(0, Math.min(sim.questoes.length - 1, sim.indiceAtual + delta));
+  TENTATIVAS.posicao(sim.tentativaId, sim.indiceAtual);
+  renderSimulado();
+}
+function irParaQuestaoSim(idx) {
+  const sim = state.simuladoAtual; if (!sim) return;
+  sim.indiceAtual = idx;
+  TENTATIVAS.posicao(sim.tentativaId, sim.indiceAtual);
+  renderSimulado();
+}
+function sairSimuladoDepois() {
+  const sim = state.simuladoAtual; if (!sim) { renderHome(); return; }
+  const rest = _segundosRestantes(sim);
+  if (!confirm('Sair e continuar depois?\n\nAs marcações ficam salvas. O tempo continua contando: restam ' + Math.floor(rest / 60) + ' min ' + (rest % 60) + ' s. Quando o prazo acabar, o simulado é encerrado com o que estiver marcado.')) return;
+  TENTATIVAS.desmarcarAberta(sim.tentativaId);
+  renderHome();
+}
+function confirmarFinalizar() {
+  const sim = state.simuladoAtual; if (!sim || sim.finalizado) return;
+  const naoRespondidas = sim.questoes.filter(q => sim.respostas[q.id] === undefined).length;
+  let msg = 'Deseja finalizar o simulado?';
+  if (naoRespondidas > 0) msg += '\n\nAtenção: ' + naoRespondidas + ' questão(ões) sem resposta.';
+  if (confirm(msg)) finalizarSimulado(false);
+}
+function finalizarSimulado(porTempo, opts) {
+  const sim = state.simuladoAtual;
+  if (!sim || sim.finalizado) return;              // duas chamadas (clique + vencimento) não geram dois registros
+  sim.finalizado = true;
+  if (cronometroInterval) { clearInterval(cronometroInterval); cronometroInterval = null; }
+  const o = opts || {};
+  const agoraIso = new Date(RELOGIO.agora()).toISOString();
+  let acertos = 0, erros = 0, brancos = 0;
+  const itens = [];
+  const detalhes = sim.questoes.map(q => {
+    const resposta = sim.respostas[q.id];
+    const correto = resposta !== undefined && resposta === q.correta;
+    if (resposta === undefined) brancos++; else if (correto) acertos++; else erros++;
+    if (resposta !== undefined) itens.push({ questao_id: q.id, tema: q.tema, resposta_marcada: resposta, correto: correto, fonte: 'simulado', respondido_em: agoraIso });
+    return { questao: q, resposta, correto };
+  });
+  const total = sim.questoes.length;
+  const tempoUsado = Math.min(sim.tempoTotal, Math.max(0, Math.round((Math.min(RELOGIO.agora(), sim.terminaEm) - sim.iniciadoEm) / 1000)));
+  const t = TENTATIVAS.mapa[sim.tentativaId];
+  const opId = (t && (t.fim_op_id = t.fim_op_id || rxUuid())) || rxUuid();
+  const registro = {
+    id: 'pendente:' + opId, opId, aluno: state.usuario.nome, data: agoraIso,
+    acertos, erros, brancos, total, percentual: Math.round((acertos / total) * 100),
+    tempoUsado, detalhes, porTempo: !!porTempo, pendente: true
+  };
+  itens.forEach(i => state.respostasAluno.push({ questaoId: i.questao_id, tema: i.tema, resposta: i.resposta_marcada, correto: i.correto, data: agoraIso, aluno: state.usuario.nome, fonte: 'simulado', pendente: true, opId, tentativaId: sim.tentativaId }));
+  state.historicoSimulados.unshift(registro);
+  FILA.enfileirar({ id: opId, tipo: 'gravar', payload: { tipo: 'simulado', dados: {
+    total_questoes: total, acertos, erros, brancos, percentual: registro.percentual, tempo_usado_seg: tempoUsado,
+    questoes_ids: sim.questoes.map(q => q.id), por_tempo: !!porTempo, realizado_em: agoraIso,
+    tentativa_id: sim.tentativaId, tentativa: t ? TENTATIVAS.retrato(t) : null, itens
+  } } }, (estado, dados) => {
+    if (estado === 'salvo' && dados) { if (dados.simulado_id) registro.id = dados.simulado_id; registro.pendente = false; registro.jaFinalizada = !!dados.ja_finalizada; }
+  });
+  TENTATIVAS.finalizar(sim.tentativaId, opId);
+  state.simuladoAtual = null;
+  if (o.silencioso || (state.view !== 'simulado' && porTempo)) {
+    if (!o.silencioso) SYNC_UI.avisar('O tempo do simulado acabou. Ele foi encerrado com o que estava marcado; o resultado está em Simulados.', 8000);
+    return;
+  }
+  renderResultadoSimulado(registro, porTempo);
+  _preencherExplicacoes(registro.detalhes.map(d => d.questao));
+}
+
+// ============================================================================
+// SIMULADO TRI — autosave pela fila (ordem garantida, sem falha silenciosa)
+// ============================================================================
+function triMarcar(i, l) {
+  const a = TRI.atual; if (!a) return;
+  a.resp[i] = a.resp[i] === l ? '.' : l;
+  const el = document.getElementById('tri-q-' + i); if (el) el.outerHTML = _triLinha(i, a.resp[i]);
+  const p = document.getElementById('tri-progresso'); if (p) p.textContent = a.resp.filter(x => x !== '.').length + ' de 45 marcadas';
+  clearTimeout(TRI.salvarT);
+  TRI.salvarT = setTimeout(() => _triSalvarAgora(), 800);
+}
+function _triSalvarAgora() {
+  const a = TRI.atual; if (!a) return;
+  clearTimeout(TRI.salvarT);
+  FILA.enfileirar({ tipo: 'rpc', chave: 'tri:' + a.id, payload: { fn: 'fn_simulado_tri_salvar', args: { p_id: a.id, p_respostas: a.resp.join('') } } });
+}
+function triSairDepois() {
+  _triSalvarAgora();
+  renderSimuladoTRI();
+}
+async function triEnviar() {
+  const a = TRI.atual; if (!a) return;
+  const brancos = a.resp.filter(x => x === '.').length;
+  const aviso = brancos > 0 ? brancos + ' questão(ões) em branco contam como erro. Enviar assim mesmo? Depois do envio não dá para alterar.' : 'Enviar o gabarito e calcular a nota? Depois do envio não dá para alterar.';
+  if (!confirm(aviso)) return;
+  if (triEnviar._ocupado) return;
+  triEnviar._ocupado = true;
+  radixShowLoading('Calculando sua nota TRI…');
+  try {
+    _triSalvarAgora();
+    await FILA.processar();                       // as últimas marcações sobem antes do envio, na ordem
+    if (FILA.pendentes('tri:' + a.id).length) {
+      radixHideLoading();
+      alert('Sem conexão com o servidor. Suas marcações estão guardadas neste aparelho; tente enviar de novo quando a internet voltar.');
+      return;
+    }
+    const tempo = Math.floor((Date.now() - a.inicio) / 1000);
+    const { data, error } = await sb.rpc('fn_simulado_tri_finalizar', { p_id: a.id, p_respostas: a.resp.join(''), p_tempo_seg: tempo });
+    radixHideLoading();
+    if (error) {
+      if (rxErroTransitorio(error)) alert('Não foi possível enviar agora (sem conexão). Suas marcações estão guardadas; tente de novo em instantes.');
+      else alert('Não foi possível calcular: ' + error.message);
+      return;
+    }
+    clearInterval(TRI.timer); TRI.atual = null;
+    renderResultadoTRI(data, tempo);
+  } finally { triEnviar._ocupado = false; radixHideLoading(); }
+}
+
+function _htmlBotaoContinuar(temaSemAtual) {
+  const ico = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>';
+  const pend = (typeof TENTATIVAS !== 'undefined' && TENTATIVAS.uid) ? TENTATIVAS.lista() : [];
+  if (pend.length === 1) return '<button class="v3-btn v3-btn-light" onclick="TENTATIVAS.continuar(\'' + pend[0].id + '\')">' + ico + 'Continuar atividade</button><span class="v3-hero-cont">Em andamento: ' + _escHtml(TENTATIVAS.rotulo(pend[0])) + '</span>';
+  if (pend.length > 1) return '<button class="v3-btn v3-btn-light" onclick="TENTATIVAS.modalRetomar()">' + ico + 'Continuar atividade (' + pend.length + ' em andamento)</button>';
+  if (temaSemAtual) return '<button class="v3-btn v3-btn-light" onclick="abrirTema(\'' + temaSemAtual.id + '\')">' + ico + 'Estudar o tema da semana</button>';
+  return '';
 }
 
 // ========== INIT ==========
@@ -23412,6 +24064,7 @@ function fazerMiniSimulado(temaId) {
       return;
     }
     if (event === 'SIGNED_OUT') {
+      try { CONFIAB.aoSair(); } catch (e) {}
       state.usuario = null;
       document.getElementById('view-app').classList.add('hidden');
       document.getElementById('view-login').classList.remove('hidden');
