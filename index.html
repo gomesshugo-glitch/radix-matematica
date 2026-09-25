@@ -6242,6 +6242,230 @@
   .qbk-cesta-acoes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
   .qbk-cesta-acoes .rx-btn { width: 100%; }
 
+  /* =====================================================================
+     ETAPA 3 (acompanhamento pedagógico, 25/09/2026)
+     Ações após o resultado, registro em lote no caderno, desempenho por
+     tema (aluno) e painel "Quem precisa de atenção" + registros (professor).
+     Usa os tokens rx-* da Etapa 2 (declarados em body, nos dois temas).
+     ===================================================================== */
+  .ac-acoes { margin: 18px 0; }
+  .ac-acoes h3 { margin: 0 0 4px; font-size: var(--rx-fs-md); font-weight: 800; color: var(--rx-text); }
+  .ac-acoes-sub { margin: 0 0 12px; font-size: var(--rx-fs-sm); color: var(--rx-muted); line-height: 1.45; }
+  .ac-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+  .ac-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: var(--rx-fs-xs); font-weight: 700; background: var(--rx-surface-2); border: 1px solid var(--rx-line-2); color: var(--rx-text-2); }
+  .ac-chip.err { color: var(--rx-danger); border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.10); }
+  .ac-chip.blank { color: var(--rx-text-2); }
+  .ac-chip.ok { color: var(--rx-success); border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.10); }
+  .ac-chip.info { color: var(--rx-accent); border-color: rgba(34,211,238,.4); background: var(--rx-accent-soft); }
+  .ac-botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ac-botoes .rx-btn[disabled] { opacity: .55; cursor: not-allowed; }
+  .ac-nota { margin: 10px 0 0; font-size: var(--rx-fs-xs); color: var(--rx-muted); line-height: 1.45; }
+  .ac-rec { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(168,85,247,.35); background: rgba(168,85,247,.10); color: var(--rx-text); font-size: var(--rx-fs-sm); margin: 10px 0 0; line-height: 1.45; }
+  .ac-rec b { color: #a855f7; }
+  body.theme-light .ac-rec b { color: #7e22ce; }
+  .ac-rec .rx-tag { flex: none; background: rgba(168,85,247,.16); color: #a855f7; }
+  body.theme-light .ac-rec .rx-tag { color: #7e22ce; }
+  .ac-lista { margin: 12px 0 0; border: 1px solid var(--rx-line); border-radius: 12px; overflow: hidden; }
+  .ac-lista[hidden] { display: none; }
+  .ac-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--rx-line); font-size: var(--rx-fs-sm); }
+  .ac-item:last-child { border-bottom: 0; }
+  .ac-item .ac-q { font-weight: 800; color: var(--rx-text); flex: none; min-width: 52px; }
+  .ac-item .ac-meta { flex: 1; min-width: 0; color: var(--rx-muted); font-size: var(--rx-fs-xs); line-height: 1.4; }
+  .ac-item .ac-meta b { color: var(--rx-text); font-weight: 700; }
+  .ac-item .rx-btn { flex: none; }
+  .ac-grupo-t { padding: 8px 12px; background: var(--rx-surface-2); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--rx-muted); }
+  /* modal de registro em lote */
+  .ac-lote { max-width: 680px; padding: 22px 24px; }
+  .ac-lote h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
+  .ac-lote-itens { border: 1px solid var(--rx-line); border-radius: 12px; overflow: hidden; margin: 12px 0; max-height: 34vh; overflow-y: auto; }
+  .ac-lote-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--rx-line); font-size: var(--rx-fs-sm); }
+  .ac-lote-item:last-child { border-bottom: 0; }
+  .ac-lote-item input[type=checkbox] { width: 18px; height: 18px; flex: none; accent-color: var(--rx-accent); }
+  .ac-lote-item label { flex: 1; min-width: 0; cursor: pointer; line-height: 1.4; }
+  .ac-lote-item label small { display: block; color: var(--rx-muted); font-size: var(--rx-fs-xs); }
+  .ac-lote-item.ja { opacity: .85; }
+  .ac-lote-item .ac-ja { font-size: var(--rx-fs-xs); font-weight: 700; color: var(--rx-success); white-space: nowrap; }
+  .ac-lote .ce-cat-grid { margin-top: 6px; }
+  .ac-lote textarea { width: 100%; min-height: 64px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text); font: 500 var(--rx-fs) 'Inter', system-ui, sans-serif; resize: vertical; }
+  .ac-lote-rodape { display: flex; gap: 10px; justify-content: flex-end; align-items: center; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--rx-line); margin-top: 14px; }
+  .ac-lote-msg { flex: 1; font-size: var(--rx-fs-sm); color: var(--rx-muted); }
+  .ac-lote-msg.err { color: var(--rx-danger); }
+  .ac-lote-msg.ok { color: var(--rx-success); }
+  .ac-ult-resp { margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: var(--rx-surface-2); border: 1px solid var(--rx-line); font-size: var(--rx-fs-sm); color: var(--rx-text-2); line-height: 1.45; }
+  .ac-ult-resp b { color: var(--rx-text); }
+  .ac-sem-sel { min-height: 34px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text); font: 700 12px 'Inter', system-ui, sans-serif; max-width: 220px; }
+  /* desempenho do aluno */
+  .ac-desemp .rx-kpis { grid-template-columns: repeat(3, 1fr); }
+  .ac-per { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+  .ac-per .rx-label { margin: 0 8px 0 0; }
+  .ac-per button { min-height: 34px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text-2); font: 700 var(--rx-fs-xs) 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .ac-per button[aria-pressed="true"] { background: var(--rx-accent-soft); color: var(--rx-accent); border-color: rgba(34,211,238,.45); }
+  .ac-kpi-base { font-size: var(--rx-fs-xs); color: var(--rx-muted); line-height: 1.4; margin-top: 6px; }
+  .ac-aviso { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(251,191,36,.45); background: rgba(251,191,36,.10); font-size: var(--rx-fs-xs); color: var(--rx-text-2); line-height: 1.45; }
+  .ac-aviso.info { border-color: rgba(34,211,238,.4); background: var(--rx-accent-soft); }
+  .ac-aviso.erro { border-color: rgba(248,113,113,.45); background: rgba(248,113,113,.10); }
+  .ac-sec { margin: 22px 0 0; }
+  .ac-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; }
+  .ac-sec-head h2 { margin: 0; font-size: var(--rx-fs-lg); font-weight: 800; color: var(--rx-text); }
+  .ac-sec-head p { margin: 2px 0 0; font-size: var(--rx-fs-sm); color: var(--rx-muted); }
+  .ac-tbl-wrap { overflow-x: auto; border: 1px solid var(--rx-line); border-radius: 12px; background: var(--rx-surface); -webkit-overflow-scrolling: touch; }
+  .ac-tbl { width: 100%; border-collapse: collapse; font-size: var(--rx-fs-sm); min-width: 640px; }
+  .ac-tbl th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--rx-muted); background: var(--rx-surface-2); border-bottom: 1px solid var(--rx-line); white-space: nowrap; }
+  .ac-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--rx-line); color: var(--rx-text); vertical-align: middle; }
+  .ac-tbl tr:last-child td { border-bottom: 0; }
+  .ac-tbl .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ac-tbl .num small { color: var(--rx-muted); font-weight: 600; }
+  .ac-tbl a.ac-link { color: var(--rx-accent); font-weight: 700; text-decoration: none; cursor: pointer; }
+  .ac-tbl a.ac-link:hover { text-decoration: underline; }
+  .ac-tbl tr.is-click { cursor: pointer; }
+  .ac-tbl tr.is-click:hover td { background: var(--rx-surface-2); }
+  .ac-sinal { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; background: var(--rx-surface-2); color: var(--rx-text-2); border: 1px solid var(--rx-line-2); }
+  .ac-sinal.pouca { color: var(--rx-muted); }
+  .ac-sinal.recorrente { color: var(--rx-danger); border-color: rgba(248,113,113,.45); background: rgba(248,113,113,.10); }
+  .ac-sinal.evolucao { color: var(--rx-success); border-color: rgba(52,211,153,.45); background: rgba(52,211,153,.10); }
+  .ac-sinal.regular { color: var(--rx-accent); border-color: rgba(34,211,238,.4); background: var(--rx-accent-soft); }
+  .ac-sinal.atencao { color: var(--rx-warning); border-color: rgba(251,191,36,.5); background: rgba(251,191,36,.12); }
+  .ac-tema-head { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; margin: 0 0 14px; }
+  .ac-tema-head .rx-h1 { font-size: 20px; }
+  .ac-tema-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
+  .ac-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: var(--rx-fs-sm); margin: 0; }
+  .ac-dl dt { color: var(--rx-muted); font-weight: 700; }
+  .ac-dl dd { margin: 0; color: var(--rx-text); }
+  .ac-ativ { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--rx-line); font-size: var(--rx-fs-sm); }
+  .ac-ativ:last-child { border-bottom: 0; }
+  .ac-ativ .d { color: var(--rx-muted); font-size: var(--rx-fs-xs); min-width: 78px; flex: none; }
+  .ac-ativ .t { flex: 1; min-width: 0; color: var(--rx-text); }
+  .ac-ativ .n { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ac-crit { font-size: var(--rx-fs-xs); color: var(--rx-muted); line-height: 1.5; }
+  .ac-crit summary { cursor: pointer; font-weight: 700; color: var(--rx-text-2); }
+  .ac-crit ul { margin: 6px 0 0; padding-left: 18px; }
+  /* painel do professor */
+  .ac-prof .rx-kpis { grid-template-columns: repeat(4, 1fr); }
+  .ac-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 14px 0 12px; }
+  .ac-filtros .rx-label { margin-bottom: 4px; }
+  .ac-ordem { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 8px 12px; background: var(--rx-accent-soft); border: 1px solid rgba(34,211,238,.25); border-radius: 8px; font-size: var(--rx-fs-xs); color: var(--rx-text-2); }
+  .ac-ordem b { color: var(--rx-accent); }
+  .ac-filtros { align-items: end; }
+  .ac-filtros .rx-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ac-tbl-painel { min-width: 920px; table-layout: fixed; }
+  .ac-tbl-painel .c-aluno { width: 190px; } .ac-tbl-painel .c-ult { width: 150px; } .ac-tbl-painel .c-sit { width: 140px; } .ac-tbl-painel .c-acoes { width: 122px; }
+  .ac-tbl-painel td { vertical-align: top; padding: 12px; }
+  .ac-motivos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .ac-motivos li { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 6px 10px; align-items: start; }
+  .ac-motivos .ac-sinal { justify-self: start; margin-top: 1px; }
+  .ac-motivos .t { font-size: var(--rx-fs-sm); font-weight: 600; color: var(--rx-text); line-height: 1.35; }
+  .ac-motivos small { display: block; color: var(--rx-muted); font-size: var(--rx-fs-xs); line-height: 1.4; margin-top: 2px; }
+  .ac-sem-ind { color: var(--rx-muted); font-size: var(--rx-fs-sm); }
+  .ac-td-sit small { display: block; margin-top: 4px; font-size: 11px; color: var(--rx-muted); }
+  .ac-td-acoes { white-space: nowrap; }
+  .ac-td-acoes .rx-btn { display: flex; width: 100%; margin-bottom: 6px; }
+  .ac-ind-card { padding: 12px 14px; margin-bottom: 8px; }
+  .ac-ind-acoes { margin-top: 8px; padding-left: 170px; }
+  .ac-aluno-cel { display: flex; flex-direction: column; gap: 2px; }
+  .ac-aluno-cel b { color: var(--rx-text); }
+  .ac-aluno-cel small { color: var(--rx-muted); font-size: var(--rx-fs-xs); }
+  .ac-sit { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text-2); }
+  .ac-sit.pendente { color: var(--rx-warning); border-color: rgba(251,191,36,.5); background: rgba(251,191,36,.12); }
+  .ac-sit.em_acompanhamento { color: var(--rx-accent); border-color: rgba(34,211,238,.4); background: var(--rx-accent-soft); }
+  .ac-sit.concluida { color: var(--rx-success); border-color: rgba(52,211,153,.45); background: rgba(52,211,153,.10); }
+  .ac-regs { display: grid; gap: 10px; }
+  .ac-reg { padding: 14px 16px; }
+  .ac-reg-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .ac-reg-head b { color: var(--rx-text); font-size: var(--rx-fs-sm); }
+  .ac-reg p { margin: 4px 0; font-size: var(--rx-fs-sm); color: var(--rx-text); line-height: 1.5; white-space: pre-wrap; }
+  .ac-reg p .l { color: var(--rx-muted); font-weight: 700; }
+  .ac-reg-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .ac-hist { margin-top: 10px; border-top: 1px dashed var(--rx-line); padding-top: 10px; font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .ac-hist div { padding: 3px 0; }
+  .ac-hist b { color: var(--rx-text-2); }
+  .ac-form .rx-label { margin-top: 12px; }
+  .ac-form textarea, .ac-form input[type=date], .ac-form select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text); font: 500 var(--rx-fs) 'Inter', system-ui, sans-serif; }
+  .ac-form textarea { min-height: 72px; resize: vertical; }
+  .ac-form .ac-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ac-ind-box { padding: 10px 12px; border-radius: 10px; background: var(--rx-surface-2); border: 1px solid var(--rx-line); font-size: var(--rx-fs-xs); color: var(--rx-text-2); margin-top: 8px; line-height: 1.45; }
+  .ac-ind-box b { color: var(--rx-text); }
+  @media (max-width: 900px) {
+    .ac-desemp .rx-kpis, .ac-prof .rx-kpis { grid-template-columns: 1fr 1fr; }
+    .ac-form .ac-two { grid-template-columns: 1fr; }
+    .ac-tema-head { flex-direction: column; }
+    /* painel do professor vira cartões empilhados */
+    .ac-tbl-painel { min-width: 0; table-layout: auto; }
+    .ac-tbl-painel colgroup, .ac-tbl-painel thead { display: none; }
+    .ac-tbl-painel, .ac-tbl-painel tbody, .ac-tbl-painel tr, .ac-tbl-painel td { display: block; }
+    .ac-tbl-painel tr { padding: 10px 12px; border-bottom: 1px solid var(--rx-line); }
+    .ac-tbl-painel tr:last-child { border-bottom: 0; }
+    .ac-tbl-painel td { padding: 4px 0; border: 0; }
+    .ac-motivos li { grid-template-columns: 1fr; gap: 4px; }
+    .ac-td-acoes { display: flex !important; gap: 8px; margin-top: 8px; }
+    .ac-td-acoes .rx-btn { width: auto; flex: 1; margin: 0; }
+    .ac-ind-acoes { padding-left: 0; }
+  }
+  @media (max-width: 600px) {
+    .ac-desemp .rx-kpis, .ac-prof .rx-kpis { grid-template-columns: 1fr; }
+    .ac-lote { padding: 18px 16px; }
+    .ac-item { flex-wrap: wrap; }
+    .ac-item .rx-btn { margin-left: auto; }
+  }
+
+  /* ---------- Cronograma: bloco "Revisão Geral" (refino visual, 25/09/2026). Regras restritas a .crv-* ---------- */
+  .crv-bloco {
+    --crv-azul: #93c5fd; --crv-azul-forte: #bfdbfe; --crv-txt: var(--radix-text); --crv-mudo: var(--radix-text-muted);
+    --crv-bg: rgba(59,130,246,.07); --crv-card: var(--radix-surface); --crv-borda: var(--radix-line-2); --crv-borda-hover: rgba(147,197,253,.6);
+    --crv-geo-bg: rgba(34,211,238,.10); --crv-geo-fg: #7dd3fc; --crv-btn-bg: rgba(96,165,250,.14); --crv-btn-bg-hover: rgba(96,165,250,.24); --crv-btn-fg: #bfdbfe;
+    --crv-dot: #6b7280; --crv-estudo: #fbbf24; --crv-ok: #34d399;
+    container-type: inline-size; background: var(--crv-bg); border: 1px solid var(--crv-borda); border-radius: 14px; padding: 18px; margin-bottom: 20px;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  body.theme-light .crv-bloco {
+    --crv-azul: #1d4ed8; --crv-azul-forte: #1e3a8a; --crv-bg: rgba(37,99,235,.06); --crv-card: #fff; --crv-borda: #dbe4f0; --crv-borda-hover: rgba(29,78,216,.45);
+    --crv-geo-bg: rgba(8,145,178,.10); --crv-geo-fg: #0e7490; --crv-btn-bg: rgba(37,99,235,.10); --crv-btn-bg-hover: rgba(37,99,235,.18); --crv-btn-fg: #1d4ed8;
+    --crv-dot: #9ca3af; --crv-estudo: #d97706; --crv-ok: #059669;
+  }
+  .crv-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 0 0 16px; }
+  .crv-kicker { display: block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--crv-azul); margin-bottom: 4px; }
+  .crv-title { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.3px; color: var(--crv-txt); }
+  .crv-sub { margin: 3px 0 0; font-size: 12.5px; color: var(--crv-mudo); line-height: 1.4; }
+  .crv-prog { font-size: 12.5px; color: var(--crv-mudo); white-space: nowrap; padding: 6px 12px; border-radius: 999px; background: var(--crv-card); border: 1px solid var(--crv-borda); }
+  .crv-prog b { color: var(--crv-azul); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .crv-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @container (min-width: 560px) { .crv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @container (min-width: 1040px) { .crv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @supports not (container-type: inline-size) {
+    @media (min-width: 620px) { .crv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1320px) { .crv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  }
+  .crv-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; background: var(--crv-card); border: 1px solid var(--crv-borda); border-radius: 12px; padding: 18px; color: var(--crv-txt); transition: border-color .15s, transform .15s; }
+  .crv-card[role="button"] { cursor: pointer; }
+  .crv-card[role="button"]:hover { border-color: var(--crv-borda-hover); transform: translateY(-1px); }
+  .crv-card:focus-visible { outline: 2px solid var(--crv-azul); outline-offset: 2px; }
+  .crv-card.em_estudo { border-color: rgba(245,158,11,.55); }
+  .crv-card.concluido { border-color: rgba(16,185,129,.55); }
+  .crv-card.cron-semana-foco { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+  .crv-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .crv-id { min-width: 0; }
+  .crv-week { display: block; font-size: 11px; font-weight: 600; color: var(--crv-mudo); letter-spacing: .02em; }
+  .crv-h { margin: 2px 0 0; font-size: 17px; font-weight: 800; color: var(--crv-azul); letter-spacing: -.2px; line-height: 1.2; }
+  .crv-date { flex: none; font-size: 12px; font-weight: 700; color: var(--crv-azul); background: var(--crv-btn-bg); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+  .crv-estado { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .crv-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--crv-mudo); }
+  .crv-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--crv-dot); display: inline-block; }
+  .crv-status.em_estudo { color: var(--crv-estudo); } .crv-status.em_estudo i { background: var(--crv-estudo); }
+  .crv-status.concluido { color: var(--crv-ok); } .crv-status.concluido i { background: var(--crv-ok); }
+  .crv-erros { font-size: 11px; font-weight: 700; color: #a855f7; background: rgba(168,85,247,.12); padding: 2px 8px; border-radius: 999px; }
+  body.theme-light .crv-erros { color: #7e22ce; }
+  .crv-list { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 6px; }
+  .crv-list li { position: relative; padding-left: 14px; font-size: 13.5px; line-height: 1.4; color: var(--crv-txt); overflow-wrap: anywhere; }
+  .crv-list li::before { content: ''; position: absolute; left: 0; top: .6em; width: 5px; height: 5px; border-radius: 50%; background: var(--crv-azul); opacity: .7; }
+  .crv-base { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+  .crv-geo { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; background: var(--crv-geo-bg); color: var(--crv-geo-fg); font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .crv-geo svg { width: 15px; height: 15px; flex: none; }
+  .crv-stats { font-size: 12px; color: var(--crv-mudo); font-variant-numeric: tabular-nums; }
+  .crv-stats b { color: var(--crv-txt); font-weight: 800; }
+  .crv-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 38px; padding: 8px 12px; border-radius: 9px; background: var(--crv-btn-bg); color: var(--crv-btn-fg); font-size: 13px; font-weight: 700; text-decoration: none; transition: background .15s; }
+  .crv-btn:hover { background: var(--crv-btn-bg-hover); text-decoration: none; }
+  .crv-btn:focus-visible { outline: 2px solid var(--crv-azul); outline-offset: 2px; }
+  @media (max-width: 480px) { .crv-bloco { padding: 14px; } .crv-card { padding: 16px; } }
+
   /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
   #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
   #radix-sync.on{display:flex}
@@ -6589,7 +6813,7 @@ const MODULOS = [
     cor: '#0277BD',
     temas: ['combinatoria','probabilidade','estatistica','matrizes','sistemas-lineares'] },
   { id: 'm5', numero: '05', nome: 'Revisão Geral',
-    subtitulo: '7 semanas · 4 assuntos + geometria por semana · mini-simulado',
+    subtitulo: '7 semanas · 4 assuntos + geometria · mini-simulado',
     cor: '#1565C0',
     temas: [] },
 ];
@@ -9699,6 +9923,10 @@ function renderHome() {
           <div class="icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
           <div><h3>Simulados</h3><p>ENEM com TRI, bancas externas e plataforma</p></div>
         </div>
+        <div class="quick-card" onclick="renderAcompanhamento()">
+          <div class="icon icon-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div><h3>Quem precisa de atenção</h3><p>Indicações com evidência e registro de acompanhamento</p></div>
+        </div>
         <div class="quick-card" onclick="renderMetricasAlunos()">
           <div class="icon icon-success"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
           <div><h3>Métricas dos alunos</h3><p>Estudos, questões, revisões</p></div>
@@ -10995,7 +11223,7 @@ function renderEstudoDigital() {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;padding:14px 16px;background:${corBgSuave};border:1px solid ${corBorda};border-radius:12px;">
       <div>
         <h2 style="margin:0;font-size:18px;color:${corAcento};">${tituloModo}</h2>
-        <p style="margin:4px 0 0;font-size:12.5px;color:var(--radix-text-muted);">${subtituloModo}</p>
+        <p style="margin:4px 0 0;font-size:12.5px;color:var(--radix-text-muted);">${subtituloModo}</p>${ACOMP.htmlBannerRecuperacao(_estudoAtual)}
       </div>
       <div style="text-align:right;">
         <div style="font-size:11.5px;color:var(--radix-text-muted);">Progresso</div>
@@ -12362,6 +12590,7 @@ function renderResultadoSimulado(registro, porTempo) {
       <button class="btn" onclick="renderHome()">Voltar ao Início</button>
       <button class="btn btn-secondary" onclick="abrirSimuladoConfig()">Novo Simulado</button>
     </div>
+    ${ACOMP.htmlAcoesResultado(ACOMP.ctxSimulado(registro))}
     <h3 class="section-title"><span class="section-title-accent"></span>Revisão das Questões</h3>
     ${registro.detalhes.map((d, i) => {
       const q = d.questao;
@@ -18348,6 +18577,7 @@ function renderCronograma(focoN) {
       const semanas = semanasPorMod[mod.id] || [];
       const semTotal = semanas.filter(s => s.tipo !== 'recesso').length;
       const semOk = mostrarProgresso ? semanas.filter(s => s.tipo !== 'recesso' && statusDaSemana(s.n) === 'concluido').length : 0;
+      if (typeof _ehModuloRevisaoGeral === 'function' && _ehModuloRevisaoGeral(mod, semanas)) return _htmlBlocoRevisaoGeral(mod, semanas, mostrarProgresso, semOk, semTotal);
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
           <div class="cron-modulo-header">
@@ -19215,7 +19445,7 @@ async function renderResultadoTRI(j, tempo) {
     if (!qid) return '';
     let h = '<button type="button" class="sim-btn sim-btn-outline sim-btn-sm" onclick="triVerQuestao(' + qid + ',' + x.posicao + ',\'' + (x.resposta || '.') + '\',' + (j.ano || 0) + ')">Ver questão</button>';
     if (x.acertou === false) {
-      h += '<button type="button" class="sim-btn sim-btn-erro sim-btn-sm" title="Adicionar esta questão ao seu caderno de erros" onclick="abrirModalErroDaQuestao(' + qid + ')">+ Caderno</button>';
+      h += '<button type="button" class="sim-btn sim-btn-erro sim-btn-sm" title="Adicionar esta questão ao seu caderno de erros" onclick="ACOMP.cadernoDaTri(\'' + _escHtml(String(j.id || '')) + '\',' + qid + ',' + x.posicao + ',\'' + (x.resposta || '.') + '\',\'' + (x.gabarito || '') + '\')">+ Caderno</button>';
     }
     return '<span class="sim-acoes">' + h + '</span>';
   };
@@ -19274,6 +19504,7 @@ async function renderResultadoTRI(j, tempo) {
     + '<div class="sim-kpi"><div class="k-l">Tempo</div><div class="k-v">' + _triTempo(tempo) + '</div><div class="k-c">do início ao envio</div></div>'
     + '</div>'
     + aviso
+    + ACOMP.htmlAcoesResultado(ACOMP.ctxTri(j, mapaQ))
     + '<div class="sim-card"><div class="sim-card-head"><div>'
       + '<div class="sim-card-t">Revisão prioritária</div>'
       + '<div class="sim-card-s">Erros em questões que estavam ao seu alcance — chance de acerto de 50% ou mais na sua proficiência. É aqui que a nota sobe mais rápido.</div>'
@@ -20469,15 +20700,14 @@ function abrirModalErro(opcoes) {
     : null;
 
   const semanaN = editando ? editando.semana_numero : (opcoes.semanaN || (typeof getSemanaAtual === 'function' ? (getSemanaAtual() || {}).n : null));
-  if (semanaN == null) { alert('Nao foi possivel identificar a semana. Abra o caderno pelo editor de uma semana.'); return; }
   const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
   const sem = merged.find(s => s.n === semanaN) || {};
   const temaId = editando ? editando.tema_id : (opcoes.temaId || sem.temaId || null);
   const tituloPre = editando ? (editando.titulo || '') : (opcoes.pre?.titulo || '');
-  const descricaoPre = editando ? (editando.descricao || '') : '';
+  const descricaoPre = editando ? (editando.descricao || '') : (opcoes.pre?.descricao || '');
   const causaPre = editando ? (editando.causa || '') : '';
   const aprendPre = editando ? (editando.aprendizado || '') : '';
-  const categoriaPre = editando ? editando.categoria : (opcoes.pre?.categoria || 'outro');
+  const categoriaPre = editando ? editando.categoria : (opcoes.pre && opcoes.pre.categoria !== undefined ? opcoes.pre.categoria : 'outro');
   const prioridadePre = editando ? editando.prioridade : 2;
   const questaoId = editando ? _questaoIdDoErro(editando) : (opcoes.questaoId || null);
 
@@ -20503,7 +20733,7 @@ function abrirModalErro(opcoes) {
           <span style="font-size:28px;line-height:1;">📕</span>
           <h2 style="margin:0;flex:1;font-size:20px;font-weight:800;">${editando ? 'Editar erro' : 'Novo erro'}</h2>
           ${questaoId ? `<button class="btn btn-secondary" style="padding:7px 12px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;" onclick="verQuestaoDoErro(${editando ? "'" + editando.id + "'" : 'null'}, ${questaoId})" title="Abre a questão ${questaoId} com gabarito e resolução"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver questão ${questaoId}</button>` : ''}
-          <span style="background:var(--radix-bg-2);padding:5px 12px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:0.05em;color:var(--radix-text-muted);">SEM ${String(semanaN).padStart(2,'0')}</span>
+          ${ACOMP.htmlSelectSemana(semanaN, merged)}
         </div>
 
         <div class="ce-form-row">
@@ -20539,7 +20769,7 @@ function abrirModalErro(opcoes) {
           </div>
         </div>
 
-        <input type="hidden" id="ce-modal-semana" value="${semanaN}">
+        <input type="hidden" id="ce-modal-semana" value="${semanaN == null ? '' : semanaN}">
         <input type="hidden" id="ce-modal-tema" value="${escAttr(temaId || '')}">
         <input type="hidden" id="ce-modal-questao" value="${questaoId || ''}">
         <input type="hidden" id="ce-modal-id" value="${editando ? editando.id : ''}">
@@ -20592,9 +20822,11 @@ async function salvarErroNoModal() {
   const _val = id => (document.getElementById(id)?.value || '').trim();
   const titulo = _val('ce-modal-titulo');
   if (!titulo) { alert('Informe o título do erro.'); return; }
-  const categoria = _val('ce-modal-cat') || 'outro';
+  const categoria = _val('ce-modal-cat');
+  if (!categoria) { alert('Escolha a categoria do erro (conceito, cálculo, interpretação…). O app não deduz a causa pela alternativa marcada.'); return; }
   const prioridade = parseInt(_val('ce-modal-pri'), 10) || 2;
-  const semanaN = parseInt(_val('ce-modal-semana'), 10);
+  const _semRaw = parseInt(_val('ce-modal-semana'), 10);
+  const semanaN = Number.isFinite(_semRaw) ? _semRaw : null;
   const temaId = _val('ce-modal-tema') || null;
   const descricao = _val('ce-modal-desc') || null;
   const causa = _val('ce-modal-causa') || null;
@@ -20611,7 +20843,9 @@ async function salvarErroNoModal() {
     categoria, prioridade,
     // Vínculo com a questão (voltou em 09/09/2026, migration 11: a FK antiga apontava
     // para a tabela legada `questoes`). É o que permite "Ver questão" no caderno.
-    questao_id: questaoId
+    questao_id: questaoId,
+    // (Etapa 3) atividade de origem e resposta marcada, quando o registro nasce de uma questão respondida
+    origem: (!idExistente && typeof ACOMP !== 'undefined' && ACOMP._modalOrigem) ? ACOMP._modalOrigem : undefined
   };
 
   try {
@@ -20882,7 +21116,7 @@ function _renderLinhaErro(e, ehResolv) {
     <div class="ce-linha ${ehResolv ? 'resolvida' : ''}" onclick="verDetalheErro('${e.id}')">
       <span class="ce-linha-ico" style="color:${corIco};">${svgIco}</span>
       <span class="ce-linha-titulo">${_esc(e.titulo)}</span>
-      <span class="ce-linha-meta">SEM ${String(e.semana_numero).padStart(2,'0')} · ${cat.nome}</span>
+      <span class="ce-linha-meta">${e.semana_numero != null ? 'SEM ' + String(e.semana_numero).padStart(2,'0') + ' · ' : ''}${cat.nome}</span>
       <span class="ce-linha-data">${dataBR}</span>
       <span class="ce-linha-acoes">
         ${_questaoIdDoErro(e) ? `<button class="ce-linha-btn ce-linha-btn-q" onclick="event.stopPropagation();verQuestaoDoErro('${e.id}')" title="Abre a questão com gabarito e resolução">Ver questão</button>` : ''}
@@ -21053,24 +21287,29 @@ function _refreshSecaoCadernoNaSemana() {
 }
 
 // Abre modal pré-preenchido a partir de uma questão errada (vem do Modo Teste/Prova)
-function abrirModalErroDaQuestao(qid) {
+function abrirModalErroDaQuestao(qid, extra) {
   const q = (state.questoes || []).find(x => x.id === qid);
   if (!q) { abrirModalErro(); return; }
   const tema = TEMAS.find(t => t.id === q.tema);
-  const semAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
-  // Tenta achar a semana correspondente ao tema da questão; senão usa semana atual
-  let semanaN = null;
-  const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
-  const semDoTema = cronoMerged.find(s => s.temaId === q.tema);
-  if (semDoTema) semanaN = semDoTema.n;
-  else if (semAtualObj) semanaN = semAtualObj.n;
+  // (Etapa 3) Semana só quando o tema da questão está no cronograma; senão o registro fica sem vínculo
+  // (não força a semana atual). Categoria fica em branco: o aluno informa a causa.
+  const semanaN = (typeof ACOMP !== 'undefined') ? ACOMP.semanaDoTema(q.tema) : null;
+  const o = extra || {};
+  const ultima = (state.respostasAluno || []).find(r => r.questaoId === qid);
+  const origem = o.origem || (ultima
+    ? { tipo: ultima.fonte || 'estudo', tentativa_id: ultima.tentativaId || null, resposta_marcada: (typeof ultima.resposta === 'number' ? ultima.resposta : null), gabarito: q.correta, registrado_em: new Date().toISOString() }
+    : { tipo: 'banco', gabarito: q.correta });
+  const marc = origem.em_branco ? 'Deixei em branco' : (typeof origem.resposta_marcada === 'number' ? 'Marquei ' + String.fromCharCode(65 + origem.resposta_marcada) : '');
+  const desc = (marc ? marc + '; gabarito ' + String.fromCharCode(65 + q.correta) + '.' : '') + (origem.rotulo ? ' Origem: ' + origem.rotulo + '.' : '');
   abrirModalErro({
     semanaN,
     temaId: q.tema,
     questaoId: qid,
+    origem,
     pre: {
       titulo: 'Errei Q' + qid + (tema ? ' — ' + tema.nome : ''),
-      categoria: 'conceitual'
+      categoria: '',
+      descricao: desc.trim()
     }
   });
 }
@@ -23079,7 +23318,7 @@ function _retomarEstudo(t) {
   const qs = (t.questoes_ids || []).map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
   if (!qs.length) { alert('Nenhuma das questões dessa atividade está mais disponível no banco.'); return; }
   const resp = {}; Object.keys(t.respostas || {}).forEach(k => { const qid = Number(k); if (qs.some(q => q.id === qid)) resp[qid] = t.respostas[k].i; });
-  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length };
+  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length, recuperacao: (t.origem && t.origem.recuperacao) || null };
   TENTATIVAS.marcarAberta(t.id);
   state.view = 'estudo-digital';
   renderEstudoDigital();
@@ -23180,7 +23419,7 @@ async function _finalizarEstudoDigital() {
     }
     FILA.enfileirar({ id: opId, tipo: 'gravar', payload: { tipo: 'respostas', dados: { itens, tentativa_id: tentativaId, finaliza: true, tentativa: t ? TENTATIVAS.retrato(t) : null } } });
     TENTATIVAS.finalizar(tentativaId, opId);
-    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId });
+    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId, tentativaId, recuperacao: (_estudoAtual && _estudoAtual.recuperacao) || null });
     _estudoAtual = null;
   } finally { _finalizarEstudoDigital._ocupado = false; }
 }
@@ -23215,6 +23454,7 @@ function _renderResultadoEstudo(r) {
     + _htmlStatusGravacao(opId)
     + '</div>'
     + '<div style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
+    + ACOMP.htmlAcoesResultado(ACOMP.ctxEstudo(r))
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">📚 Voltar ao Banco</button></div>';
   try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
 }
@@ -23232,7 +23472,7 @@ function _mostrarFeedbackQuestao(q, idx) {
   });
   const correto = idx === q.correta;
   const semAtualResp = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
-  const podeCaderno = !correto && state.usuario?.perfil === 'aluno' && semAtualResp && semAtualResp.n;
+  const podeCaderno = !correto && state.usuario?.perfil === 'aluno';   // (Etapa 3) sem exigir semana
   const btnCaderno = podeCaderno ? '<div style="margin-top:10px;"><button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;" onclick="abrirModalErroDaQuestao(' + q.id + ')">📕 Adicionar ao caderno de erros</button></div>' : '';
   const box = document.getElementById('explicacao-' + q.id);
   if (box) box.innerHTML = '<div class="explicacao"><strong>' + (correto ? '✓ Correto!' : '✗ Resposta incorreta.') + '</strong><br>'
@@ -23384,7 +23624,7 @@ function finalizarSimulado(porTempo, opts) {
   const registro = {
     id: 'pendente:' + opId, opId, aluno: state.usuario.nome, data: agoraIso,
     acertos, erros, brancos, total, percentual: Math.round((acertos / total) * 100),
-    tempoUsado, detalhes, porTempo: !!porTempo, pendente: true
+    tempoUsado, detalhes, porTempo: !!porTempo, pendente: true, tentativaId: sim.tentativaId
   };
   itens.forEach(i => state.respostasAluno.push({ questaoId: i.questao_id, tema: i.tema, resposta: i.resposta_marcada, correto: i.correto, data: agoraIso, aluno: state.usuario.nome, fonte: 'simulado', pendente: true, opId, tentativaId: sim.tentativaId }));
   state.historicoSimulados.unshift(registro);
@@ -23450,7 +23690,7 @@ async function triEnviar() {
       return;
     }
     clearInterval(TRI.timer); TRI.atual = null;
-    renderResultadoTRI(data, tempo);
+    renderResultadoTRI(Object.assign({ id: a.id }, data || {}), tempo);
   } finally { triEnviar._ocupado = false; radixHideLoading(); }
 }
 
@@ -23708,7 +23948,7 @@ const NAV = {
     side.innerHTML = this.ITENS.map(it => this.item(it)).join('')
       + '<div class="rx-side-sec">Mais</div>'
       + '<a class="rx-nav-item rx-nav-rf" data-secao="revisao-final" href="#/revisao-final" onclick="event.preventDefault();ROTA.ir(\'revisao-final\')">' + rxIco('rf') + '<span>Revisão Final</span></a>'
-      + '<a class="rx-nav-item" data-secao="estatisticas" href="#/estatisticas" onclick="event.preventDefault();ROTA.ir(\'estatisticas\')">' + rxIco('estat') + '<span>Estatísticas</span></a>'
+      + '<a class="rx-nav-item" data-secao="desempenho" href="#/desempenho" onclick="event.preventDefault();ROTA.ir(\'desempenho\')">' + rxIco('estat') + '<span>Desempenho</span></a>'
       + '<div class="rx-side-rodape">'
       + '<a class="rx-nav-item" href="#/perfil" onclick="event.preventDefault();ROTA.ir(\'perfil\')">' + rxIco('perfil') + '<span>Meu perfil</span></a>'
       + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();toggleTheme()">' + rxIco(claro ? 'tema' : 'sol') + '<span>' + (claro ? 'Tema escuro' : 'Tema claro') + '</span></a>'
@@ -23722,7 +23962,7 @@ const NAV = {
   },
   desmontar() { document.body.classList.remove('rx-aluno', 'rx-kb-open'); RX_DRAWER.fechar(); },
   marcar(rota) {
-    const sec = ROTA.secao(rota) || (rota === 'estatisticas' ? 'estatisticas' : '');
+    const sec = ROTA.secao(rota) || '';
     document.querySelectorAll('.rx-side [data-secao], .rx-bottom [data-secao]').forEach(a => {
       if (a.getAttribute('data-secao') === sec) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
@@ -23740,7 +23980,7 @@ const NAV = {
       + it('listas', 'listas', 'Minhas listas', n ? '<span class="rx-badge">' + n + '</span>' : '')
       + it('cronograma', 'cronograma', 'Cronograma')
       + it('revisao-final', 'rf', 'Revisão Final')
-      + it('estatisticas', 'estat', 'Estatísticas')
+      + it('desempenho', 'estat', 'Desempenho')
       + it('perfil', 'perfil', 'Meu perfil')
       + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();toggleTheme();NAV.abrirMais()">' + rxIco(claro ? 'tema' : 'sol') + '<span>' + (claro ? 'Tema escuro' : 'Tema claro') + '</span></a>'
       + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();RX_DRAWER.fechar();logout()">' + rxIco('sair') + '<span>Sair</span></a>'
@@ -23896,7 +24136,7 @@ function renderDashboardAluno() {
     + '<div class="rx-kpi"><div class="l">Respostas registradas</div><div class="v">' + r7.length + '</div><div class="s">últimos 7 dias' + (resp.length && !r7.length ? ' · ' + resp.length + ' no total' : '') + '</div></div>'
     + '<div class="rx-kpi"><div class="l">Taxa de acerto</div><div class="v">' + (taxa7 == null ? '—' : taxa7 + '<small>%</small>') + '</div><div class="s">' + (taxa7 == null ? 'sem respostas no período' : ac7 + ' acertos em ' + r7.length + ' · 7 dias') + '</div></div>'
     + '<div class="rx-kpi"><div class="l">Revisões realizadas</div><div class="v">' + (feitas7 == null ? '—' : feitas7) + '</div><div class="s">' + (feitas7 == null ? 'nenhuma prevista ainda' : 'últimos 7 dias') + '</div></div>'
-    + '</div><div class="rx-kpis-rodape"><a href="#/estatisticas" onclick="event.preventDefault();ROTA.ir(\'estatisticas\')">Ver relatórios completos →</a></div></div>'
+    + '</div><div class="rx-kpis-rodape"><a href="#/desempenho" onclick="event.preventDefault();ROTA.ir(\'desempenho\')">Ver meu desempenho →</a></div></div>'
     + '<section class="rx-card rx-week" aria-label="Na sua semana"><div class="rx-week-head"><div><span class="rx-kicker">Na sua semana</span>'
     + (semAtual ? '<h2 class="rx-h2">Semana ' + String(semAtual.n).padStart(2, '0') + ' · ' + _escHtml(semAtual.titulo || (temaSemAtual ? temaSemAtual.nome : '')) + '</h2><p class="rx-sub">' + (temaSemAtual ? 'Tema: ' + _escHtml(temaSemAtual.nome) + '. ' : '') + (mats.length ? mats.length + (mats.length === 1 ? ' material disponível.' : ' materiais disponíveis.') : 'Nenhum material publicado para esta semana ainda.') + '</p>'
       : '<h2 class="rx-h2">Fora do calendário de aulas</h2><p class="rx-sub">Nenhuma semana em andamento hoje.</p>')
@@ -24175,6 +24415,885 @@ function limparCestaLateral() {
  ['renderRevisaoFinal', () => 'revisao-final'],
  ['renderEstatisticasAvancadas', () => 'estatisticas'],
  ['abrirMeuPerfil', () => 'perfil']].forEach(([n, f]) => ROTA.envolver(n, f));
+
+// ============================================================================
+// ETAPA 3 — ACOMPANHAMENTO PEDAGÓGICO (25/09/2026)
+// Liga resultado → caderno de erros → revisões → desempenho por tema (aluno) e
+// reúne indicações com evidência + registro de acompanhamento (professor).
+// Parâmetros de produto em ACOMP_CFG (documentados no relatório da etapa).
+// ============================================================================
+const ACOMP_CFG = {
+  FUSO: 'America/Fortaleza', OFFSET: '-03:00',   // Fortaleza não tem horário de verão: deslocamento fixo
+  PERIODOS: [7, 30, 90, 0],                      // 0 = todo o histórico
+  DIAS_PADRAO: 30,
+  DUP_JANELA_MS: 2000,      // reenvio técnico: mesma questão, mesma marcação, mesmo op_id OU menos de 2 s de diferença
+  INICIO_HISTORICO_COMPLETO: '2026-09-25',       // antes disso o Modo Prova não era gravado (Etapa 1)
+  // aluno · evolução por tema
+  TEMA_MIN_DISTINTAS: 5,    // menos que isso = pouca prática (sem conclusão sobre o tema)
+  TEMA_RECENTES_N: 10,      // "novas tentativas" do tema = últimas N respostas válidas
+  TEMA_RECORRENTE_MAX: 50,  // % de acerto nas últimas N abaixo disso (com prática suficiente) = dificuldade recorrente
+  TEMA_EVOLUCAO_PP: 15,     // últimas N acima da 1ª tentativa por 15 pontos ou mais = evolução
+  // professor · quem precisa de atenção
+  DIAS_SEM_ATIVIDADE: 7,
+  REV_ATRASADAS_MIN: 2,
+  ERROS_ALTA_MIN: 1,
+  TEMA_MIN_RESP: 8,         // respostas no período para avaliar um tema
+  TEMA_LIMITE_BAIXO: 40,    // % de acerto no período igual ou abaixo disso
+  QUEDA_MIN_RESP: 15,       // respostas em CADA período para comparar
+  QUEDA_PP: 20              // queda em pontos percentuais entre os períodos
+};
+
+// ---------- RX_MET: métricas com regras explícitas ----------
+const RX_MET = {
+  hojeFortaleza(agoraMs) {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: ACOMP_CFG.FUSO, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(agoraMs || Date.now()));
+    } catch (e) { return new Date(agoraMs || Date.now()).toISOString().slice(0, 10); }
+  },
+  agora() { return (typeof RELOGIO !== 'undefined' && RELOGIO.agora) ? RELOGIO.agora() : Date.now(); },
+  // 00:00 (Fortaleza) do 1º dia do período: hoje - (dias - 1). dias = 0 → todo o histórico.
+  inicioPeriodo(dias, agoraMs) {
+    if (!dias) return -Infinity;
+    const hoje = this.hojeFortaleza(agoraMs);
+    return Date.parse(hoje + 'T00:00:00' + ACOMP_CFG.OFFSET) - (dias - 1) * 86400000;
+  },
+  descPeriodo(dias) { return dias ? 'últimos ' + dias + ' dias' : 'todo o histórico'; },
+  normalizar(lista) {
+    return (lista || []).map((r, i) => {
+      const db = r.questao_id !== undefined;
+      const t = Date.parse(db ? r.respondido_em : r.data);
+      return {
+        qid: Number(db ? r.questao_id : r.questaoId), tema: r.tema || null,
+        resp: db ? r.resposta_marcada : r.resposta, ok: !!r.correto,
+        t: Number.isFinite(t) ? t : 0, id: (typeof r.id === 'number') ? r.id : null,
+        fonte: r.fonte || 'estudo', op: db ? (r.op_id || null) : (r.opId || null),
+        tent: db ? (r.tentativa_id || null) : (r.tentativaId || null), sim: db ? (r.simulado_id || null) : null,
+        pendente: !!r.pendente, seq: i
+      };
+    }).filter(x => x.qid > 0);
+  },
+  // Ordem temporal com desempate determinístico: horário, id do banco, ordem de chegada.
+  ordenar(arr) {
+    return arr.slice().sort((a, b) => (a.t - b.t) || ((a.id == null ? Infinity : a.id) - (b.id == null ? Infinity : b.id)) || (a.seq - b.seq));
+  },
+  // Reenvio técnico = mesma questão e mesma marcação com o mesmo op_id ou a menos de 2 s.
+  // Uma nova tentativa legítima (outro horário) continua valendo.
+  deduplicar(lista) {
+    const ord = this.ordenar(this.normalizar(lista));
+    const ultima = new Map(); const validas = []; const removidas = [];
+    ord.forEach(x => {
+      const u = ultima.get(x.qid);
+      if (u && u.resp === x.resp && ((x.op && u.op && x.op === u.op) || Math.abs(x.t - u.t) < ACOMP_CFG.DUP_JANELA_MS)) { removidas.push(x); return; }
+      ultima.set(x.qid, x); validas.push(x);
+    });
+    return { validas, removidas };
+  },
+  primeiras(validas) { const m = new Map(); validas.forEach(x => { if (!m.has(x.qid)) m.set(x.qid, x); }); return m; },
+  pct(ac, n) { return n ? Math.round(ac / n * 100) : null; },
+  pctTxt(ac, n) { const p = this.pct(ac, n); return p == null ? '—' : p + '%'; },
+  historicoIncompleto(validas) {
+    const corte = Date.parse(ACOMP_CFG.INICIO_HISTORICO_COMPLETO + 'T00:00:00' + ACOMP_CFG.OFFSET);
+    return validas.some(x => x.t && x.t < corte);
+  },
+  // A) primeira tentativa por questão  B) desempenho recente  C) questões diferentes
+  indicadores(validas, dias, agoraMs) {
+    const ini = this.inicioPeriodo(dias, agoraMs);
+    const prim = this.primeiras(validas);
+    let pN = 0, pAc = 0;
+    prim.forEach(x => { if (x.t >= ini) { pN++; if (x.ok) pAc++; } });
+    const per = validas.filter(x => x.t >= ini);
+    const rAc = per.filter(x => x.ok).length;
+    const dist = new Set(per.map(x => x.qid)).size;
+    return {
+      dias, ini, periodo: this.descPeriodo(dias),
+      primeira: { n: pN, ac: pAc, pct: this.pct(pAc, pN) },
+      recente: { n: per.length, ac: rAc, pct: this.pct(rAc, per.length) },
+      distintas: { n: dist, respostas: per.length },
+      incompleto: this.historicoIncompleto(validas)
+    };
+  },
+  // Por tema: prática, 1ª tentativa, período, últimas N, erros no caderno, revisões, atividades.
+  porTema(validas, o) {
+    o = o || {};
+    const ini = this.inicioPeriodo(o.dias == null ? ACOMP_CFG.DIAS_PADRAO : o.dias, o.agora);
+    const prim = this.primeiras(validas);
+    const erros = (o.caderno || []).filter(e => !e.resolvido);
+    const revs = o.revisoes || [];
+    const mapa = new Map();
+    const tema = id => { if (!mapa.has(id)) mapa.set(id, { temaId: id, nome: (TEMAS.find(t => t.id === id) || {}).nome || id, qs: new Set(), pN: 0, pAc: 0, rN: 0, rAc: 0, todas: [], errosAtivos: 0, errosAlta: 0, revPend: 0, revAtras: 0, ult: 0 }); return mapa.get(id); };
+    validas.forEach(x => { if (!x.tema) return; const m = tema(x.tema); m.qs.add(x.qid); m.todas.push(x); if (x.t >= ini) { m.rN++; if (x.ok) m.rAc++; } if (x.t > m.ult) m.ult = x.t; });
+    prim.forEach(x => { if (!x.tema) return; const m = tema(x.tema); m.pN++; if (x.ok) m.pAc++; });
+    erros.forEach(e => { if (!e.tema_id) return; const m = tema(e.tema_id); m.errosAtivos++; if (e.prioridade === 3) m.errosAlta++; });
+    revs.forEach(r => { if (!r.temaId || r.status === 'feita') return; const m = tema(r.temaId); m.revPend++; if (r.status === 'atrasada') m.revAtras++; });
+    const N = ACOMP_CFG.TEMA_RECENTES_N;
+    const out = [];
+    mapa.forEach(m => {
+      const ult = m.todas.slice(-N); const uAc = ult.filter(x => x.ok).length;
+      // evolução em questões repetidas: errou na 1ª e acertou na última
+      let melhorou = 0, repetidas = 0;
+      const porQ = new Map(); m.todas.forEach(x => { if (!porQ.has(x.qid)) porQ.set(x.qid, []); porQ.get(x.qid).push(x); });
+      porQ.forEach(arr => { if (arr.length > 1) { repetidas++; if (!arr[0].ok && arr[arr.length - 1].ok) melhorou++; } });
+      const r = {
+        temaId: m.temaId, nome: m.nome, distintas: m.qs.size, respostas: m.todas.length,
+        primeira: { n: m.pN, ac: m.pAc, pct: this.pct(m.pAc, m.pN) },
+        recente: { n: m.rN, ac: m.rAc, pct: this.pct(m.rAc, m.rN) },
+        ultimas: { n: ult.length, ac: uAc, pct: this.pct(uAc, ult.length) },
+        repetidas, melhorou, errosAtivos: m.errosAtivos, errosAlta: m.errosAlta, revPend: m.revPend, revAtras: m.revAtras, ultimaAtividade: m.ult || null
+      };
+      r.sinal = this.sinalTema(r);
+      out.push(r);
+    });
+    return out.sort((a, b) => (b.respostas - a.respostas) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  },
+  // Sinal do tema (critérios em ACOMP_CFG). Nunca "dominado": poucas questões certas não provam nada.
+  sinalTema(r) {
+    const C = ACOMP_CFG;
+    if (r.distintas === 0) return { cod: 'sem_dados', rotulo: 'Sem respostas', cls: 'pouca', texto: 'Nenhuma questão deste tema respondida ainda.' };
+    if (r.distintas < C.TEMA_MIN_DISTINTAS) return { cod: 'pouca_pratica', rotulo: 'Pouca prática', cls: 'pouca', texto: r.distintas + ' de ' + C.TEMA_MIN_DISTINTAS + ' questões diferentes necessárias para avaliar o tema.' };
+    if (r.ultimas.pct != null && r.primeira.pct != null && r.ultimas.n >= C.TEMA_MIN_DISTINTAS && r.repetidas > 0 && r.ultimas.pct >= r.primeira.pct + C.TEMA_EVOLUCAO_PP)
+      return { cod: 'evolucao', rotulo: 'Evolução nas novas tentativas', cls: 'evolucao', texto: 'Últimas ' + r.ultimas.n + ' respostas: ' + r.ultimas.pct + '% (1ª tentativa: ' + r.primeira.pct + '%). ' + r.melhorou + ' de ' + r.repetidas + ' questões repetidas passaram de erro para acerto.' };
+    if (r.ultimas.pct != null && r.ultimas.pct < C.TEMA_RECORRENTE_MAX)
+      return { cod: 'dificuldade_recorrente', rotulo: 'Dificuldade recorrente', cls: 'recorrente', texto: 'Últimas ' + r.ultimas.n + ' respostas: ' + r.ultimas.ac + ' acertos (' + r.ultimas.pct + '%), abaixo de ' + C.TEMA_RECORRENTE_MAX + '%.' };
+    return { cod: 'regular', rotulo: 'Prática em andamento', cls: 'regular', texto: 'Últimas ' + r.ultimas.n + ' respostas: ' + r.ultimas.ac + ' acertos (' + r.ultimas.pct + '%). Continue praticando para ampliar a base.' };
+  },
+  // Atividades do tema: agrupa respostas por tentativa/simulado (ou por fonte + dia quando não há vínculo).
+  atividades(validas, temaId) {
+    const g = new Map(); const ROT = { estudo: 'Estudo (banco / Modo Teste)', estudo_prova: 'Modo Prova', simulado: 'Simulado' };
+    validas.filter(x => x.tema === temaId).forEach(x => {
+      const k = x.tent ? 'tent:' + x.tent : (x.sim ? 'sim:' + x.sim : x.fonte + ':' + this.hojeFortaleza(x.t));
+      if (!g.has(k)) g.set(k, { chave: k, rotulo: ROT[x.fonte] || x.fonte, t: x.t, n: 0, ac: 0, tent: x.tent, sim: x.sim });
+      const a = g.get(k); a.n++; if (x.ok) a.ac++; if (x.t > a.t) a.t = x.t;
+    });
+    return [...g.values()].sort((a, b) => b.t - a.t);
+  },
+  fmtData(v) {
+    if (!v) return '—';
+    const so = typeof v === 'string' && v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (so) return so[3] + '/' + so[2] + '/' + so[1];   // data sem hora: não passa por fuso
+    const d = new Date(typeof v === 'number' ? v : Date.parse(v));
+    if (isNaN(d)) return '—';
+    try { return d.toLocaleDateString('pt-BR', { timeZone: ACOMP_CFG.FUSO, day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return d.toLocaleDateString('pt-BR'); }
+  },
+  fmtDataHora(v) {
+    if (!v) return '—';
+    const d = new Date(typeof v === 'number' ? v : Date.parse(v)); if (isNaN(d)) return '—';
+    try { return d.toLocaleDateString('pt-BR', { timeZone: ACOMP_CFG.FUSO, day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { timeZone: ACOMP_CFG.FUSO, hour: '2-digit', minute: '2-digit' }); } catch (e) { return d.toLocaleString('pt-BR'); }
+  },
+  diasDesde(v, agoraMs) { if (!v) return null; const t = typeof v === 'number' ? v : Date.parse(v); if (!Number.isFinite(t)) return null; return Math.floor(((agoraMs || this.agora()) - t) / 86400000); }
+};
+
+// ---------- ACOMP: ações após o resultado, recuperação e caderno em lote (aluno) ----------
+const ACOMP = {
+  _ctx: {}, _loteOps: {}, _modalOrigem: null,
+  letra(i) { return (i == null || i < 0) ? '—' : String.fromCharCode(65 + i); },
+  idxLetra(l) { return (typeof l === 'string' && /^[A-E]$/i.test(l)) ? l.toUpperCase().charCodeAt(0) - 65 : null; },
+  guardar(ctx) { this._ctx[ctx.chave] = ctx; return ctx; },
+  ctxEstudo(r) {
+    const modo = r.modo === 'teste' ? 'Modo Teste' : 'Modo Prova';
+    return this.guardar({
+      chave: r.opId || rxUuid(), tipo: r.modo === 'teste' ? 'estudo' : 'estudo_prova', rotulo: modo + ' de ' + RX_MET.fmtData(RX_MET.agora()),
+      tentativaId: r.tentativaId || null, recuperacao: r.recuperacao || null,
+      itens: (r.detalhes || []).map(d => ({ qid: d.q.id, tema: d.q.tema, resp: d.minhaResp == null ? null : d.minhaResp, correta: d.q.correta, ok: !!d.correto, blank: d.minhaResp == null }))
+    });
+  },
+  ctxSimulado(reg) {
+    return this.guardar({
+      chave: reg.opId || ('sim:' + reg.id), tipo: 'simulado', rotulo: 'Simulado de ' + RX_MET.fmtData(reg.data), tentativaId: reg.tentativaId || null,
+      simuladoId: (typeof reg.id === 'number') ? reg.id : null, opId: reg.opId || null,
+      itens: (reg.detalhes || []).map(d => ({ qid: d.questao.id, tema: d.questao.tema, resp: d.resposta === undefined ? null : d.resposta, correta: d.questao.correta, ok: !!d.correto, blank: d.resposta === undefined }))
+    });
+  },
+  ctxTri(j, mapaQ) {
+    const itens = (j.itens || []).filter(x => !x.anulado).map(x => {
+      const qid = mapaQ[x.posicao] || null; const q = qid ? (state.questoes || []).find(z => z.id === qid) : null;
+      return { qid, tema: q ? q.tema : null, posicao: x.posicao, resp: x.resposta === '.' ? null : this.idxLetra(x.resposta), correta: this.idxLetra(x.gabarito), ok: x.acertou === true, blank: x.resposta === '.', semQuestao: !qid, letraResp: x.resposta, letraGab: x.gabarito };
+    });
+    return this.guardar({ chave: 'tri:' + (j.id || j.co_prova), tipo: 'tri', rotulo: 'ENEM ' + (j.ano || '') + ' (TRI)', triId: j.id || null, tentativaId: null, itens });
+  },
+  erradas(ctx) { return ctx.itens.filter(i => !i.blank && !i.ok); },
+  brancos(ctx) { return ctx.itens.filter(i => i.blank); },
+  existente(qid) { return (state.cadernoErros || []).find(e => !e.resolvido && _questaoIdDoErro(e) === qid) || null; },
+  htmlAcoesResultado(ctx) {
+    if (!ctx || !state.usuario || state.usuario.perfil !== 'aluno') return '';
+    const err = this.erradas(ctx), br = this.brancos(ctx);
+    const errQ = err.filter(i => i.qid), brQ = br.filter(i => i.qid);
+    const jaCad = errQ.filter(i => this.existente(i.qid)).length;
+    const k = "'" + ctx.chave.replace(/'/g, '') + "'";
+    let rec = '';
+    if (ctx.recuperacao) {
+      const o = ctx.recuperacao; const nOk = ctx.itens.filter(i => i.ok).length;
+      rec = '<div class="ac-rec"><span class="rx-tag">Recuperação</span><div><b>Estudo de recuperação</b> · ' + _escHtml(o.rotulo || 'atividade anterior') + (o.recuperacao_tipo === 'brancos' ? ' · questões que ficaram em branco' : ' · questões que você tinha errado')
+        + '. Desta vez: <b>' + nOk + ' de ' + ctx.itens.length + '</b> certas. O resultado da atividade original foi preservado.</div></div>';
+    }
+    const chips = '<div class="ac-chips"><span class="ac-chip err">' + err.length + (err.length === 1 ? ' errada' : ' erradas') + '</span><span class="ac-chip blank">' + br.length + ' em branco</span>'
+      + (jaCad ? '<span class="ac-chip ok">' + jaCad + ' já no caderno</span>' : '')
+      + (ctx.tipo === 'tri' ? '<span class="ac-chip info">' + (errQ.length + brQ.length) + ' de ' + (err.length + br.length) + ' com a questão no banco</span>' : '') + '</div>';
+    const b = (txt, fn, n, title) => '<button type="button" class="rx-btn ' + (n ? 'rx-btn-primary' : 'rx-btn-secondary') + '"' + (n ? '' : ' disabled') + ' title="' + _escHtml(title || '') + '" onclick="' + fn + '">' + txt + '</button>';
+    const botoes = '<div class="ac-botoes">'
+      + b('Refazer as erradas' + (errQ.length ? ' (' + errQ.length + ')' : ''), 'ACOMP.iniciarRecuperacao(' + k + ',\'erradas\')', errQ.length, errQ.length ? 'Nova atividade só com as questões que você errou aqui' : 'Nenhuma questão errada com questão no banco')
+      + b('Estudar as em branco' + (brQ.length ? ' (' + brQ.length + ')' : ''), 'ACOMP.iniciarRecuperacao(' + k + ',\'brancos\')', brQ.length, brQ.length ? 'Nova atividade só com as questões que ficaram em branco' : 'Nenhuma questão em branco com questão no banco')
+      + b('Registrar erros no caderno', 'ACOMP.abrirLote(' + k + ')', errQ.length + brQ.length, 'Escolha quais questões registrar no caderno de erros')
+      + '<button type="button" class="rx-btn rx-btn-ghost" onclick="ACOMP.toggleResolucoes(' + k + ')"' + ((errQ.length + brQ.length) ? '' : ' disabled') + '>Ver resoluções</button>'
+      + '</div>';
+    const nota = ctx.tipo === 'tri' && (err.length + br.length) > (errQ.length + brQ.length)
+      ? '<p class="ac-nota">' + ((err.length + br.length) - (errQ.length + brQ.length)) + ' questão(ões) desta prova ainda não está(ão) ligada(s) ao banco; as ações por questão valem só para as que estão.</p>'
+      : (ctx.tipo === 'tri' && !(errQ.length + brQ.length) && (err.length + br.length) ? '<p class="ac-nota">As questões desta prova ainda não estão ligadas ao banco; as ações por questão ficam indisponíveis.</p>' : '');
+    const lista = (errQ.length + brQ.length) ? '<div class="ac-lista" id="ac-resol-' + _escHtml(ctx.chave) + '" hidden>'
+      + (errQ.length ? '<div class="ac-grupo-t">Erradas</div>' + errQ.map(i => this._htmlItemResol(ctx, i)).join('') : '')
+      + (brQ.length ? '<div class="ac-grupo-t">Em branco</div>' + brQ.map(i => this._htmlItemResol(ctx, i)).join('') : '') + '</div>' : '';
+    return '<section class="ac-acoes rx-card" aria-label="O que fazer com este resultado"><span class="rx-kicker">Próximo passo</span><h3>O que fazer com este resultado</h3>'
+      + '<p class="ac-acoes-sub">Erros e questões em branco ficam separados. Refazer cria uma atividade nova; esta fica guardada como está.</p>'
+      + rec + chips + botoes + nota + lista + '</section>';
+  },
+  _htmlItemResol(ctx, i) {
+    const tema = TEMAS.find(t => t.id === i.tema); const ex = this.existente(i.qid);
+    const k = "'" + ctx.chave.replace(/'/g, '') + "'";
+    const marc = i.blank ? '.' : this.letra(i.resp);
+    return '<div class="ac-item"><span class="ac-q">' + (i.posicao ? 'Q' + i.posicao : '#' + i.qid) + '</span><div class="ac-meta"><b>' + _escHtml(tema ? tema.nome : 'Sem tema') + '</b> · '
+      + (i.blank ? 'em branco' : 'marcou <b>' + this.letra(i.resp) + '</b>') + ' · gabarito <b>' + this.letra(i.correta) + '</b>' + (ex ? ' · <span style="color:var(--rx-success);font-weight:700">já no caderno</span>' : '') + '</div>'
+      + '<button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP.verResolucao(' + k + ',' + i.qid + ')">Ver resolução</button>'
+      + (ex ? '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="abrirModalErro({erroId:\'' + ex.id + '\'})">Abrir registro</button>' : '') + '</div>';
+  },
+  toggleResolucoes(chave) { const el = document.getElementById('ac-resol-' + chave); if (el) el.hidden = !el.hidden; },
+  verResolucao(chave, qid) {
+    const ctx = this._ctx[chave]; const i = ctx && ctx.itens.find(x => x.qid === qid);
+    const marc = i ? (i.blank ? '.' : this.letra(i.resp)) : undefined;
+    verQuestaoDoErro(null, qid, { rotulo: (i && i.posicao ? 'QUESTÃO ' + i.posicao + ' · ' : '') + (ctx ? ctx.rotulo.toUpperCase() : 'RESULTADO'), marcada: marc });
+  },
+  // "Refazer as erradas" / "Estudar as em branco": estudo de recuperação (Modo Teste) com vínculo à atividade de origem.
+  iniciarRecuperacao(chave, tipo) {
+    const ctx = this._ctx[chave]; if (!ctx) return;
+    const sel = (tipo === 'brancos' ? this.brancos(ctx) : this.erradas(ctx)).filter(i => i.qid);
+    const qs = sel.map(i => (state.questoes || []).find(q => q.id === i.qid)).filter(Boolean);
+    if (!qs.length) { alert('Nenhuma dessas questões está disponível no banco agora.'); return; }
+    if (ctx.tipo === 'simulado' && ctx.simuladoId == null && ctx.opId) { const h = (state.historicoSimulados || []).find(x => x.opId === ctx.opId); if (h && typeof h.id === 'number') ctx.simuladoId = h.id; }
+    const de = ctx.tentativaId || ctx.triId || null;
+    const origem = { nome: 'Recuperação · ' + ctx.rotulo, recuperacao_de: de, recuperacao_tipo: tipo,
+      recuperacao: { rotulo: ctx.rotulo, de_tipo: ctx.tipo, tentativa_id: ctx.tentativaId || null, simulado_id: ctx.simuladoId || null, tri_id: ctx.triId || null, recuperacao_tipo: tipo, n_origem: ctx.itens.length } };
+    TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
+      const t = TENTATIVAS.criar({ tipo: 'estudo_teste', origem, questoes_ids: qs.map(q => q.id) });
+      _estudoAtual = { modo: 'teste', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, recuperacao: Object.assign({}, origem.recuperacao) };
+      state.view = 'estudo-digital';
+      renderEstudoDigital();
+      try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
+    });
+  },
+  htmlBannerRecuperacao(estudo) {
+    const o = estudo && estudo.recuperacao; if (!o) return '';
+    return '<div class="ac-rec" style="margin-top:10px"><span class="rx-tag">Recuperação</span><div><b>Estudo de recuperação</b> · ' + (o.recuperacao_tipo === 'brancos' ? 'questões em branco' : 'questões erradas') + ' de <b>' + _escHtml(o.rotulo || 'atividade anterior') + '</b>. A atividade original e o resultado dela continuam guardados.</div></div>';
+  },
+  // ---- caderno de erros em lote ----
+  opDe(chave, qid) { const k = chave + ':' + qid; if (!this._loteOps[k]) this._loteOps[k] = rxUuid(); return this._loteOps[k]; },
+  semanaDoTema(temaId) {
+    if (!temaId) return null;
+    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+    const s = merged.find(x => !x.cancelada && (x.temaId === temaId || (Array.isArray(x.temas) && x.temas.includes(temaId))));
+    return s ? s.n : null;
+  },
+  abrirLote(chave) {
+    const ctx = this._ctx[chave]; if (!ctx) return;
+    this._lote = { chave, cat: '', pri: 2, obs: '', msg: '', ocupado: false, sel: new Set() };
+    const itens = this.erradas(ctx).concat(this.brancos(ctx)).filter(i => i.qid);
+    itens.forEach(i => { if (!i.blank && !this.existente(i.qid)) this._lote.sel.add(i.qid); });
+    const old = document.getElementById('modal-ac-lote'); if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', '<div class="modal-overlay" id="modal-ac-lote" onclick="if(event.target===this)ACOMP.fecharLote()"><div class="modal ac-lote" role="dialog" aria-modal="true" aria-labelledby="ac-lote-t"><div id="ac-lote-corpo"></div></div></div>');
+    document.body.classList.add('modal-open');
+    this._loteTeclado = (e) => { if (e.key === 'Escape') { e.preventDefault(); this.fecharLote(); } else if (e.key === 'Tab') _rxPrenderFoco(e, document.getElementById('modal-ac-lote')); };
+    document.addEventListener('keydown', this._loteTeclado);
+    this._loteFoco = document.activeElement;
+    this._loteRender();
+    setTimeout(() => { const f = document.querySelector('#modal-ac-lote input[type=checkbox]:not([disabled]), #modal-ac-lote button'); if (f) try { f.focus(); } catch (e) {} }, 30);
+  },
+  fecharLote() {
+    const m = document.getElementById('modal-ac-lote'); if (m) m.remove();
+    if (!document.querySelector('.modal-overlay')) document.body.classList.remove('modal-open');
+    if (this._loteTeclado) { document.removeEventListener('keydown', this._loteTeclado); this._loteTeclado = null; }
+    const f = this._loteFoco; this._loteFoco = null; if (f && f.focus && document.contains(f)) try { f.focus({ preventScroll: true }); } catch (e) {}
+  },
+  _loteRender() {
+    const L = this._lote; const ctx = this._ctx[L.chave]; const corpo = document.getElementById('ac-lote-corpo'); if (!ctx || !corpo) return;
+    const itens = this.erradas(ctx).concat(this.brancos(ctx)).filter(i => i.qid);
+    const linha = i => {
+      const tema = TEMAS.find(t => t.id === i.tema); const ex = this.existente(i.qid); const id = 'ac-lote-q-' + i.qid;
+      return '<div class="ac-lote-item' + (ex ? ' ja' : '') + '"><input type="checkbox" id="' + id + '"' + (ex ? ' disabled' : (L.sel.has(i.qid) ? ' checked' : '')) + ' onchange="ACOMP._loteToggle(' + i.qid + ', this.checked)">'
+        + '<label for="' + id + '"><b>' + (i.posicao ? 'Q' + i.posicao + ' · ' : '') + '#' + i.qid + '</b> · ' + _escHtml(tema ? tema.nome : 'Sem tema') + '<small>' + (i.blank ? 'Em branco' : 'Marcou ' + this.letra(i.resp)) + ' · gabarito ' + this.letra(i.correta) + (this.semanaDoTema(i.tema) ? ' · semana ' + String(this.semanaDoTema(i.tema)).padStart(2, '0') + ' do cronograma' : ' · sem semana no cronograma') + '</small></label>'
+        + (ex ? '<span class="ac-ja">Já no caderno</span><button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ACOMP.fecharLote();abrirModalErro({erroId:\'' + ex.id + '\'})">Abrir</button>' : '') + '</div>';
+    };
+    const err = itens.filter(i => !i.blank), br = itens.filter(i => i.blank);
+    const cats = CATEGORIAS_ERRO.map(c => '<div class="ce-cat-opc' + (c.id === L.cat ? ' sel' : '') + '" role="radio" tabindex="0" aria-checked="' + (c.id === L.cat) + '" data-cat="' + c.id + '" onclick="ACOMP._loteCat(\'' + c.id + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ACOMP._loteCat(\'' + c.id + '\')}"><span class="ico">' + (_SVG_CAT[c.id] || '') + '</span><span class="nm">' + c.nome + '</span></div>').join('');
+    const pris = PRIORIDADES_ERRO.map(p => '<button type="button" class="' + (p.id === L.pri ? 'sel pri-' + p.id : '') + '" aria-pressed="' + (p.id === L.pri) + '" onclick="ACOMP._lotePri(' + p.id + ')">' + p.simbolo + ' ' + p.nome + '</button>').join('');
+    const nSel = L.sel.size;
+    corpo.innerHTML = '<h2 id="ac-lote-t">Registrar no caderno de erros</h2><p class="rx-sub">' + _escHtml(ctx.rotulo) + ' · escolha as questões, a categoria e a prioridade. A causa do erro é você quem informa; o app não adivinha pela alternativa.</p>'
+      + '<div class="ac-lote-itens">' + (err.length ? '<div class="ac-grupo-t">Erradas</div>' + err.map(linha).join('') : '') + (br.length ? '<div class="ac-grupo-t">Em branco</div>' + br.map(linha).join('') : '') + '</div>'
+      + '<div class="ce-form-row"><label>Categoria do erro <span style="color:#dc2626">*</span> <span class="opt">(vale para as selecionadas; edite depois uma a uma se quiser)</span></label><div class="ce-cat-grid" role="radiogroup" aria-label="Categoria">' + cats + '</div></div>'
+      + '<div class="ce-form-row"><label>Prioridade</label><div class="ce-pri-seg">' + pris + '</div></div>'
+      + '<div class="ce-form-row"><label>Observação <span class="opt">(opcional)</span></label><textarea id="ac-lote-obs" placeholder="O que aconteceu? O que vai fazer diferente?" oninput="ACOMP._lote.obs=this.value">' + _escHtml(L.obs) + '</textarea></div>'
+      + '<div class="ac-lote-rodape"><span class="ac-lote-msg' + (L.msgCls ? ' ' + L.msgCls : '') + '" role="status">' + (L.msg || (nSel + (nSel === 1 ? ' questão selecionada' : ' questões selecionadas'))) + '</span>'
+      + (L.concluido ? '<button type="button" class="rx-btn rx-btn-secondary" onclick="ACOMP.fecharLote();ROTA.ir(\'caderno\')">Abrir caderno</button><button type="button" class="rx-btn rx-btn-primary" onclick="ACOMP.fecharLote()">Fechar</button>'
+        : '<button type="button" class="rx-btn rx-btn-secondary" onclick="ACOMP.fecharLote()">Cancelar</button><button type="button" class="rx-btn rx-btn-primary" id="ac-lote-salvar"' + (L.ocupado ? ' disabled' : '') + ' onclick="ACOMP._loteSalvar()">' + (L.ocupado ? 'Registrando…' : (L.msgCls === 'err' ? 'Tentar de novo' : 'Registrar ' + (nSel || ''))) + '</button>') + '</div>';
+  },
+  _loteToggle(qid, on) { if (on) this._lote.sel.add(qid); else this._lote.sel.delete(qid); const m = document.querySelector('#modal-ac-lote .ac-lote-msg'); if (m && !this._lote.msg) m.textContent = this._lote.sel.size + (this._lote.sel.size === 1 ? ' questão selecionada' : ' questões selecionadas'); const b = document.getElementById('ac-lote-salvar'); if (b && !this._lote.ocupado) b.textContent = 'Registrar ' + (this._lote.sel.size || ''); },
+  _loteCat(id) { this._lote.cat = id; document.querySelectorAll('#modal-ac-lote .ce-cat-opc').forEach(el => { const on = el.dataset.cat === id; el.classList.toggle('sel', on); el.setAttribute('aria-checked', on); }); },
+  _lotePri(p) { this._lote.pri = p; document.querySelectorAll('#modal-ac-lote .ce-pri-seg button').forEach((el, i) => { const on = PRIORIDADES_ERRO[i].id === p; el.className = on ? 'sel pri-' + p : ''; el.setAttribute('aria-pressed', on); }); },
+  async _loteSalvar() {
+    const L = this._lote; const ctx = this._ctx[L.chave]; if (!ctx || L.ocupado) return;
+    const sel = ctx.itens.filter(i => i.qid && L.sel.has(i.qid));
+    if (!sel.length) { L.msg = 'Selecione pelo menos uma questão.'; L.msgCls = 'err'; this._loteRender(); return; }
+    if (!L.cat) { L.msg = 'Escolha a categoria do erro.'; L.msgCls = 'err'; this._loteRender(); return; }
+    L.ocupado = true; L.msg = 'Registrando…'; L.msgCls = ''; this._loteRender();
+    const itens = sel.map(i => {
+      const tema = TEMAS.find(t => t.id === i.tema);
+      return { op_id: this.opDe(L.chave, i.qid), questao_id: i.qid, tema_id: i.tema || null, semana_numero: this.semanaDoTema(i.tema),
+        titulo: 'Errei Q' + i.qid + (tema ? ' — ' + tema.nome : ''), categoria: L.cat, prioridade: L.pri, descricao: (L.obs || '').trim() || null,
+        origem: { tipo: ctx.tipo, rotulo: ctx.rotulo, tentativa_id: ctx.tentativaId || null, simulado_id: ctx.simuladoId || null, tri_id: ctx.triId || null, posicao: i.posicao || null,
+          resposta_marcada: i.blank ? null : i.resp, gabarito: i.correta, em_branco: !!i.blank, registrado_em: new Date(RX_MET.agora()).toISOString() } };
+    });
+    try {
+      const { data, error } = await sb.rpc('fn_caderno_registrar_lote', { p_itens: itens });
+      if (error) throw error;
+      const res = Array.isArray(data) ? data : [];
+      const ids = res.filter(x => x.status === 'gravado' || x.status === 'replay').map(x => x.id);
+      if (ids.length) {
+        let linhas = null;
+        try { const r = await sb.from('caderno_erros').select('*').in('id', ids); if (!r.error) linhas = r.data; } catch (e) {}
+        (linhas || ids.map(id => { const it = itens.find(x => (res.find(z => z.id === id) || {}).op_id === x.op_id) || {}; return Object.assign({ id, aluno_id: state.usuario.id, resolvido: false, criado_em: new Date().toISOString(), atualizado_em: new Date().toISOString(), questao_id: it.questao_id, semana_numero: it.semana_numero, op_id: it.op_id }, it); }))
+          .forEach(l => { if (!(state.cadernoErros || []).some(e => e.id === l.id)) state.cadernoErros.unshift(l); });
+      }
+      const nG = res.filter(x => x.status === 'gravado').length, nR = res.filter(x => x.status === 'replay').length, nE = res.filter(x => x.status === 'existente').length;
+      L.concluido = true; L.ocupado = false; L.msgCls = 'ok';
+      L.msg = (nG ? nG + (nG === 1 ? ' registro criado' : ' registros criados') : 'Nenhum registro novo') + (nR ? ' · ' + nR + ' já tinha(m) sido enviado(s) (não duplicado)' : '') + (nE ? ' · ' + nE + ' já existia(m) no caderno' : '') + '.';
+      this._loteRender();
+      if (state.view === 'caderno-erros') renderCadernoErros();
+      const sec = document.querySelector('.ac-acoes'); if (sec && ctx) { const novo = document.createElement('div'); novo.innerHTML = this.htmlAcoesResultado(ctx); const el = novo.firstElementChild; const aberto = document.getElementById('ac-resol-' + ctx.chave); const estava = aberto && !aberto.hidden; sec.replaceWith(el); if (estava) { const a2 = document.getElementById('ac-resol-' + ctx.chave); if (a2) a2.hidden = false; } }
+    } catch (e) {
+      L.ocupado = false; L.msgCls = 'err';
+      L.msg = (typeof rxErroTransitorio === 'function' && rxErroTransitorio(e)) ? 'Sem conexão. Nada foi registrado; tente de novo (não vai duplicar).' : 'Não foi possível registrar: ' + (e && e.message ? e.message : e);
+      this._loteRender();
+    }
+  },
+  // ---- integração com o modal existente do caderno ----
+  htmlSelectSemana(semanaN, merged) {
+    const ops = (merged || []).filter(s => !s.cancelada && (s.temaId || (s.temas && s.temas.length))).map(s => {
+      const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null; const lab = tema ? tema.nome : (s.titulo || '');
+      return '<option value="' + s.n + '"' + (String(s.n) === String(semanaN) ? ' selected' : '') + '>Sem ' + String(s.n).padStart(2, '0') + ' · ' + _escHtml(String(lab).slice(0, 34)) + '</option>';
+    }).join('');
+    return '<select class="ac-sem-sel" id="ce-modal-semana-sel" aria-label="Semana do cronograma" onchange="document.getElementById(\'ce-modal-semana\').value=this.value"><option value=""' + (semanaN == null ? ' selected' : '') + '>Sem semana</option>' + ops + '</select>';
+  },
+  aposModalErro(opcoes) {
+    const m = document.getElementById('modal-caderno-erro'); if (!m) return;
+    const e = opcoes && opcoes.erroId ? (state.cadernoErros || []).find(x => x.id === opcoes.erroId) : null;
+    const qid = e ? _questaoIdDoErro(e) : (opcoes && opcoes.questaoId) || null;
+    if (!e || !qid) return;
+    // Nova tentativa na mesma questão não fecha o registro sozinha: mostra o resultado e deixa o aluno decidir.
+    const dep = (state.respostasAluno || []).filter(r => r.questaoId === qid && r.data && Date.parse(r.data) > Date.parse(e.criado_em || 0)).sort((a, b) => Date.parse(b.data) - Date.parse(a.data));
+    if (!dep.length) return;
+    const u = dep[0]; const ROT = { estudo: 'estudo', estudo_prova: 'Modo Prova', simulado: 'simulado' };
+    const html = '<div class="ac-ult-resp">Depois deste registro você respondeu a questão ' + qid + ' de novo (' + dep.length + (dep.length === 1 ? ' vez' : ' vezes') + '). Última: <b>' + (u.correto ? 'acertou' : 'errou (marcou ' + this.letra(u.resposta) + ')') + '</b> em ' + RX_MET.fmtData(u.data) + ' (' + (ROT[u.fonte] || u.fonte) + '). '
+      + (e.resolvido ? 'Registro marcado como resolvido.' : 'Considera a dificuldade resolvida? Use "Marcar resolvido" abaixo; o registro não fecha sozinho.') + '</div>';
+    const primeira = m.querySelector('.ce-form-row'); if (primeira) primeira.insertAdjacentHTML('beforebegin', html);
+  },
+  cadernoDaTri(triId, qid, posicao, resposta, gabarito) {
+    abrirModalErroDaQuestao(qid, { origem: { tipo: 'tri', tri_id: triId || null, posicao, resposta_marcada: this.idxLetra(resposta), gabarito: this.idxLetra(gabarito), em_branco: resposta === '.', rotulo: 'ENEM (TRI) · questão ' + posicao } });
+  },
+  // Abre o banco filtrado no tema (e, se pedido, só nas que errou) mantendo os filtros ao voltar.
+  abrirBancoTema(temaId, status) {
+    if (!state.questoesPronto && state.questoesPromise) { radixShowLoading('Carregando banco de questões…'); state.questoesPromise.finally(() => { radixHideLoading(); this.abrirBancoTema(temaId, status); }); return; }
+    abrirTema(temaId);
+    if (status) setTimeout(() => { if (typeof selecionarStatusResp === 'function') selecionarStatusResp(status); }, 120);
+  },
+  abrirRevisoesTema(temaId) {
+    const mod = (typeof getModulosCronograma === 'function' ? getModulosCronograma() : MODULOS).find(m => (m.temas || []).includes(temaId));
+    state._revFiltroMod = mod ? mod.id : ''; ROTA.ir('revisar');
+  },
+  abrirCadernoTema(temaId) {
+    const mod = MODULOS.find(m => (m.temas || []).includes(temaId));
+    state._ceFiltroMod = mod ? mod.id : ''; state._ceBusca = ''; ROTA.ir('caderno');
+  }
+};
+
+// ---------- Revisões de qualquer aluno a partir das linhas de progresso (usado pelo professor) ----------
+function _revisoesDeProgresso(rows, cronogramaTipo) {
+  const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged(cronogramaTipo === 'integral' ? 'integral' : 'regular') : (CRONOGRAMA_2026 || []);
+  const out = [];
+  (rows || []).forEach(p => {
+    const st = p.st || p.status; if (st !== 'em_estudo' && st !== 'concluido') return;
+    const n = p.n != null ? p.n : p.semana_numero; const s = merged.find(x => x.n === n); if (!s || !s.temaId || s.cancelada) return;
+    let ini = p.ini || p.data_inicio_estudo;
+    if (!ini && s.data) { const md = String(s.data).match(/^(\d{1,2})\/(\d{1,2})/); if (md) ini = '2026-' + md[2].padStart(2, '0') + '-' + md[1].padStart(2, '0'); }
+    if (!ini) return;
+    const feitas = p.r1 !== undefined ? { 1: p.r1 || null, 2: p.r2 || null, 3: p.r3 || null, 4: p.r4 || null } : _feitasDoProgresso(p);
+    calcularRevisoes(ini, feitas).forEach(r => out.push(Object.assign({}, r, { semanaN: n, temaId: s.temaId, temaNome: (TEMAS.find(t => t.id === s.temaId) || {}).nome || s.temaId })));
+  });
+  return out;
+}
+
+// ---------- DESEMPENHO DO ALUNO (indicadores + evolução por tema) ----------
+function _despDados() {
+  const { validas, removidas } = RX_MET.deduplicar(state.respostasAluno || []);
+  let revs = []; try { revs = (typeof _listarRevisoesAluno === 'function') ? _listarRevisoesAluno().map(r => Object.assign({}, r, { temaId: r.temaId || (((typeof getCronogramaMerged === 'function' ? getCronogramaMerged() : CRONOGRAMA_2026).find(s => s.n === r.semanaN) || {}).temaId) })) : []; } catch (e) { revs = []; }
+  return { validas, removidas, revs };
+}
+function _htmlIndicadores(ind, opts) {
+  const o = opts || {};
+  const per = ind.periodo;
+  return '<div class="rx-kpis">'
+    + '<div class="rx-kpi"><div class="l">Primeira tentativa</div><div class="v">' + (ind.primeira.pct == null ? '—' : ind.primeira.pct + '<small>%</small>') + '</div><div class="s">' + (ind.primeira.n ? ind.primeira.ac + ' acertos em ' + ind.primeira.n + (ind.primeira.n === 1 ? ' questão' : ' questões') : 'sem questões novas no período') + '</div><div class="ac-kpi-base">Base: a <b>primeira resposta registrada</b> de cada questão, quando ela caiu em ' + per + '. Uma questão só conta uma vez.</div></div>'
+    + '<div class="rx-kpi"><div class="l">Desempenho recente</div><div class="v">' + (ind.recente.pct == null ? '—' : ind.recente.pct + '<small>%</small>') + '</div><div class="s">' + (ind.recente.n ? ind.recente.ac + ' acertos em ' + ind.recente.n + ' respostas' : 'sem respostas no período') + '</div><div class="ac-kpi-base">Base: <b>todas as respostas válidas</b> em ' + per + ', incluindo novas tentativas na mesma questão.</div></div>'
+    + '<div class="rx-kpi"><div class="l">Questões diferentes</div><div class="v">' + ind.distintas.n + '</div><div class="s">' + (ind.distintas.respostas ? 'em ' + ind.distintas.respostas + ' respostas' : 'nenhuma resposta no período') + '</div><div class="ac-kpi-base">Base: questões distintas com resposta registrada em ' + per + '.</div></div>'
+    + '</div>'
+    + (ind.incompleto ? '<div class="ac-aviso">Histórico anterior a 25/09/2026 pode estar incompleto (o Modo Prova não era gravado). Por isso o indicador é "primeira tentativa <b>registrada</b>", não necessariamente a primeira vez que você viu a questão.</div>' : '')
+    + (o.removidas ? '<p class="ac-nota">' + o.removidas + ' reenvio(s) técnico(s) ignorado(s): mesma questão, mesma marcação, a menos de 2 s ou pela mesma operação.</p>' : '');
+}
+function _htmlPeriodos(atual, fn) {
+  return '<div class="ac-per" role="group" aria-label="Período"><span class="rx-label">Período</span>' + ACOMP_CFG.PERIODOS.map(d => '<button type="button" aria-pressed="' + (d === atual) + '" onclick="' + fn + '(' + d + ')">' + (d ? d + ' dias' : 'Tudo') + '</button>').join('') + '</div>';
+}
+function _htmlTabelaTemas(temas, o) {
+  o = o || {};
+  if (!temas.length) return '<div class="rx-empty"><b>Nenhum tema com dados</b>Responda questões no banco ou numa lista para acompanhar a evolução por tema.</div>';
+  const fnTema = o.fnTema || 'renderDesempenhoAluno';
+  return '<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>Tema</th><th class="num" title="Questões distintas respondidas (todo o histórico)">Questões dif.</th><th class="num" title="Acerto na primeira resposta registrada de cada questão">1ª tentativa</th><th class="num" title="Acerto nas respostas do período">Recente</th><th class="num" title="Erros ativos no caderno">Erros</th><th class="num" title="Revisões pendentes (atrasadas)">Revisões</th><th>Sinal</th></tr></thead><tbody>'
+    + temas.map(t => '<tr class="is-click" tabindex="0" onclick="' + fnTema + '(\'' + t.temaId + '\')" onkeydown="if(event.key===\'Enter\'){' + fnTema + '(\'' + t.temaId + '\')}"><td><a class="ac-link">' + _escHtml(t.nome) + '</a></td>'
+      + '<td class="num">' + t.distintas + '</td>'
+      + '<td class="num">' + RX_MET.pctTxt(t.primeira.ac, t.primeira.n) + ' <small>' + t.primeira.ac + '/' + t.primeira.n + '</small></td>'
+      + '<td class="num">' + RX_MET.pctTxt(t.recente.ac, t.recente.n) + ' <small>' + (t.recente.n ? t.recente.ac + '/' + t.recente.n : 'sem resp.') + '</small></td>'
+      + '<td class="num">' + (t.errosAtivos || '—') + (t.errosAlta ? ' <small>(' + t.errosAlta + ' alta)</small>' : '') + '</td>'
+      + '<td class="num">' + (t.revPend || '—') + (t.revAtras ? ' <small>(' + t.revAtras + ' atras.)</small>' : '') + '</td>'
+      + '<td><span class="ac-sinal ' + t.sinal.cls + '">' + t.sinal.rotulo + '</span></td></tr>').join('')
+    + '</tbody></table></div>';
+}
+function _htmlCriteriosTema() {
+  const C = ACOMP_CFG;
+  return '<details class="ac-crit"><summary>Como os sinais são calculados</summary><ul>'
+    + '<li><b>Pouca prática</b>: menos de ' + C.TEMA_MIN_DISTINTAS + ' questões diferentes respondidas. Nenhuma conclusão sobre o tema.</li>'
+    + '<li><b>Dificuldade recorrente</b>: prática suficiente e menos de ' + C.TEMA_RECORRENTE_MAX + '% de acerto nas últimas ' + C.TEMA_RECENTES_N + ' respostas do tema.</li>'
+    + '<li><b>Evolução nas novas tentativas</b>: últimas ' + C.TEMA_RECENTES_N + ' respostas pelo menos ' + C.TEMA_EVOLUCAO_PP + ' pontos acima da primeira tentativa, com questões repetidas.</li>'
+    + '<li><b>Prática em andamento</b>: o resto. O app não declara tema "dominado": acertar poucas questões não prova domínio.</li>'
+    + '<li>Períodos contados em ' + C.FUSO + '. Reenvios técnicos (mesma questão e marcação a menos de 2 s) contam uma vez; novas tentativas legítimas contam.</li></ul></details>';
+}
+function renderDesempenhoAluno(temaId) {
+  state.view = 'desempenho';
+  const main = document.getElementById('main-content');
+  if (state._despDias === undefined) state._despDias = ACOMP_CFG.DIAS_PADRAO;
+  if (state._despTodos === undefined) state._despTodos = false;
+  const { validas, removidas, revs } = _despDados();
+  const dias = state._despDias;
+  if (temaId) { _renderTemaAluno(temaId, validas, revs, dias); return; }
+  const ind = RX_MET.indicadores(validas, dias);
+  let temas = RX_MET.porTema(validas, { dias, caderno: state.cadernoErros, revisoes: revs });
+  if (!state._despTodos) temas = temas.filter(t => t.respostas || t.errosAtivos || t.revPend);
+  main.innerHTML = '<div class="ac-desemp"><div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Meu desempenho</div>'
+    + '<h1 class="rx-h1">Meu desempenho</h1><p class="rx-sub">Três leituras diferentes do mesmo histórico, cada uma com a base de cálculo. Resultados da plataforma; notas TRI e simulados externos ficam em Simulados.</p>'
+    + _htmlPeriodos(dias, '_despPeriodo')
+    + _htmlIndicadores(ind, { removidas: removidas.length })
+    + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Evolução por tema</h2><p>Clique num tema para ver o histórico, praticar no banco, abrir revisões e registros do caderno.</p></div>'
+    + '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--rx-muted);cursor:pointer"><input type="checkbox"' + (state._despTodos ? ' checked' : '') + ' onchange="state._despTodos=this.checked;renderDesempenhoAluno()"> Mostrar temas sem dados</label></div>'
+    + _htmlTabelaTemas(temas) + '<div style="margin-top:10px">' + _htmlCriteriosTema() + '</div></section>'
+    + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Relatórios</h2><p>Gráficos de evolução e comparação com a turma.</p></div><a class="rx-btn rx-btn-secondary rx-btn-sm" href="#/estatisticas" onclick="event.preventDefault();ROTA.ir(\'estatisticas\')">Estatísticas avançadas</a></div></section></div>';
+  if (typeof NAV !== 'undefined' && NAV.aoRenderizar) try { NAV.aoRenderizar('desempenho'); } catch (e) {}
+}
+function _despPeriodo(d) { state._despDias = d; renderDesempenhoAluno(state._despTemaAtual || undefined); }
+function _renderTemaAluno(temaId, validas, revs, dias) {
+  const main = document.getElementById('main-content');
+  state._despTemaAtual = temaId;
+  const tema = TEMAS.find(t => t.id === temaId);
+  if (!tema) { main.innerHTML = '<div class="rx-empty"><b>Tema não encontrado</b></div>'; return; }
+  const t = RX_MET.porTema(validas, { dias, caderno: state.cadernoErros, revisoes: revs }).find(x => x.temaId === temaId)
+    || { temaId, nome: tema.nome, distintas: 0, respostas: 0, primeira: { n: 0, ac: 0, pct: null }, recente: { n: 0, ac: 0, pct: null }, ultimas: { n: 0, ac: 0, pct: null }, repetidas: 0, melhorou: 0, errosAtivos: 0, errosAlta: 0, revPend: 0, revAtras: 0, sinal: RX_MET.sinalTema({ distintas: 0, primeira: {}, ultimas: {}, repetidas: 0 }) };
+  const ativ = RX_MET.atividades(validas, temaId);
+  const erros = (state.cadernoErros || []).filter(e => e.tema_id === temaId && !e.resolvido);
+  const revT = revs.filter(r => r.temaId === temaId && r.status !== 'feita').sort((a, b) => a.diasFalta - b.diasFalta);
+  main.innerHTML = '<div class="ac-desemp"><div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderDesempenhoAluno()">Meu desempenho</a> / ' + _escHtml(tema.nome) + '</div>'
+    + '<div class="ac-tema-head"><div><span class="rx-kicker">Tema</span><h1 class="rx-h1">' + _escHtml(tema.nome) + '</h1><p class="rx-sub"><span class="ac-sinal ' + t.sinal.cls + '">' + t.sinal.rotulo + '</span> ' + _escHtml(t.sinal.texto) + '</p></div></div>'
+    + _htmlPeriodos(dias, '_despPeriodo')
+    + '<div class="rx-kpis">'
+    + '<div class="rx-kpi"><div class="l">Questões diferentes</div><div class="v">' + t.distintas + '</div><div class="s">' + t.respostas + ' respostas no total</div></div>'
+    + '<div class="rx-kpi"><div class="l">1ª tentativa registrada</div><div class="v">' + (t.primeira.pct == null ? '—' : t.primeira.pct + '<small>%</small>') + '</div><div class="s">' + t.primeira.ac + ' de ' + t.primeira.n + ' questões</div></div>'
+    + '<div class="rx-kpi"><div class="l">Desempenho recente</div><div class="v">' + (t.recente.pct == null ? '—' : t.recente.pct + '<small>%</small>') + '</div><div class="s">' + (t.recente.n ? t.recente.ac + ' de ' + t.recente.n + ' respostas · ' + RX_MET.descPeriodo(dias) : 'sem respostas em ' + RX_MET.descPeriodo(dias)) + '</div></div>'
+    + '</div>'
+    + '<div class="ac-tema-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="ACOMP.abrirBancoTema(\'' + temaId + '\')">Praticar no banco</button>'
+    + (t.distintas ? '<button type="button" class="rx-btn rx-btn-secondary" onclick="ACOMP.abrirBancoTema(\'' + temaId + '\',\'errei\')">Só as que errei</button>' : '')
+    + '<button type="button" class="rx-btn rx-btn-secondary" onclick="ACOMP.abrirRevisoesTema(\'' + temaId + '\')">Revisões' + (t.revPend ? ' (' + t.revPend + ')' : '') + '</button>'
+    + '<button type="button" class="rx-btn rx-btn-secondary" onclick="ACOMP.abrirCadernoTema(\'' + temaId + '\')">Caderno de erros' + (t.errosAtivos ? ' (' + t.errosAtivos + ')' : '') + '</button></div>'
+    + '<section class="ac-sec rx-card"><div class="ac-sec-head"><div><h2>Erros ativos no caderno</h2><p>' + (erros.length ? erros.length + ' registro(s)' + (t.errosAlta ? ' · ' + t.errosAlta + ' de alta prioridade' : '') : 'Nenhum erro ativo neste tema.') + '</p></div></div>'
+    + (erros.length ? erros.slice(0, 8).map(e => '<div class="ac-ativ"><span class="d">' + RX_MET.fmtData(e.criado_em) + '</span><span class="t">' + _escHtml(e.titulo) + ' <small style="color:var(--rx-muted)">· ' + _catErroPorId(e.categoria).nome + ' · ' + _priErroPorId(e.prioridade).nome + '</small></span><button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="abrirModalErro({erroId:\'' + e.id + '\'})">Ficha</button></div>').join('') : '') + '</section>'
+    + '<section class="ac-sec rx-card"><div class="ac-sec-head"><div><h2>Revisões pendentes</h2><p>' + (revT.length ? revT.length + ' pendente(s)' + (t.revAtras ? ' · ' + t.revAtras + ' atrasada(s)' : '') : 'Nenhuma revisão pendente deste tema.') + '</p></div></div>'
+    + revT.slice(0, 6).map(r => '<div class="ac-ativ"><span class="d">' + r.dataBR + '</span><span class="t">Revisão ' + r.n + ' · semana ' + String(r.semanaN).padStart(2, '0') + '</span><span class="n" style="color:' + (r.status === 'atrasada' ? 'var(--rx-danger)' : 'var(--rx-text-2)') + '">' + _revStatusLabel(r) + '</span></div>').join('') + '</section>'
+    + '<section class="ac-sec rx-card"><div class="ac-sec-head"><div><h2>Histórico de atividades</h2><p>Respostas deste tema agrupadas por atividade (todo o histórico).</p></div></div>'
+    + (ativ.length ? ativ.slice(0, 20).map(a => '<div class="ac-ativ"><span class="d">' + RX_MET.fmtDataHora(a.t) + '</span><span class="t">' + _escHtml(a.rotulo) + '</span><span class="n">' + a.ac + '/' + a.n + '</span></div>').join('') : '<p class="rx-sub">Nenhuma resposta registrada neste tema.</p>') + '</section>'
+    + '<div style="margin-top:12px">' + _htmlCriteriosTema() + '</div></div>';
+}
+
+// ---------- PROFESSOR: "Quem precisa de atenção" ----------
+const ACOMP_PROF = {
+  MOTIVOS: { sem_atividade: 'Sem atividade', revisoes_atrasadas: 'Revisões atrasadas', erros_alta: 'Erros de alta prioridade', tema_baixo: 'Acerto baixo em tema', queda: 'Queda recente' },
+  SIT: { sem_registro: 'Sem registro', pendente: 'Pendente', em_acompanhamento: 'Em acompanhamento', concluida: 'Concluída' },
+  ORDENS: { motivos_desc: 'Mais motivos', dias_desc: 'Dias sem atividade', rev_desc: 'Revisões atrasadas', alta_desc: 'Erros de alta prioridade', nome_asc: 'Nome A→Z' },
+  async carregar(dias, forcar) {
+    const c = state._painelAtencao;
+    if (c && !forcar && c.dias === dias && (Date.now() - c.em) < 120000) return c;
+    const { data, error } = await sb.rpc('fn_painel_atencao', { p_dias: dias });
+    if (error) throw error;
+    const r = { dias, em: Date.now(), dados: data };
+    state._painelAtencao = r; return r;
+  },
+  // Última atividade de ESTUDO (não é o último acesso): a mais recente entre as fontes.
+  ultimaAtividade(a) {
+    const f = [['resp', 'respostas'], ['tent', 'atividade (estudo/simulado)'], ['tri', 'simulado TRI'], ['prog', 'registro de estudo'], ['cad', 'caderno de erros'], ['ext', 'nota externa registrada'], ['mat', 'material marcado como concluído']];
+    let best = null;
+    f.forEach(([k, rot]) => { const v = a[k] && a[k].ult; if (v && (!best || Date.parse(v) > Date.parse(best.data))) best = { data: v, fonte: rot }; });
+    if (a.prog && a.prog.ult_rev) { const v = a.prog.ult_rev + 'T12:00:00' + ACOMP_CFG.OFFSET; if (!best || Date.parse(v) > Date.parse(best.data)) best = { data: v, fonte: 'revisão marcada' }; }
+    return best;
+  },
+  avaliar(a, painel) {
+    const C = ACOMP_CFG; const agora = RX_MET.agora(); const dias = painel.dias;
+    const m = [];
+    const ult = this.ultimaAtividade(a);
+    const dSem = ult ? RX_MET.diasDesde(ult.data, agora) : null;
+    if (!ult) m.push({ cod: 'sem_atividade', texto: 'Nenhuma atividade registrada desde o cadastro (' + RX_MET.fmtData(a.criado_em) + ')', evid: 'Fontes: respostas, atividades, TRI, registro de estudo, caderno, notas externas, materiais', crit: 'Critério: ' + C.DIAS_SEM_ATIVIDADE + ' dias ou mais sem atividade de estudo.', periodo: 'todo o histórico', valor: 9999 });
+    else if (dSem >= C.DIAS_SEM_ATIVIDADE) m.push({ cod: 'sem_atividade', texto: 'Sem atividade registrada há ' + dSem + ' dias', evid: 'Última: ' + RX_MET.fmtData(ult.data) + ' (' + ult.fonte + ')', crit: 'Critério: ' + C.DIAS_SEM_ATIVIDADE + ' dias ou mais sem atividade de estudo.', periodo: 'todo o histórico', valor: dSem });
+    const revs = _revisoesDeProgresso(a.prog ? a.prog.sem : [], a.cronograma);
+    const atr = revs.filter(r => r.status === 'atrasada');
+    if (atr.length >= C.REV_ATRASADAS_MIN) {
+      const maisAntiga = atr.slice().sort((x, y) => x.diasFalta - y.diasFalta)[0];
+      const temasR = [...new Set(atr.map(r => r.temaNome))].slice(0, 3).join(', ');
+      m.push({ cod: 'revisoes_atrasadas', texto: atr.length + ' revisões atrasadas', evid: 'Mais antiga: ' + Math.abs(maisAntiga.diasFalta) + ' dias · ' + temasR, crit: 'Critério: ' + C.REV_ATRASADAS_MIN + ' ou mais revisões do plano com data vencida.', periodo: 'plano de revisões', valor: atr.length });
+    }
+    if (a.cad && a.cad.alta >= C.ERROS_ALTA_MIN) {
+      const temasC = (a.cad.alta_temas || []).map(x => ((TEMAS.find(t => t.id === x.tema) || {}).nome || x.tema || 'sem tema') + ' (' + x.n + ')').slice(0, 3).join(', ');
+      m.push({ cod: 'erros_alta', texto: a.cad.alta + (a.cad.alta === 1 ? ' erro de alta prioridade ativo' : ' erros de alta prioridade ativos'), evid: 'Temas: ' + temasC, crit: 'Registrados e classificados pelo próprio aluno no caderno de erros.', periodo: 'caderno (ativos)', valor: a.cad.alta });
+    }
+    const baixos = (a.temas || []).filter(t => t.n >= C.TEMA_MIN_RESP && RX_MET.pct(t.ac, t.n) <= C.TEMA_LIMITE_BAIXO).map(t => ({ tema: t.tema, nome: (TEMAS.find(x => x.id === t.tema) || {}).nome || t.tema, n: t.n, ac: t.ac, pct: RX_MET.pct(t.ac, t.n) })).sort((x, y) => x.pct - y.pct);
+    if (baixos.length) m.push({ cod: 'tema_baixo', texto: 'Acerto baixo em ' + baixos.slice(0, 2).map(b => b.nome + ' (' + b.ac + ' de ' + b.n + ' · ' + b.pct + '%)').join(' e ') + (baixos.length > 2 ? ' e mais ' + (baixos.length - 2) : ''), evid: '', crit: 'Critério: ' + C.TEMA_MIN_RESP + ' ou mais respostas no tema com ' + C.TEMA_LIMITE_BAIXO + '% ou menos de acerto no período.', periodo: 'últimos ' + dias + ' dias', valor: baixos.length, temas: baixos });
+    if (a.resp && a.resp.n_per >= C.QUEDA_MIN_RESP && a.resp.n_prev >= C.QUEDA_MIN_RESP) {
+      const pPer = RX_MET.pct(a.resp.ac_per, a.resp.n_per), pPrev = RX_MET.pct(a.resp.ac_prev, a.resp.n_prev);
+      if (pPrev - pPer >= C.QUEDA_PP) {
+        const tPer = new Set((a.temas || []).filter(t => t.n > 0).map(t => t.tema)), tPrev = new Set((a.temas || []).filter(t => t.n_prev > 0).map(t => t.tema));
+        let inter = 0; tPer.forEach(x => { if (tPrev.has(x)) inter++; }); const uni = new Set([...tPer, ...tPrev]).size;
+        const comparavel = uni ? (inter / uni) >= 0.5 : false;
+        m.push({ cod: 'queda', texto: 'Acerto caiu de ' + pPrev + '% para ' + pPer + '%', evid: a.resp.n_prev + ' respostas nos ' + dias + ' dias anteriores e ' + a.resp.n_per + ' no período atual' + (comparavel ? ' · temas parecidos nos dois períodos' : ' · os temas praticados mudaram: compare com cautela, não é prova de perda de aprendizagem'), crit: 'Critério: ' + C.QUEDA_MIN_RESP + ' ou mais respostas em cada período e queda de ' + C.QUEDA_PP + ' pontos ou mais.', periodo: 'últimos ' + dias + ' dias vs ' + dias + ' anteriores', valor: pPrev - pPer, cautela: !comparavel });
+      }
+    }
+    const regs = a.acomp || []; const ultReg = regs[0] || null;
+    return { motivos: m, ultimaAtividade: ult, diasSem: dSem, revAtrasadas: atr.length, errosAlta: a.cad ? a.cad.alta : 0, situacao: ultReg ? ultReg.situacao : 'sem_registro', ultReg, regs };
+  },
+  filtrar(lista) {
+    const f = state._acFiltros;
+    let out = lista.slice();
+    if (f.turma) out = out.filter(x => x.a.turma === f.turma);
+    if (f.motivo) out = out.filter(x => x.av.motivos.some(m => m.cod === f.motivo));
+    if (f.situacao) out = out.filter(x => x.av.situacao === f.situacao);
+    if (f.busca) { const t = _normBusca(f.busca); out = out.filter(x => _normBusca(x.a.nome || '').includes(t)); }
+    if (!f.mostrarTodos) out = out.filter(x => x.av.motivos.length);
+    const nome = (x, y) => String(x.a.nome || '').localeCompare(String(y.a.nome || ''), 'pt-BR');
+    const ord = f.ordem || 'motivos_desc';
+    out.sort((x, y) => {
+      let r = 0;
+      if (ord === 'motivos_desc') r = (y.av.motivos.length - x.av.motivos.length) || ((y.av.diasSem == null ? -1 : y.av.diasSem) - (x.av.diasSem == null ? -1 : x.av.diasSem));
+      else if (ord === 'dias_desc') r = ((y.av.diasSem == null ? 99999 : y.av.diasSem) - (x.av.diasSem == null ? 99999 : x.av.diasSem));
+      else if (ord === 'rev_desc') r = y.av.revAtrasadas - x.av.revAtrasadas;
+      else if (ord === 'alta_desc') r = y.av.errosAlta - x.av.errosAlta;
+      return r || nome(x, y);
+    });
+    return out;
+  },
+  htmlCriterios(dias) {
+    const C = ACOMP_CFG;
+    return '<details class="ac-crit"><summary>Critérios das indicações (parâmetros de produto, ajustáveis em ACOMP_CFG)</summary><ul>'
+      + '<li><b>Sem atividade</b>: nenhuma atividade de estudo há ' + C.DIAS_SEM_ATIVIDADE + ' dias ou mais, considerando respostas, atividades salvas, simulado TRI, registro de estudo, caderno, notas externas registradas e materiais marcados como concluídos. Último acesso ao app é mostrado à parte e não conta como estudo. Marcar material como concluído não prova que a aula foi assistida.</li>'
+      + '<li><b>Revisões atrasadas</b>: ' + C.REV_ATRASADAS_MIN + ' ou mais revisões do plano (Ebbinghaus) com data vencida, pelo cronograma do aluno.</li>'
+      + '<li><b>Erros de alta prioridade</b>: ' + C.ERROS_ALTA_MIN + ' ou mais registros ativos com prioridade alta no caderno (o aluno é quem classifica).</li>'
+      + '<li><b>Acerto baixo em tema</b>: ' + C.TEMA_MIN_RESP + ' ou mais respostas no tema nos últimos ' + dias + ' dias com ' + C.TEMA_LIMITE_BAIXO + '% ou menos de acerto.</li>'
+      + '<li><b>Queda recente</b>: ' + C.QUEDA_MIN_RESP + ' ou mais respostas em cada um dos dois períodos (' + dias + ' dias atuais e os ' + dias + ' anteriores) e queda de ' + C.QUEDA_PP + ' pontos ou mais. Se os temas mudaram, a indicação vem com aviso de cautela.</li>'
+      + '<li>Os números vêm de uma consulta agregada no servidor (fn_painel_atencao), em ' + C.FUSO + '. Se a consulta falhar, o painel mostra indisponibilidade em vez de "sem atividade".</li></ul></details>';
+  }
+};
+async function renderAcompanhamento() {
+  if (!state.usuario || state.usuario.perfil !== 'professor') { renderHome(); return; }
+  state.view = 'acompanhamento';
+  const main = document.getElementById('main-content');
+  if (!state._acFiltros) state._acFiltros = { turma: '', motivo: '', situacao: '', busca: '', ordem: 'motivos_desc', dias: ACOMP_CFG.DIAS_PADRAO, mostrarTodos: false };
+  const f = state._acFiltros;
+  const cab = '<div class="ac-prof"><div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Quem precisa de atenção</div><h1 class="rx-h1">Quem precisa de atenção</h1><p class="rx-sub">Indicações produzidas pelos dados, com o motivo e a evidência. O acompanhamento registrado por você fica separado e não some quando a indicação some.</p>';
+  main.innerHTML = cab + '<div class="rx-empty" style="margin-top:14px"><b>Carregando…</b>Consultando os agregados por aluno.</div></div>';
+  let painel;
+  try {
+    const c = await ACOMP_PROF.carregar(f.dias);
+    painel = c.dados;
+  } catch (e) {
+    main.innerHTML = cab + '<div class="ac-aviso erro" style="margin-top:14px"><b>Consulta indisponível.</b> Não foi possível ler os agregados (' + _escHtml(e && e.message ? e.message : String(e)) + '). Nenhum aluno é apontado como inativo sem os dados. <button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="renderAcompanhamento()">Tentar de novo</button></div></div>';
+    return;
+  }
+  const linhas = (painel.alunos || []).map(a => ({ a, av: ACOMP_PROF.avaliar(a, painel) }));
+  state._acLinhas = linhas; state._acPainel = painel;
+  const nCom = linhas.filter(x => x.av.motivos.length).length;
+  const cont = {}; linhas.forEach(x => x.av.motivos.forEach(m => { cont[m.cod] = (cont[m.cod] || 0) + 1; }));
+  const nAcomp = linhas.filter(x => x.av.situacao === 'pendente' || x.av.situacao === 'em_acompanhamento').length;
+  const sel = (id, lab, opts, val, fn) => '<div><label class="rx-label" for="' + id + '">' + lab + '</label><select id="' + id + '" class="rx-select" onchange="' + fn + '">' + opts.map(o => '<option value="' + o[0] + '"' + (String(val) === String(o[0]) ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></div>';
+  main.innerHTML = cab
+    + '<div class="rx-kpis" style="margin-top:14px"><div class="rx-kpi"><div class="l">Alunos com indicação</div><div class="v">' + nCom + '</div><div class="s">de ' + linhas.length + ' aprovados</div></div>'
+    + '<div class="rx-kpi"><div class="l">Sem atividade</div><div class="v">' + (cont.sem_atividade || 0) + '</div><div class="s">' + ACOMP_CFG.DIAS_SEM_ATIVIDADE + ' dias ou mais</div></div>'
+    + '<div class="rx-kpi"><div class="l">Revisões atrasadas</div><div class="v">' + (cont.revisoes_atrasadas || 0) + '</div><div class="s">alunos com ' + ACOMP_CFG.REV_ATRASADAS_MIN + '+ atrasadas</div></div>'
+    + '<div class="rx-kpi"><div class="l">Em acompanhamento</div><div class="v">' + nAcomp + '</div><div class="s">registros pendentes ou em curso</div></div></div>'
+    + '<div class="ac-filtros">'
+    + sel('ac-f-turma', 'Turma', [['', 'Todas as turmas']].concat(TURMAS.map(t => [t.id, t.nome])), f.turma, "state._acFiltros.turma=this.value;_acRenderTabela()")
+    + sel('ac-f-dias', 'Período', [[7, '7 dias'], [30, '30 dias'], [90, '90 dias']], f.dias, "state._acFiltros.dias=Number(this.value);renderAcompanhamento()")
+    + sel('ac-f-motivo', 'Motivo', [['', 'Todos os motivos']].concat(Object.entries(ACOMP_PROF.MOTIVOS)), f.motivo, "state._acFiltros.motivo=this.value;_acRenderTabela()")
+    + sel('ac-f-sit', 'Acompanhamento', [['', 'Todas as situações']].concat(Object.entries(ACOMP_PROF.SIT)), f.situacao, "state._acFiltros.situacao=this.value;_acRenderTabela()")
+    + sel('ac-f-ordem', 'Ordenar por', Object.entries(ACOMP_PROF.ORDENS), f.ordem, "state._acFiltros.ordem=this.value;_acRenderTabela()")
+    + '<div><label class="rx-label" for="ac-f-busca">Aluno</label><input id="ac-f-busca" class="rx-input" type="search" placeholder="Nome do aluno" value="' + _escHtml(f.busca) + '" oninput="state._acFiltros.busca=this.value;clearTimeout(window._acT);window._acT=setTimeout(_acRenderTabela,180)"></div>'
+    + '</div>'
+    + '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--rx-muted);cursor:pointer;margin-bottom:10px"><input type="checkbox"' + (f.mostrarTodos ? ' checked' : '') + ' onchange="state._acFiltros.mostrarTodos=this.checked;_acRenderTabela()"> Mostrar também alunos sem indicação</label>'
+    + '<div id="ac-tabela"></div>'
+    + '<p class="ac-nota">Gerado em ' + RX_MET.fmtDataHora(painel.gerado_em) + ' · período de ' + RX_MET.fmtData(painel.inicio) + ' até hoje (' + painel.fuso + '). <a class="ac-link" style="cursor:pointer;color:var(--rx-accent)" onclick="ACOMP_PROF.carregar(state._acFiltros.dias,true).then(renderAcompanhamento)">Atualizar agora</a></p>'
+    + '<div style="margin-top:8px">' + ACOMP_PROF.htmlCriterios(painel.dias) + '</div></div>';
+  _acRenderTabela();
+}
+// Lista de indicações: chip do motivo · texto · evidência (e o critério, quando pedido).
+function _acHtmlMotivos(motivos, comCriterio) {
+  if (!motivos || !motivos.length) return '<span class="ac-sem-ind">Sem indicação no período</span>';
+  const cls = c => c === 'sem_atividade' ? 'pouca' : c === 'queda' ? 'atencao' : 'recorrente';
+  return '<ul class="ac-motivos">' + motivos.map(m => '<li><span class="ac-sinal ' + cls(m.cod) + '">' + ACOMP_PROF.MOTIVOS[m.cod] + '</span><div><div class="t">' + _escHtml(m.texto) + (m.cautela ? ' <span class="ac-sinal atencao">cautela</span>' : '') + '</div>'
+    + '<small>' + _escHtml([m.evid, m.periodo].filter(Boolean).join(' · ')) + (comCriterio && m.crit ? '<br>' + _escHtml(m.crit) : '') + '</small></div></li>').join('') + '</ul>';
+}
+function _acRenderTabela() {
+  const cont = document.getElementById('ac-tabela'); if (!cont) return;
+  const f = state._acFiltros; const lista = ACOMP_PROF.filtrar(state._acLinhas || []);
+  if (!lista.length) { cont.innerHTML = '<div class="rx-empty"><b>Nenhum aluno com esses filtros</b>' + (f.mostrarTodos ? '' : 'Marque "Mostrar também alunos sem indicação" para ver todos.') + '</div>'; return; }
+  const linha = x => {
+    const a = x.a, av = x.av; const turma = turmaPorId(a.turma); const ult = av.ultimaAtividade;
+    return '<tr><td class="ac-td-aluno"><div class="ac-aluno-cel"><b>' + _escHtml(a.nome || '(sem nome)') + '</b><small>' + _escHtml(turma ? turma.nome : '—') + '</small></div></td>'
+      + '<td class="ac-td-mot">' + _acHtmlMotivos(av.motivos, false) + '</td>'
+      + '<td class="ac-td-ult"><div class="ac-aluno-cel"><b>' + (ult ? RX_MET.fmtData(ult.data) : '—') + '</b><small>' + (ult ? _escHtml(ult.fonte) : 'nenhuma atividade') + '</small><small>acesso ao app: ' + RX_MET.fmtData(a.ultimo_acesso) + '</small></div></td>'
+      + '<td class="ac-td-sit"><span class="ac-sit ' + av.situacao + '">' + ACOMP_PROF.SIT[av.situacao] + '</span>' + (av.ultReg && av.ultReg.data_retorno ? '<small>retorno ' + RX_MET.fmtData(av.ultReg.data_retorno) + '</small>' : '') + '</td>'
+      + '<td class="ac-td-acoes"><button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="renderAlunoAcompanhamento(\'' + a.id + '\')">Detalhe</button><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + a.id + '\')">Registrar</button></td></tr>';
+  };
+  cont.innerHTML = '<div class="ac-ordem"><span>Ordenado por:</span><b>' + ACOMP_PROF.ORDENS[f.ordem || 'motivos_desc'] + '</b><span>· desempate por nome</span><span style="margin-left:auto">' + lista.length + (lista.length === 1 ? ' aluno' : ' alunos') + '</span></div>'
+    + '<div class="ac-tbl-wrap"><table class="ac-tbl ac-tbl-painel"><colgroup><col class="c-aluno"><col class="c-mot"><col class="c-ult"><col class="c-sit"><col class="c-acoes"></colgroup><thead><tr><th>Aluno · turma</th><th>Motivo e evidência</th><th>Última atividade</th><th>Acompanhamento</th><th>Ações</th></tr></thead><tbody>' + lista.map(linha).join('') + '</tbody></table></div>';
+}
+
+// ---------- PROFESSOR: detalhe do aluno ----------
+async function renderAlunoAcompanhamento(alunoId) {
+  if (!state.usuario || state.usuario.perfil !== 'professor') { renderHome(); return; }
+  state.view = 'acompanhamento-aluno';
+  const main = document.getElementById('main-content');
+  const dias = (state._acFiltros && state._acFiltros.dias) || ACOMP_CFG.DIAS_PADRAO;
+  main.innerHTML = '<div class="ac-prof"><div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderAcompanhamento()">Quem precisa de atenção</a> / Aluno</div><div class="rx-empty"><b>Carregando…</b></div></div>';
+  const falhas = [];
+  const q = async (nome, p) => { try { const r = await p; if (r && r.error) throw r.error; return r ? r.data : null; } catch (e) { falhas.push(nome + ': ' + (e && e.message ? e.message : e)); return null; } };
+  let painel = null;
+  try { painel = (await ACOMP_PROF.carregar(dias)).dados; } catch (e) { falhas.push('painel: ' + (e && e.message ? e.message : e)); }
+  const [perfil, resp, cad, prog, tents, tri, ext, regs] = await Promise.all([
+    q('perfil', sb.from('perfis').select('id, nome, email, turma, cronograma, ultimo_acesso, criado_em').eq('id', alunoId).single()),
+    q('respostas', sbTodas(() => sb.from('respostas').select('id, questao_id, tema, resposta_marcada, correto, respondido_em, fonte, op_id, tentativa_id, simulado_id').eq('aluno_id', alunoId).order('respondido_em', { ascending: true }).order('id', { ascending: true })).then(d => ({ data: d }))),
+    q('caderno', sb.from('caderno_erros').select('*').eq('aluno_id', alunoId)),
+    q('progresso', sb.from('progresso_semanas').select('*').eq('aluno_id', alunoId)),
+    q('atividades', sb.from('tentativa').select('id, tipo, origem, status, iniciado_em, finalizada_em, questoes_ids, recuperacao_de, recuperacao_tipo').eq('aluno_id', alunoId).order('iniciado_em', { ascending: false }).limit(15)),
+    q('TRI', sb.from('simulado_tri').select('id, co_prova, enviado_em, nota, acertos, erros, brancos').eq('aluno_id', alunoId).not('enviado_em', 'is', null).order('enviado_em', { ascending: false }).limit(10)),
+    q('externos', sb.from('simulado_externo').select('id, data_realizacao, banca, nome_simulado, tri_mat, acertos_mat').eq('aluno_id', alunoId).order('data_realizacao', { ascending: false }).limit(10)),
+    q('acompanhamento', sb.from('acompanhamento').select('*').eq('aluno_id', alunoId).order('atualizado_em', { ascending: false }))
+  ]);
+  if (!perfil) { main.innerHTML = '<div class="ac-prof"><div class="breadcrumb"><a onclick="renderAcompanhamento()">← Quem precisa de atenção</a></div><div class="ac-aviso erro">Não foi possível abrir o aluno (' + _escHtml(falhas.join('; ')) + ').</div></div>'; return; }
+  const agreg = painel && (painel.alunos || []).find(a => a.id === alunoId);
+  const av = agreg ? ACOMP_PROF.avaliar(agreg, painel) : null;
+  const { validas, removidas } = RX_MET.deduplicar(resp || []);
+  if (state._acDetDias === undefined) state._acDetDias = dias;
+  const revs = _revisoesDeProgresso(prog || [], perfil.cronograma);
+  const ind = RX_MET.indicadores(validas, state._acDetDias);
+  const temas = RX_MET.porTema(validas, { dias: state._acDetDias, caderno: cad || [], revisoes: revs }).filter(t => t.respostas || t.errosAtivos || t.revPend);
+  state._acDet = { alunoId, perfil, validas, cad: cad || [], revs, regs: regs || [], temas };
+  const turma = turmaPorId(perfil.turma);
+  const ult = agreg ? ACOMP_PROF.ultimaAtividade(agreg) : null;
+  const ROT_T = { estudo_teste: 'Modo Teste', estudo_prova: 'Modo Prova', simulado: 'Simulado', mini: 'Mini-simulado' };
+  main.innerHTML = '<div class="ac-prof"><div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderAcompanhamento()">Quem precisa de atenção</a> / ' + _escHtml(perfil.nome || '') + '</div>'
+    + '<div class="ac-tema-head"><div><span class="rx-kicker">' + _escHtml(turma ? turma.nome : 'Sem turma') + '</span><h1 class="rx-h1">' + _escHtml(perfil.nome || '(sem nome)') + '</h1><p class="rx-sub">' + _escHtml(perfil.email || '') + ' · último acesso ao app: ' + RX_MET.fmtDataHora(perfil.ultimo_acesso) + ' · última atividade de estudo: ' + (ult ? RX_MET.fmtData(ult.data) + ' (' + _escHtml(ult.fonte) + ')' : (agreg ? 'nenhuma registrada' : 'indisponível')) + '</p></div>'
+    + '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="rx-btn rx-btn-primary" onclick="ACOMP_REG.abrirForm(\'' + alunoId + '\')">Novo registro</button><button type="button" class="rx-btn rx-btn-secondary" onclick="abrirEditarAluno(\'' + alunoId + '\')">Cadastro</button></div></div>'
+    + (falhas.length ? '<div class="ac-aviso erro"><b>Fontes indisponíveis:</b> ' + _escHtml(falhas.join('; ')) + '. O que depende delas aparece como indisponível, não como ausência de estudo.</div>' : '')
+    + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Indicações pelos dados</h2><p>Período de ' + dias + ' dias (' + ACOMP_CFG.FUSO + ').</p></div></div>'
+    + (av ? (av.motivos.length ? av.motivos.map(m => '<div class="rx-card ac-ind-card">' + _acHtmlMotivos([m], true) + '<div class="ac-ind-acoes"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + alunoId + '\', null, {motivo:\'' + m.cod + '\', tema_id:\'' + ((m.temas && m.temas[0] && m.temas[0].tema) || '') + '\'})">Registrar acompanhamento a partir desta indicação</button></div></div>').join('') : '<div class="rx-empty"><b>Nenhuma indicação no período</b>Os critérios não foram atingidos com os dados atuais.</div>') : '<div class="ac-aviso">Agregados do painel indisponíveis; as indicações não puderam ser calculadas.</div>') + '</section>'
+    + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Acompanhamento registrado</h2><p>Observações internas: só perfis de professor enxergam. Histórico e autoria preservados a cada alteração.</p></div></div><div id="ac-regs">' + ACOMP_REG.htmlLista(regs || []) + '</div></section>'
+    + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Indicadores</h2><p>Resultados da plataforma (respostas em questões). TRI e notas externas ficam separados abaixo.</p></div></div>' + _htmlPeriodos(state._acDetDias, '_acDetPeriodo') + _htmlIndicadores(ind, { removidas: removidas.length }) + '</section>'
+    + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Evolução por tema</h2><p>Mesmos critérios da tela do aluno.</p></div></div>' + _htmlTabelaTemas(temas, { fnTema: '_acDetTema' }) + '<div style="margin-top:10px">' + _htmlCriteriosTema() + '</div></section>'
+    + '<div id="ac-det-tema"></div>'
+    + '<section class="ac-sec rx-card"><div class="ac-sec-head"><div><h2>Atividades recentes</h2><p>Atividades salvas (Etapa 1) e simulados.</p></div></div>'
+    + ((tents || []).length ? tents.map(t => '<div class="ac-ativ"><span class="d">' + RX_MET.fmtDataHora(t.finalizada_em || t.iniciado_em) + '</span><span class="t">' + (ROT_T[t.tipo] || t.tipo) + (t.origem && t.origem.nome ? ' · ' + _escHtml(t.origem.nome) : '') + (t.recuperacao_de ? ' <span class="rx-tag" style="background:rgba(168,85,247,.16);color:#a855f7">recuperação</span>' : '') + '</span><span class="n" style="color:var(--rx-muted);font-weight:600">' + (t.status === 'finalizada' ? 'finalizada' : t.status === 'em_andamento' ? 'em andamento' : 'descartada') + ' · ' + ((t.questoes_ids || []).length) + ' q</span></div>').join('') : '<p class="rx-sub">' + (tents ? 'Nenhuma atividade salva (as atividades passaram a ser guardadas em 25/09/2026).' : 'indisponível') + '</p>') + '</section>'
+    + '<section class="ac-sec rx-card"><div class="ac-sec-head"><div><h2>Simulados TRI e notas externas</h2><p>Não entram nos percentuais acima.</p></div></div>'
+    + ((tri || []).map(t => '<div class="ac-ativ"><span class="d">' + RX_MET.fmtData(t.enviado_em) + '</span><span class="t">ENEM oficial (TRI)</span><span class="n">nota ' + Number(t.nota).toFixed(0) + ' · ' + t.acertos + '/45</span></div>').join('') + (ext || []).map(s => '<div class="ac-ativ"><span class="d">' + RX_MET.fmtData(s.data_realizacao) + '</span><span class="t">' + _escHtml((s.banca || '') + (s.nome_simulado ? ' · ' + s.nome_simulado : '')) + ' (registrado pelo aluno)</span><span class="n">' + (s.tri_mat != null ? 'TRI mat ' + Math.round(Number(s.tri_mat)) : (s.acertos_mat != null ? s.acertos_mat + ' acertos mat' : '—')) + '</span></div>').join('') || '<p class="rx-sub">Nenhum simulado TRI enviado nem nota externa registrada.</p>') + '</section></div>';
+}
+function _acDetPeriodo(d) { state._acDetDias = d; if (state._acDet) renderAlunoAcompanhamento(state._acDet.alunoId); }
+function _acDetTema(temaId) {
+  const D = state._acDet; if (!D) return;
+  const t = D.temas.find(x => x.temaId === temaId); const box = document.getElementById('ac-det-tema'); if (!t || !box) return;
+  const ativ = RX_MET.atividades(D.validas, temaId);
+  const erros = D.cad.filter(e => e.tema_id === temaId && !e.resolvido);
+  const revT = D.revs.filter(r => r.temaId === temaId && r.status !== 'feita').sort((a, b) => a.diasFalta - b.diasFalta);
+  box.innerHTML = '<section class="ac-sec rx-card"><div class="ac-sec-head"><div><h2>' + _escHtml(t.nome) + '</h2><p><span class="ac-sinal ' + t.sinal.cls + '">' + t.sinal.rotulo + '</span> ' + _escHtml(t.sinal.texto) + '</p></div><button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="document.getElementById(\'ac-det-tema\').innerHTML=\'\'">Fechar</button></div>'
+    + '<dl class="ac-dl"><dt>Questões diferentes</dt><dd>' + t.distintas + ' (' + t.respostas + ' respostas)</dd><dt>1ª tentativa</dt><dd>' + RX_MET.pctTxt(t.primeira.ac, t.primeira.n) + ' · ' + t.primeira.ac + '/' + t.primeira.n + '</dd><dt>Recente</dt><dd>' + RX_MET.pctTxt(t.recente.ac, t.recente.n) + ' · ' + t.recente.ac + '/' + t.recente.n + '</dd><dt>Últimas ' + t.ultimas.n + '</dt><dd>' + RX_MET.pctTxt(t.ultimas.ac, t.ultimas.n) + '</dd><dt>Erros ativos</dt><dd>' + (erros.length ? erros.map(e => _escHtml(e.titulo) + ' (' + _priErroPorId(e.prioridade).nome + ')').join('; ') : 'nenhum') + '</dd><dt>Revisões pendentes</dt><dd>' + (revT.length ? revT.map(r => 'R' + r.n + ' sem ' + String(r.semanaN).padStart(2, '0') + ' · ' + _revStatusLabel(r)).join('; ') : 'nenhuma') + '</dd></dl>'
+    + '<div style="margin-top:10px">' + (ativ.length ? ativ.slice(0, 12).map(a => '<div class="ac-ativ"><span class="d">' + RX_MET.fmtDataHora(a.t) + '</span><span class="t">' + _escHtml(a.rotulo) + '</span><span class="n">' + a.ac + '/' + a.n + '</span></div>').join('') : '<p class="rx-sub">Sem respostas neste tema.</p>') + '</div>'
+    + '<div style="margin-top:10px"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + D.alunoId + '\', null, {tema_id:\'' + temaId + '\'})">Registrar acompanhamento sobre este tema</button></div></section>';
+  try { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+}
+
+// ---------- PROFESSOR: registro de acompanhamento (CRUD com histórico) ----------
+const ACOMP_REG = {
+  nomeProf(id) { const p = (state.perfisMapa || {})[id]; return p ? p.nome : (id ? 'professor ' + String(id).slice(0, 8) : '—'); },
+  htmlLista(regs) {
+    if (!regs.length) return '<div class="rx-empty"><b>Nenhum registro ainda</b>Use "Novo registro" para anotar uma observação ou uma ação combinada.</div>';
+    return '<div class="ac-regs">' + regs.map(r => '<div class="rx-card ac-reg" id="ac-reg-' + r.id + '"><div class="ac-reg-head"><span class="ac-sit ' + r.situacao + '">' + ACOMP_PROF.SIT[r.situacao] + '</span><b>' + RX_MET.fmtData(r.data_registro) + '</b>'
+      + (r.data_retorno ? '<span>retorno previsto ' + RX_MET.fmtData(r.data_retorno) + '</span>' : '') + (r.tema_id ? '<span>tema: ' + _escHtml((TEMAS.find(t => t.id === r.tema_id) || {}).nome || r.tema_id) + '</span>' : '') + (r.motivo ? '<span>indicação: ' + (ACOMP_PROF.MOTIVOS[r.motivo] || r.motivo) + '</span>' : '')
+      + '<span style="margin-left:auto">responsável: ' + _escHtml(this.nomeProf(r.responsavel_id)) + ' · v' + r.versao + ' · atualizado ' + RX_MET.fmtDataHora(r.atualizado_em) + ' por ' + _escHtml(this.nomeProf(r.atualizado_por)) + '</span></div>'
+      + (r.observacao ? '<p><span class="l">Observação: </span>' + _escHtml(r.observacao) + '</p>' : '') + (r.acao ? '<p><span class="l">Ação combinada: </span>' + _escHtml(r.acao) + '</p>' : '')
+      + (r.indicacao && r.indicacao.texto ? '<div class="ac-ind-box"><b>Indicação na época:</b> ' + _escHtml(r.indicacao.texto) + (r.indicacao.evid ? ' · ' + _escHtml(r.indicacao.evid) : '') + '</div>' : '')
+      + '<div class="ac-reg-acoes"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + r.aluno_id + '\',\'' + r.id + '\')">Editar</button>'
+      + (r.situacao !== 'concluida' ? '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ACOMP_REG.mudarSituacao(\'' + r.id + '\',\'concluida\')">Concluir</button>' : '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ACOMP_REG.mudarSituacao(\'' + r.id + '\',\'em_acompanhamento\')">Reabrir</button>')
+      + '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ACOMP_REG.historico(\'' + r.id + '\')">Histórico</button></div><div class="ac-hist" id="ac-hist-' + r.id + '" hidden></div></div>').join('') + '</div>';
+  },
+  abrirForm(alunoId, regId, pre) {
+    const D = state._acDet; const reg = regId && D ? D.regs.find(r => r.id === regId) : null;
+    pre = pre || {};
+    let ind = null;
+    if (!reg && pre.motivo) { const L = (state._acLinhas || []).find(x => x.a.id === alunoId); const m = L && L.av.motivos.find(z => z.cod === pre.motivo); if (m) ind = { texto: m.texto, evid: m.evid, periodo: m.periodo, cod: m.cod, gerado_em: new Date().toISOString() }; }
+    const nomeAluno = (D && D.perfil && D.perfil.id === alunoId) ? D.perfil.nome : (((state._acLinhas || []).find(x => x.a.id === alunoId) || {}).a || {}).nome || (state.perfisMapa && state.perfisMapa[alunoId] && state.perfisMapa[alunoId].nome) || '';
+    const profs = Object.values(state.perfisMapa || {}).filter(p => p.perfil === 'professor' && p.status === 'aprovado');
+    const hojeF = RX_MET.hojeFortaleza();
+    const html = '<h2 style="margin:0 0 4px">' + (reg ? 'Editar registro' : 'Novo registro de acompanhamento') + '</h2><p class="rx-sub" style="margin-bottom:10px">' + _escHtml(nomeAluno) + ' · interno (o aluno não vê)</p>'
+      + (ind ? '<div class="ac-ind-box"><b>Indicação:</b> ' + _escHtml(ind.texto) + ' · ' + _escHtml(ind.evid) + '</div>' : '')
+      + '<div class="ac-form"><label class="rx-label" for="ac-r-obs">Observação pedagógica</label><textarea id="ac-r-obs">' + _escHtml(reg ? reg.observacao || '' : '') + '</textarea>'
+      + '<label class="rx-label" for="ac-r-acao">Ação combinada</label><textarea id="ac-r-acao">' + _escHtml(reg ? reg.acao || '' : '') + '</textarea>'
+      + '<div class="ac-two"><div><label class="rx-label" for="ac-r-data">Data do registro</label><input type="date" id="ac-r-data" value="' + (reg ? reg.data_registro : hojeF) + '"></div><div><label class="rx-label" for="ac-r-ret">Data prevista de retorno</label><input type="date" id="ac-r-ret" value="' + (reg && reg.data_retorno ? reg.data_retorno : '') + '"></div></div>'
+      + '<div class="ac-two"><div><label class="rx-label" for="ac-r-sit">Situação</label><select id="ac-r-sit">' + ['pendente', 'em_acompanhamento', 'concluida'].map(s => '<option value="' + s + '"' + ((reg ? reg.situacao : 'pendente') === s ? ' selected' : '') + '>' + ACOMP_PROF.SIT[s] + '</option>').join('') + '</select></div>'
+      + '<div><label class="rx-label" for="ac-r-tema">Tema (opcional)</label><select id="ac-r-tema"><option value="">Sem tema</option>' + TEMAS.map(t => '<option value="' + t.id + '"' + ((reg ? reg.tema_id : pre.tema_id) === t.id ? ' selected' : '') + '>' + _escHtml(t.nome) + '</option>').join('') + '</select></div></div>'
+      + (profs.length > 1 ? '<label class="rx-label" for="ac-r-resp">Responsável</label><select id="ac-r-resp">' + profs.map(p => '<option value="' + p.id + '"' + ((reg ? reg.responsavel_id : state.usuario.id) === p.id ? ' selected' : '') + '>' + _escHtml(p.nome) + '</option>').join('') + '</select>' : '')
+      + '<p class="ac-lote-msg" id="ac-r-msg" role="status" style="margin:10px 0 0"></p></div>';
+    _modalConfiab(html, [{ txt: 'Cancelar', cls: 'btn-secondary' }]);
+    const acoes = document.querySelector('#modal-confiab .modal-acoes');
+    if (acoes) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-success'; b.textContent = reg ? 'Salvar alterações' : 'Salvar registro'; b.onclick = () => this.salvar(alunoId, reg, ind, pre); acoes.appendChild(b); }
+    setTimeout(() => { const el = document.getElementById('ac-r-obs'); if (el) el.focus(); }, 40);
+  },
+  async salvar(alunoId, reg, ind, pre) {
+    const v = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const obs = v('ac-r-obs'), acao = v('ac-r-acao'); const msg = document.getElementById('ac-r-msg');
+    if (!obs && !acao) { if (msg) { msg.textContent = 'Escreva uma observação ou uma ação combinada.'; msg.className = 'ac-lote-msg err'; } return; }
+    const payload = { observacao: obs || null, acao: acao || null, data_registro: v('ac-r-data') || RX_MET.hojeFortaleza(), data_retorno: v('ac-r-ret') || null, situacao: v('ac-r-sit') || 'pendente', tema_id: v('ac-r-tema') || null };
+    const respEl = document.getElementById('ac-r-resp'); if (respEl) payload.responsavel_id = respEl.value;
+    if (!reg) { payload.aluno_id = alunoId; payload.motivo = (pre && pre.motivo) || null; payload.indicacao = ind || null; }
+    if (msg) { msg.textContent = 'Salvando…'; msg.className = 'ac-lote-msg'; }
+    try {
+      const r = reg ? await sb.from('acompanhamento').update(payload).eq('id', reg.id).select().single() : await sb.from('acompanhamento').insert(payload).select().single();
+      if (r.error) throw r.error;
+      _fecharModalConfiab();
+      state._painelAtencao = null;
+      if (state.view === 'acompanhamento-aluno' && state._acDet && state._acDet.alunoId === alunoId) renderAlunoAcompanhamento(alunoId);
+      else if (state.view === 'acompanhamento') renderAcompanhamento();
+    } catch (e) { if (msg) { msg.textContent = 'Não foi possível salvar: ' + (e && e.message ? e.message : e); msg.className = 'ac-lote-msg err'; } }
+  },
+  async mudarSituacao(regId, sit) {
+    const r = await sb.from('acompanhamento').update({ situacao: sit }).eq('id', regId).select().single();
+    if (r.error) { alert('Não foi possível atualizar: ' + r.error.message); return; }
+    state._painelAtencao = null;
+    if (state._acDet) renderAlunoAcompanhamento(state._acDet.alunoId);
+  },
+  async historico(regId) {
+    const box = document.getElementById('ac-hist-' + regId); if (!box) return;
+    if (!box.hidden) { box.hidden = true; return; }
+    box.hidden = false; box.innerHTML = 'Carregando histórico…';
+    const r = await sb.from('acompanhamento_hist').select('versao, evento, dados, gravado_por, gravado_em').eq('acompanhamento_id', regId).order('versao', { ascending: true });
+    if (r.error) { box.innerHTML = 'Histórico indisponível: ' + _escHtml(r.error.message); return; }
+    const rows = r.data || []; let ant = null;
+    const CAMPOS = { situacao: 'situação', observacao: 'observação', acao: 'ação', data_retorno: 'retorno', data_registro: 'data', tema_id: 'tema', responsavel_id: 'responsável' };
+    box.innerHTML = rows.map(h => {
+      const d = h.dados || {}; let mud = [];
+      if (ant) Object.keys(CAMPOS).forEach(k => { if (String(ant[k] || '') !== String(d[k] || '')) mud.push(CAMPOS[k] + ': ' + (k === 'responsavel_id' ? this.nomeProf(d[k]) : (k === 'situacao' ? ACOMP_PROF.SIT[d[k]] || d[k] : String(d[k] || '—').slice(0, 80)))); });
+      ant = d;
+      return '<div><b>v' + h.versao + '</b> · ' + (h.evento === 'criado' ? 'criado' : 'alterado') + ' em ' + RX_MET.fmtDataHora(h.gravado_em) + ' por ' + _escHtml(this.nomeProf(h.gravado_por)) + (mud.length ? ' · ' + _escHtml(mud.join(' | ')) : '') + '</div>';
+    }).join('') || 'Sem histórico.';
+  }
+};
+
+// ---------- ligações com o resto do app ----------
+(function () {
+  // Rotas do aluno: desempenho e desempenho por tema. "Estatísticas" continua acessível dentro de Desempenho.
+  if (typeof ROTA !== 'undefined') {
+    ROTA.MAPA.push(['desempenho', () => renderDesempenhoAluno()], ['desempenho/tema/:id', (id) => renderDesempenhoAluno(id)]);
+    const secaoAnt = ROTA.secao.bind(ROTA);
+    ROTA.secao = function (rota) { const r = String(rota || ''); if (r.startsWith('desempenho') || r === 'estatisticas') return 'desempenho'; return secaoAnt(rota); };
+    ROTA.envolver('renderDesempenhoAluno', (id) => (id ? 'desempenho/tema/' + encodeURIComponent(id) : 'desempenho'));
+  }
+  // Modal do caderno: guarda a origem para gravar e injeta a última resposta na edição.
+  const abrirAnt = abrirModalErro;
+  abrirModalErro = function (opcoes) { ACOMP._modalOrigem = (opcoes && opcoes.origem) || null; abrirAnt(opcoes); try { ACOMP.aposModalErro(opcoes); } catch (e) { console.warn('[acomp] modal:', e); } };
+})();
+
+// ============================================================================
+// CRONOGRAMA — bloco "Revisão Geral" (refino visual, 25/09/2026)
+// Só apresentação: os dados continuam vindo do cronograma configurado
+// (CRONOGRAMA_2026 / MODULOS + edições do professor), do progresso do aluno
+// (statusDaSemana) e das respostas (statsDaSemana). Clique no cartão e o
+// botão "Ver plano da semana" mantêm o destino de antes (editor da semana e
+// Revisão Final).
+// ============================================================================
+const _CRV_MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const _CRV_ICO_GEO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/></svg>';
+
+// Módulo de revisão geral = módulo sem temas próprios cujas semanas são revisões com lista de assuntos.
+function _ehModuloRevisaoGeral(mod, semanas) {
+  if (!mod || !(Array.isArray(mod.temas) && mod.temas.length === 0)) return false;
+  const uteis = (semanas || []).filter(s => s.tipo !== 'recesso' && !s.cancelada);
+  return uteis.length > 0 && uteis.every(s => s.tipo === 'revisao' && Array.isArray(s.temas) && s.temas.length);
+}
+function _crvData(d) {
+  const m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})/);
+  if (!m) return _escHtml(d || '');
+  return parseInt(m[1], 10) + ' ' + (_CRV_MESES[parseInt(m[2], 10) - 1] || m[2]);
+}
+// Geometria com a numeração I/II/III que está no título da semana (fonte: cronograma). Sem número, fica o nome do tema.
+function _crvGeometria(s) {
+  const temas = Array.isArray(s.temas) ? s.temas : [];
+  const geoId = temas.find(id => /^geo-/.test(id)) || temas[temas.length - 1];
+  const geo = TEMAS.find(t => t.id === geoId);
+  const nome = geo ? geo.nome : (geoId || '');
+  const m = String(s.titulo || '').match(/(Geometria\s+[A-Za-zÀ-ú]+)\s+(I{1,3}|IV|V)\b/);
+  return m ? m[1] + ' ' + m[2] : nome;
+}
+function _htmlBlocoRevisaoGeral(mod, semanas, mostrarProgresso, semOk, semTotal) {
+  const ehAluno = !!(state.usuario && state.usuario.perfil !== 'professor');
+  const prog = mostrarProgresso
+    ? '<div class="crv-prog" aria-label="' + semOk + ' de ' + semTotal + ' semanas concluídas"><b>' + semOk + '/' + semTotal + '</b> semanas concluídas</div>'
+    : '<div class="crv-prog"><b>' + semTotal + '</b> ' + (semTotal === 1 ? 'semana' : 'semanas') + '</div>';
+  return '<section class="crv-bloco" aria-labelledby="crv-t-' + _escHtml(mod.id) + '">'
+    + '<div class="crv-head"><div class="crv-head-txt"><span class="crv-kicker">Módulo ' + _escHtml(String(mod.numero)) + '</span>'
+    + '<h3 class="crv-title" id="crv-t-' + _escHtml(mod.id) + '">' + _escHtml(mod.nome) + '</h3>'
+    + (mod.subtitulo ? '<p class="crv-sub">' + _escHtml(mod.subtitulo) + '</p>' : '') + '</div>' + prog + '</div>'
+    + '<div class="crv-grid">' + semanas.map(s => _htmlCardRevisaoGeral(s, mostrarProgresso, ehAluno)).join('') + '</div></section>';
+}
+function _htmlCardRevisaoGeral(s, mostrarProgresso, ehAluno) {
+  if (s.tipo === 'recesso') return renderSemanaCard(s, mostrarProgresso);   // recesso não é revisão: cartão comum
+  const temas = Array.isArray(s.temas) ? s.temas : [];
+  const geoId = temas.find(id => /^geo-/.test(id)) || temas[temas.length - 1];
+  const assuntos = temas.filter(id => id !== geoId);
+  const titulo = s.revisaoN ? 'Revisão ' + String(s.revisaoN).padStart(2, '0') : _escHtml(s.titulo || '');
+  const st = mostrarProgresso ? statusDaSemana(s.n) : null;
+  const stLabel = { nao_iniciado: 'Não iniciado', em_estudo: 'Em estudo', concluido: 'Concluído' }[st] || '';
+  const podeMarcar = mostrarProgresso && s.tipo !== 'recesso';
+  const errosAtivos = mostrarProgresso ? _errosAtivos(_errosDaSemana(s.n)) : [];
+  let stats = '';
+  if (mostrarProgresso) {
+    const e = statsDaSemana(s);
+    stats = '<div class="crv-stats" title="Suas respostas em questões destes assuntos, no banco e nas listas"><b>' + e.total + '</b> ' + (e.total === 1 ? 'questão' : 'questões')
+      + (e.total > 0 ? ' · <b>' + e.taxa + '%</b> de acerto' : '') + '</div>';
+  }
+  const botao = (s.revisaoN && ehAluno)
+    ? '<a class="crv-btn" href="/revisao-final" role="button" aria-label="Ver plano da semana ' + s.n + ' (Revisão ' + String(s.revisaoN).padStart(2, '0') + ')" onclick="event.stopPropagation();event.preventDefault();renderRevisaoFinal()">Ver plano da semana <span aria-hidden="true">→</span></a>'
+    : '';
+  const aria = 'Semana ' + s.n + ' do curso, ' + titulo + ', ' + _crvData(s.data) + (stLabel ? ', ' + stLabel.toLowerCase() : '') + (podeMarcar ? '. Abre o registro da semana.' : '');
+  return '<article class="crv-card' + (st ? ' ' + st : '') + '" id="cron-sem-' + s.n + '"' + (podeMarcar ? ' role="button" tabindex="0" onclick="abrirEditorSemana(' + s.n + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirEditorSemana(' + s.n + ')}"' : '') + ' aria-label="' + _escHtml(aria) + '">'
+    + '<div class="crv-top"><div class="crv-id"><span class="crv-week">Semana ' + s.n + ' do curso</span><h4 class="crv-h">' + titulo + '</h4></div><span class="crv-date">' + _crvData(s.data) + '</span></div>'
+    + (st || errosAtivos.length ? '<div class="crv-estado">' + (st ? '<span class="crv-status ' + st + '"><i aria-hidden="true"></i>' + stLabel + '</span>' : '')
+      + (errosAtivos.length ? '<span class="crv-erros" title="Erros ativos no caderno nesta semana">' + errosAtivos.length + (errosAtivos.length === 1 ? ' erro no caderno' : ' erros no caderno') + '</span>' : '') + '</div>' : '')
+    + '<ul class="crv-list">' + assuntos.map(id => '<li>' + _escHtml(_nomeCurtoTema(id)) + '</li>').join('') + '</ul>'
+    + '<div class="crv-base">'
+    + (geoId ? '<div class="crv-geo">' + _CRV_ICO_GEO + '<span>' + _escHtml(_crvGeometria(s)) + '</span></div>' : '')
+    + stats + botao + '</div></article>';
+}
 
 // ========== INIT ==========
 (async function init() {
