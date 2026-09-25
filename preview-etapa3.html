@@ -6407,6 +6407,65 @@
     .ac-item .rx-btn { margin-left: auto; }
   }
 
+  /* ---------- Cronograma: bloco "Revisão Geral" (refino visual, 25/09/2026). Regras restritas a .crv-* ---------- */
+  .crv-bloco {
+    --crv-azul: #93c5fd; --crv-azul-forte: #bfdbfe; --crv-txt: var(--radix-text); --crv-mudo: var(--radix-text-muted);
+    --crv-bg: rgba(59,130,246,.07); --crv-card: var(--radix-surface); --crv-borda: var(--radix-line-2); --crv-borda-hover: rgba(147,197,253,.6);
+    --crv-geo-bg: rgba(34,211,238,.10); --crv-geo-fg: #7dd3fc; --crv-btn-bg: rgba(96,165,250,.14); --crv-btn-bg-hover: rgba(96,165,250,.24); --crv-btn-fg: #bfdbfe;
+    --crv-dot: #6b7280; --crv-estudo: #fbbf24; --crv-ok: #34d399;
+    container-type: inline-size; background: var(--crv-bg); border: 1px solid var(--crv-borda); border-radius: 14px; padding: 18px; margin-bottom: 20px;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  body.theme-light .crv-bloco {
+    --crv-azul: #1d4ed8; --crv-azul-forte: #1e3a8a; --crv-bg: rgba(37,99,235,.06); --crv-card: #fff; --crv-borda: #dbe4f0; --crv-borda-hover: rgba(29,78,216,.45);
+    --crv-geo-bg: rgba(8,145,178,.10); --crv-geo-fg: #0e7490; --crv-btn-bg: rgba(37,99,235,.10); --crv-btn-bg-hover: rgba(37,99,235,.18); --crv-btn-fg: #1d4ed8;
+    --crv-dot: #9ca3af; --crv-estudo: #d97706; --crv-ok: #059669;
+  }
+  .crv-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 0 0 16px; }
+  .crv-kicker { display: block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--crv-azul); margin-bottom: 4px; }
+  .crv-title { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.3px; color: var(--crv-txt); }
+  .crv-sub { margin: 3px 0 0; font-size: 12.5px; color: var(--crv-mudo); line-height: 1.4; }
+  .crv-prog { font-size: 12.5px; color: var(--crv-mudo); white-space: nowrap; padding: 6px 12px; border-radius: 999px; background: var(--crv-card); border: 1px solid var(--crv-borda); }
+  .crv-prog b { color: var(--crv-azul); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .crv-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @container (min-width: 560px) { .crv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @container (min-width: 1040px) { .crv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @supports not (container-type: inline-size) {
+    @media (min-width: 620px) { .crv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1320px) { .crv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  }
+  .crv-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; background: var(--crv-card); border: 1px solid var(--crv-borda); border-radius: 12px; padding: 18px; color: var(--crv-txt); transition: border-color .15s, transform .15s; }
+  .crv-card[role="button"] { cursor: pointer; }
+  .crv-card[role="button"]:hover { border-color: var(--crv-borda-hover); transform: translateY(-1px); }
+  .crv-card:focus-visible { outline: 2px solid var(--crv-azul); outline-offset: 2px; }
+  .crv-card.em_estudo { border-color: rgba(245,158,11,.55); }
+  .crv-card.concluido { border-color: rgba(16,185,129,.55); }
+  .crv-card.cron-semana-foco { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+  .crv-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .crv-id { min-width: 0; }
+  .crv-week { display: block; font-size: 11px; font-weight: 600; color: var(--crv-mudo); letter-spacing: .02em; }
+  .crv-h { margin: 2px 0 0; font-size: 17px; font-weight: 800; color: var(--crv-azul); letter-spacing: -.2px; line-height: 1.2; }
+  .crv-date { flex: none; font-size: 12px; font-weight: 700; color: var(--crv-azul); background: var(--crv-btn-bg); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+  .crv-estado { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .crv-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--crv-mudo); }
+  .crv-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--crv-dot); display: inline-block; }
+  .crv-status.em_estudo { color: var(--crv-estudo); } .crv-status.em_estudo i { background: var(--crv-estudo); }
+  .crv-status.concluido { color: var(--crv-ok); } .crv-status.concluido i { background: var(--crv-ok); }
+  .crv-erros { font-size: 11px; font-weight: 700; color: #a855f7; background: rgba(168,85,247,.12); padding: 2px 8px; border-radius: 999px; }
+  body.theme-light .crv-erros { color: #7e22ce; }
+  .crv-list { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 6px; }
+  .crv-list li { position: relative; padding-left: 14px; font-size: 13.5px; line-height: 1.4; color: var(--crv-txt); overflow-wrap: anywhere; }
+  .crv-list li::before { content: ''; position: absolute; left: 0; top: .6em; width: 5px; height: 5px; border-radius: 50%; background: var(--crv-azul); opacity: .7; }
+  .crv-base { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+  .crv-geo { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; background: var(--crv-geo-bg); color: var(--crv-geo-fg); font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .crv-geo svg { width: 15px; height: 15px; flex: none; }
+  .crv-stats { font-size: 12px; color: var(--crv-mudo); font-variant-numeric: tabular-nums; }
+  .crv-stats b { color: var(--crv-txt); font-weight: 800; }
+  .crv-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 38px; padding: 8px 12px; border-radius: 9px; background: var(--crv-btn-bg); color: var(--crv-btn-fg); font-size: 13px; font-weight: 700; text-decoration: none; transition: background .15s; }
+  .crv-btn:hover { background: var(--crv-btn-bg-hover); text-decoration: none; }
+  .crv-btn:focus-visible { outline: 2px solid var(--crv-azul); outline-offset: 2px; }
+  @media (max-width: 480px) { .crv-bloco { padding: 14px; } .crv-card { padding: 16px; } }
+
   /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
   #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
   #radix-sync.on{display:flex}
@@ -6754,7 +6813,7 @@ const MODULOS = [
     cor: '#0277BD',
     temas: ['combinatoria','probabilidade','estatistica','matrizes','sistemas-lineares'] },
   { id: 'm5', numero: '05', nome: 'Revisão Geral',
-    subtitulo: '7 semanas · 4 assuntos + geometria por semana · mini-simulado',
+    subtitulo: '7 semanas · 4 assuntos + geometria · mini-simulado',
     cor: '#1565C0',
     temas: [] },
 ];
@@ -18518,6 +18577,7 @@ function renderCronograma(focoN) {
       const semanas = semanasPorMod[mod.id] || [];
       const semTotal = semanas.filter(s => s.tipo !== 'recesso').length;
       const semOk = mostrarProgresso ? semanas.filter(s => s.tipo !== 'recesso' && statusDaSemana(s.n) === 'concluido').length : 0;
+      if (typeof _ehModuloRevisaoGeral === 'function' && _ehModuloRevisaoGeral(mod, semanas)) return _htmlBlocoRevisaoGeral(mod, semanas, mostrarProgresso, semOk, semTotal);
       return `
         <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};">
           <div class="cron-modulo-header">
@@ -25162,6 +25222,78 @@ const ACOMP_REG = {
   const abrirAnt = abrirModalErro;
   abrirModalErro = function (opcoes) { ACOMP._modalOrigem = (opcoes && opcoes.origem) || null; abrirAnt(opcoes); try { ACOMP.aposModalErro(opcoes); } catch (e) { console.warn('[acomp] modal:', e); } };
 })();
+
+// ============================================================================
+// CRONOGRAMA — bloco "Revisão Geral" (refino visual, 25/09/2026)
+// Só apresentação: os dados continuam vindo do cronograma configurado
+// (CRONOGRAMA_2026 / MODULOS + edições do professor), do progresso do aluno
+// (statusDaSemana) e das respostas (statsDaSemana). Clique no cartão e o
+// botão "Ver plano da semana" mantêm o destino de antes (editor da semana e
+// Revisão Final).
+// ============================================================================
+const _CRV_MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const _CRV_ICO_GEO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/></svg>';
+
+// Módulo de revisão geral = módulo sem temas próprios cujas semanas são revisões com lista de assuntos.
+function _ehModuloRevisaoGeral(mod, semanas) {
+  if (!mod || !(Array.isArray(mod.temas) && mod.temas.length === 0)) return false;
+  const uteis = (semanas || []).filter(s => s.tipo !== 'recesso' && !s.cancelada);
+  return uteis.length > 0 && uteis.every(s => s.tipo === 'revisao' && Array.isArray(s.temas) && s.temas.length);
+}
+function _crvData(d) {
+  const m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})/);
+  if (!m) return _escHtml(d || '');
+  return parseInt(m[1], 10) + ' ' + (_CRV_MESES[parseInt(m[2], 10) - 1] || m[2]);
+}
+// Geometria com a numeração I/II/III que está no título da semana (fonte: cronograma). Sem número, fica o nome do tema.
+function _crvGeometria(s) {
+  const temas = Array.isArray(s.temas) ? s.temas : [];
+  const geoId = temas.find(id => /^geo-/.test(id)) || temas[temas.length - 1];
+  const geo = TEMAS.find(t => t.id === geoId);
+  const nome = geo ? geo.nome : (geoId || '');
+  const m = String(s.titulo || '').match(/(Geometria\s+[A-Za-zÀ-ú]+)\s+(I{1,3}|IV|V)\b/);
+  return m ? m[1] + ' ' + m[2] : nome;
+}
+function _htmlBlocoRevisaoGeral(mod, semanas, mostrarProgresso, semOk, semTotal) {
+  const ehAluno = !!(state.usuario && state.usuario.perfil !== 'professor');
+  const prog = mostrarProgresso
+    ? '<div class="crv-prog" aria-label="' + semOk + ' de ' + semTotal + ' semanas concluídas"><b>' + semOk + '/' + semTotal + '</b> semanas concluídas</div>'
+    : '<div class="crv-prog"><b>' + semTotal + '</b> ' + (semTotal === 1 ? 'semana' : 'semanas') + '</div>';
+  return '<section class="crv-bloco" aria-labelledby="crv-t-' + _escHtml(mod.id) + '">'
+    + '<div class="crv-head"><div class="crv-head-txt"><span class="crv-kicker">Módulo ' + _escHtml(String(mod.numero)) + '</span>'
+    + '<h3 class="crv-title" id="crv-t-' + _escHtml(mod.id) + '">' + _escHtml(mod.nome) + '</h3>'
+    + (mod.subtitulo ? '<p class="crv-sub">' + _escHtml(mod.subtitulo) + '</p>' : '') + '</div>' + prog + '</div>'
+    + '<div class="crv-grid">' + semanas.map(s => _htmlCardRevisaoGeral(s, mostrarProgresso, ehAluno)).join('') + '</div></section>';
+}
+function _htmlCardRevisaoGeral(s, mostrarProgresso, ehAluno) {
+  if (s.tipo === 'recesso') return renderSemanaCard(s, mostrarProgresso);   // recesso não é revisão: cartão comum
+  const temas = Array.isArray(s.temas) ? s.temas : [];
+  const geoId = temas.find(id => /^geo-/.test(id)) || temas[temas.length - 1];
+  const assuntos = temas.filter(id => id !== geoId);
+  const titulo = s.revisaoN ? 'Revisão ' + String(s.revisaoN).padStart(2, '0') : _escHtml(s.titulo || '');
+  const st = mostrarProgresso ? statusDaSemana(s.n) : null;
+  const stLabel = { nao_iniciado: 'Não iniciado', em_estudo: 'Em estudo', concluido: 'Concluído' }[st] || '';
+  const podeMarcar = mostrarProgresso && s.tipo !== 'recesso';
+  const errosAtivos = mostrarProgresso ? _errosAtivos(_errosDaSemana(s.n)) : [];
+  let stats = '';
+  if (mostrarProgresso) {
+    const e = statsDaSemana(s);
+    stats = '<div class="crv-stats" title="Suas respostas em questões destes assuntos, no banco e nas listas"><b>' + e.total + '</b> ' + (e.total === 1 ? 'questão' : 'questões')
+      + (e.total > 0 ? ' · <b>' + e.taxa + '%</b> de acerto' : '') + '</div>';
+  }
+  const botao = (s.revisaoN && ehAluno)
+    ? '<a class="crv-btn" href="/revisao-final" role="button" aria-label="Ver plano da semana ' + s.n + ' (Revisão ' + String(s.revisaoN).padStart(2, '0') + ')" onclick="event.stopPropagation();event.preventDefault();renderRevisaoFinal()">Ver plano da semana <span aria-hidden="true">→</span></a>'
+    : '';
+  const aria = 'Semana ' + s.n + ' do curso, ' + titulo + ', ' + _crvData(s.data) + (stLabel ? ', ' + stLabel.toLowerCase() : '') + (podeMarcar ? '. Abre o registro da semana.' : '');
+  return '<article class="crv-card' + (st ? ' ' + st : '') + '" id="cron-sem-' + s.n + '"' + (podeMarcar ? ' role="button" tabindex="0" onclick="abrirEditorSemana(' + s.n + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirEditorSemana(' + s.n + ')}"' : '') + ' aria-label="' + _escHtml(aria) + '">'
+    + '<div class="crv-top"><div class="crv-id"><span class="crv-week">Semana ' + s.n + ' do curso</span><h4 class="crv-h">' + titulo + '</h4></div><span class="crv-date">' + _crvData(s.data) + '</span></div>'
+    + (st || errosAtivos.length ? '<div class="crv-estado">' + (st ? '<span class="crv-status ' + st + '"><i aria-hidden="true"></i>' + stLabel + '</span>' : '')
+      + (errosAtivos.length ? '<span class="crv-erros" title="Erros ativos no caderno nesta semana">' + errosAtivos.length + (errosAtivos.length === 1 ? ' erro no caderno' : ' erros no caderno') + '</span>' : '') + '</div>' : '')
+    + '<ul class="crv-list">' + assuntos.map(id => '<li>' + _escHtml(_nomeCurtoTema(id)) + '</li>').join('') + '</ul>'
+    + '<div class="crv-base">'
+    + (geoId ? '<div class="crv-geo">' + _CRV_ICO_GEO + '<span>' + _escHtml(_crvGeometria(s)) + '</span></div>' : '')
+    + stats + botao + '</div></article>';
+}
 
 // ========== INIT ==========
 (async function init() {
