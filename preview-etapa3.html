@@ -6345,9 +6345,22 @@
   .ac-filtros .rx-label { margin-bottom: 4px; }
   .ac-ordem { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 8px 12px; background: var(--rx-accent-soft); border: 1px solid rgba(34,211,238,.25); border-radius: 8px; font-size: var(--rx-fs-xs); color: var(--rx-text-2); }
   .ac-ordem b { color: var(--rx-accent); }
-  .ac-motivo { display: block; padding: 4px 0; font-size: var(--rx-fs-sm); line-height: 1.4; color: var(--rx-text); }
-  .ac-motivo .ac-sinal { margin-right: 6px; vertical-align: middle; }
-  .ac-motivo small { display: block; color: var(--rx-muted); font-size: var(--rx-fs-xs); }
+  .ac-filtros { align-items: end; }
+  .ac-filtros .rx-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ac-tbl-painel { min-width: 920px; table-layout: fixed; }
+  .ac-tbl-painel .c-aluno { width: 190px; } .ac-tbl-painel .c-ult { width: 150px; } .ac-tbl-painel .c-sit { width: 140px; } .ac-tbl-painel .c-acoes { width: 122px; }
+  .ac-tbl-painel td { vertical-align: top; padding: 12px; }
+  .ac-motivos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .ac-motivos li { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 6px 10px; align-items: start; }
+  .ac-motivos .ac-sinal { justify-self: start; margin-top: 1px; }
+  .ac-motivos .t { font-size: var(--rx-fs-sm); font-weight: 600; color: var(--rx-text); line-height: 1.35; }
+  .ac-motivos small { display: block; color: var(--rx-muted); font-size: var(--rx-fs-xs); line-height: 1.4; margin-top: 2px; }
+  .ac-sem-ind { color: var(--rx-muted); font-size: var(--rx-fs-sm); }
+  .ac-td-sit small { display: block; margin-top: 4px; font-size: 11px; color: var(--rx-muted); }
+  .ac-td-acoes { white-space: nowrap; }
+  .ac-td-acoes .rx-btn { display: flex; width: 100%; margin-bottom: 6px; }
+  .ac-ind-card { padding: 12px 14px; margin-bottom: 8px; }
+  .ac-ind-acoes { margin-top: 8px; padding-left: 170px; }
   .ac-aluno-cel { display: flex; flex-direction: column; gap: 2px; }
   .ac-aluno-cel b { color: var(--rx-text); }
   .ac-aluno-cel small { color: var(--rx-muted); font-size: var(--rx-fs-xs); }
@@ -6375,6 +6388,17 @@
     .ac-desemp .rx-kpis, .ac-prof .rx-kpis { grid-template-columns: 1fr 1fr; }
     .ac-form .ac-two { grid-template-columns: 1fr; }
     .ac-tema-head { flex-direction: column; }
+    /* painel do professor vira cartões empilhados */
+    .ac-tbl-painel { min-width: 0; table-layout: auto; }
+    .ac-tbl-painel colgroup, .ac-tbl-painel thead { display: none; }
+    .ac-tbl-painel, .ac-tbl-painel tbody, .ac-tbl-painel tr, .ac-tbl-painel td { display: block; }
+    .ac-tbl-painel tr { padding: 10px 12px; border-bottom: 1px solid var(--rx-line); }
+    .ac-tbl-painel tr:last-child { border-bottom: 0; }
+    .ac-tbl-painel td { padding: 4px 0; border: 0; }
+    .ac-motivos li { grid-template-columns: 1fr; gap: 4px; }
+    .ac-td-acoes { display: flex !important; gap: 8px; margin-top: 8px; }
+    .ac-td-acoes .rx-btn { width: auto; flex: 1; margin: 0; }
+    .ac-ind-acoes { padding-left: 0; }
   }
   @media (max-width: 600px) {
     .ac-desemp .rx-kpis, .ac-prof .rx-kpis { grid-template-columns: 1fr; }
@@ -24843,7 +24867,7 @@ function _renderTemaAluno(temaId, validas, revs, dias) {
 const ACOMP_PROF = {
   MOTIVOS: { sem_atividade: 'Sem atividade', revisoes_atrasadas: 'Revisões atrasadas', erros_alta: 'Erros de alta prioridade', tema_baixo: 'Acerto baixo em tema', queda: 'Queda recente' },
   SIT: { sem_registro: 'Sem registro', pendente: 'Pendente', em_acompanhamento: 'Em acompanhamento', concluida: 'Concluída' },
-  ORDENS: { motivos_desc: 'Mais motivos primeiro', dias_desc: 'Mais dias sem atividade', rev_desc: 'Mais revisões atrasadas', alta_desc: 'Mais erros de alta prioridade', nome_asc: 'Nome A→Z' },
+  ORDENS: { motivos_desc: 'Mais motivos', dias_desc: 'Dias sem atividade', rev_desc: 'Revisões atrasadas', alta_desc: 'Erros de alta prioridade', nome_asc: 'Nome A→Z' },
   async carregar(dias, forcar) {
     const c = state._painelAtencao;
     if (c && !forcar && c.dias === dias && (Date.now() - c.em) < 120000) return c;
@@ -24865,28 +24889,28 @@ const ACOMP_PROF = {
     const m = [];
     const ult = this.ultimaAtividade(a);
     const dSem = ult ? RX_MET.diasDesde(ult.data, agora) : null;
-    if (!ult) m.push({ cod: 'sem_atividade', texto: 'Nenhuma atividade registrada desde o cadastro (' + RX_MET.fmtData(a.criado_em) + ')', evid: 'Fontes consultadas: respostas, atividades, TRI, registro de estudo, caderno, notas externas, materiais.', periodo: 'todo o histórico', valor: 9999 });
-    else if (dSem >= C.DIAS_SEM_ATIVIDADE) m.push({ cod: 'sem_atividade', texto: 'Sem atividade registrada há ' + dSem + ' dias', evid: 'Última: ' + RX_MET.fmtData(ult.data) + ' (' + ult.fonte + '). Critério: ' + C.DIAS_SEM_ATIVIDADE + ' dias ou mais.', periodo: 'todo o histórico', valor: dSem });
+    if (!ult) m.push({ cod: 'sem_atividade', texto: 'Nenhuma atividade registrada desde o cadastro (' + RX_MET.fmtData(a.criado_em) + ')', evid: 'Fontes: respostas, atividades, TRI, registro de estudo, caderno, notas externas, materiais', crit: 'Critério: ' + C.DIAS_SEM_ATIVIDADE + ' dias ou mais sem atividade de estudo.', periodo: 'todo o histórico', valor: 9999 });
+    else if (dSem >= C.DIAS_SEM_ATIVIDADE) m.push({ cod: 'sem_atividade', texto: 'Sem atividade registrada há ' + dSem + ' dias', evid: 'Última: ' + RX_MET.fmtData(ult.data) + ' (' + ult.fonte + ')', crit: 'Critério: ' + C.DIAS_SEM_ATIVIDADE + ' dias ou mais sem atividade de estudo.', periodo: 'todo o histórico', valor: dSem });
     const revs = _revisoesDeProgresso(a.prog ? a.prog.sem : [], a.cronograma);
     const atr = revs.filter(r => r.status === 'atrasada');
     if (atr.length >= C.REV_ATRASADAS_MIN) {
       const maisAntiga = atr.slice().sort((x, y) => x.diasFalta - y.diasFalta)[0];
       const temasR = [...new Set(atr.map(r => r.temaNome))].slice(0, 3).join(', ');
-      m.push({ cod: 'revisoes_atrasadas', texto: atr.length + ' revisões atrasadas', evid: 'Mais antiga: ' + Math.abs(maisAntiga.diasFalta) + ' dias (' + temasR + '). Critério: ' + C.REV_ATRASADAS_MIN + ' ou mais.', periodo: 'plano de revisões', valor: atr.length });
+      m.push({ cod: 'revisoes_atrasadas', texto: atr.length + ' revisões atrasadas', evid: 'Mais antiga: ' + Math.abs(maisAntiga.diasFalta) + ' dias · ' + temasR, crit: 'Critério: ' + C.REV_ATRASADAS_MIN + ' ou mais revisões do plano com data vencida.', periodo: 'plano de revisões', valor: atr.length });
     }
     if (a.cad && a.cad.alta >= C.ERROS_ALTA_MIN) {
       const temasC = (a.cad.alta_temas || []).map(x => ((TEMAS.find(t => t.id === x.tema) || {}).nome || x.tema || 'sem tema') + ' (' + x.n + ')').slice(0, 3).join(', ');
-      m.push({ cod: 'erros_alta', texto: a.cad.alta + (a.cad.alta === 1 ? ' erro de alta prioridade ativo' : ' erros de alta prioridade ativos'), evid: 'Temas: ' + temasC + '. Registrados pelo próprio aluno no caderno.', periodo: 'caderno (ativos)', valor: a.cad.alta });
+      m.push({ cod: 'erros_alta', texto: a.cad.alta + (a.cad.alta === 1 ? ' erro de alta prioridade ativo' : ' erros de alta prioridade ativos'), evid: 'Temas: ' + temasC, crit: 'Registrados e classificados pelo próprio aluno no caderno de erros.', periodo: 'caderno (ativos)', valor: a.cad.alta });
     }
     const baixos = (a.temas || []).filter(t => t.n >= C.TEMA_MIN_RESP && RX_MET.pct(t.ac, t.n) <= C.TEMA_LIMITE_BAIXO).map(t => ({ tema: t.tema, nome: (TEMAS.find(x => x.id === t.tema) || {}).nome || t.tema, n: t.n, ac: t.ac, pct: RX_MET.pct(t.ac, t.n) })).sort((x, y) => x.pct - y.pct);
-    if (baixos.length) m.push({ cod: 'tema_baixo', texto: 'Acerto baixo em ' + baixos.slice(0, 2).map(b => b.nome + ' (' + b.ac + ' de ' + b.n + ' · ' + b.pct + '%)').join(' e ') + (baixos.length > 2 ? ' e mais ' + (baixos.length - 2) : ''), evid: 'Critério: ' + C.TEMA_MIN_RESP + ' ou mais respostas no tema com ' + C.TEMA_LIMITE_BAIXO + '% ou menos de acerto no período.', periodo: 'últimos ' + dias + ' dias', valor: baixos.length, temas: baixos });
+    if (baixos.length) m.push({ cod: 'tema_baixo', texto: 'Acerto baixo em ' + baixos.slice(0, 2).map(b => b.nome + ' (' + b.ac + ' de ' + b.n + ' · ' + b.pct + '%)').join(' e ') + (baixos.length > 2 ? ' e mais ' + (baixos.length - 2) : ''), evid: '', crit: 'Critério: ' + C.TEMA_MIN_RESP + ' ou mais respostas no tema com ' + C.TEMA_LIMITE_BAIXO + '% ou menos de acerto no período.', periodo: 'últimos ' + dias + ' dias', valor: baixos.length, temas: baixos });
     if (a.resp && a.resp.n_per >= C.QUEDA_MIN_RESP && a.resp.n_prev >= C.QUEDA_MIN_RESP) {
       const pPer = RX_MET.pct(a.resp.ac_per, a.resp.n_per), pPrev = RX_MET.pct(a.resp.ac_prev, a.resp.n_prev);
       if (pPrev - pPer >= C.QUEDA_PP) {
         const tPer = new Set((a.temas || []).filter(t => t.n > 0).map(t => t.tema)), tPrev = new Set((a.temas || []).filter(t => t.n_prev > 0).map(t => t.tema));
         let inter = 0; tPer.forEach(x => { if (tPrev.has(x)) inter++; }); const uni = new Set([...tPer, ...tPrev]).size;
         const comparavel = uni ? (inter / uni) >= 0.5 : false;
-        m.push({ cod: 'queda', texto: 'Acerto caiu de ' + pPrev + '% para ' + pPer + '%', evid: a.resp.n_prev + ' respostas nos ' + dias + ' dias anteriores e ' + a.resp.n_per + ' no período atual. ' + (comparavel ? 'Temas parecidos nos dois períodos.' : 'Os temas praticados mudaram entre os períodos: compare com cautela, não é prova de perda de aprendizagem.'), periodo: 'últimos ' + dias + ' dias vs ' + dias + ' anteriores', valor: pPrev - pPer, cautela: !comparavel });
+        m.push({ cod: 'queda', texto: 'Acerto caiu de ' + pPrev + '% para ' + pPer + '%', evid: a.resp.n_prev + ' respostas nos ' + dias + ' dias anteriores e ' + a.resp.n_per + ' no período atual' + (comparavel ? ' · temas parecidos nos dois períodos' : ' · os temas praticados mudaram: compare com cautela, não é prova de perda de aprendizagem'), crit: 'Critério: ' + C.QUEDA_MIN_RESP + ' ou mais respostas em cada período e queda de ' + C.QUEDA_PP + ' pontos ou mais.', periodo: 'últimos ' + dias + ' dias vs ' + dias + ' anteriores', valor: pPrev - pPer, cautela: !comparavel });
       }
     }
     const regs = a.acomp || []; const ultReg = regs[0] || null;
@@ -24954,7 +24978,7 @@ async function renderAcompanhamento() {
     + sel('ac-f-turma', 'Turma', [['', 'Todas as turmas']].concat(TURMAS.map(t => [t.id, t.nome])), f.turma, "state._acFiltros.turma=this.value;_acRenderTabela()")
     + sel('ac-f-dias', 'Período', [[7, '7 dias'], [30, '30 dias'], [90, '90 dias']], f.dias, "state._acFiltros.dias=Number(this.value);renderAcompanhamento()")
     + sel('ac-f-motivo', 'Motivo', [['', 'Todos os motivos']].concat(Object.entries(ACOMP_PROF.MOTIVOS)), f.motivo, "state._acFiltros.motivo=this.value;_acRenderTabela()")
-    + sel('ac-f-sit', 'Situação do acompanhamento', [['', 'Todas']].concat(Object.entries(ACOMP_PROF.SIT)), f.situacao, "state._acFiltros.situacao=this.value;_acRenderTabela()")
+    + sel('ac-f-sit', 'Acompanhamento', [['', 'Todas as situações']].concat(Object.entries(ACOMP_PROF.SIT)), f.situacao, "state._acFiltros.situacao=this.value;_acRenderTabela()")
     + sel('ac-f-ordem', 'Ordenar por', Object.entries(ACOMP_PROF.ORDENS), f.ordem, "state._acFiltros.ordem=this.value;_acRenderTabela()")
     + '<div><label class="rx-label" for="ac-f-busca">Aluno</label><input id="ac-f-busca" class="rx-input" type="search" placeholder="Nome do aluno" value="' + _escHtml(f.busca) + '" oninput="state._acFiltros.busca=this.value;clearTimeout(window._acT);window._acT=setTimeout(_acRenderTabela,180)"></div>'
     + '</div>'
@@ -24964,22 +24988,27 @@ async function renderAcompanhamento() {
     + '<div style="margin-top:8px">' + ACOMP_PROF.htmlCriterios(painel.dias) + '</div></div>';
   _acRenderTabela();
 }
+// Lista de indicações: chip do motivo · texto · evidência (e o critério, quando pedido).
+function _acHtmlMotivos(motivos, comCriterio) {
+  if (!motivos || !motivos.length) return '<span class="ac-sem-ind">Sem indicação no período</span>';
+  const cls = c => c === 'sem_atividade' ? 'pouca' : c === 'queda' ? 'atencao' : 'recorrente';
+  return '<ul class="ac-motivos">' + motivos.map(m => '<li><span class="ac-sinal ' + cls(m.cod) + '">' + ACOMP_PROF.MOTIVOS[m.cod] + '</span><div><div class="t">' + _escHtml(m.texto) + (m.cautela ? ' <span class="ac-sinal atencao">cautela</span>' : '') + '</div>'
+    + '<small>' + _escHtml([m.evid, m.periodo].filter(Boolean).join(' · ')) + (comCriterio && m.crit ? '<br>' + _escHtml(m.crit) : '') + '</small></div></li>').join('') + '</ul>';
+}
 function _acRenderTabela() {
   const cont = document.getElementById('ac-tabela'); if (!cont) return;
   const f = state._acFiltros; const lista = ACOMP_PROF.filtrar(state._acLinhas || []);
   if (!lista.length) { cont.innerHTML = '<div class="rx-empty"><b>Nenhum aluno com esses filtros</b>' + (f.mostrarTodos ? '' : 'Marque "Mostrar também alunos sem indicação" para ver todos.') + '</div>'; return; }
   const linha = x => {
-    const a = x.a, av = x.av; const turma = turmaPorId(a.turma);
-    const mot = av.motivos.length ? av.motivos.map(m => '<span class="ac-motivo"><span class="ac-sinal ' + (m.cod === 'sem_atividade' ? 'pouca' : m.cod === 'queda' ? 'atencao' : 'recorrente') + '">' + ACOMP_PROF.MOTIVOS[m.cod] + '</span>' + _escHtml(m.texto) + (m.cautela ? ' <span class="ac-sinal atencao">cautela</span>' : '') + '<small>' + _escHtml(m.evid) + ' · ' + _escHtml(m.periodo) + '</small></span>').join('') : '<span class="ac-motivo" style="color:var(--rx-muted)">Sem indicação no período</span>';
-    const ult = av.ultimaAtividade;
-    return '<tr><td><div class="ac-aluno-cel"><b>' + _escHtml(a.nome || '(sem nome)') + '</b><small>' + _escHtml(turma ? turma.nome : '—') + '</small></div></td>'
-      + '<td>' + mot + '</td>'
-      + '<td><div class="ac-aluno-cel"><b>' + (ult ? RX_MET.fmtData(ult.data) : '—') + '</b><small>' + (ult ? _escHtml(ult.fonte) : 'nenhuma atividade') + '</small><small>último acesso: ' + RX_MET.fmtData(a.ultimo_acesso) + '</small></div></td>'
-      + '<td><span class="ac-sit ' + av.situacao + '">' + ACOMP_PROF.SIT[av.situacao] + '</span>' + (av.ultReg && av.ultReg.data_retorno ? '<div style="font-size:11px;color:var(--rx-muted);margin-top:4px">retorno ' + RX_MET.fmtData(av.ultReg.data_retorno) + '</div>' : '') + '</td>'
-      + '<td><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="renderAlunoAcompanhamento(\'' + a.id + '\')">Detalhe</button><button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + a.id + '\')">Registrar</button></div></td></tr>';
+    const a = x.a, av = x.av; const turma = turmaPorId(a.turma); const ult = av.ultimaAtividade;
+    return '<tr><td class="ac-td-aluno"><div class="ac-aluno-cel"><b>' + _escHtml(a.nome || '(sem nome)') + '</b><small>' + _escHtml(turma ? turma.nome : '—') + '</small></div></td>'
+      + '<td class="ac-td-mot">' + _acHtmlMotivos(av.motivos, false) + '</td>'
+      + '<td class="ac-td-ult"><div class="ac-aluno-cel"><b>' + (ult ? RX_MET.fmtData(ult.data) : '—') + '</b><small>' + (ult ? _escHtml(ult.fonte) : 'nenhuma atividade') + '</small><small>acesso ao app: ' + RX_MET.fmtData(a.ultimo_acesso) + '</small></div></td>'
+      + '<td class="ac-td-sit"><span class="ac-sit ' + av.situacao + '">' + ACOMP_PROF.SIT[av.situacao] + '</span>' + (av.ultReg && av.ultReg.data_retorno ? '<small>retorno ' + RX_MET.fmtData(av.ultReg.data_retorno) + '</small>' : '') + '</td>'
+      + '<td class="ac-td-acoes"><button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="renderAlunoAcompanhamento(\'' + a.id + '\')">Detalhe</button><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + a.id + '\')">Registrar</button></td></tr>';
   };
   cont.innerHTML = '<div class="ac-ordem"><span>Ordenado por:</span><b>' + ACOMP_PROF.ORDENS[f.ordem || 'motivos_desc'] + '</b><span>· desempate por nome</span><span style="margin-left:auto">' + lista.length + (lista.length === 1 ? ' aluno' : ' alunos') + '</span></div>'
-    + '<div class="ac-tbl-wrap"><table class="ac-tbl" style="min-width:860px"><thead><tr><th>Aluno · turma</th><th>Motivo e evidência</th><th>Última atividade</th><th>Acompanhamento</th><th></th></tr></thead><tbody>' + lista.map(linha).join('') + '</tbody></table></div>';
+    + '<div class="ac-tbl-wrap"><table class="ac-tbl ac-tbl-painel"><colgroup><col class="c-aluno"><col class="c-mot"><col class="c-ult"><col class="c-sit"><col class="c-acoes"></colgroup><thead><tr><th>Aluno · turma</th><th>Motivo e evidência</th><th>Última atividade</th><th>Acompanhamento</th><th>Ações</th></tr></thead><tbody>' + lista.map(linha).join('') + '</tbody></table></div>';
 }
 
 // ---------- PROFESSOR: detalhe do aluno ----------
@@ -25020,7 +25049,7 @@ async function renderAlunoAcompanhamento(alunoId) {
     + '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="rx-btn rx-btn-primary" onclick="ACOMP_REG.abrirForm(\'' + alunoId + '\')">Novo registro</button><button type="button" class="rx-btn rx-btn-secondary" onclick="abrirEditarAluno(\'' + alunoId + '\')">Cadastro</button></div></div>'
     + (falhas.length ? '<div class="ac-aviso erro"><b>Fontes indisponíveis:</b> ' + _escHtml(falhas.join('; ')) + '. O que depende delas aparece como indisponível, não como ausência de estudo.</div>' : '')
     + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Indicações pelos dados</h2><p>Período de ' + dias + ' dias (' + ACOMP_CFG.FUSO + ').</p></div></div>'
-    + (av ? (av.motivos.length ? av.motivos.map(m => '<div class="rx-card" style="padding:12px 14px;margin-bottom:8px"><span class="ac-motivo"><span class="ac-sinal ' + (m.cod === 'sem_atividade' ? 'pouca' : m.cod === 'queda' ? 'atencao' : 'recorrente') + '">' + ACOMP_PROF.MOTIVOS[m.cod] + '</span>' + _escHtml(m.texto) + (m.cautela ? ' <span class="ac-sinal atencao">cautela</span>' : '') + '<small>' + _escHtml(m.evid) + ' · ' + _escHtml(m.periodo) + '</small></span><div style="margin-top:6px"><button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + alunoId + '\', null, {motivo:\'' + m.cod + '\', tema_id:\'' + ((m.temas && m.temas[0] && m.temas[0].tema) || '') + '\'})">Registrar acompanhamento a partir desta indicação</button></div></div>').join('') : '<div class="rx-empty"><b>Nenhuma indicação no período</b>Os critérios não foram atingidos com os dados atuais.</div>') : '<div class="ac-aviso">Agregados do painel indisponíveis; as indicações não puderam ser calculadas.</div>') + '</section>'
+    + (av ? (av.motivos.length ? av.motivos.map(m => '<div class="rx-card ac-ind-card">' + _acHtmlMotivos([m], true) + '<div class="ac-ind-acoes"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="ACOMP_REG.abrirForm(\'' + alunoId + '\', null, {motivo:\'' + m.cod + '\', tema_id:\'' + ((m.temas && m.temas[0] && m.temas[0].tema) || '') + '\'})">Registrar acompanhamento a partir desta indicação</button></div></div>').join('') : '<div class="rx-empty"><b>Nenhuma indicação no período</b>Os critérios não foram atingidos com os dados atuais.</div>') : '<div class="ac-aviso">Agregados do painel indisponíveis; as indicações não puderam ser calculadas.</div>') + '</section>'
     + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Acompanhamento registrado</h2><p>Observações internas: só perfis de professor enxergam. Histórico e autoria preservados a cada alteração.</p></div></div><div id="ac-regs">' + ACOMP_REG.htmlLista(regs || []) + '</div></section>'
     + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Indicadores</h2><p>Resultados da plataforma (respostas em questões). TRI e notas externas ficam separados abaixo.</p></div></div>' + _htmlPeriodos(state._acDetDias, '_acDetPeriodo') + _htmlIndicadores(ind, { removidas: removidas.length }) + '</section>'
     + '<section class="ac-sec"><div class="ac-sec-head"><div><h2>Evolução por tema</h2><p>Mesmos critérios da tela do aluno.</p></div></div>' + _htmlTabelaTemas(temas, { fnTema: '_acDetTema' }) + '<div style="margin-top:10px">' + _htmlCriteriosTema() + '</div></section>'
