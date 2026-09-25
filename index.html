@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1a36">
 <title>Radix — Curso de Matemática</title>
 <meta name="description" content="Curso de Matemática para o ENEM, preparando alunos do básico ao avançado desde 2010. Plataforma de aulas, simulados e banco de questões oficiais. Professor Hugo Gomes.">
 <meta name="theme-color" content="#0e1a36">
@@ -6006,6 +6007,241 @@
   }
 
 
+  /* =====================================================================
+     ETAPA 2 (usabilidade e identidade visual, 25/09/2026)
+     Tokens rx-* (apontam para a paleta radix-* já existente, nos dois temas),
+     componentes, casca de navegação do aluno, página inicial e banco.
+     ===================================================================== */
+  /* Declarados em body (não em :root): a paleta radix-* do tema claro vive em body.theme-light,
+     e um alias em :root resolveria sempre os valores do tema escuro. */
+  body {
+    --rx-bg: var(--radix-bg); --rx-surface: var(--radix-surface); --rx-surface-2: var(--radix-surface-2); --rx-surface-3: var(--radix-surface-3);
+    --rx-line: var(--radix-line); --rx-line-2: var(--radix-line-2);
+    --rx-text: var(--radix-text); --rx-text-2: var(--radix-text-2); --rx-muted: var(--radix-text-muted);
+    --rx-primary: var(--radix-blue); --rx-primary-dark: var(--radix-blue-dark); --rx-accent: var(--radix-cyan);
+    --rx-coral: var(--radix-coral); --rx-success: var(--radix-success); --rx-warning: var(--radix-warning); --rx-danger: var(--radix-red);
+    --rx-accent-soft: rgba(34,211,238,.12); --rx-primary-soft: rgba(59,130,246,.16);
+    --rx-r-sm: 8px; --rx-r: 12px; --rx-r-lg: 16px;
+    --rx-sp-1: 4px; --rx-sp-2: 8px; --rx-sp-3: 12px; --rx-sp-4: 16px; --rx-sp-5: 20px; --rx-sp-6: 24px; --rx-sp-8: 32px;
+    --rx-shadow: 0 10px 28px -18px rgba(0,0,0,.55); --rx-shadow-sm: 0 2px 8px -4px rgba(0,0,0,.4);
+    --rx-focus: 0 0 0 3px rgba(34,211,238,.45);
+    --rx-side-w: 236px; --rx-bottom-h: 62px;
+    --rx-fs-xs: 12px; --rx-fs-sm: 13px; --rx-fs: 14px; --rx-fs-md: 15px; --rx-fs-lg: 18px; --rx-fs-xl: 22px;
+  }
+  body.theme-light {
+    --rx-shadow: 0 10px 28px -18px rgba(15,23,42,.28); --rx-shadow-sm: 0 2px 8px -4px rgba(15,23,42,.16);
+    --rx-accent-soft: rgba(8,145,178,.12); --rx-primary-soft: rgba(37,99,235,.12);
+  }
+  :focus-visible { outline: 2px solid var(--rx-accent); outline-offset: 2px; }
+  .rx-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---- componentes ---- */
+  .rx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px; border-radius: 10px; border: 1px solid transparent;
+    font: 600 var(--rx-fs)/1.2 'Inter', system-ui, sans-serif; cursor: pointer; text-decoration: none; transition: filter .15s, background .15s, border-color .15s; white-space: nowrap; }
+  .rx-btn svg { width: 16px; height: 16px; flex: none; }
+  .rx-btn-primary { background: var(--rx-primary); color: #fff; box-shadow: 0 6px 16px -10px rgba(59,130,246,.7); }
+  .rx-btn-primary:hover { filter: brightness(1.08); }
+  .rx-btn-accent { background: var(--rx-accent); color: #0e1a36; }
+  .rx-btn-secondary { background: var(--rx-surface-2); color: var(--rx-text); border-color: var(--rx-line-2); }
+  .rx-btn-secondary:hover { background: var(--rx-surface-3); }
+  body.theme-light .rx-btn-secondary { background: #fff; }
+  body.theme-light .rx-btn-secondary:hover { background: var(--rx-surface-2); }
+  .rx-btn-ghost { background: transparent; color: var(--rx-text-2); border-color: transparent; }
+  .rx-btn-ghost:hover { background: var(--rx-surface-2); }
+  .rx-btn-danger { background: transparent; color: var(--rx-coral); border-color: rgba(255,122,92,.4); }
+  .rx-btn-sm { min-height: 34px; padding: 6px 12px; font-size: var(--rx-fs-sm); border-radius: 8px; }
+  .rx-btn[disabled] { opacity: .55; cursor: not-allowed; }
+  .rx-btn[aria-pressed="true"] { background: rgba(52,211,153,.14); color: var(--rx-success); border-color: rgba(52,211,153,.45); }
+  .rx-icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .rx-icon-btn:hover { color: var(--rx-text); background: var(--rx-surface-3); }
+  .rx-card { background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: var(--rx-r-lg); padding: var(--rx-sp-5); box-shadow: var(--rx-shadow-sm); }
+  .rx-card-link { display: block; cursor: pointer; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+  .rx-card-link:hover { border-color: rgba(34,211,238,.45); transform: translateY(-1px); }
+  .rx-kicker { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--rx-accent); margin-bottom: 6px; }
+  .rx-h1 { font-size: var(--rx-fs-xl); font-weight: 800; letter-spacing: -.3px; color: var(--rx-text); margin: 0; line-height: 1.2; }
+  .rx-h2 { font-size: var(--rx-fs-lg); font-weight: 800; letter-spacing: -.2px; color: var(--rx-text); margin: 0; line-height: 1.25; }
+  .rx-sub { font-size: var(--rx-fs-sm); color: var(--rx-muted); margin: 4px 0 0; line-height: 1.45; }
+  .rx-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--rx-accent); color: #0e1a36; }
+  .rx-badge.is-zero { background: var(--rx-surface-3); color: var(--rx-text-2); }
+  body.theme-light .rx-badge.is-zero { background: var(--rx-surface-3); }
+  .rx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 11px; border-radius: 999px; font-size: var(--rx-fs-xs); font-weight: 600; background: var(--rx-surface-2); border: 1px solid var(--rx-line-2); color: var(--rx-text-2); }
+  .rx-chip button { border: 0; background: transparent; color: var(--rx-muted); width: 20px; height: 20px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+  .rx-chip button:hover { background: rgba(255,122,92,.18); color: var(--rx-coral); }
+  .rx-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; background: var(--rx-surface-3); color: var(--rx-text-2); }
+  .rx-tag.facil { background: rgba(52,211,153,.14); color: #059669; } .rx-tag.media { background: rgba(251,191,36,.16); color: #b45309; } .rx-tag.dificil { background: rgba(248,113,113,.16); color: #dc2626; }
+  body:not(.theme-light) .rx-tag.facil { color: #34d399; } body:not(.theme-light) .rx-tag.media { color: #fbbf24; } body:not(.theme-light) .rx-tag.dificil { color: #f87171; }
+  .rx-tag.st-acertei { background: rgba(52,211,153,.14); color: var(--rx-success); } .rx-tag.st-errei { background: rgba(248,113,113,.16); color: var(--rx-danger); } .rx-tag.st-nao { color: var(--rx-muted); }
+  .rx-label { display: block; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--rx-muted); margin-bottom: 6px; }
+  .rx-select, .rx-input { width: 100%; min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text); font: 500 var(--rx-fs) 'Inter', system-ui, sans-serif; }
+  body.theme-light .rx-select, body.theme-light .rx-input { background: #fff; }
+  .rx-select:focus, .rx-input:focus { outline: none; border-color: var(--rx-accent); box-shadow: var(--rx-focus); }
+  .rx-empty { text-align: center; padding: 28px 18px; border: 1px dashed var(--rx-line-2); border-radius: var(--rx-r); color: var(--rx-muted); font-size: var(--rx-fs-sm); background: var(--rx-surface); }
+  .rx-empty b { color: var(--rx-text); display: block; margin-bottom: 4px; font-size: var(--rx-fs); }
+  .rx-progress { height: 6px; border-radius: 999px; background: var(--rx-surface-3); overflow: hidden; }
+  .rx-progress i { display: block; height: 100%; background: var(--rx-accent); border-radius: 999px; }
+  .rx-subnav { display: flex; gap: 6px; margin: 0 0 14px; padding: 4px; background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: 12px; width: max-content; max-width: 100%; overflow-x: auto; }
+  .rx-subnav a { padding: 8px 14px; border-radius: 9px; font-size: var(--rx-fs-sm); font-weight: 700; color: var(--rx-text-2); text-decoration: none; cursor: pointer; white-space: nowrap; min-height: 36px; display: inline-flex; align-items: center; }
+  .rx-subnav a[aria-current="page"] { background: var(--rx-accent-soft); color: var(--rx-accent); }
+
+  /* ---- casca do aluno: menu lateral (desktop) e barra inferior (celular) ---- */
+  body.rx-aluno header { padding: 10px 20px !important; }
+  body.rx-aluno .rx-shell { display: flex; align-items: flex-start; }
+  .rx-side { display: none; }
+  body.rx-aluno .rx-side { width: var(--rx-side-w); flex: none; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 16px 12px; background: var(--rx-surface); border-right: 1px solid var(--rx-line); display: flex; flex-direction: column; gap: 4px; }
+  .rx-side-sec { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--rx-muted); padding: 14px 12px 6px; }
+  .rx-nav-item { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 8px 12px; border-radius: 10px; color: var(--rx-text-2); font-weight: 600; font-size: var(--rx-fs); text-decoration: none; cursor: pointer; position: relative; border: 1px solid transparent; }
+  .rx-nav-item svg { width: 18px; height: 18px; flex: none; opacity: .9; }
+  .rx-nav-item:hover { background: var(--rx-surface-2); color: var(--rx-text); }
+  .rx-nav-item[aria-current="page"] { background: var(--rx-accent-soft); color: var(--rx-accent); }
+  .rx-nav-item[aria-current="page"]::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--rx-accent); }
+  .rx-nav-item .rx-badge { margin-left: auto; }
+  .rx-nav-item.rx-nav-rf { border-color: rgba(212,175,55,.45); color: #d4af37; }
+  .rx-nav-item.rx-nav-rf[aria-current="page"] { background: rgba(212,175,55,.14); }
+  .rx-side-rodape { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--rx-line); display: flex; flex-direction: column; gap: 2px; }
+  body.rx-aluno .container { flex: 1; min-width: 0; max-width: 1180px; }
+  .rx-bottom { display: none; }
+  .rx-drawer-wrap { position: fixed; inset: 0; z-index: 9995; display: flex; justify-content: flex-end; }   /* acima do chip de sincronização */
+  body.rx-aluno #radix-sync { left: calc(var(--rx-side-w) + 14px); }   /* não cobre o rodapé do menu lateral */
+  .rx-drawer-fundo { position: absolute; inset: 0; background: rgba(8,14,30,.6); backdrop-filter: blur(2px); }
+  .rx-drawer { position: relative; width: min(420px, 100%); height: 100%; background: var(--rx-surface); border-left: 1px solid var(--rx-line); box-shadow: var(--rx-shadow); display: flex; flex-direction: column; animation: rxSlideIn .18s ease-out; }
+  .rx-drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--rx-line); }
+  .rx-drawer-head h2 { font-size: var(--rx-fs-md); font-weight: 800; margin: 0; color: var(--rx-text); }
+  .rx-drawer-body { flex: 1; overflow-y: auto; padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); }
+  @keyframes rxSlideIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes rxSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  body.rx-drawer-open { overflow: hidden; }
+  .rx-mais-lista { display: flex; flex-direction: column; gap: 4px; }
+  .rx-mais-lista .rx-nav-item { min-height: 48px; }
+
+  @media (max-width: 900px) {
+    body.rx-aluno .rx-side { display: none; }
+    body.rx-aluno .rx-bottom { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 9500; height: calc(var(--rx-bottom-h) + env(safe-area-inset-bottom)); padding: 0 4px env(safe-area-inset-bottom); background: var(--rx-surface); border-top: 1px solid var(--rx-line); box-shadow: 0 -8px 24px -18px rgba(0,0,0,.6); }
+    .rx-bottom a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 48px; font-size: 11px; font-weight: 600; color: var(--rx-muted); text-decoration: none; cursor: pointer; border-radius: 10px; position: relative; }
+    .rx-bottom a svg { width: 21px; height: 21px; }
+    .rx-bottom a[aria-current="page"] { color: var(--rx-accent); }
+    .rx-bottom a .rx-badge { position: absolute; top: 4px; right: calc(50% - 22px); height: 16px; min-width: 16px; font-size: 10px; padding: 0 4px; }
+    body.rx-aluno .container { padding-bottom: calc(var(--rx-bottom-h) + env(safe-area-inset-bottom) + 24px) !important; }
+    body.rx-aluno.rx-kb-open .rx-bottom { display: none; }
+    body.rx-aluno.rx-kb-open .container { padding-bottom: 24px !important; }
+    body.rx-aluno #radix-sync { bottom: calc(var(--rx-bottom-h) + env(safe-area-inset-bottom) + 10px); left: 10px; max-width: calc(100vw - 20px); }
+    body.rx-aluno.rx-kb-open #radix-sync { bottom: 10px; }
+    body.rx-aluno .estudo-barra { bottom: calc(var(--rx-bottom-h) + env(safe-area-inset-bottom)) !important; }
+    body.rx-aluno header .btn-logout, body.rx-aluno header .theme-toggle { display: none; }
+    .rx-drawer-wrap { align-items: flex-end; justify-content: stretch; }
+    .rx-drawer { width: 100%; height: auto; max-height: 86vh; border-left: 0; border-top: 1px solid var(--rx-line); border-radius: 18px 18px 0 0; animation: rxSlideUp .18s ease-out; }
+    .rx-drawer-head { padding: 12px 16px; }
+    .rx-btn { min-height: 44px; }
+    .rx-btn-sm { min-height: 40px; }
+  }
+  .estudo-barra { position: sticky; bottom: 0; background: var(--rx-surface); padding: 12px 14px; border-top: 1px solid var(--rx-line); display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; box-shadow: 0 -8px 20px -16px rgba(0,0,0,.5); border-radius: 12px 12px 0 0; z-index: 5; }
+
+  /* ---- página inicial do aluno ---- */
+  .rx-home { display: flex; flex-direction: column; gap: 16px; }
+  .rx-greet { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 4px 2px 0; }
+  .rx-greet .rx-h1 { font-size: 24px; }
+  .rx-next { position: relative; overflow: hidden; background: linear-gradient(135deg, rgba(34,211,238,.16), rgba(59,130,246,.18) 60%, transparent), var(--rx-surface); border: 1px solid rgba(34,211,238,.35); border-radius: var(--rx-r-lg); padding: 22px; box-shadow: var(--rx-shadow); }
+  .rx-next::after { content: ''; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(34,211,238,.18), transparent 70%); pointer-events: none; }
+  .rx-next .rx-h2 { font-size: 21px; margin-bottom: 4px; }
+  .rx-next p { color: var(--rx-text-2); font-size: var(--rx-fs); margin: 0 0 12px; max-width: 60ch; }
+  .rx-next-acoes { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+  .rx-next .rx-progress { max-width: 360px; margin: 10px 0 12px; }
+  .rx-next-meta { font-size: var(--rx-fs-xs); color: var(--rx-muted); margin-top: -6px; margin-bottom: 8px; }
+  .rx-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .rx-two .rx-card { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; }
+  .rx-ico { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: var(--rx-primary-soft); color: var(--rx-primary); }
+  .rx-ico svg { width: 20px; height: 20px; }
+  .rx-ico.alerta { background: rgba(255,122,92,.16); color: var(--rx-coral); }
+  .rx-ico.ok { background: rgba(52,211,153,.14); color: var(--rx-success); }
+  .rx-ico.roxo { background: rgba(168,85,247,.16); color: #a855f7; }
+  .rx-two h3 { margin: 0 0 3px; font-size: var(--rx-fs-md); font-weight: 800; color: var(--rx-text); }
+  .rx-two p { margin: 0; font-size: var(--rx-fs-sm); color: var(--rx-muted); line-height: 1.45; }
+  .rx-two .rx-seta { margin-left: auto; color: var(--rx-muted); align-self: center; }
+  .rx-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .rx-kpi { background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: var(--rx-r); padding: 14px 16px; }
+  .rx-kpi .l { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--rx-muted); }
+  .rx-kpi .v { font-size: 26px; font-weight: 800; color: var(--rx-text); line-height: 1.15; margin: 4px 0 2px; }
+  .rx-kpi .v small { font-size: 14px; color: var(--rx-muted); font-weight: 700; }
+  .rx-kpi .s { font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .rx-kpis-rodape { display: flex; justify-content: flex-end; }
+  .rx-kpis-rodape a { font-size: var(--rx-fs-sm); color: var(--rx-accent); font-weight: 700; cursor: pointer; text-decoration: none; }
+  .rx-week .rx-week-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .rx-week .mrow { background: var(--rx-surface-2); }
+  .rx-week-lista { display: flex; flex-direction: column; gap: 6px; }
+  .rx-reports summary { cursor: pointer; font-weight: 800; color: var(--rx-text); font-size: var(--rx-fs-md); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  .rx-reports summary::-webkit-details-marker { display: none; }
+  .rx-reports summary::after { content: '+'; font-size: 20px; color: var(--rx-muted); }
+  .rx-reports[open] summary::after { content: '–'; }
+  .rx-reports .dash-charts-grid { margin-top: 14px; }
+  @media (max-width: 720px) {
+    .rx-two { grid-template-columns: 1fr; }
+    .rx-kpis { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .rx-kpi { padding: 12px 10px; } .rx-kpi .v { font-size: 20px; }
+    .rx-next { padding: 18px 16px; }
+    .rx-greet .rx-h1 { font-size: 21px; }
+  }
+  @media (max-width: 360px) { .rx-kpis { grid-template-columns: 1fr 1fr; } }
+
+  /* ---- banco de questões ---- */
+  .qbk2-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .qbk2-head-acoes { display: flex; gap: 8px; align-items: center; }
+  .qbk2-btn-filtros { display: none; }
+  .qbk2-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .qbk2-filtros { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: var(--rx-r); padding: 14px; }
+  .qbk2-f-grupo { margin-bottom: 14px; }
+  .qbk2-f-grupo:last-child { margin-bottom: 0; }
+  .qbk2-f-linha { display: flex; gap: 6px; align-items: center; }
+  .qbk2-f-linha .rx-select { flex: 1; min-width: 0; }
+  .qbk2-f .qbk-seg { display: flex; flex-wrap: wrap; }
+  .qbk2-f .qbk-seg button { flex: 1 1 auto; justify-content: center; min-height: 34px; }
+  .qbk2-f .qbk-seg button[aria-pressed="true"]::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 2px; }
+  .qbk2-limpar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .qbk2-limpar span { font-size: var(--rx-fs-sm); font-weight: 700; color: var(--rx-text); }
+  .qbk2-main { min-width: 0; }
+  .qbk2-info { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; padding: 0 2px; font-size: var(--rx-fs-sm); color: var(--rx-muted); }
+  .qbk2-ativos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+  .qbk2-ativos .l { font-size: var(--rx-fs-xs); font-weight: 700; color: var(--rx-muted); }
+  .qbk2-ativos .rx-btn { margin-left: auto; }
+  .qbk-card { background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: var(--rx-r-lg); padding: 16px 18px; margin-bottom: 10px; box-shadow: var(--rx-shadow-sm); }
+  .qbk-card:hover { transform: none; border-color: var(--rx-line-2); box-shadow: var(--rx-shadow-sm); }
+  .qbk-card.is-aberta { border-color: rgba(34,211,238,.45); }
+  .qbk-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .qbk-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .qbk-card-meta .qbk-id { font-weight: 800; color: var(--rx-text); font-size: var(--rx-fs-sm); }
+  .qbk-card-meta .qbk-tema { color: var(--rx-text-2); font-weight: 600; }
+  .qbk-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .qbk-card-preview { color: var(--rx-text-2); font-size: var(--rx-fs); line-height: 1.55; margin: 2px 0 12px; cursor: pointer; }
+  .qbk-card-acoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 0; }
+  .qbk-card-acoes .qbk-ver-mais { margin-left: auto; }
+  .qbk-card-expanded { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rx-line); }
+  .qbk-card-expanded .questao-enunciado, .questao-enunciado { overflow-wrap: anywhere; }
+  .questao-enunciado .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+  .questao-enunciado table { display: block; max-width: 100%; overflow-x: auto; }
+  .questao-enunciado img, .questao-img, .alt-img-content { max-width: 100%; height: auto; }
+  .alternativa[tabindex] { cursor: pointer; }
+  .alternativa:focus-visible { outline: 2px solid var(--rx-accent); outline-offset: 2px; }
+  .alternativa.selecionada, .alternativa.correta, .alternativa.errada { position: relative; }
+  .alternativa.selecionada::after, .alternativa.correta::after, .alternativa.errada::after { margin-left: auto; align-self: center; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.14); flex: none; }
+  .alternativa.selecionada::after { content: 'marcada'; }
+  .alternativa.correta::after { content: 'correta'; }
+  .alternativa.errada::after { content: 'sua resposta'; }
+  .qbk2-fab { display: none; }
+  @media (max-width: 900px) {
+    .qbk2-grid { grid-template-columns: 1fr; }
+    .qbk2-filtros { display: none; }
+    .qbk2-btn-filtros { display: inline-flex; }
+    .qbk2-head .rx-h1 { font-size: 20px; }
+    .qbk2-btn-lista { display: none; }
+    .qbk2-fab { display: inline-flex; position: fixed; right: 12px; bottom: calc(var(--rx-bottom-h) + env(safe-area-inset-bottom) + 12px); z-index: 9400; box-shadow: var(--rx-shadow); }
+    body.rx-kb-open .qbk2-fab { bottom: 12px; }
+    body.rx-drawer-open .qbk2-fab { display: none; }
+    .qbk-card { padding: 14px; border-radius: 14px; }
+    .qbk-card-acoes .rx-btn { flex: 1 1 auto; }
+    .qbk-card-acoes .qbk-ver-mais { margin-left: 0; flex-basis: 100%; }
+  }
+  /* cesta (drawer) */
+  .qbk-cesta-acoes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .qbk-cesta-acoes .rx-btn { width: 100%; }
+
   /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
   #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
   #radix-sync.on{display:flex}
@@ -6139,6 +6375,7 @@
 </style>
 </head>
 <body>
+<script>try { if (localStorage.getItem('radix-theme') === 'light') { document.body.classList.add('theme-light'); var _m = document.querySelector('meta[name="theme-color"]'); if (_m) _m.setAttribute('content', '#f1f5fb'); } } catch (e) {}</script>
 
 <!-- LOGIN -->
 <div id="view-login" class="login-wrap mk-login-wrap">
@@ -6315,15 +6552,6 @@
 
 <script>
 // ========== TEMA CLARO/ESCURO ==========
-function applyTheme(theme) {
-  if (theme === 'light') {
-    document.body.classList.add('theme-light');
-  } else {
-    document.body.classList.remove('theme-light');
-  }
-  // A Revisão Final roda numa moldura própria: o tema tem que chegar nela também.
-  try { RF_EMBED.mandarTema(); } catch (e) {}
-}
 function toggleTheme() {
   const current = document.body.classList.contains('theme-light') ? 'light' : 'dark';
   const next = current === 'light' ? 'dark' : 'light';
@@ -8134,6 +8362,7 @@ function mostrarTelaBloqueado(perfil) {
 async function logout() {
   await _cacheBancoLimpar();
   try { CONFIAB.aoSair(); } catch (e) {}
+  try { NAV.desmontar(); } catch (e) {}
   await sb.auth.signOut();
   state.usuario = null;
   document.getElementById('view-app').classList.add('hidden');
@@ -9076,6 +9305,7 @@ function mostrarApp() {
   const vs = document.getElementById('view-status');
   if (vs) vs.classList.add('hidden');
   atualizarHeaderAvatar();
+  try { if (state.usuario && state.usuario.perfil === 'aluno') NAV.montar(); else NAV.desmontar(); } catch (e) { console.warn('[nav]', e); }
   renderHome();
   setTimeout(() => { atualizarBadgePendentes(); atualizarBadgeLista(); }, 200);
 }
@@ -9183,7 +9413,11 @@ function renderRevisaoFinal() {
 function _abrirDestinoInicial() {
   const d = state._destinoInicial;
   state._destinoInicial = null;
-  if (!d) { try { if (state.usuario && state.usuario.perfil !== 'professor') TENTATIVAS.oferecerRetomadaAoAbrir(); } catch (e) {} return; }
+  if (!d) {
+    try { if (state.usuario && state.usuario.perfil !== 'professor') ROTA.abrirDaUrl(); } catch (e) {}
+    try { if (state.usuario && state.usuario.perfil !== 'professor') TENTATIVAS.oferecerRetomadaAoAbrir(); } catch (e) {}
+    return;
+  }
   try {
     if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
     if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel); return; }
@@ -9558,228 +9792,6 @@ function getSemanaAtual() {
   return atual;
 }
 
-function renderDashboardAluno() {
-  state.view = 'home';
-  const main = document.getElementById('main-content');
-
-  const respostas = state.respostasAluno || [];
-  const totalRespostas = respostas.length;
-  const acertos = respostas.filter(r => r.correto).length;
-  const taxaAcerto = totalRespostas ? Math.round((acertos / totalRespostas) * 100) : 0;
-
-  const merged = getCronogramaMerged();
-  const semanasValidas = merged.filter(s => s.tipo !== 'recesso' && !s.cancelada);
-  const concluidas = semanasValidas.filter(s => statusDaSemana(s.n) === 'concluido').length;
-  const pctCronograma = semanasValidas.length ? Math.round((concluidas / semanasValidas.length) * 100) : 0;
-
-  const ultimoSim = state.historicoSimulados[0];
-
-  const hoje = new Date();
-  const respostasRecentes = respostas.filter(r => {
-    const d = new Date(r.data);
-    return (Date.now() - d.getTime()) < 7 * 24 * 60 * 60 * 1000;
-  });
-
-  const hora = hoje.getHours();
-  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  const nomeCurto = state.usuario.nome.split(' ')[0];
-
-  // Próximas aulas: atual + 1 próxima + 2 concluídas mais recentes
-  const semAtual = getSemanaAtual();
-  const idxAtualSem = semAtual ? semanasValidas.findIndex(s => s.n === semAtual.n) : -1;
-  const proxAulas = [];
-  if (semAtual) proxAulas.push({ ...semAtual, _vstatus: 'now' });
-  if (idxAtualSem >= 0) {
-    for (let i = idxAtualSem + 1; i < semanasValidas.length && proxAulas.length < 2; i++) {
-      proxAulas.push({ ...semanasValidas[i], _vstatus: 'todo' });
-    }
-    for (let i = idxAtualSem - 1; i >= 0 && proxAulas.length < 4; i--) {
-      if (statusDaSemana(semanasValidas[i].n) === 'concluido') {
-        proxAulas.push({ ...semanasValidas[i], _vstatus: 'done' });
-      }
-    }
-  } else {
-    for (let i = 0; i < semanasValidas.length && proxAulas.length < 4; i++) {
-      proxAulas.push({ ...semanasValidas[i], _vstatus: 'todo' });
-    }
-  }
-
-  const temaSemAtual = semAtual?.temaId ? TEMAS.find(t => t.id === semAtual.temaId) : null;
-  const diasSemBR = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  const mesesBR = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  const heroDate = `${diasSemBR[hoje.getDay()]} · ${hoje.getDate()} de ${mesesBR[hoje.getMonth()]}`;
-
-  main.innerHTML = `${_bannerDegustacao()}
-    <!-- HERO -->
-    <div class="dash-hero">
-      <div style="position:relative;z-index:1;width:100%;">
-        <div class="v3-hero-date">${heroDate.toUpperCase()}</div>
-        <h2 class="v3-hero-title">${saudacao}, ${nomeCurto}.</h2>
-        ${semAtual ? `
-          <div class="v3-hero-sub">Você está na <b>semana ${semAtual.n}</b> do cronograma${temaSemAtual ? ' — ' + temaSemAtual.nome : (semAtual.titulo ? ' — ' + semAtual.titulo : '')}.</div>
-        ` : ''}
-        <div class="v3-hero-actions">
-          ${_htmlBotaoContinuar(temaSemAtual)}
-          <button class="v3-btn v3-btn-ghost" onclick="renderCronograma()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Ver cronograma</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alerta de revisões pendentes (curva de Ebbinghaus) -->
-    ${_renderAlertaRevisoes()}
-
-    <!-- Alerta de caderno de erros (alta prioridade) -->
-    ${_renderAlertaCaderno()}
-
-    <!-- Stats principais -->
-    <div class="dash-stats-grid">
-      <div class="dash-stat dash-stat-v3 v3-cyan">
-        <div class="v3-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
-        <div class="dash-stat-label">Cronograma</div>
-        <div class="dash-stat-value">${pctCronograma}<small>%</small></div>
-        <div class="dash-stat-sub">${concluidas} / ${semanasValidas.length} semanas concluídas</div>
-        <div class="v3-bar"><i style="width:${pctCronograma}%"></i></div>
-      </div>
-      <div class="dash-stat dash-stat-v3 v3-success">
-        <div class="v3-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-        <div class="dash-stat-label">Taxa de acerto</div>
-        <div class="dash-stat-value">${taxaAcerto}<small>%</small></div>
-        <div class="dash-stat-sub">${acertos} acertos em ${totalRespostas} respostas</div>
-        <div class="v3-bar"><i style="width:${taxaAcerto}%"></i></div>
-      </div>
-      <div class="dash-stat dash-stat-v3 v3-warning">
-        <div class="v3-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-        <div class="dash-stat-label">Esta semana</div>
-        <div class="dash-stat-value">${respostasRecentes.length}</div>
-        <div class="dash-stat-sub">questões respondidas (7 dias)</div>
-        <div class="v3-bar"><i style="width:${Math.min(100, respostasRecentes.length * 4)}%"></i></div>
-      </div>
-      <div class="dash-stat dash-stat-v3 v3-coral">
-        <div class="v3-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg></div>
-        <div class="dash-stat-label">Último simulado</div>
-        <div class="dash-stat-value">${ultimoSim ? ultimoSim.percentual + '<small>%</small>' : '—'}</div>
-        <div class="dash-stat-sub">${ultimoSim ? ultimoSim.acertos + '/' + ultimoSim.total + ' acertos' : 'Nenhum ainda'}</div>
-        <div class="v3-bar"><i style="width:${ultimoSim ? ultimoSim.percentual : 0}%"></i></div>
-      </div>
-    </div>
-
-    <!-- 2 colunas: Suas próximas aulas + Atalhos -->
-    <div class="dash-grid">
-      <div class="dash-card">
-        <div class="v3-card-head">
-          <h3>Suas próximas aulas</h3>
-          <a onclick="renderCronograma()">Ver cronograma completo →</a>
-        </div>
-        ${proxAulas.length === 0 ? `
-          <div class="dash-empty"><p>Nenhuma aula configurada ainda.</p></div>
-        ` : proxAulas.map(s => {
-          const tema = s.temaId ? TEMAS.find(t => t.id === s.temaId) : null;
-          // Pro aluno integral, mapeia via tema (não por semana_numero literal)
-          const visi = (materiaisCache || []).filter(m => m.visivel);
-          const mats = (typeof _materiaisDaSemanaPraAluno === 'function')
-            ? _materiaisDaSemanaPraAluno(s, visi)
-            : visi.filter(m => m.semana_numero === s.n);
-          const matsCount = mats.length;
-          // Clicar numa aula → vai pro Cronograma com a semana destacada/scroll
-          const clickAction = `renderCronograma(${s.n})`;
-          return `
-            <div class="v3-week-row v3-week-${s._vstatus}" onclick="${clickAction}">
-              <div class="v3-week-num">${String(s.n).padStart(2,'0')}</div>
-              <div class="v3-week-body">
-                <div class="v3-week-title">${_escHtml(s.titulo)}</div>
-                <div class="v3-week-meta">${tema ? tema.nome : 'Sem tema'}${matsCount > 0 ? ' · ' + matsCount + ' material' + (matsCount > 1 ? 'is' : '') : ''}</div>
-              </div>
-              <span class="v3-week-pill v3-week-pill-${s._vstatus}">${s._vstatus === 'now' ? 'Agora' : s._vstatus === 'todo' ? 'A seguir' : 'Concluída'}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
-
-      <div class="dash-card">
-        <div class="v3-card-head"><h3>Atalhos</h3></div>
-        <div class="dash-atalhos">
-          <div class="dash-atalho" onclick="renderVideoAulas()">
-            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></div>
-            <span>Vídeo-aulas</span>
-            <small>Aulas e materiais</small>
-          </div>
-          <div class="dash-atalho rf-ouro" onclick="renderRevisaoFinal()">
-            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
-            <span>Revisão Final</span>
-            <small>${state.degustacao ? 'Amostra: Semana 1 do plano das 7 semanas' : 'Seu plano das 7 semanas até o ENEM'}</small>
-          </div>
-          <div class="dash-atalho" onclick="renderSimulados()">
-            <div class="dash-atalho-icon icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-            <span>Simulados</span>
-            <small>${(() => {
-              const nExt = (state.simuladosExternos || []).length;
-              const nPlat = (state.historicoSimulados || []).filter(h => h.aluno === state.usuario.nome).length;
-              const tot = nExt + nPlat;
-              return tot > 0 ? `Fazer · ${tot} registrado${tot === 1 ? '' : 's'}` : 'Fazer e registrar notas';
-            })()}</small>
-          </div>
-          <div class="dash-atalho" onclick="abrirTema('')">
-            <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-            <span>Banco de questões</span>
-            <small>${(state.questoes || []).length} ${(state.questoes || []).length === 1 ? 'questão disponível' : 'questões disponíveis'}</small>
-          </div>
-          <div class="dash-atalho" onclick="renderEstatisticasAvancadas()">
-            <div class="dash-atalho-icon icon-success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
-            <span>Estatísticas</span>
-            <small>Desempenho por tema</small>
-          </div>
-          <div class="dash-atalho" onclick="renderMontarLista()" style="position:relative;">
-            <div class="dash-atalho-icon icon-coral"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17l-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <span>Minhas listas</span>
-            <small>Listas salvas + em construção</small>
-            <span id="badge-lista" class="badge-pendentes hidden" style="top:6px;right:6px;background:var(--radix-coral);"></span>
-          </div>
-          <div class="dash-atalho" onclick="renderMinhasRevisoes()">
-            <div class="dash-atalho-icon icon-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg></div>
-            <span>Minhas revisões</span>
-            <small>Plano de Ebbinghaus</small>
-          </div>
-          <div class="dash-atalho" onclick="renderCadernoErros()" style="position:relative;">
-            <div class="dash-atalho-icon" style="background:rgba(168,85,247,.14);color:#7e22ce;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
-            <span>Caderno de erros</span>
-            <small>Anote e revise</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráficos do dashboard: evolução de simulados + progresso por módulo -->
-    <div class="dash-charts-grid">
-      <div class="dash-card">
-        <h3>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
-          Evolução dos simulados
-        </h3>
-        <div class="chart-wrap"><canvas id="chart-sim-evolucao"></canvas></div>
-        <div id="chart-sim-empty" class="chart-empty" style="display:none;">
-          Nenhum simulado realizado ainda.<br>
-          <small style="opacity:0.7;">Faça um simulado pra ver sua evolução aparecer aqui.</small>
-        </div>
-      </div>
-      <div class="dash-card">
-        <h3>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-          Acertos por módulo
-        </h3>
-        <div class="chart-wrap"><canvas id="chart-modulo"></canvas></div>
-        <div id="chart-mod-empty" class="chart-empty" style="display:none;">
-          Responda algumas questões pra ver seus acertos por módulo.
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Renderiza os gráficos depois do DOM commit
-  setTimeout(() => {
-    renderChartSimulados();
-    renderChartProgressoModulo();
-  }, 0);
-}
 
 // ====== Gráficos do dashboard do aluno (Chart.js) ======
 
@@ -10216,13 +10228,6 @@ function toggleQuestaoLista(qid) {
   }
 }
 
-function atualizarBadgeLista() {
-  const el = document.getElementById('badge-lista');
-  if (!el) return;
-  const n = state.questoesSelecionadas.length;
-  if (n > 0) { el.textContent = n; el.classList.remove('hidden'); }
-  else el.classList.add('hidden');
-}
 
 function renderMontarLista() {
   state.view = 'montar-lista';
@@ -10238,7 +10243,7 @@ function renderMontarLista() {
 
   // ----- Seção 1: cards das listas salvas -----
   const cardsListasHtml = listas.length === 0
-    ? `<div style="text-align:center;padding:32px;background:white;border-radius:14px;border:1px dashed var(--radix-border);color:var(--radix-gray-light);">
+    ? `<div style="text-align:center;padding:32px;background:var(--radix-surface);border-radius:14px;border:1px dashed var(--radix-border);color:var(--radix-gray-light);">
          <div style="font-size:40px;margin-bottom:6px;">📚</div>
          <p style="margin:0;font-size:14px;">Você ainda não tem listas salvas.<br>
            <span style="font-size:12px;">Monte uma seleção abaixo e clique em <strong>"Baixar PDF"</strong> — a lista vira um arquivo aqui automaticamente.</span>
@@ -10253,7 +10258,7 @@ function renderMontarLista() {
           const nomeEsc = String(l.nome || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
           return `
             <div class="lista-card" onclick="abrirListaSalva(${l.id})"
-                 style="background:white;border:1px solid var(--radix-border);border-radius:14px;padding:16px;cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column;gap:8px;"
+                 style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:14px;padding:16px;cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column;gap:8px;"
                  onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)';"
                  onmouseout="this.style.transform='';this.style.boxShadow='';">
               <div style="display:flex;align-items:center;gap:10px;">
@@ -10421,7 +10426,7 @@ function renderListaSalva(lista) {
     </div>
 
     ${qs.length === 0 ? `
-      <div style="text-align:center;padding:32px;background:white;border-radius:14px;border:1px solid var(--radix-border);color:var(--radix-gray-light);">
+      <div style="text-align:center;padding:32px;background:var(--radix-surface);border-radius:14px;border:1px solid var(--radix-border);color:var(--radix-gray-light);">
         Nenhuma das questões dessa lista está mais disponível no banco.
       </div>
     ` : MODULOS.map(mod => {
@@ -10960,7 +10965,7 @@ function renderEstudoDigital() {
     }
 
     return `
-      <div class="estudo-q-card" id="estudo-q-${q.id}" style="background:white;border:1px solid var(--radix-border);border-radius:14px;padding:20px;margin-bottom:16px;">
+      <div class="estudo-q-card" id="estudo-q-${q.id}" style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:14px;padding:20px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--radix-line);">
           <div style="background:${corBgSuave};color:${corAcento};font-weight:800;padding:6px 12px;border-radius:8px;font-size:13px;">
             Q${String(idx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}
@@ -11002,7 +11007,7 @@ function renderEstudoDigital() {
       ${questoesHtml}
     </div>
 
-    <div style="position:sticky;bottom:0;background:white;padding:14px;border-top:1px solid var(--radix-line);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;box-shadow:0 -4px 12px rgba(0,0,0,0.04);border-radius:12px 12px 0 0;">
+    <div class="estudo-barra">
       <button class="btn btn-secondary" onclick="_sairEstudoDigital()">← Sair</button>
       <button id="estudo-btn-encerrar" class="btn" ${podeEncerrar ? `style="background:${corAcento};"` : 'disabled style="opacity:.55;cursor:not-allowed;"'}
               onclick="${podeEncerrar ? '_finalizarEstudoDigital()' : `alert('Responda todas as ${total} questões antes de ver o resultado.')`}">
@@ -11721,6 +11726,7 @@ function abrirTema(temaId) {
   state._modAtual = null;
   state._temaSubAtual = '';
 
+  state._qbkIrTopo = true;   // (Etapa 2) filtros re-renderizam sem pular para o topo
   renderTelaQuestoes();
 }
 
@@ -11893,187 +11899,6 @@ function _questoesComFiltros(pularArg) {
   return qs;
 }
 
-// Renderiza a tela inteira de questões (separado de abrirTema pra permitir
-// re-render parcial sem perder estado quando trocam módulo/dificuldade/etc.)
-function renderTelaQuestoes() {
-  const main = document.getElementById('main-content');
-  const difAtual    = state._difAtual || '';
-  const provaAtual  = state._provaAtual || '';
-  const statusAtual = state._statusRespAtual || '';
-  const totalGeral  = (state.questoes || []).length;
-  const idxResp     = _idxRespostasPorQuestao();
-
-  // Inicializa sets da sidebar (multi-seleção de temas + módulos abertos)
-  if (!(state._sideTemasAtivos instanceof Set))     state._sideTemasAtivos = new Set();
-  if (!(state._sideModulosAbertos instanceof Set))  state._sideModulosAbertos = new Set();
-  // Árvore de temas começa toda COLAPSADA (o aluno abre o módulo que quiser).
-  // Se chegou via um tema específico (atalho do dashboard), o abrirTema já abre só aquele módulo.
-
-  // === CONTAGEM FACETADA ===
-  // Cada contador aplica TODOS os outros filtros ativos, menos o próprio.
-  // Sem isso, filtrar por prova mantinha "Fácil 170 / Média 911" (números
-  // globais) em vez dos números daquela prova. Bug reportado em 24/06.
-
-  // Dificuldade: respeita tema + semana + prova + status + busca
-  const baseDif = _questoesComFiltros('dificuldade');
-  const cntPorDif = { facil: 0, media: 0, dificil: 0 };
-  baseDif.forEach(q => {
-    if (q.dificuldade && cntPorDif[q.dificuldade] != null) cntPorDif[q.dificuldade]++;
-  });
-
-  // Provas: respeita tema + semana + dificuldade + status + busca
-  // Agrupa variações "(adaptada)" na prova-base (ex.: "ENEM 2022 (adaptada)" → "ENEM 2022")
-  const baseProva = _questoesComFiltros('prova');
-  const cntPorProva = new Map();
-  baseProva.forEach(q => {
-    if (!q.prova) return;
-    const base = _provaBase(q.prova);
-    cntPorProva.set(base, (cntPorProva.get(base) || 0) + 1);
-  });
-  // Garante que a prova atualmente selecionada continue na lista mesmo que
-  // os outros filtros zerem a contagem dela (senão o select "perde" a opção).
-  if (provaAtual && !cntPorProva.has(provaAtual)) cntPorProva.set(provaAtual, 0);
-  const provas = [...cntPorProva.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
-
-  // Status: respeita tema + semana + prova + dificuldade + busca
-  const baseStatus = _questoesComFiltros('status');
-  const cntStatus = { nao_feita: 0, acertei: 0, errei: 0 };
-  baseStatus.forEach(q => {
-    cntStatus[_statusDaQuestao(q, idxResp)]++;
-  });
-
-  // Semanas do curso disponíveis pra filtro (só as que têm temaId, ou seja, aula real).
-  const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
-  const semanaAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
-  // Contagem por semana também é facetada: respeita prova + dificuldade + status
-  // + busca. Pula 'semana' (óbvio) e 'tema' (semana JÁ define o tema — se
-  // considerasse a seleção da sidebar, toda semana de outro tema mostraria 0).
-  const baseSemana = _questoesComFiltros(['semana', 'tema']);
-  const semanasFiltraveis = cronoMerged
-    .filter(s => _temasDaSemana(s).length && !s.cancelada)
-    .map(s => {
-      const ts = _temasDaSemana(s);
-      const cnt = baseSemana.filter(q => ts.includes(q.tema)).length;
-      return { ...s, _cnt: cnt };
-    });
-  const semanaFiltro = state._semanaFiltro || '';
-
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Banco de Questões</div>
-
-    <h2 class="section-title">
-      <span class="section-title-accent"></span>
-      <span class="st-ico"><svg width="18" height="18" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18 L8 18 L13 27 L19 6 L30 6"/></svg></span>
-      Banco de Questões
-    </h2>
-    <p style="color:var(--radix-gray-light);font-size:13px;margin-top:-6px;margin-bottom:14px;">
-      Escolha questões pra montar sua lista de estudos. ${totalGeral} ${totalGeral === 1 ? 'questão disponível' : 'questões disponíveis'} no total.
-    </p>
-
-    <!-- Cards de estatística (dashboard) -->
-    ${_renderStatsBanco()}
-
-    <!-- Busca em destaque -->
-    <div class="qbk-busca-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="filtro-busca" class="qbk-busca"
-             placeholder="Buscar no texto da questão ou alternativas…"
-             value="${_escHtml(state._qbkBusca || '')}"
-             oninput="agendarFiltrarQuestoes()">
-    </div>
-
-    <!-- Toolbar compacta: Semana + Prova + Dificuldade + Status numa linha só -->
-    <div class="qbk-toolbar">
-
-      ${semanasFiltraveis.length > 0 ? `
-        <div class="qbk-tb-item">
-          <span class="qbk-tb-label">Semana do curso</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            ${semanaAtualObj && _temasDaSemana(semanaAtualObj).length ? `
-              <button class="qbk-tb-hoje ${String(semanaFiltro) === String(semanaAtualObj.n) ? 'active' : ''}"
-                      onclick="selecionarSemanaFiltro(${semanaAtualObj.n})"
-                      title="Questões do tema da aula desta semana">
-                📅 Esta semana
-              </button>
-            ` : ''}
-            <select id="filtro-semana" class="qbk-tb-select ${semanaFiltro ? 'is-active' : ''}"
-                    onchange="selecionarSemanaFiltro(this.value)" style="min-width:200px;">
-              <option value="" ${!semanaFiltro ? 'selected' : ''}>Todas as semanas</option>
-              ${semanasFiltraveis.map(s => {
-                const tema = TEMAS.find(t => t.id === s.temaId);
-                const labelTema = s.temas ? ('Revisão ' + (s.revisaoN || '') + ' · ' + s.temas.map(_nomeCurtoTema).join(', ')) : (tema ? tema.nome : s.titulo);
-                return `<option value="${s.n}" ${String(semanaFiltro) === String(s.n) ? 'selected' : ''}>Sem ${String(s.n).padStart(2,'0')} · ${labelTema} (${s._cnt})</option>`;
-              }).join('')}
-            </select>
-          </div>
-        </div>
-      ` : ''}
-
-      ${provas.length > 1 ? `
-        <div class="qbk-tb-item">
-          <span class="qbk-tb-label">Prova</span>
-          <select id="filtro-prova" class="qbk-tb-select ${provaAtual ? 'is-active' : ''}"
-                  onchange="selecionarProva(this.value)" style="min-width:170px;">
-            <option value="" ${!provaAtual ? 'selected' : ''}>Todas as provas</option>
-            ${provas.map(([nome, cnt]) => {
-              const nomeEsc = _escHtml(nome);
-              return `<option value="${nomeEsc}" ${provaAtual === nome ? 'selected' : ''}>${nomeEsc} (${cnt})</option>`;
-            }).join('')}
-          </select>
-        </div>
-      ` : ''}
-
-      <div class="qbk-tb-item">
-        <span class="qbk-tb-label">Dificuldade</span>
-        <div class="qbk-seg">
-          <button class="${!difAtual ? 'active' : ''}" onclick="selecionarDificuldade('')">Todas</button>
-          <button class="${difAtual === 'facil' ? 'active' : ''}" onclick="selecionarDificuldade('facil')">Fácil <span class="qbk-seg-cnt">${cntPorDif.facil}</span></button>
-          <button class="${difAtual === 'media' ? 'active' : ''}" onclick="selecionarDificuldade('media')">Média <span class="qbk-seg-cnt">${cntPorDif.media}</span></button>
-          <button class="${difAtual === 'dificil' ? 'active' : ''}" onclick="selecionarDificuldade('dificil')">Difícil <span class="qbk-seg-cnt">${cntPorDif.dificil}</span></button>
-        </div>
-      </div>
-
-      <div class="qbk-tb-item">
-        <span class="qbk-tb-label">Como eu fui</span>
-        <div class="qbk-seg">
-          <button class="${!statusAtual ? 'active' : ''}" onclick="selecionarStatusResp('')">Todas</button>
-          <button class="seg-naofeita ${statusAtual === 'nao_feita' ? 'active' : ''}" onclick="selecionarStatusResp('nao_feita')" title="Questões que eu ainda não respondi">○ Não feita <span class="qbk-seg-cnt">${cntStatus.nao_feita}</span></button>
-          <button class="seg-acertei ${statusAtual === 'acertei' ? 'active' : ''}" onclick="selecionarStatusResp('acertei')" title="Questões que eu já acertei">✓ Acertei <span class="qbk-seg-cnt">${cntStatus.acertei}</span></button>
-          <button class="seg-errei ${statusAtual === 'errei' ? 'active' : ''}" onclick="selecionarStatusResp('errei')" title="Questões que eu errei — bom pra refazer">✗ Errei <span class="qbk-seg-cnt">${cntStatus.errei}</span></button>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Indicador de filtros ativos (rendered dinamicamente em filtrarQuestoes) -->
-    <div id="qbk-filtros-ativos"></div>
-
-    <!-- Layout 3 colunas: sidebar tree | resultados | cesta -->
-    <div class="qbk-3col">
-
-      <!-- Coluna 1: Sidebar de temas -->
-      <aside class="qbk-side">
-        <div class="qbk-col-titulo">
-          <span>Temas</span>
-          <button class="qbk-tree-limpar" onclick="limparTemasSidebar()">Limpar</button>
-        </div>
-        <div id="qbk-tree">${renderTreeTemas()}</div>
-      </aside>
-
-      <!-- Coluna 2: Resultados -->
-      <main id="lista-questoes"></main>
-
-      <!-- Coluna 3: Cesta -->
-      <aside class="qbk-cesta" id="qbk-cesta">
-        ${renderCestaLateral()}
-      </aside>
-
-    </div>
-  `;
-  filtrarQuestoes();
-  // Garante que a tela do banco abra no topo (não herda o scroll da tela anterior)
-  try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
-}
 
 // Renderiza a árvore de módulos > temas pra sidebar
 function renderTreeTemas() {
@@ -12118,11 +11943,6 @@ function renderTreeTemas() {
   }).join('');
 }
 
-// Re-renderiza só a árvore (preserva foco e scroll do resto)
-function _refreshTreeTemas() {
-  const cont = document.getElementById('qbk-tree');
-  if (cont) cont.innerHTML = renderTreeTemas();
-}
 
 // Handlers da sidebar
 function toggleTemaSidebar(temaId) {
@@ -12148,84 +11968,7 @@ function limparTemasSidebar() {
 }
 
 // ===== Cesta lateral (substitui a antiga "Lista em construção") =====
-// Renderiza painel direito: contador + ações + lista das questões selecionadas.
-// Sempre renderiza um conteúdo válido — vazia mostra estado "carrinho vazio".
-function renderCestaLateral() {
-  const ids = state.questoesSelecionadas || [];
-  const n = ids.length;
-  const compactaTxt = state._cestaCompacta ? 'checked' : '';
 
-  if (n === 0) {
-    return `
-      <div class="qbk-col-titulo">
-        <span>Minha lista</span>
-      </div>
-      <div class="qbk-cesta-vazia">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        <div>Sua lista está vazia.</div>
-        <div style="margin-top:6px;font-size:11.5px;">Clique em <b>+ Adicionar à lista</b> nos cards à esquerda.</div>
-      </div>
-      <div style="border-top:1px solid var(--radix-line);margin-top:16px;padding-top:16px;">
-        ${_renderDesempenhoBanco()}
-      </div>`;
-  }
-
-  // Pega as questões na ordem em que foram adicionadas
-  const qs = ids
-    .map(id => (state.questoes || []).find(q => q.id === id))
-    .filter(Boolean);
-
-  // Render dos itens (compacto ou expandido conforme toggle)
-  const itensHtml = qs.map((q, idx) => {
-    const tema = TEMAS.find(t => t.id === q.tema);
-    const preview = String(q.enunciado || '')
-      .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const previewCurto = preview.length > 90 ? preview.substring(0, 90) + '…' : preview;
-    const provaTxt = q.prova ? ` · ${String(q.prova).replace(/[<>&]/g,'')}` : '';
-    return `
-      <div class="qbk-cesta-item">
-        <div class="qbk-cesta-item-info">
-          <div class="qbk-cesta-item-meta">
-            <b>${String(idx + 1).padStart(2, '0')}</b>
-            <span>${tema ? tema.nome : '—'}${provaTxt}</span>
-          </div>
-          <div class="qbk-cesta-item-titulo">${previewCurto || 'Sem enunciado'}</div>
-        </div>
-        <button class="qbk-cesta-item-rm" onclick="removerDaCesta(${q.id})" title="Remover da lista">✕</button>
-      </div>`;
-  }).join('');
-
-  return `
-    <div class="qbk-cesta-head">
-      <div class="qbk-cesta-titulo">Minha lista</div>
-      <span class="qbk-cesta-cnt">${n}</span>
-    </div>
-    <div class="qbk-cesta-acoes">
-      <button class="btn" onclick="abrirModalGerar()">📝 Estudar com essa lista</button>
-      <button class="btn btn-secondary" onclick="limparCestaLateral()" style="color:#DC2626;border-color:rgba(220,38,38,.3);">🗑 Limpar lista</button>
-    </div>
-    <label class="qbk-cesta-toggle">
-      <input type="checkbox" ${compactaTxt} onchange="toggleCestaCompacta(this.checked)">
-      Modo compacto
-    </label>
-    <div class="qbk-cesta-itens ${state._cestaCompacta ? '' : ''}">
-      ${itensHtml}
-    </div>
-    <div style="border-top:1px solid var(--radix-line);margin-top:16px;padding-top:16px;">
-      ${_renderDesempenhoBanco()}
-    </div>
-  `;
-}
-
-// Re-render só do painel da cesta (preserva o resto da tela)
-function _refreshCestaLateral() {
-  const cont = document.getElementById('qbk-cesta');
-  if (cont) cont.innerHTML = renderCestaLateral();
-  if (cont) cont.classList.toggle('compacta', !!state._cestaCompacta);
-}
 
 function removerDaCesta(qid) {
   if (!Array.isArray(state.questoesSelecionadas)) return;
@@ -12237,25 +11980,6 @@ function removerDaCesta(qid) {
   atualizarBotaoLista(qid);
 }
 
-// Limpa a cesta de questões selecionadas. Usa confirm() nativo — caminho mais
-// robusto e com feedback óbvio. (A estratégia anterior de "2 cliques + feedback
-// inline" às vezes ficava sem feedback visual e o aluno achava que não funcionava.)
-function limparCestaLateral() {
-  const arr = Array.isArray(state.questoesSelecionadas) ? state.questoesSelecionadas : [];
-  const n = arr.length;
-  if (n === 0) { alert('Sua lista já está vazia.'); return; }
-  if (!confirm(`Esvaziar sua lista de ${n} questão${n === 1 ? '' : 'ões'}?\n\nNão dá pra desfazer.`)) return;
-  state.questoesSelecionadas = [];
-  try { salvarListaLocal(); } catch (e) { console.warn('Erro salvarListaLocal:', e); }
-  try { atualizarBadgeLista(); } catch (e) { /* nop */ }
-  try { _refreshCestaLateral(); } catch (e) { /* nop */ }
-  // Atualiza os botões dos cards visíveis (volta pra "+ Adicionar")
-  document.querySelectorAll('[data-lista-btn]').forEach(btn => {
-    btn.innerHTML = '+ Adicionar à lista';
-    btn.classList.remove('btn-success');
-    btn.classList.add('btn-secondary');
-  });
-}
 
 function toggleCestaCompacta(val) {
   state._cestaCompacta = !!val;
@@ -12284,82 +12008,6 @@ function selecionarSemanaFiltro(n) {
   state._semanaFiltro = (n === '' || n == null) ? '' : String(n);
   state._paginaQuestoes = 0;
   renderTelaQuestoes();
-}
-// Renderiza pills clicáveis dos filtros atualmente ativos + botão "Limpar tudo".
-// Cada pill mostra o valor + X pra remover só aquele filtro.
-function _renderFiltrosAtivos() {
-  const cont = document.getElementById('qbk-filtros-ativos');
-  if (!cont) return;
-
-  const ativos = [];
-  // Temas selecionados na sidebar (multi-seleção) — uma pill por tema
-  const sideTemas = (state._sideTemasAtivos instanceof Set) ? state._sideTemasAtivos : new Set();
-  if (sideTemas.size > 0) {
-    sideTemas.forEach(tid => {
-      const t = TEMAS.find(x => x.id === tid);
-      if (t) ativos.push({
-        label: 'Tema: ' + t.nome,
-        onClear: `toggleTemaSidebar('${tid.replace(/'/g, "\\'")}')`
-      });
-    });
-  }
-  if (state._semanaFiltro) {
-    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
-    const sem = merged.find(s => String(s.n) === String(state._semanaFiltro));
-    if (sem) {
-      const tema = sem.temaId ? TEMAS.find(t => t.id === sem.temaId) : null;
-      const labelTema = tema ? tema.nome : (sem.titulo || '');
-      ativos.push({
-        label: `Semana ${String(sem.n).padStart(2,'0')}: ${labelTema}`,
-        onClear: 'selecionarSemanaFiltro(\'\')'
-      });
-    }
-  }
-  if (state._provaAtual) {
-    ativos.push({ label: 'Prova: ' + state._provaAtual, onClear: 'selecionarProva(\'\')' });
-  }
-  if (state._difAtual) {
-    const lab = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[state._difAtual] || state._difAtual;
-    ativos.push({ label: 'Dificuldade: ' + lab, onClear: 'selecionarDificuldade(\'\')' });
-  }
-  if (state._statusRespAtual) {
-    const lab = { nao_feita: '○ Não feita', acertei: '✓ Acertei', errei: '✗ Errei' }[state._statusRespAtual] || state._statusRespAtual;
-    ativos.push({ label: lab, onClear: 'selecionarStatusResp(\'\')' });
-  }
-  const buscaEl = document.getElementById('filtro-busca');
-  const buscaVal = buscaEl ? buscaEl.value.trim() : '';
-  if (buscaVal) {
-    ativos.push({
-      label: 'Busca: "' + buscaVal.replace(/[<>&"]/g,'') + '"',
-      onClear: '(function(){const e=document.getElementById(\'filtro-busca\');if(e){e.value=\'\';filtrarQuestoes();}})()'
-    });
-  }
-
-  if (ativos.length === 0) {
-    cont.innerHTML = '';
-    return;
-  }
-
-  cont.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 14px;padding:10px 14px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.22);border-radius:10px;">
-      <span style="font-size:12px;color:var(--radix-text-muted,#6b7280);font-weight:600;">${ativos.length} filtro${ativos.length !== 1 ? 's' : ''} ativo${ativos.length !== 1 ? 's' : ''}:</span>
-      ${ativos.map(a => `
-        <span style="display:inline-flex;align-items:center;gap:6px;background:var(--radix-surface,#fff);border:1px solid var(--radix-line-2,#e5e7eb);padding:3px 6px 3px 10px;border-radius:999px;font-size:12px;color:var(--radix-text,#111);">
-          ${a.label.replace(/[<>&]/g,c=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]))}
-          <button onclick="${a.onClear}" title="Remover este filtro" aria-label="Remover filtro"
-                  style="background:transparent;border:none;cursor:pointer;color:var(--radix-text-muted,#6b7280);padding:2px 4px;border-radius:50%;line-height:0;display:inline-flex;align-items:center;justify-content:center;"
-                  onmouseover="this.style.background='rgba(220,38,38,0.12)';this.style.color='#dc2626';"
-                  onmouseout="this.style.background='transparent';this.style.color='var(--radix-text-muted,#6b7280)';">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </span>
-      `).join('')}
-      <span style="flex:1;"></span>
-      <button onclick="limparTodosFiltros()" style="background:transparent;border:1px solid var(--radix-line-2,#e5e7eb);color:var(--radix-text-2,#374151);padding:5px 12px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600;">
-        Limpar tudo
-      </button>
-    </div>
-  `;
 }
 
 function limparTodosFiltros() {
@@ -12391,208 +12039,10 @@ function agendarFiltrarQuestoes() {
 
 const QBK_POR_PAGINA = 20;
 
-function filtrarQuestoes() {
-  const buscaEl = document.getElementById('filtro-busca');
-  if (buscaEl) state._qbkBusca = buscaEl.value; // mantém em state pra sobreviver a re-render
-  const termo = _normBusca(buscaEl ? buscaEl.value : (state._qbkBusca || ''));
-  const difAtual     = state._difAtual || '';
-  const provaAtual   = state._provaAtual || '';
-  const statusAtual  = state._statusRespAtual || '';
-  const semanaFiltro = state._semanaFiltro || '';
-  const sideTemas = (state._sideTemasAtivos instanceof Set) ? state._sideTemasAtivos : new Set();
 
-  let questoes = (state.questoes || []).slice();
-  // Filtro multi-tema da sidebar — se algum tema marcado, filtra; senão, mostra tudo
-  if (sideTemas.size > 0) {
-    questoes = questoes.filter(q => sideTemas.has(q.tema));
-  }
-  // Filtro por semana do curso — mapeia semana → tema, e filtra pelo tema dela.
-  // Se a semana não existir ou não tiver temaId, resulta em zero (intencional).
-  if (semanaFiltro) {
-    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
-    const sem = merged.find(s => String(s.n) === String(semanaFiltro));
-    const temaDaSemana = sem && sem.temaId;
-    if (temaDaSemana) {
-      questoes = questoes.filter(q => q.tema === temaDaSemana);
-    } else {
-      questoes = []; // semana sem tema (recesso/simulado) → nada
-    }
-  }
-  // Prova (compara pela prova-base pra incluir variações "(adaptada)")
-  if (provaAtual) questoes = questoes.filter(q => _provaBase(q.prova || '') === provaAtual);
-  // Dificuldade
-  if (difAtual) questoes = questoes.filter(q => q.dificuldade === difAtual);
-  // Status do aluno (não feita / acertei / errei)
-  if (statusAtual) {
-    const idxResp = _idxRespostasPorQuestao();
-    questoes = questoes.filter(q => _statusDaQuestao(q, idxResp) === statusAtual);
-  }
-  // Busca por texto
-  if (termo) questoes = questoes.filter(q => questaoCasaBusca(q, termo));
 
-  // Renderiza o indicador de filtros ativos (pills removíveis + Limpar tudo)
-  _renderFiltrosAtivos();
 
-  const container = document.getElementById('lista-questoes');
-  if (!container) return;
 
-  if (questoes.length === 0) {
-    const algumFiltroAtivo = !!(termo || sideTemas.size > 0 || difAtual || provaAtual || statusAtual || semanaFiltro);
-    const msg = termo
-      ? `Nenhuma questão contém o texto <strong>"${(buscaEl.value||'').replace(/[<>&]/g,'')}"</strong>. Tente outras palavras ou limpe a busca.`
-      : 'Nenhuma questão com esses filtros.';
-    container.innerHTML = `
-      <div style="text-align:center;padding:48px 24px;background:white;border-radius:14px;border:1px dashed var(--radix-line, #e5e7eb);color:var(--radix-text-muted, #6b7280);">
-        <div style="font-size:40px;margin-bottom:8px;">🔍</div>
-        <p style="margin:0 0 14px;">${msg}</p>
-        ${algumFiltroAtivo ? `<button class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" onclick="limparTodosFiltros()">Limpar todos os filtros</button>` : ''}
-      </div>`;
-    return;
-  }
-
-  // Paginação
-  const totalPag = Math.ceil(questoes.length / QBK_POR_PAGINA);
-  if (state._paginaQuestoes == null || state._paginaQuestoes >= totalPag) state._paginaQuestoes = 0;
-  const ini = state._paginaQuestoes * QBK_POR_PAGINA;
-  const fim = Math.min(ini + QBK_POR_PAGINA, questoes.length);
-  const pagina = questoes.slice(ini, fim);
-
-  // Cabeçalho do resultado
-  const infoHtml = `
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:0 4px;">
-      <div style="font-size:13px;color:var(--radix-text-muted, #6b7280);">
-        Mostrando <b style="color:var(--radix-text,#111);">${ini + 1}–${fim}</b> de <b style="color:var(--radix-text,#111);">${questoes.length}</b> ${questoes.length === 1 ? 'questão' : 'questões'}
-      </div>
-    </div>`;
-
-  // Cards
-  const cardsHtml = pagina.map((q, idx) => renderQuestaoCardLinha(q, ini + idx + 1)).join('');
-
-  // Paginação (rodapé)
-  const pagHtml = totalPag > 1 ? renderPaginacaoQuestoes(totalPag) : '';
-
-  container.innerHTML = infoHtml + cardsHtml + pagHtml;
-}
-
-// Renderiza UM card-linha de questão (preview + expansão inline)
-function renderQuestaoCardLinha(q, numero) {
-  const tema = TEMAS.find(t => t.id === q.tema);
-  const dif = q.dificuldade || '';
-  const difLabel = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[dif] || '';
-  const sel = (state.questoesSelecionadas || []).includes(q.id);
-  const expandido = state._expandidoQuestoes && state._expandidoQuestoes.has(q.id);
-
-  // Preview do enunciado: tira markdown de imagem e HTML, mostra primeiros ~220 chars
-  const enunPreview = String(q.enunciado || '')
-    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const previewCurto = enunPreview.length > 220 ? enunPreview.substring(0, 220) + '…' : enunPreview;
-
-  // Conteúdo expandido (reusa o motor de render do app: KaTeX, imagens, alternativas)
-  const expandedHtml = expandido ? `
-    <div class="qbk-card-expanded">
-      ${renderQuestaoCompleta(q)}
-    </div>
-  ` : '';
-
-  const numStr = String(numero).padStart(2, '0');
-  const provaTxt = q.prova ? ` <span class="qbk-sep">·</span> ${String(q.prova).replace(/[<>&]/g,'')}` : '';
-  const idAttr = `qbk-${q.id}`;
-
-  // Clicar em QUALQUER parte do header ou da prévia → toggle expansão.
-  // (Cards já têm cursor:pointer + hover via CSS na .qbk-card-head/.qbk-card-preview)
-  return `
-    <div class="qbk-card" id="${idAttr}">
-      <div class="qbk-card-head" onclick="toggleVerCompleta(${q.id})" title="${expandido ? 'Clique para esconder' : 'Clique para ver completa'}">
-        <div class="qbk-card-meta">
-          <b>Q${numStr}</b>
-          <span class="qbk-sep">·</span>
-          <span>${tema ? tema.nome : 'Sem tema'}</span>
-          ${provaTxt}
-        </div>
-        ${difLabel ? `<span class="qbk-card-dif ${dif}">${difLabel}</span>` : ''}
-      </div>
-      ${expandido ? '' : `<div class="qbk-card-preview" onclick="toggleVerCompleta(${q.id})" title="Clique para ver completa">${previewCurto}</div>`}
-      <div class="qbk-card-acoes">
-        <button class="qbk-ver-mais ${expandido ? 'aberto' : ''}" onclick="event.stopPropagation();toggleVerCompleta(${q.id})">
-          ${expandido ? 'Esconder questão' : 'Ver questão completa'}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <button class="btn ${sel ? 'btn-success' : 'btn-secondary'}" data-lista-btn="${q.id}"
-                style="padding:8px 14px;font-size:13px;"
-                onclick="event.stopPropagation();toggleQuestaoLista(${q.id});atualizarBotaoLista(${q.id});">
-          ${sel ? '✓ Já está na sua lista' : '+ Adicionar à lista'}
-        </button>
-        ${htmlBtnReportarErro(q.id)}
-      </div>
-      ${expandedHtml}
-    </div>`;
-}
-
-// Render do conteúdo expandido (enunciado completo + imagens + alternativas + ação de responder)
-function renderQuestaoCompleta(q) {
-  const imgsHtml = (q.imagens || []).map(src =>
-    `<div class="questao-img-wrap"><img class="questao-img" src="${src}" alt="figura da questão"></div>`
-  ).join('');
-
-  let altsHtml;
-  if (q.alternativasImg && q.alternativasImg.length) {
-    altsHtml = q.alternativasImg.map((src, i) => `
-      <div class="alternativa alt-img" onclick="responderQuestao(${q.id}, ${i})">
-        <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
-        <img class="alt-img-content" src="${src}" alt="alternativa ${String.fromCharCode(65 + i)}">
-      </div>`).join('');
-  } else {
-    altsHtml = (q.alternativas || []).map((alt, i) => `
-      <div class="alternativa" onclick="responderQuestao(${q.id}, ${i})">
-        <div class="alternativa-letra">${String.fromCharCode(65 + i)}</div>
-        <div>${formatarEnunciado(String(alt).replace(/^[A-E]\)\s*/, ''))}</div>
-      </div>`).join('');
-  }
-
-  return `
-    <div class="questao-enunciado" style="margin-bottom:12px;">${formatarEnunciado(q.enunciado)}</div>
-    ${imgsHtml}
-    <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}" id="alts-${q.id}">${altsHtml}</div>
-    <div id="explicacao-${q.id}"></div>
-  `;
-}
-
-// Helpers de interação
-function toggleVerCompleta(qid) {
-  if (!state._expandidoQuestoes) state._expandidoQuestoes = new Set();
-  if (state._expandidoQuestoes.has(qid)) state._expandidoQuestoes.delete(qid);
-  else state._expandidoQuestoes.add(qid);
-  filtrarQuestoes();
-  // Re-renderiza KaTeX no novo conteúdo expandido
-  setTimeout(() => {
-    if (window.renderMathInElement) {
-      const el = document.getElementById('qbk-' + qid);
-      if (el) window.renderMathInElement(el, { delimiters: [{left:'$',right:'$',display:false}], throwOnError:false });
-    }
-  }, 30);
-}
-
-function atualizarBotaoLista(qid) {
-  // Atualiza só o card desse ID + o badge global (sem re-render da lista toda).
-  const sel = (state.questoesSelecionadas || []).includes(qid);
-  const btn = document.querySelector(`[data-lista-btn="${qid}"]`);
-  if (btn) {
-    btn.innerHTML = sel ? '✓ Já está na sua lista' : '+ Adicionar à lista';
-    btn.classList.toggle('btn-success', sel);
-    btn.classList.toggle('btn-secondary', !sel);
-  }
-  // Atualiza o contador da topbar (re-render parcial)
-  const topInfo = document.querySelector('.qbk-topbar .qbk-topbar-info');
-  if (topInfo) {
-    const n = (state.questoesSelecionadas || []).length;
-    topInfo.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--radix-cyan,#0891b2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-      <b>${n}</b><span>${n === 1 ? 'questão na sua lista atual' : 'questões na sua lista atual'}</span>`;
-  }
-}
 
 function renderPaginacaoQuestoes(totalPag) {
   const cur = state._paginaQuestoes || 0;
@@ -13097,7 +12547,7 @@ async function renderHistoricoNotificacoes() {
     </div>
 
     ${totalMsg === 0 ? `
-      <div style="text-align:center;padding:48px;color:var(--radix-gray-light);background:white;border-radius:14px;border:1px solid var(--radix-border);">
+      <div style="text-align:center;padding:48px;color:var(--radix-gray-light);background:var(--radix-surface);border-radius:14px;border:1px solid var(--radix-border);">
         <div style="font-size:56px;margin-bottom:10px;">📭</div>
         Nenhuma mensagem enviada ainda.
       </div>
@@ -23243,22 +22693,6 @@ function _marcarRespostasSalvas(opId) {
   (state.historicoSimulados || []).forEach(h => { if (h.opId === opId) h.pendente = false; });
 }
 
-// ---------- modal genérico (mesmas classes do app) ----------
-function _modalConfiab(html, botoes) {
-  _fecharModalConfiab();
-  const acoes = (botoes || []).map((b, i) => '<button type="button" class="btn ' + (b.cls || 'btn-secondary') + '" data-conf-btn="' + i + '">' + _escHtml(b.txt) + '</button>').join('');
-  document.body.insertAdjacentHTML('beforeend',
-    '<div id="modal-confiab"><div class="modal-overlay" style="z-index:9998;"><div class="modal" style="max-width:520px;">' + html
-    + '<div class="modal-acoes">' + acoes + '</div></div></div></div>');
-  document.body.classList.add('modal-open');
-  document.querySelectorAll('#modal-confiab [data-conf-btn]').forEach(btn => {
-    btn.onclick = () => { const b = botoes[Number(btn.getAttribute('data-conf-btn'))]; _fecharModalConfiab(); if (b && b.fn) b.fn(); };
-  });
-}
-function _fecharModalConfiab() {
-  const m = document.getElementById('modal-confiab'); if (m) m.remove();
-  if (!document.getElementById('modal-nova-senha')) document.body.classList.remove('modal-open');
-}
 
 // ---------- TENTATIVAS (andamento de atividades) ----------
 const TENTATIVAS = {
@@ -23780,7 +23214,7 @@ function _renderResultadoEstudo(r) {
     + '<div class="conf-tripla"><span><b>' + acertos + '</b> acertos</span><span><b>' + erros + '</b> erros</span><span><b>' + brancos + '</b> em branco</span></div>'
     + _htmlStatusGravacao(opId)
     + '</div>'
-    + '<div style="background:white;border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
+    + '<div style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">📚 Voltar ao Banco</button></div>';
   try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
 }
@@ -24028,6 +23462,719 @@ function _htmlBotaoContinuar(temaSemAtual) {
   if (temaSemAtual) return '<button class="v3-btn v3-btn-light" onclick="abrirTema(\'' + temaSemAtual.id + '\')">' + ico + 'Estudar o tema da semana</button>';
   return '';
 }
+
+// ============================================================================
+// ETAPA 2 — USABILIDADE E IDENTIDADE VISUAL (25/09/2026)
+// Casca de navegação do aluno (menu lateral no computador, barra inferior no
+// celular), histórico do navegador (Voltar/Avançar), painéis deslizantes,
+// página inicial nova e banco de questões reorganizado. Só interface: os dados,
+// a fila de gravação, as tentativas e as listas continuam os da Etapa 1.
+// Professor: mantém a interface anterior (a casca só entra para o aluno).
+// ============================================================================
+const _RXI = {
+  inicio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>',
+  estudar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  revisar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>',
+  simulados: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+  listas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>',
+  cronograma: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  mais: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
+  rf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg>',
+  estat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>',
+  perfil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>',
+  tema: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  sol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  sair: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>',
+  fechar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  filtro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+  busca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+  seta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  livro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  lista: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>'
+};
+function rxIco(n) { return _RXI[n] || ''; }
+
+// ---------- ROTA: histórico do navegador (Voltar/Avançar) e links diretos (#/...) ----------
+const ROTA = {
+  atual: null, _navegando: false, scroll: {}, _ligado: false,
+  MAPA: [
+    ['inicio', () => renderHome()],
+    ['estudar', () => (state._qbkVisitado ? renderTelaQuestoes() : abrirTema(''))],
+    ['estudar/tema/:id', (id) => abrirTema(id)],
+    ['aulas', () => renderVideoAulas()],
+    ['revisar', () => renderMinhasRevisoes()],
+    ['caderno', () => renderCadernoErros()],
+    ['simulados', () => renderSimulados()],
+    ['simulados/tri', () => renderSimuladoTRI()],
+    ['simulados/novo', () => abrirSimuladoConfig()],
+    ['simulados/:aba', (aba) => renderSimulados(aba)],
+    ['listas', () => renderMontarLista()],
+    ['listas/:id', (id) => abrirListaSalva(Number(id))],
+    ['cronograma', () => renderCronograma()],
+    ['cronograma/:n', (n) => renderCronograma(Number(n))],
+    ['revisao-final', () => renderRevisaoFinal()],
+    ['estatisticas', () => renderEstatisticasAvancadas()],
+    ['perfil', () => abrirMeuPerfil()]
+  ],
+  ativo() { return document.body.classList.contains('rx-aluno'); },
+  secao(rota) {
+    const r = String(rota || '');
+    if (r === 'inicio') return 'inicio';
+    if (r.startsWith('estudar') || r === 'aulas') return 'estudar';
+    if (r === 'revisar' || r === 'caderno') return 'revisar';
+    if (r.startsWith('simulados')) return 'simulados';
+    if (r.startsWith('listas')) return 'listas';
+    if (r.startsWith('cronograma')) return 'cronograma';
+    if (r === 'revisao-final') return 'revisao-final';
+    return '';
+  },
+  resolver(rota) {
+    const partes = String(rota || '').split('/').filter(Boolean);
+    for (const [padrao, fn] of this.MAPA) {
+      const pp = padrao.split('/');
+      if (pp.length !== partes.length) continue;
+      const args = []; let ok = true;
+      for (let i = 0; i < pp.length; i++) {
+        if (pp[i].startsWith(':')) args.push(decodeURIComponent(partes[i]));
+        else if (pp[i] !== partes[i]) { ok = false; break; }
+      }
+      if (ok) return () => fn.apply(null, args);
+    }
+    return null;
+  },
+  daHash() { const h = location.hash || ''; return h.startsWith('#/') ? h.slice(2).replace(/\/+$/, '') : null; },
+  ligar() {
+    if (this._ligado) return; this._ligado = true;
+    window.addEventListener('popstate', (e) => {
+      if (!this.ativo()) return;
+      const rota = (e.state && e.state.rota) || this.daHash() || 'inicio';
+      this.abrir(rota, true);
+    });
+  },
+  _guardarScroll() { if (this.atual) this.scroll[this.atual] = window.scrollY || 0; },
+  registrar(rota) {
+    if (!this.ativo() || !rota) return;
+    const url = '#/' + rota;
+    if (this._navegando) {
+      this._navegando = false; this.atual = rota;
+      try { history.replaceState({ rota }, '', url); } catch (e) {}
+    } else if (rota === this.atual) {
+      try { history.replaceState({ rota }, '', url); } catch (e) {}
+    } else {
+      this.atual = rota;
+      try { history.pushState({ rota }, '', url); } catch (e) {}
+    }
+    NAV.marcar(rota);
+  },
+  abrir(rota, silencioso) {
+    const fn = this.resolver(rota);
+    if (!fn) { this._navegando = false; renderHome(); return; }
+    this._navegando = !!silencioso;
+    const salvo = this.scroll[rota];
+    try { fn(); } catch (e) { console.warn('[rota]', rota, e); }
+    setTimeout(() => { this._navegando = false; }, 0);
+    if (silencioso && salvo > 0) setTimeout(() => window.scrollTo(0, salvo), 260);
+  },
+  ir(rota) { RX_DRAWER.fechar(); this.abrir(rota, false); },
+  abrirDaUrl() {
+    if (!this.ativo()) return;
+    const rota = this.daHash();
+    if (rota && rota !== 'inicio' && this.resolver(rota)) { this.abrir(rota, true); return; }
+    this.atual = 'inicio';
+    try { history.replaceState({ rota: 'inicio' }, '', location.pathname + location.search + '#/inicio'); } catch (e) {}
+    NAV.marcar('inicio');
+  },
+  // Envolve uma função de tela: guarda o scroll da tela anterior, registra a rota e avisa a casca.
+  envolver(nome, rotaDe) {
+    const orig = window[nome];
+    if (typeof orig !== 'function') { console.warn('[rota] não achou', nome); return; }
+    window[nome] = function () {
+      const args = arguments;
+      const ativo = ROTA.ativo();
+      if (ativo) ROTA._guardarScroll();
+      const r = orig.apply(this, args);
+      if (ativo) {
+        const rota = rotaDe.apply(null, args);
+        if (rota) { ROTA.registrar(rota); Promise.resolve(r).then(() => NAV.aoRenderizar(rota)).catch(() => {}); }
+      }
+      return r;
+    };
+  }
+};
+
+// ---------- RX_DRAWER: painel deslizante (lateral no computador, de baixo no celular) ----------
+const RX_DRAWER = {
+  aberto: null, _foco: null, _teclado: null,
+  abrir(id, titulo, html) {
+    this.fechar();
+    this._foco = document.activeElement;
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="rx-drawer-wrap" id="rx-drawer"><div class="rx-drawer-fundo" onclick="RX_DRAWER.fechar()"></div>'
+      + '<aside class="rx-drawer" role="dialog" aria-modal="true" aria-labelledby="rx-drawer-t" tabindex="-1">'
+      + '<div class="rx-drawer-head"><h2 id="rx-drawer-t">' + _escHtml(titulo) + '</h2><button type="button" class="rx-icon-btn" aria-label="Fechar" onclick="RX_DRAWER.fechar()">' + rxIco('fechar') + '</button></div>'
+      + '<div class="rx-drawer-body" id="rx-drawer-body">' + html + '</div></aside></div>');
+    document.body.classList.add('rx-drawer-open');
+    this.aberto = id;
+    this._teclado = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); this.fechar(); return; }
+      if (e.key === 'Tab') _rxPrenderFoco(e, document.getElementById('rx-drawer'));
+    };
+    document.addEventListener('keydown', this._teclado);
+    setTimeout(() => {
+      const f = document.querySelector('#rx-drawer-body button:not([disabled]), #rx-drawer-body select, #rx-drawer-body input, #rx-drawer-body a[href]') || document.querySelector('#rx-drawer .rx-icon-btn');
+      if (f) try { f.focus({ preventScroll: true }); } catch (e) {}
+    }, 30);
+  },
+  atualizar(html) { const b = document.getElementById('rx-drawer-body'); if (b) b.innerHTML = html; },
+  fechar() {
+    const d = document.getElementById('rx-drawer'); if (!d) return;
+    d.remove(); document.body.classList.remove('rx-drawer-open'); this.aberto = null;
+    if (this._teclado) { document.removeEventListener('keydown', this._teclado); this._teclado = null; }
+    const f = this._foco; this._foco = null;
+    if (f && f.focus && document.contains(f)) try { f.focus({ preventScroll: true }); } catch (e) {}
+  }
+};
+function _rxFocaveis(raiz) {
+  return raiz ? [...raiz.querySelectorAll('a[href], a[onclick], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(el => el.offsetParent !== null) : [];
+}
+function _rxPrenderFoco(e, raiz) {
+  const f = _rxFocaveis(raiz); if (!f.length) return;
+  const i = f.indexOf(document.activeElement);
+  if (e.shiftKey && (i <= 0)) { e.preventDefault(); f[f.length - 1].focus(); }
+  else if (!e.shiftKey && (i === -1 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+}
+// Modal genérico da Etapa 1, agora com foco preso, Esc e devolução do foco.
+function _modalConfiab(html, botoes) {
+  _fecharModalConfiab();
+  _modalConfiab._foco = document.activeElement;
+  const acoes = (botoes || []).map((b, i) => '<button type="button" class="btn ' + (b.cls || 'btn-secondary') + '" data-conf-btn="' + i + '">' + _escHtml(b.txt) + '</button>').join('');
+  document.body.insertAdjacentHTML('beforeend',
+    '<div id="modal-confiab"><div class="modal-overlay" style="z-index:9998;"><div class="modal" role="dialog" aria-modal="true" style="max-width:520px;">' + html
+    + '<div class="modal-acoes">' + acoes + '</div></div></div></div>');
+  document.body.classList.add('modal-open');
+  document.querySelectorAll('#modal-confiab [data-conf-btn]').forEach(btn => {
+    btn.onclick = () => { const b = botoes[Number(btn.getAttribute('data-conf-btn'))]; _fecharModalConfiab(); if (b && b.fn) b.fn(); };
+  });
+  _modalConfiab._teclado = (e) => {
+    if (e.key === 'Escape') { const semAcao = (botoes || []).find(b => !b.fn); if (semAcao) { e.preventDefault(); _fecharModalConfiab(); } return; }
+    if (e.key === 'Tab') _rxPrenderFoco(e, document.getElementById('modal-confiab'));
+  };
+  document.addEventListener('keydown', _modalConfiab._teclado);
+  setTimeout(() => { const f = document.querySelector('#modal-confiab [data-conf-btn]'); if (f) try { f.focus(); } catch (e) {} }, 30);
+}
+function _fecharModalConfiab() {
+  const m = document.getElementById('modal-confiab'); if (m) m.remove();
+  if (!document.getElementById('modal-nova-senha')) document.body.classList.remove('modal-open');
+  if (_modalConfiab._teclado) { document.removeEventListener('keydown', _modalConfiab._teclado); _modalConfiab._teclado = null; }
+  const f = _modalConfiab._foco; _modalConfiab._foco = null;
+  if (f && f.focus && document.contains(f)) try { f.focus({ preventScroll: true }); } catch (e) {}
+}
+
+// ---------- NAV: casca do aluno ----------
+const NAV = {
+  _montada: false, _kb: false,
+  ITENS: [
+    { id: 'inicio', rota: 'inicio', txt: 'Início', ico: 'inicio' },
+    { id: 'estudar', rota: 'estudar', txt: 'Estudar', ico: 'estudar' },
+    { id: 'revisar', rota: 'revisar', txt: 'Revisar', ico: 'revisar' },
+    { id: 'simulados', rota: 'simulados', txt: 'Simulados', ico: 'simulados' },
+    { id: 'listas', rota: 'listas', txt: 'Minhas listas', ico: 'listas', badge: 'listas' },
+    { id: 'cronograma', rota: 'cronograma', txt: 'Cronograma', ico: 'cronograma' }
+  ],
+  item(it, cls) {
+    return '<a class="' + (cls || 'rx-nav-item') + '" data-secao="' + it.id + '" href="#/' + it.rota + '" onclick="event.preventDefault();ROTA.ir(\'' + it.rota + '\')">' + rxIco(it.ico) + '<span>' + it.txt + '</span>'
+      + (it.badge ? '<span class="rx-badge is-zero" data-badge="' + it.badge + '">0</span>' : '') + '</a>';
+  },
+  montar() {
+    const app = document.getElementById('view-app'); const main = document.getElementById('main-content');
+    if (!app || !main) return;
+    document.body.classList.add('rx-aluno');
+    if (!this._montada) {
+      const shell = document.createElement('div'); shell.className = 'rx-shell';
+      main.parentNode.insertBefore(shell, main);
+      const side = document.createElement('nav'); side.className = 'rx-side'; side.setAttribute('aria-label', 'Menu principal');
+      shell.appendChild(side); shell.appendChild(main);
+      const bottom = document.createElement('nav'); bottom.className = 'rx-bottom'; bottom.setAttribute('aria-label', 'Menu principal');
+      app.appendChild(bottom);
+      this._montada = true;
+      ROTA.ligar();
+      this._ligarTeclado();
+    }
+    const claro = document.body.classList.contains('theme-light');
+    const side = app.querySelector('.rx-side');
+    side.innerHTML = this.ITENS.map(it => this.item(it)).join('')
+      + '<div class="rx-side-sec">Mais</div>'
+      + '<a class="rx-nav-item rx-nav-rf" data-secao="revisao-final" href="#/revisao-final" onclick="event.preventDefault();ROTA.ir(\'revisao-final\')">' + rxIco('rf') + '<span>Revisão Final</span></a>'
+      + '<a class="rx-nav-item" data-secao="estatisticas" href="#/estatisticas" onclick="event.preventDefault();ROTA.ir(\'estatisticas\')">' + rxIco('estat') + '<span>Estatísticas</span></a>'
+      + '<div class="rx-side-rodape">'
+      + '<a class="rx-nav-item" href="#/perfil" onclick="event.preventDefault();ROTA.ir(\'perfil\')">' + rxIco('perfil') + '<span>Meu perfil</span></a>'
+      + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();toggleTheme()">' + rxIco(claro ? 'tema' : 'sol') + '<span>' + (claro ? 'Tema escuro' : 'Tema claro') + '</span></a>'
+      + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();logout()">' + rxIco('sair') + '<span>Sair</span></a>'
+      + '</div>';
+    const bottom = app.querySelector('.rx-bottom');
+    bottom.innerHTML = this.ITENS.slice(0, 4).map(it => this.item(it, '')).join('')
+      + '<a data-secao="mais" href="#" onclick="event.preventDefault();NAV.abrirMais()">' + rxIco('mais') + '<span>Mais</span><span class="rx-badge is-zero" data-badge="listas" hidden>0</span></a>';
+    this.atualizarBadges();
+    this.marcar(ROTA.atual || 'inicio');
+  },
+  desmontar() { document.body.classList.remove('rx-aluno', 'rx-kb-open'); RX_DRAWER.fechar(); },
+  marcar(rota) {
+    const sec = ROTA.secao(rota) || (rota === 'estatisticas' ? 'estatisticas' : '');
+    document.querySelectorAll('.rx-side [data-secao], .rx-bottom [data-secao]').forEach(a => {
+      if (a.getAttribute('data-secao') === sec) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  },
+  atualizarBadges() {
+    const n = (state.questoesSelecionadas || []).length;
+    document.querySelectorAll('[data-badge="listas"]').forEach(b => { b.textContent = n; b.classList.toggle('is-zero', n === 0); if (b.closest('.rx-bottom')) b.hidden = n === 0; });
+    document.querySelectorAll('#qbk2-lista-cnt, #qbk2-fab-cnt').forEach(el => { el.textContent = n; });
+  },
+  abrirMais() {
+    const claro = document.body.classList.contains('theme-light');
+    const n = (state.questoesSelecionadas || []).length;
+    const it = (rota, ico, txt, extra) => '<a class="rx-nav-item" href="#/' + rota + '" onclick="event.preventDefault();ROTA.ir(\'' + rota + '\')">' + rxIco(ico) + '<span>' + txt + '</span>' + (extra || '') + '</a>';
+    RX_DRAWER.abrir('mais', 'Mais', '<div class="rx-mais-lista">'
+      + it('listas', 'listas', 'Minhas listas', n ? '<span class="rx-badge">' + n + '</span>' : '')
+      + it('cronograma', 'cronograma', 'Cronograma')
+      + it('revisao-final', 'rf', 'Revisão Final')
+      + it('estatisticas', 'estat', 'Estatísticas')
+      + it('perfil', 'perfil', 'Meu perfil')
+      + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();toggleTheme();NAV.abrirMais()">' + rxIco(claro ? 'tema' : 'sol') + '<span>' + (claro ? 'Tema escuro' : 'Tema claro') + '</span></a>'
+      + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();RX_DRAWER.fechar();logout()">' + rxIco('sair') + '<span>Sair</span></a>'
+      + '</div>');
+  },
+  // Sub-navegação das seções com mais de uma tela.
+  SUBNAV: {
+    estudar: [['estudar', 'Questões'], ['aulas', 'Aulas e materiais']],
+    revisar: [['revisar', 'Revisões'], ['caderno', 'Caderno de erros']]
+  },
+  aoRenderizar(rota) {
+    if (!ROTA.ativo()) return;
+    const sec = ROTA.secao(rota); const itens = this.SUBNAV[sec];
+    const main = document.getElementById('main-content');
+    if (!itens || !main || main.querySelector('.rx-subnav')) return;
+    if (!/^(estudar|aulas|revisar|caderno)/.test(String(rota))) return;
+    const atualBase = String(rota).split('/')[0];
+    main.insertAdjacentHTML('afterbegin', '<nav class="rx-subnav" aria-label="Seção">' + itens.map(([r, t]) =>
+      '<a href="#/' + r + '" ' + (r === atualBase ? 'aria-current="page"' : '') + ' onclick="event.preventDefault();ROTA.ir(\'' + r + '\')">' + t + '</a>').join('') + '</nav>');
+  },
+  _ligarTeclado() {
+    // Teclado do celular aberto: a barra inferior sai da frente dos campos.
+    if (window.visualViewport) {
+      const f = () => { const aberto = (window.innerHeight - window.visualViewport.height) > 140; document.body.classList.toggle('rx-kb-open', aberto); };
+      window.visualViewport.addEventListener('resize', f);
+    }
+    // Alternativas acessíveis por teclado (Enter/Espaço) e com papel de botão.
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && (e.target.classList.contains('alternativa') || e.target.classList.contains('qbk-card-preview'))) { e.preventDefault(); e.target.click(); }
+    });
+    const marcar = (raiz) => { raiz.querySelectorAll('.alternativa[onclick]:not([tabindex])').forEach(el => { el.setAttribute('tabindex', '0'); el.setAttribute('role', 'button'); }); };
+    const main = document.getElementById('main-content');
+    if (main && window.MutationObserver) {
+      new MutationObserver(() => marcar(main)).observe(main, { childList: true, subtree: true });
+      marcar(main);
+    }
+  }
+};
+
+// ---------- tema: aplica também nos gráficos e na moldura ----------
+function applyTheme(theme) {
+  if (theme === 'light') document.body.classList.add('theme-light'); else document.body.classList.remove('theme-light');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'light' ? '#f1f5fb' : '#0e1a36');
+  try { RF_EMBED.mandarTema(); } catch (e) {}
+  if (state.usuario && state.usuario.perfil === 'aluno') {
+    try { if (NAV._montada) NAV.montar(); } catch (e) {}
+    if (state.view === 'home') setTimeout(() => { try { renderChartSimulados(); renderChartProgressoModulo(); } catch (e) {} }, 0);
+    else if (state.view === 'meus-simulados') setTimeout(() => { try { renderSimulados(state._simAba); } catch (e) {} }, 0);
+  }
+}
+function atualizarBadgeLista() {
+  const el = document.getElementById('badge-lista');
+  const n = (state.questoesSelecionadas || []).length;
+  if (el) { if (n > 0) { el.textContent = n; el.classList.remove('hidden'); } else el.classList.add('hidden'); }
+  try { NAV.atualizarBadges(); } catch (e) {}
+}
+
+// ============================================================================
+// PÁGINA INICIAL DO ALUNO
+// ============================================================================
+function _homeProximoPasso(semAtual, temaSemAtual, mats) {
+  const pend = (typeof TENTATIVAS !== 'undefined' && TENTATIVAS.uid) ? TENTATIVAS.lista() : [];
+  if (pend.length === 1) {
+    const t = pend[0]; const total = (t.questoes_ids || []).length; const resp = Object.keys(t.respostas || {}).length;
+    const venceu = t.termina_em && Date.parse(t.termina_em) <= RELOGIO.agora();
+    let ctx = TENTATIVAS.ROTULO[t.tipo] || t.tipo;
+    if (t.origem && t.origem.temaId) { const tm = TEMAS.find(x => x.id === t.origem.temaId); if (tm) ctx += ' de ' + tm.nome; } else if (t.origem && t.origem.nome) ctx += ' · ' + t.origem.nome;
+    const rest = t.termina_em ? Math.round((Date.parse(t.termina_em) - RELOGIO.agora()) / 1000) : null;
+    return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">' + (venceu ? 'Simulado com tempo esgotado' : 'Continuar atividade') + '</h2>'
+      + '<p>' + _escHtml(ctx) + (venceu ? '. O prazo acabou: ao abrir, ele é encerrado com o que você marcou.' : '. Você para onde parou, com as marcações guardadas.') + '</p>'
+      + '<div class="rx-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + resp + '"><i style="width:' + (total ? Math.round(resp / total * 100) : 0) + '%"></i></div>'
+      + '<div class="rx-next-meta">' + resp + ' de ' + total + ' respondidas' + (rest != null && !venceu ? ' · ' + Math.max(1, Math.round(rest / 60)) + ' min restantes' : '') + '</div>'
+      + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="TENTATIVAS.continuar(\'' + t.id + '\')">' + rxIco('play') + (venceu ? 'Ver resultado' : 'Continuar atividade') + '</button>'
+      + '<button type="button" class="rx-btn rx-btn-ghost" onclick="TENTATIVAS.modalRetomar()">Detalhes</button></div>';
+  }
+  if (pend.length > 1) {
+    return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Continuar atividade</h2>'
+      + '<p>Você tem ' + pend.length + ' atividades em andamento: ' + _escHtml(pend.slice(0, 3).map(t => TENTATIVAS.ROTULO[t.tipo] || t.tipo).join(', ')) + (pend.length > 3 ? '…' : '') + '. Escolha qual continuar.</p>'
+      + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="TENTATIVAS.modalRetomar()">' + rxIco('play') + 'Escolher e continuar</button></div>';
+  }
+  if (semAtual && temaSemAtual) {
+    const nQ = state.questoesPronto ? (state.questoes || []).filter(q => q.tema === temaSemAtual.id).length : null;
+    const partes = [];
+    if (nQ != null) partes.push(nQ + (nQ === 1 ? ' questão no banco' : ' questões no banco'));
+    if (mats.length) partes.push(mats.length + (mats.length === 1 ? ' material da semana' : ' materiais da semana'));
+    return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Estudar o tema da semana</h2>'
+      + '<p><b>' + _escHtml(temaSemAtual.nome) + '</b> · semana ' + semAtual.n + (semAtual.data ? ' · aula de ' + _escHtml(semAtual.data) : '') + (partes.length ? '. ' + partes.join(' e ') + '.' : '.') + '</p>'
+      + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="abrirTema(\'' + temaSemAtual.id + '\')">' + rxIco('estudar') + 'Estudar o tema da semana</button>'
+      + (mats.length ? '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'aulas\')">Aulas e materiais</button>' : '') + '</div>';
+  }
+  if (semAtual) {
+    return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">' + _escHtml(semAtual.titulo || 'Semana ' + semAtual.n) + '</h2>'
+      + '<p>Esta semana não tem tema de aula no cronograma. Aproveite para praticar no banco de questões ou colocar as revisões em dia.</p>'
+      + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="ROTA.ir(\'estudar\')">' + rxIco('estudar') + 'Abrir o banco de questões</button>'
+      + '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'cronograma\')">Ver cronograma</button></div>';
+  }
+  return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Praticar no banco de questões</h2>'
+    + '<p>Fora do calendário de aulas. O banco e o cronograma continuam disponíveis.</p>'
+    + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="ROTA.ir(\'estudar\')">' + rxIco('estudar') + 'Abrir o banco de questões</button>'
+    + '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'cronograma\')">Ver cronograma</button></div>';
+}
+function renderDashboardAluno() {
+  state.view = 'home';
+  const main = document.getElementById('main-content');
+  const hoje = new Date(); const agora = Date.now(); const SETE = 7 * 86400000;
+  const hora = hoje.getHours();
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  const nomeCurto = String(state.usuario.nome || '').split(' ')[0];
+  const diasSemBR = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  const mesesBR = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const dataTxt = diasSemBR[hoje.getDay()] + ', ' + hoje.getDate() + ' de ' + mesesBR[hoje.getMonth()];
+
+  const semAtual = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  const temaSemAtual = semAtual && semAtual.temaId ? TEMAS.find(t => t.id === semAtual.temaId) : null;
+  const visi = (typeof materiaisCache !== 'undefined' && Array.isArray(materiaisCache) ? materiaisCache : []).filter(m => m.visivel);
+  let mats = [];
+  try { mats = semAtual ? ((typeof _materiaisDaSemanaPraAluno === 'function') ? _materiaisDaSemanaPraAluno(semAtual, visi) : visi.filter(m => m.semana_numero === semAtual.n)) : []; } catch (e) { mats = []; }
+  if (!(state.materiaisConcluidos instanceof Set)) state.materiaisConcluidos = new Set();
+
+  // Indicadores dos últimos 7 dias (mesma janela nos três)
+  const resp = state.respostasAluno || [];
+  const r7 = resp.filter(r => r.data && (agora - Date.parse(r.data)) <= SETE);
+  const ac7 = r7.filter(r => r.correto).length;
+  const taxa7 = r7.length ? Math.round(ac7 / r7.length * 100) : null;
+  let cont = null; try { cont = _contagensRevisoes(); } catch (e) { cont = null; }
+  const temPlano = !!(cont && cont.todas.length);
+  const feitas7 = temPlano ? cont.grupos.feitas.filter(r => r.feitaEm && (agora - Date.parse(r.feitaEm)) <= SETE).length : null;
+  const ativos = (typeof _errosAtivos === 'function') ? _errosAtivos(state.cadernoErros || []) : [];
+  const altas = ativos.filter(e => e.prioridade === 3).length;
+
+  // Revisões: texto e estado
+  let revTit, revSub, revIco = '';
+  if (!temPlano) { revTit = 'Revisões programadas'; revSub = 'Nenhuma revisão prevista ainda. Elas aparecem quando você marca uma semana como em estudo ou concluída.'; }
+  else if (cont.nAtrasadas || cont.nHoje) { revIco = 'alerta'; revTit = (cont.nAtrasadas ? cont.nAtrasadas + (cont.nAtrasadas === 1 ? ' atrasada' : ' atrasadas') : '') + (cont.nAtrasadas && cont.nHoje ? ' · ' : '') + (cont.nHoje ? cont.nHoje + ' para hoje' : ''); revSub = 'Revisões pendentes. Abra a lista para marcar as que fizer.'; }
+  else if (cont.nEstaSemana) { revTit = cont.nEstaSemana + (cont.nEstaSemana === 1 ? ' revisão nos próximos 7 dias' : ' revisões nos próximos 7 dias'); revSub = 'Nada atrasado. Veja o que vem por aí.'; }
+  else { revIco = 'ok'; const fut = cont.grupos.proximas30.length + cont.grupos.futuras.length; revTit = 'Revisões em dia'; revSub = fut ? fut + (fut === 1 ? ' revisão programada' : ' revisões programadas') + ' para depois desta semana.' : 'Nenhuma pendência no momento.'; }
+  // Caderno de erros
+  let cadTit, cadSub;
+  if (!ativos.length) { cadTit = 'Caderno de erros'; cadSub = 'Nenhum erro anotado. Ao errar uma questão, você pode registrar aqui o que revisar.'; }
+  else { cadTit = ativos.length + (ativos.length === 1 ? ' erro anotado' : ' erros anotados'); cadSub = altas ? altas + (altas === 1 ? ' de alta prioridade para revisar.' : ' de alta prioridade para revisar.') : 'Nenhum de alta prioridade. Revise quando quiser.'; }
+
+  const matsHtml = mats.length ? '<div class="rx-week-lista">' + mats.map(m => { try { return renderLinhaMaterial(m); } catch (e) { return ''; } }).join('') + '</div>' : '';
+
+  main.innerHTML = _bannerDegustacao() + '<div class="rx-home">'
+    + '<div class="rx-greet"><div><h1 class="rx-h1">' + saudacao + ', ' + _escHtml(nomeCurto) + '.</h1><p class="rx-sub">' + dataTxt + (semAtual ? ' · semana ' + semAtual.n + (temaSemAtual ? ' · ' + _escHtml(temaSemAtual.nome) : (semAtual.titulo ? ' · ' + _escHtml(semAtual.titulo) : '')) : '') + '</p></div></div>'
+    + '<section class="rx-next" aria-label="Seu próximo passo">' + _homeProximoPasso(semAtual, temaSemAtual, mats) + '</section>'
+    + '<div class="rx-two">'
+    + '<a class="rx-card rx-card-link" href="#/revisar" onclick="event.preventDefault();ROTA.ir(\'revisar\')"><span class="rx-ico ' + revIco + '">' + rxIco('revisar') + '</span><div><h3>' + _escHtml(revTit) + '</h3><p>' + _escHtml(revSub) + '</p></div><span class="rx-seta">' + rxIco('chevron') + '</span></a>'
+    + '<a class="rx-card rx-card-link" href="#/caderno" onclick="event.preventDefault();ROTA.ir(\'caderno\')"><span class="rx-ico ' + (altas ? 'alerta' : 'roxo') + '">' + rxIco('livro') + '</span><div><h3>' + _escHtml(cadTit) + '</h3><p>' + _escHtml(cadSub) + '</p></div><span class="rx-seta">' + rxIco('chevron') + '</span></a>'
+    + '</div>'
+    + '<div><div class="rx-kpis" aria-label="Indicadores dos últimos 7 dias">'
+    + '<div class="rx-kpi"><div class="l">Respostas registradas</div><div class="v">' + r7.length + '</div><div class="s">últimos 7 dias' + (resp.length && !r7.length ? ' · ' + resp.length + ' no total' : '') + '</div></div>'
+    + '<div class="rx-kpi"><div class="l">Taxa de acerto</div><div class="v">' + (taxa7 == null ? '—' : taxa7 + '<small>%</small>') + '</div><div class="s">' + (taxa7 == null ? 'sem respostas no período' : ac7 + ' acertos em ' + r7.length + ' · 7 dias') + '</div></div>'
+    + '<div class="rx-kpi"><div class="l">Revisões realizadas</div><div class="v">' + (feitas7 == null ? '—' : feitas7) + '</div><div class="s">' + (feitas7 == null ? 'nenhuma prevista ainda' : 'últimos 7 dias') + '</div></div>'
+    + '</div><div class="rx-kpis-rodape"><a href="#/estatisticas" onclick="event.preventDefault();ROTA.ir(\'estatisticas\')">Ver relatórios completos →</a></div></div>'
+    + '<section class="rx-card rx-week" aria-label="Na sua semana"><div class="rx-week-head"><div><span class="rx-kicker">Na sua semana</span>'
+    + (semAtual ? '<h2 class="rx-h2">Semana ' + String(semAtual.n).padStart(2, '0') + ' · ' + _escHtml(semAtual.titulo || (temaSemAtual ? temaSemAtual.nome : '')) + '</h2><p class="rx-sub">' + (temaSemAtual ? 'Tema: ' + _escHtml(temaSemAtual.nome) + '. ' : '') + (mats.length ? mats.length + (mats.length === 1 ? ' material disponível.' : ' materiais disponíveis.') : 'Nenhum material publicado para esta semana ainda.') + '</p>'
+      : '<h2 class="rx-h2">Fora do calendário de aulas</h2><p class="rx-sub">Nenhuma semana em andamento hoje.</p>')
+    + '</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + (temaSemAtual ? '<button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="abrirTema(\'' + temaSemAtual.id + '\')">Questões do tema</button>' : '') + '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ROTA.ir(\'cronograma' + (semAtual ? '/' + semAtual.n : '') + '\')">Ver cronograma completo</button></div></div>'
+    + matsHtml + '</section>'
+    + '<details class="rx-card rx-reports" open><summary>Relatórios</summary>'
+    + '<div class="dash-charts-grid"><div class="dash-card"><h3>Evolução dos simulados</h3><div class="chart-wrap"><canvas id="chart-sim-evolucao"></canvas></div><div id="chart-sim-empty" class="chart-empty" style="display:none;">Nenhum simulado realizado ainda.<br><small style="opacity:0.7;">Faça um simulado pra ver sua evolução aparecer aqui.</small></div></div>'
+    + '<div class="dash-card"><h3>Acertos por módulo</h3><div class="chart-wrap"><canvas id="chart-modulo"></canvas></div><div id="chart-mod-empty" class="chart-empty" style="display:none;">Responda algumas questões pra ver seus acertos por módulo.</div></div></div>'
+    + '</details></div>';
+  setTimeout(() => { try { renderChartSimulados(); renderChartProgressoModulo(); } catch (e) { console.warn('[home] gráficos', e); } }, 0);
+}
+
+// ============================================================================
+// BANCO DE QUESTÕES
+// ============================================================================
+function _qbkFacetas() {
+  const idxResp = _idxRespostasPorQuestao();
+  const baseDif = _questoesComFiltros('dificuldade');
+  const cntPorDif = { facil: 0, media: 0, dificil: 0 };
+  baseDif.forEach(q => { if (q.dificuldade && cntPorDif[q.dificuldade] != null) cntPorDif[q.dificuldade]++; });
+  const baseProva = _questoesComFiltros('prova');
+  const cntPorProva = new Map();
+  baseProva.forEach(q => { if (!q.prova) return; const b = _provaBase(q.prova); cntPorProva.set(b, (cntPorProva.get(b) || 0) + 1); });
+  const provaAtual = state._provaAtual || '';
+  if (provaAtual && !cntPorProva.has(provaAtual)) cntPorProva.set(provaAtual, 0);
+  const provas = [...cntPorProva.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+  const baseStatus = _questoesComFiltros('status');
+  const cntStatus = { nao_feita: 0, acertei: 0, errei: 0 };
+  baseStatus.forEach(q => { cntStatus[_statusDaQuestao(q, idxResp)]++; });
+  const cronoMerged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+  const semanaAtualObj = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+  const baseSemana = _questoesComFiltros(['semana', 'tema']);
+  const semanas = cronoMerged.filter(s => _temasDaSemana(s).length && !s.cancelada).map(s => { const ts = _temasDaSemana(s); return Object.assign({}, s, { _cnt: baseSemana.filter(q => ts.includes(q.tema)).length }); });
+  return { idxResp, cntPorDif, provas, cntStatus, semanas, semanaAtualObj };
+}
+function _qbkFiltrosAtivos() {
+  const ativos = [];
+  const sideTemas = (state._sideTemasAtivos instanceof Set) ? state._sideTemasAtivos : new Set();
+  sideTemas.forEach(tid => { const t = TEMAS.find(x => x.id === tid); if (t) ativos.push({ label: t.nome, onClear: "toggleTemaSidebar('" + tid.replace(/'/g, "\\'") + "')" }); });
+  if (state._semanaFiltro) {
+    const merged = (typeof getCronogramaMerged === 'function') ? getCronogramaMerged() : (CRONOGRAMA_2026 || []);
+    const sem = merged.find(s => String(s.n) === String(state._semanaFiltro));
+    if (sem) { const tema = sem.temaId ? TEMAS.find(t => t.id === sem.temaId) : null; ativos.push({ label: 'Semana ' + String(sem.n).padStart(2, '0') + ': ' + (tema ? tema.nome : (sem.titulo || '')), onClear: "selecionarSemanaFiltro('')" }); }
+  }
+  if (state._provaAtual) ativos.push({ label: 'Prova: ' + state._provaAtual, onClear: "selecionarProva('')" });
+  if (state._difAtual) ativos.push({ label: 'Dificuldade: ' + ({ facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[state._difAtual] || state._difAtual), onClear: "selecionarDificuldade('')" });
+  if (state._statusRespAtual) ativos.push({ label: ({ nao_feita: 'Não feitas', acertei: 'Acertei', errei: 'Errei' }[state._statusRespAtual] || state._statusRespAtual), onClear: "selecionarStatusResp('')" });
+  const buscaEl = document.getElementById('filtro-busca');
+  const buscaVal = buscaEl ? buscaEl.value.trim() : String(state._qbkBusca || '').trim();
+  if (buscaVal) ativos.push({ label: 'Busca: "' + buscaVal + '"', onClear: "(function(){const e=document.getElementById('filtro-busca');if(e){e.value='';}state._qbkBusca='';filtrarQuestoes();})()" });
+  return ativos;
+}
+function _htmlFiltrosBanco() {
+  const f = _qbkFacetas();
+  const difAtual = state._difAtual || '', provaAtual = state._provaAtual || '', statusAtual = state._statusRespAtual || '', semanaFiltro = state._semanaFiltro || '';
+  const nAtivos = _qbkFiltrosAtivos().length;
+  const seg = (lista, atual, fn) => '<div class="qbk-seg" role="group">' + lista.map(([val, txt, cnt, cls]) =>
+    '<button type="button" class="' + (cls || '') + (atual === val ? ' active' : '') + '" aria-pressed="' + (atual === val) + '" onclick="' + fn + '(\'' + val + '\')">' + txt + (cnt != null ? ' <span class="qbk-seg-cnt">' + cnt + '</span>' : '') + '</button>').join('') + '</div>';
+  return '<div class="qbk2-f">'
+    + '<div class="qbk2-limpar"><span>' + (nAtivos ? nAtivos + (nAtivos === 1 ? ' filtro ativo' : ' filtros ativos') : 'Filtros') + '</span>' + (nAtivos ? '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="limparTodosFiltros()">Limpar todos</button>' : '') + '</div>'
+    + (f.semanas.length ? '<div class="qbk2-f-grupo"><label class="rx-label">Semana do curso</label><div class="qbk2-f-linha"><select class="rx-select" aria-label="Semana do curso" onchange="selecionarSemanaFiltro(this.value)"><option value=""' + (!semanaFiltro ? ' selected' : '') + '>Todas as semanas</option>'
+      + f.semanas.map(s => { const tema = TEMAS.find(t => t.id === s.temaId); const lab = s.temas ? ('Revisão ' + (s.revisaoN || '') + ' · ' + s.temas.map(_nomeCurtoTema).join(', ')) : (tema ? tema.nome : s.titulo); return '<option value="' + s.n + '"' + (String(semanaFiltro) === String(s.n) ? ' selected' : '') + '>Sem ' + String(s.n).padStart(2, '0') + ' · ' + _escHtml(lab) + ' (' + s._cnt + ')</option>'; }).join('')
+      + '</select>' + (f.semanaAtualObj && _temasDaSemana(f.semanaAtualObj).length ? '<button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" title="Questões do tema desta semana" aria-pressed="' + (String(semanaFiltro) === String(f.semanaAtualObj.n)) + '" onclick="selecionarSemanaFiltro(' + f.semanaAtualObj.n + ')">Esta semana</button>' : '') + '</div></div>' : '')
+    + (f.provas.length > 1 ? '<div class="qbk2-f-grupo"><label class="rx-label">Prova</label><select class="rx-select" aria-label="Prova" onchange="selecionarProva(this.value)"><option value=""' + (!provaAtual ? ' selected' : '') + '>Todas as provas</option>'
+      + f.provas.map(([nome, cnt]) => '<option value="' + _escHtml(nome) + '"' + (provaAtual === nome ? ' selected' : '') + '>' + _escHtml(nome) + ' (' + cnt + ')</option>').join('') + '</select></div>' : '')
+    + '<div class="qbk2-f-grupo"><span class="rx-label">Dificuldade</span>' + seg([['', 'Todas', null], ['facil', 'Fácil', f.cntPorDif.facil], ['media', 'Média', f.cntPorDif.media], ['dificil', 'Difícil', f.cntPorDif.dificil]], difAtual, 'selecionarDificuldade') + '</div>'
+    + '<div class="qbk2-f-grupo"><span class="rx-label">Como eu fui</span>' + seg([['', 'Todas', null], ['nao_feita', 'Não feita', f.cntStatus.nao_feita, 'seg-naofeita'], ['acertei', 'Acertei', f.cntStatus.acertei, 'seg-acertei'], ['errei', 'Errei', f.cntStatus.errei, 'seg-errei']], statusAtual, 'selecionarStatusResp') + '</div>'
+    + '<div class="qbk2-f-grupo"><div class="qbk-col-titulo"><span>Temas</span>' + ((state._sideTemasAtivos instanceof Set && state._sideTemasAtivos.size) ? '<button type="button" class="qbk-tree-limpar" onclick="limparTemasSidebar()">Limpar temas</button>' : '') + '</div><div class="qbk-tree">' + renderTreeTemas() + '</div></div>'
+    + '</div>';
+}
+function _refreshTreeTemas() { document.querySelectorAll('.qbk-tree').forEach(c => { c.innerHTML = renderTreeTemas(); }); }
+function qbkAbrirFiltros() { RX_DRAWER.abrir('qbk-filtros', 'Filtros', _htmlFiltrosBanco()); }
+function qbkAbrirLista() { RX_DRAWER.abrir('qbk-lista', 'Minha lista', '<div id="qbk-cesta">' + renderCestaLateral() + '</div>'); }
+function renderTelaQuestoes() {
+  const main = document.getElementById('main-content');
+  const totalGeral = (state.questoes || []).length;
+  if (!(state._sideTemasAtivos instanceof Set)) state._sideTemasAtivos = new Set();
+  if (!(state._sideModulosAbertos instanceof Set)) state._sideModulosAbertos = new Set();
+  state.view = 'tema'; state._qbkVisitado = true;
+  const n = (state.questoesSelecionadas || []).length;
+  main.innerHTML = '<div class="qbk2">'
+    + '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Banco de Questões</div>'
+    + '<div class="qbk2-head"><div><h1 class="rx-h1">Banco de questões</h1><p class="rx-sub">' + totalGeral + (totalGeral === 1 ? ' questão disponível' : ' questões disponíveis') + '. Resolva aqui ou monte sua lista de estudos.</p></div>'
+    + '<div class="qbk2-head-acoes"><button type="button" class="rx-btn rx-btn-secondary qbk2-btn-filtros" onclick="qbkAbrirFiltros()">' + rxIco('filtro') + 'Filtros <span class="rx-badge is-zero" id="qbk2-nfiltros">0</span></button>'
+    + '<button type="button" class="rx-btn rx-btn-primary qbk2-btn-lista" onclick="qbkAbrirLista()">' + rxIco('lista') + 'Minha lista <span class="rx-badge" id="qbk2-lista-cnt" style="background:rgba(255,255,255,.22);color:#fff">' + n + '</span></button></div></div>'
+    + '<div class="qbk-busca-wrap">' + rxIco('busca').replace('<svg ', '<svg width="16" height="16" ') + '<label class="rx-visually-hidden" for="filtro-busca">Buscar no texto da questão ou alternativas</label><input type="search" id="filtro-busca" class="qbk-busca" placeholder="Buscar no texto da questão ou alternativas…" value="' + _escHtml(state._qbkBusca || '') + '" oninput="agendarFiltrarQuestoes()" autocomplete="off"></div>'
+    + '<div id="qbk-filtros-ativos"></div>'
+    + '<div class="qbk2-grid"><aside class="qbk2-filtros" id="qbk2-filtros" aria-label="Filtros">' + _htmlFiltrosBanco() + '</aside><main id="lista-questoes" class="qbk2-main" aria-live="polite"></main></div>'
+    + '<button type="button" class="rx-btn rx-btn-primary qbk2-fab" onclick="qbkAbrirLista()">' + rxIco('lista') + 'Minha lista · <b id="qbk2-fab-cnt">' + n + '</b></button>'
+    + '</div>';
+  filtrarQuestoes();
+  if (RX_DRAWER.aberto === 'qbk-filtros') RX_DRAWER.atualizar(_htmlFiltrosBanco());
+  if (state._qbkIrTopo) { state._qbkIrTopo = false; try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); } }
+  try { NAV.aoRenderizar('estudar'); } catch (e) {}   // a abertura pelo abrirTema é adiada; a sub-navegação entra aqui
+}
+function _renderFiltrosAtivos() {
+  const cont = document.getElementById('qbk-filtros-ativos');
+  const ativos = _qbkFiltrosAtivos();
+  const badge = document.getElementById('qbk2-nfiltros');
+  if (badge) { badge.textContent = ativos.length; badge.classList.toggle('is-zero', ativos.length === 0); }
+  if (!cont) return;
+  if (!ativos.length) { cont.innerHTML = ''; return; }
+  cont.innerHTML = '<div class="qbk2-ativos"><span class="l">Filtros:</span>' + ativos.map(a =>
+    '<span class="rx-chip">' + _escHtml(a.label) + '<button type="button" aria-label="Remover filtro ' + _escHtml(a.label) + '" onclick="' + a.onClear.replace(/"/g, '&quot;') + '">' + rxIco('fechar').replace('<svg ', '<svg width="12" height="12" ') + '</button></span>').join('')
+    + '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="limparTodosFiltros()">Limpar tudo</button></div>';
+}
+function filtrarQuestoes() {
+  const buscaEl = document.getElementById('filtro-busca');
+  if (buscaEl) state._qbkBusca = buscaEl.value;
+  state._qbkIdxResp = _idxRespostasPorQuestao();
+  const questoes = _questoesComFiltros([]);
+  _renderFiltrosAtivos();
+  const container = document.getElementById('lista-questoes');
+  if (!container) return;
+  if (questoes.length === 0) {
+    const termo = String(state._qbkBusca || '').trim();
+    const algum = _qbkFiltrosAtivos().length > 0;
+    container.innerHTML = '<div class="rx-empty"><b>' + (termo ? 'Nenhuma questão contém "' + _escHtml(termo) + '"' : 'Nenhuma questão com esses filtros') + '</b>'
+      + (termo ? 'Tente outras palavras ou limpe a busca.' : (algum ? 'Ajuste os filtros para ver mais questões.' : 'As questões ainda estão carregando ou o banco está vazio.'))
+      + (algum ? '<div style="margin-top:12px"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="limparTodosFiltros()">Limpar todos os filtros</button></div>' : '') + '</div>';
+    return;
+  }
+  const totalPag = Math.ceil(questoes.length / QBK_POR_PAGINA);
+  if (state._paginaQuestoes == null || state._paginaQuestoes >= totalPag) state._paginaQuestoes = 0;
+  const ini = state._paginaQuestoes * QBK_POR_PAGINA;
+  const fim = Math.min(ini + QBK_POR_PAGINA, questoes.length);
+  const pagina = questoes.slice(ini, fim);
+  container.innerHTML = '<div class="qbk2-info"><div>Mostrando <b>' + (ini + 1) + '–' + fim + '</b> de <b>' + questoes.length + '</b> ' + (questoes.length === 1 ? 'questão' : 'questões') + '</div></div>'
+    + pagina.map((q, idx) => renderQuestaoCardLinha(q, ini + idx + 1)).join('')
+    + (totalPag > 1 ? renderPaginacaoQuestoes(totalPag) : '');
+  const abertas = pagina.filter(q => state._expandidoQuestoes && state._expandidoQuestoes.has(q.id));
+  if (abertas.length) setTimeout(() => abertas.forEach(q => _qbkKatex(q.id)), 30);
+}
+function _qbkKatex(qid) {
+  if (!window.renderMathInElement) return;
+  const el = document.getElementById('qbk-' + qid);
+  if (el) window.renderMathInElement(el, { delimiters: [{ left: '$', right: '$', display: false }], throwOnError: false });
+}
+function renderQuestaoCardLinha(q, numero) {
+  const tema = TEMAS.find(t => t.id === q.tema);
+  const dif = q.dificuldade || '';
+  const difLabel = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' }[dif] || '';
+  const sel = (state.questoesSelecionadas || []).includes(q.id);
+  const expandido = !!(state._expandidoQuestoes && state._expandidoQuestoes.has(q.id));
+  const idx = state._qbkIdxResp || _idxRespostasPorQuestao();
+  const st = _statusDaQuestao(q, idx);
+  const stTxt = { nao_feita: 'Não feita', acertei: 'Acertei', errei: 'Errei' }[st];
+  const stCls = { nao_feita: 'st-nao', acertei: 'st-acertei', errei: 'st-errei' }[st];
+  const enunPreview = String(q.enunciado || '').replace(/!\[[^\]]*\]\([^)]+\)/g, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const previewCurto = enunPreview.length > 220 ? enunPreview.substring(0, 220) + '…' : enunPreview;
+  return '<article class="qbk-card' + (expandido ? ' is-aberta' : '') + '" id="qbk-' + q.id + '" data-num="' + numero + '" aria-label="Questão ' + q.id + '">'
+    + '<div class="qbk-card-head"><div class="qbk-card-meta"><span class="qbk-id">#' + q.id + '</span><span class="qbk-sep">·</span><span class="qbk-tema">' + _escHtml(tema ? tema.nome : 'Sem tema') + '</span>' + (q.prova ? '<span class="qbk-sep">·</span><span>' + _escHtml(String(q.prova)) + '</span>' : '') + '</div>'
+    + '<div class="qbk-card-tags">' + (difLabel ? '<span class="rx-tag ' + dif + '">' + difLabel + '</span>' : '') + '<span class="rx-tag ' + stCls + '">' + stTxt + '</span></div></div>'
+    + (expandido ? '' : '<p class="qbk-card-preview" role="button" tabindex="0" onclick="toggleVerCompleta(' + q.id + ')" aria-label="Ver questão completa">' + _escHtml(previewCurto) + '</p>')
+    + '<div class="qbk-card-acoes">'
+    + (expandido ? '' : '<button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="resolverQuestao(' + q.id + ')">Resolver</button>')
+    + '<button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" data-lista-btn="' + q.id + '" aria-pressed="' + sel + '" onclick="toggleQuestaoLista(' + q.id + ');atualizarBotaoLista(' + q.id + ');">' + (sel ? rxIco('check') + 'Na lista' : 'Adicionar à lista') + '</button>'
+    + htmlBtnReportarErro(q.id)
+    + '<button type="button" class="qbk-ver-mais' + (expandido ? ' aberto' : '') + '" onclick="toggleVerCompleta(' + q.id + ')">' + (expandido ? 'Esconder questão' : 'Ver completa') + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+    + '</div>'
+    + (expandido ? '<div class="qbk-card-expanded">' + renderQuestaoCompleta(q) + '</div>' : '')
+    + '</article>';
+}
+function renderQuestaoCompleta(q) {
+  const imgsHtml = (q.imagens || []).map(src => '<div class="questao-img-wrap"><img class="questao-img" src="' + src + '" alt="figura da questão"></div>').join('');
+  let altsHtml;
+  if (q.alternativasImg && q.alternativasImg.length) {
+    altsHtml = q.alternativasImg.map((src, i) => '<div class="alternativa alt-img" role="button" tabindex="0" onclick="responderQuestao(' + q.id + ', ' + i + ')"><div class="alternativa-letra">' + String.fromCharCode(65 + i) + '</div><img class="alt-img-content" src="' + src + '" alt="alternativa ' + String.fromCharCode(65 + i) + '"></div>').join('');
+  } else {
+    altsHtml = (q.alternativas || []).map((alt, i) => '<div class="alternativa" role="button" tabindex="0" onclick="responderQuestao(' + q.id + ', ' + i + ')"><div class="alternativa-letra">' + String.fromCharCode(65 + i) + '</div><div>' + formatarEnunciado(String(alt).replace(/^[A-E]\)\s*/, '')) + '</div></div>').join('');
+  }
+  return '<div class="questao-enunciado" style="margin-bottom:12px;">' + formatarEnunciado(q.enunciado) + '</div>' + imgsHtml
+    + '<div class="alternativas ' + (q.alternativasImg ? 'alts-em-imagem' : '') + '" id="alts-' + q.id + '">' + altsHtml + '</div><div id="explicacao-' + q.id + '"></div>';
+}
+function _rerenderCardQuestao(qid) {
+  const el = document.getElementById('qbk-' + qid); if (!el) return false;
+  const q = (state.questoes || []).find(x => x.id === qid); if (!q) return false;
+  el.outerHTML = renderQuestaoCardLinha(q, Number(el.getAttribute('data-num')) || 0);
+  return true;
+}
+function toggleVerCompleta(qid) {
+  if (!state._expandidoQuestoes) state._expandidoQuestoes = new Set();
+  if (state._expandidoQuestoes.has(qid)) state._expandidoQuestoes.delete(qid); else state._expandidoQuestoes.add(qid);
+  if (!_rerenderCardQuestao(qid)) filtrarQuestoes();
+  if (state._expandidoQuestoes.has(qid)) setTimeout(() => _qbkKatex(qid), 30);
+}
+function resolverQuestao(qid) {
+  if (!state._expandidoQuestoes) state._expandidoQuestoes = new Set();
+  state._expandidoQuestoes.add(qid);
+  if (!_rerenderCardQuestao(qid)) filtrarQuestoes();
+  setTimeout(() => {
+    _qbkKatex(qid);
+    const el = document.getElementById('qbk-' + qid);
+    if (el) { try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} const a = el.querySelector('.alternativa'); if (a) setTimeout(() => { try { a.focus({ preventScroll: true }); } catch (e) {} }, 350); }
+  }, 30);
+}
+function atualizarBotaoLista(qid) {
+  const sel = (state.questoesSelecionadas || []).includes(qid);
+  document.querySelectorAll('[data-lista-btn="' + qid + '"]').forEach(btn => {
+    if (btn.classList.contains('rx-btn')) {
+      btn.classList.remove('btn-success', 'btn-secondary', 'btn');
+      btn.setAttribute('aria-pressed', String(sel));
+      btn.innerHTML = sel ? rxIco('check') + 'Na lista' : 'Adicionar à lista';
+    } else {
+      btn.innerHTML = sel ? '✓ Na lista' : '+ Adicionar à lista';
+      btn.classList.toggle('btn-success', sel); btn.classList.toggle('btn-secondary', !sel);
+    }
+  });
+  try { NAV.atualizarBadges(); } catch (e) {}
+  if (RX_DRAWER.aberto === 'qbk-lista') _refreshCestaLateral();
+}
+function renderCestaLateral() {
+  const ids = state.questoesSelecionadas || [];
+  const n = ids.length;
+  if (n === 0) {
+    return '<div class="rx-empty" style="margin-bottom:14px"><b>Sua lista está vazia</b>Toque em "Adicionar à lista" nas questões para montar sua lista de estudos.</div>' + _renderDesempenhoBanco();
+  }
+  const qs = ids.map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
+  const itensHtml = qs.map((q, idx) => {
+    const tema = TEMAS.find(t => t.id === q.tema);
+    const preview = String(q.enunciado || '').replace(/!\[[^\]]*\]\([^)]+\)/g, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const previewCurto = preview.length > 90 ? preview.substring(0, 90) + '…' : preview;
+    return '<div class="qbk-cesta-item"><div class="qbk-cesta-item-info"><div class="qbk-cesta-item-meta"><b>' + String(idx + 1).padStart(2, '0') + '</b><span>' + _escHtml(tema ? tema.nome : '—') + (q.prova ? ' · ' + _escHtml(String(q.prova)) : '') + '</span></div><div class="qbk-cesta-item-titulo">' + _escHtml(previewCurto || 'Sem enunciado') + '</div></div>'
+      + '<button type="button" class="qbk-cesta-item-rm" onclick="removerDaCesta(' + q.id + ')" aria-label="Remover da lista">' + rxIco('fechar').replace('<svg ', '<svg width="14" height="14" ') + '</button></div>';
+  }).join('');
+  return '<div class="qbk-cesta-head"><div class="qbk-cesta-titulo">' + n + (n === 1 ? ' questão selecionada' : ' questões selecionadas') + '</div></div>'
+    + '<div class="qbk-cesta-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="RX_DRAWER.fechar();abrirModalGerar()">Estudar com essa lista</button>'
+    + '<button type="button" class="rx-btn rx-btn-danger rx-btn-sm" onclick="limparCestaLateral()">Limpar lista</button></div>'
+    + '<div class="qbk-cesta-itens">' + itensHtml + '</div>'
+    + '<div style="border-top:1px solid var(--rx-line);margin-top:16px;padding-top:16px;">' + _renderDesempenhoBanco() + '</div>';
+}
+function _refreshCestaLateral() {
+  const cont = document.getElementById('qbk-cesta');
+  if (cont) cont.innerHTML = renderCestaLateral();
+  try { NAV.atualizarBadges(); } catch (e) {}
+}
+function limparCestaLateral() {
+  const arr = Array.isArray(state.questoesSelecionadas) ? state.questoesSelecionadas : [];
+  const n = arr.length;
+  if (n === 0) { alert('Sua lista já está vazia.'); return; }
+  if (!confirm('Esvaziar sua lista de ' + n + (n === 1 ? ' questão' : ' questões') + '?\n\nNão dá pra desfazer.')) return;
+  const antigos = arr.slice();
+  state.questoesSelecionadas = [];
+  try { salvarListaLocal(); } catch (e) { console.warn('Erro salvarListaLocal:', e); }
+  try { atualizarBadgeLista(); } catch (e) {}
+  try { _refreshCestaLateral(); } catch (e) {}
+  antigos.forEach(id => { try { atualizarBotaoLista(id); } catch (e) {} });
+}
+// Ao responder no banco, a etiqueta de situação do cartão acompanha (sem refazer o cartão).
+{
+  const _respOrig = responderQuestao;
+  responderQuestao = function (qid, idx, opts) {
+    const r = _respOrig(qid, idx, opts);
+    try {
+      const q = (state.questoes || []).find(x => x.id === qid);
+      const tag = document.querySelector('#qbk-' + qid + ' .rx-tag.st-nao, #qbk-' + qid + ' .rx-tag.st-errei, #qbk-' + qid + ' .rx-tag.st-acertei');
+      if (q && tag) { const ok = idx === q.correta; tag.className = 'rx-tag ' + (ok ? 'st-acertei' : 'st-errei'); tag.textContent = ok ? 'Acertei' : 'Errei'; }
+    } catch (e) {}
+    return r;
+  };
+}
+
+// Rotas das telas do aluno (Voltar/Avançar do navegador e links #/...).
+[['renderHome', () => 'inicio'],
+ ['abrirTema', (id) => (id ? 'estudar/tema/' + encodeURIComponent(id) : 'estudar')],
+ ['renderTelaQuestoes', () => (String(ROTA.atual || '').startsWith('estudar') ? null : 'estudar')],
+ ['renderVideoAulas', () => 'aulas'],
+ ['renderMinhasRevisoes', () => 'revisar'],
+ ['renderCadernoErros', () => 'caderno'],
+ ['renderSimulados', (aba) => (aba && typeof aba === 'string' ? 'simulados/' + aba : 'simulados')],
+ ['renderSimuladoTRI', () => 'simulados/tri'],
+ ['abrirSimuladoConfig', () => 'simulados/novo'],
+ ['renderMontarLista', () => 'listas'],
+ ['abrirListaSalva', (id) => 'listas/' + id],
+ ['renderCronograma', () => 'cronograma'],
+ ['renderRevisaoFinal', () => 'revisao-final'],
+ ['renderEstatisticasAvancadas', () => 'estatisticas'],
+ ['abrirMeuPerfil', () => 'perfil']].forEach(([n, f]) => ROTA.envolver(n, f));
 
 // ========== INIT ==========
 (async function init() {
