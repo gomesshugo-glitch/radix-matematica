@@ -196,7 +196,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
     <div class="num"><b>45</b><small>questões</small></div>
     <div class="cartao">
       <h2>Slides do aulão com a resolução</h2>
-      <p>As 45 questões passo a passo · PowerPoint</p>
+      <p>As 45 questões passo a passo · PDF</p>
       <div class="cadeado" id="cadeado">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         Use o código mostrado no fim do aulão e responda em 1 minuto.
@@ -291,9 +291,9 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
     </div>
     <a class="botao am" id="baixar" href="#" rel="noopener">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-      Baixar os slides (9 MB)
+      Baixar os slides (PDF)
     </a>
-    <p class="dica">Abre no PowerPoint ou no Google Apresentações. Não baixou? <a href="#" id="baixar2" rel="noopener" style="color:var(--amarelo)">Toque aqui</a>.</p>
+    <p class="dica">Não baixou? <a href="#" id="baixar2" rel="noopener" style="color:var(--amarelo)">Toque aqui</a>.</p>
     <div class="bloco proximo">
       <h3>Quer seguir treinando até o ENEM?</h3>
       <p>A Revisão Final do Radix vai até a prova, com cronograma semana a semana.</p>
@@ -319,7 +319,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
   'use strict';
   var SUPABASE_URL = 'https://bvvfalzwpwvkoghmjvom.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_2_YTQi6igB_VeDBE6joJXg_SNPMIHcC'; // chave publicável (a mesma do app); só executa a RPC abaixo
-  var CHAVE_LOCAL = 'imersao-2026-09-27-liberado';
+  var CHAVE_LOCAL = 'imersao-2026-09-27-dados';
 
   var form = document.getElementById('form');
   var enviar = document.getElementById('enviar');
@@ -455,7 +455,8 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
       enviar.disabled = false;
       enviar.textContent = 'Liberar download';
       if (res.ok) {
-        gravarLocal({ nome: d.nome, arquivo: res.arquivo, em: new Date().toISOString() });
+        gravarLocal({ codigo: d.codigo, nome: d.nome, email: d.email, whatsapp: form.whatsapp.value,
+                      situacao: d.situacao, participou: d.participou, nota: d.nota, novidades: d.novidades, consentimento: true });
         apontarArquivo(res.arquivo);
         mostrarLiberado(d.nome);
         return;
@@ -491,13 +492,18 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
+  // quem volta encontra o formulário preenchido: um toque libera de novo
+  // (o link não fica guardado, então trocar o arquivo no servidor não quebra nada)
+  try { localStorage.removeItem('imersao-2026-09-27-liberado'); } catch (e) {}
   var salvo = lerLocal();
-  if (salvo && salvo.arquivo) {
-    apontarArquivo(salvo.arquivo);
-    form.style.display = 'none';
-    cadeado.style.display = 'none';
-    liberado.classList.add('on');
-    if (salvo.nome) document.getElementById('ok-txt').textContent = 'Oi de novo, ' + String(salvo.nome).split(' ')[0] + '! Seus slides continuam aqui:';
+  if (salvo) {
+    ['codigo','nome','email','whatsapp'].forEach(function(k){ if (salvo[k] && form[k]) form[k].value = salvo[k]; });
+    ['situacao','participou','nota'].forEach(function(k){
+      var el = salvo[k] !== undefined && form.querySelector('[name="' + k + '"][value="' + salvo[k] + '"]'); if (el) el.checked = true;
+    });
+    form.novidades.checked = !!salvo.novidades;
+    form.consentimento.checked = !!salvo.consentimento;
+    enviar.textContent = 'Baixar de novo';
   }
 })();
 </script>
