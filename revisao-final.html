@@ -656,8 +656,9 @@ function definirAcesso(status) {
   ACESSO.status = status || 'anon';
   if (status === 'aprovado' || status === 'professor') { ACESSO.modo = 'completo'; ACESSO.semanasMax = 7; }
   else if (status === 'degustacao') { ACESSO.modo = 'amostra'; ACESSO.semanasMax = 1; }
-  else if (!status || status === 'anon') { ACESSO.modo = 'anon'; ACESSO.semanasMax = 0; }
-  else { ACESSO.modo = 'bloqueado'; ACESSO.semanasMax = 0; }
+  else if (status === 'bloqueado') { ACESSO.modo = 'bloqueado'; ACESSO.semanasMax = 0; }
+  // visitante, cadastro pendente, degustação vencida: responde a entrevista, o plano abre com a matrícula
+  else { ACESSO.modo = 'entrevista'; ACESSO.semanasMax = 0; }
 }
 const app = {
   perfil: null, ov: {}, minis: {}, planos: {},
@@ -721,6 +722,29 @@ const app = {
       '<p class="sub">O plano faz parte da Revisão Final do Radix. Entre com a sua conta para abrir o seu. Se ainda não é aluno, faça sua matrícula: o plano é liberado junto com o acesso.</p>' +
       '<div class="acts"><button type="button" class="btn btn-pri" onclick="location.href=\'/?voltar=revisao-final\'">Entrar no app</button>' +
       '<button type="button" class="btn btn-sec" onclick="_pedirNavegacao(OFERTA.matricula)">Quero me matricular</button></div></div>';
+  },
+  htmlPronto() {
+    const q = this.perfil || {}, logado = ACESSO.status !== 'anon';
+    const faixas = ['menos de 10', '10–15', '15–20', '20–25', '25–30', '30–35', '35–40', 'acima de 40'];
+    const nDif = Object.keys(q.dif || {}).filter(k => q.dif[k] === -1).length;
+    const semana = ((q.horasDia || 0) * ((q.dias || []).length)).toFixed(1).replace('.', ',');
+    const texto = logado
+      ? 'Suas respostas estão guardadas neste aparelho. Assim que a sua matrícula for confirmada e o acesso liberado, volte aqui: o plano das 7 semanas abre montado com essas respostas.'
+      : 'Suas respostas estão guardadas neste aparelho. Depois da matrícula, entre com a sua conta aqui mesmo e o plano das 7 semanas abre montado com essas respostas.';
+    return '<div class="q-wrap"><span class="eyebrow">' + esc(CONFIG.PRODUTO) + ' · ' + esc(CONFIG.EDICAO) + '</span>' +
+      '<h2>Entrevista concluída. Seu roteiro está pronto.</h2>' +
+      '<div class="resumo-grid">' +
+      '<div class="stat"><div class="v">' + (faixas[q.acertos] || '–') + '</div><div class="l">ACERTOS HOJE</div></div>' +
+      '<div class="stat"><div class="v">' + (q.meta || '–') + '/45</div><div class="l">META</div></div>' +
+      '<div class="stat"><div class="v">' + semana + 'h</div><div class="l">POR SEMANA</div></div>' +
+      '<div class="stat neg"><div class="v">' + nDif + '</div><div class="l">COM DIFICULDADE</div></div></div>' +
+      '<p class="sub">O plano semana a semana, os mini-simulados e os recursos da plataforma fazem parte da Revisão Final e são liberados com a matrícula.</p>' +
+      '<p class="sub">' + texto + '</p>' +
+      this.htmlOferta() +
+      '<div class="acts">' +
+      (logado ? '' : '<button type="button" class="btn btn-sec" onclick="location.href=\'/?voltar=revisao-final\'">Já sou aluno: entrar</button>') +
+      '<button type="button" class="btn btn-ghost" onclick="app._editando=true;app._qTemp=null;app.qStep=0;app.render({modo:\'tela\'})">Revisar minhas respostas</button>' +
+      '</div></div>';
   },
   htmlBloqueado() {
     const st = ACESSO.status;
@@ -1259,11 +1283,12 @@ const app = {
     const root = document.getElementById('root');
     const y = (typeof window !== 'undefined' && window.scrollY) || 0;
     let tela = ACESSO.modo === 'anon' ? 'anon' : ACESSO.modo === 'bloqueado' ? 'bloqueado'
-      : (!this.perfil || this._editando) ? 'quest' : (this.posProva() ? 'pos' : 'plano');
-    document.body.classList.toggle('sem-plano', tela === 'anon' || tela === 'bloqueado');
+      : (!this.perfil || this._editando) ? 'quest'
+      : ACESSO.modo === 'entrevista' ? 'pronto' : (this.posProva() ? 'pos' : 'plano');
+    document.body.classList.toggle('sem-plano', tela === 'anon' || tela === 'bloqueado' || tela === 'pronto' || (tela === 'quest' && ACESSO.modo === 'entrevista'));
     const mudouTela = tela !== this._tela; this._tela = tela;
     root.innerHTML = tela === 'anon' ? this.htmlAnon() : tela === 'bloqueado' ? this.htmlBloqueado()
-      : tela === 'quest' ? this.htmlQuest() : tela === 'pos' ? this.htmlPosProva() : this.htmlPlano();
+      : tela === 'pronto' ? this.htmlPronto() : tela === 'quest' ? this.htmlQuest() : tela === 'pos' ? this.htmlPosProva() : this.htmlPlano();
     this._posRender();
     if (mudouTela || opts.modo === 'tela') window.scrollTo(0, 0);
     else if (opts.scrollPara) {
@@ -1463,7 +1488,7 @@ const app = {
           '<span class="esp"></span>' +
           (st < passos.length - 1
             ? '<button type="button" class="btn btn-pri" onclick="app.qAvancar()">Continuar</button>'
-            : '<button type="button" class="btn btn-pri" onclick="app.qConcluir()">' + (this.perfil ? 'Recalcular meu plano' : 'Criar meu roteiro') + '</button>') +
+            : '<button type="button" class="btn btn-pri" onclick="app.qConcluir()">' + (ACESSO.modo === 'entrevista' ? 'Concluir entrevista' : this.perfil ? 'Recalcular meu plano' : 'Criar meu roteiro') + '</button>') +
         '</div></div></div>';
   },
   qNivel() {
@@ -1626,7 +1651,8 @@ const app = {
     this.perfil = this._qTemp;
     this._qTemp = null; this.qStep = 0; this._editando = false;
     this.salvar(); this.render({ modo: 'tela' });
-    this.toast('ok', 'Roteiro pronto', 'Semanas futuras calculadas. Semanas já iniciadas mantêm o plano congelado.');
+    if (ACESSO.modo === 'entrevista') this.toast('ok', 'Respostas salvas', 'O plano abre com a matrícula na Revisão Final.');
+    else this.toast('ok', 'Roteiro pronto', 'Semanas futuras calculadas. Semanas já iniciadas mantêm o plano congelado.');
   },
 
   /* ============================================================
@@ -2037,7 +2063,7 @@ const SYNC = {
     let status = 'sem_perfil';
     try { const { data: st, error: eSt } = await this.sb.rpc('fn_status_atual'); if (!eSt && st) status = st; } catch (e) { console.warn('[acesso]', e); }
     definirAcesso(status);
-    if (ACESSO.modo === 'bloqueado') return true;   // logado, mas sem plano: a tela explica o motivo
+    if (ACESSO.modo === 'bloqueado' || ACESSO.modo === 'entrevista') return true;   // logado, sem plano: respostas ficam no aparelho
     try {
       const { data: p } = await this.sb.from('perfis').select('nome').eq('id', this.uid).single();
       if (p && p.nome) { this.nome = p.nome; CONFIG.ALUNO = p.nome; }
