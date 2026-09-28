@@ -6466,6 +6466,14 @@
   .crv-btn:focus-visible { outline: 2px solid var(--crv-azul); outline-offset: 2px; }
   @media (max-width: 480px) { .crv-bloco { padding: 14px; } .crv-card { padding: 16px; } }
 
+  /* ---------- Revisão Final: lista pronta da atividade (28/09/2026) ---------- */
+  .rfl-banner { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(59,130,246,.35); background: rgba(59,130,246,.10); color: var(--rx-text); font-size: var(--rx-fs-sm); margin: 10px 0 0; line-height: 1.45; }
+  .rfl-banner.ok { border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.10); margin: 16px 0 0; }
+  .rfl-banner .rx-tag { flex: none; background: rgba(59,130,246,.16); color: var(--rx-primary); }
+  body.theme-light .rfl-banner .rx-tag { color: #1d4ed8; }
+  .rfl-banner b { color: var(--rx-text); }
+  .rfl-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
   /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
   #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
   #radix-sync.on{display:flex}
@@ -8374,7 +8382,7 @@ async function iniciarSessao() {
   const _temaURL = _q.get('tema');
   state._destinoInicial =
       (_voltar === 'revisao-final') ? { tela: 'revisao-final' }
-    : (_temaURL)                    ? { tela: 'tema', tema: _temaURL, nivel: _q.get('nivel') || '' }
+    : (_temaURL)                    ? { tela: 'tema', tema: _temaURL, nivel: _q.get('nivel') || '', extra: { key: _q.get('rf') || '', questoes: _q.get('n') || '', efv: _q.get('efv') || '', semana: _q.get('sem') || '' } }
     : null;
   await carregarDados();
   mostrarApp();
@@ -9555,12 +9563,18 @@ const RF_EMBED = {
   },
 
   // "Abrir atividade" no plano cai no banco de questões já filtrado no tema.
-  async abrirTemaDoPlano(temaId, nivel) {
+  async abrirTemaDoPlano(temaId, nivel, extra) {
     if (typeof TEMAS === 'undefined' || !TEMAS.some(t => t.id === temaId)) {
       console.warn('[revisao] tema desconhecido:', temaId);
       return;
     }
     const nivelOk = ['facil', 'media', 'dificil'].indexOf(nivel) >= 0 ? nivel : '';
+    // (28/09/2026) Atividade de questões do plano: o app monta a lista pronta e abre em Modo Prova.
+    const ex = extra || {}; const nQ = parseInt(ex.questoes, 10);
+    if (nQ > 0 && typeof RF_LISTA !== 'undefined' && state.usuario && state.usuario.perfil !== 'professor') {
+      RF_LISTA.iniciar({ temaId, n: nQ, efv: parseInt(ex.efv, 10), nivel: nivelOk, key: ex.key ? String(ex.key) : null, semana: parseInt(ex.semana, 10) || null });
+      return;
+    }
     // abrirTema() lê state.questoes e essa tela não passa por _comBanco.
     if (!state.questoesPronto && state.questoesPromise) {
       radixShowLoading('Carregando banco de questões…');
@@ -9590,9 +9604,10 @@ const RF_EMBED = {
       if (alt) f.style.height = alt + 'px';
       return;
     }
-    if (d.radix === 'plano-pronto')      { RF_EMBED.mandarTema(); return; }
+    if (d.radix === 'plano-pronto')      { RF_EMBED.mandarTema(); try { RF_LISTA.entregarPendentes(); } catch (e) {} return; }
+    if (d.radix === 'plano-registrado')  { RF_LISTA.confirmado(String(d.key || '')); return; }
     if (d.radix === 'plano-navegar')     { RF_EMBED.navegar(String(d.destino || '')); return; }
-    if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || ''), String(d.nivel || '')); return; }
+    if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || ''), String(d.nivel || ''), d); return; }
   }
 };
 window.addEventListener('message', RF_EMBED.aoReceber);
@@ -9644,7 +9659,7 @@ function _abrirDestinoInicial() {
   }
   try {
     if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
-    if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel); return; }
+    if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel, d.extra); return; }
   } catch (e) { console.warn('[destino inicial]', e); }
 }
 
@@ -11223,7 +11238,7 @@ function renderEstudoDigital() {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;padding:14px 16px;background:${corBgSuave};border:1px solid ${corBorda};border-radius:12px;">
       <div>
         <h2 style="margin:0;font-size:18px;color:${corAcento};">${tituloModo}</h2>
-        <p style="margin:4px 0 0;font-size:12.5px;color:var(--radix-text-muted);">${subtituloModo}</p>${ACOMP.htmlBannerRecuperacao(_estudoAtual)}
+        <p style="margin:4px 0 0;font-size:12.5px;color:var(--radix-text-muted);">${subtituloModo}</p>${ACOMP.htmlBannerRecuperacao(_estudoAtual)}${RF_LISTA.htmlBanner(_estudoAtual)}
       </div>
       <div style="text-align:right;">
         <div style="font-size:11.5px;color:var(--radix-text-muted);">Progresso</div>
@@ -23318,7 +23333,7 @@ function _retomarEstudo(t) {
   const qs = (t.questoes_ids || []).map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
   if (!qs.length) { alert('Nenhuma das questões dessa atividade está mais disponível no banco.'); return; }
   const resp = {}; Object.keys(t.respostas || {}).forEach(k => { const qid = Number(k); if (qs.some(q => q.id === qid)) resp[qid] = t.respostas[k].i; });
-  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length, recuperacao: (t.origem && t.origem.recuperacao) || null };
+  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length, recuperacao: (t.origem && t.origem.recuperacao) || null, revisao: (t.origem && t.origem.revisao) || null };
   TENTATIVAS.marcarAberta(t.id);
   state.view = 'estudo-digital';
   renderEstudoDigital();
@@ -23419,7 +23434,8 @@ async function _finalizarEstudoDigital() {
     }
     FILA.enfileirar({ id: opId, tipo: 'gravar', payload: { tipo: 'respostas', dados: { itens, tentativa_id: tentativaId, finaliza: true, tentativa: t ? TENTATIVAS.retrato(t) : null } } });
     TENTATIVAS.finalizar(tentativaId, opId);
-    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId, tentativaId, recuperacao: (_estudoAtual && _estudoAtual.recuperacao) || null });
+    if (_estudoAtual && _estudoAtual.revisao) { try { RF_LISTA.registrar(_estudoAtual.revisao, acertos, total); } catch (e) { console.warn('[revisao] registro:', e); } }
+    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId, tentativaId, recuperacao: (_estudoAtual && _estudoAtual.recuperacao) || null, revisao: (_estudoAtual && _estudoAtual.revisao) || null });
     _estudoAtual = null;
   } finally { _finalizarEstudoDigital._ocupado = false; }
 }
@@ -23453,6 +23469,7 @@ function _renderResultadoEstudo(r) {
     + '<div class="conf-tripla"><span><b>' + acertos + '</b> acertos</span><span><b>' + erros + '</b> erros</span><span><b>' + brancos + '</b> em branco</span></div>'
     + _htmlStatusGravacao(opId)
     + '</div>'
+    + RF_LISTA.htmlResultado(r)
     + '<div style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
     + ACOMP.htmlAcoesResultado(ACOMP.ctxEstudo(r))
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">📚 Voltar ao Banco</button></div>';
@@ -25294,6 +25311,142 @@ function _htmlCardRevisaoGeral(s, mostrarProgresso, ehAluno) {
     + (geoId ? '<div class="crv-geo">' + _CRV_ICO_GEO + '<span>' + _escHtml(_crvGeometria(s)) + '</span></div>' : '')
     + stats + botao + '</div></article>';
 }
+
+// ============================================================================
+// REVISÃO FINAL — lista pronta da atividade (28/09/2026)
+// "Abrir atividade" no plano deixa de cair no banco para o aluno escolher: o
+// app monta a lista com a quantidade pedida pelo plano, equilibrada pela
+// dificuldade efetiva do aluno naquele assunto, e abre em Modo Prova. Ao
+// encerrar, o resultado (acertos/total) vai para o plano (registro automático
+// da atividade), entregue quando a Revisão Final é aberta de novo.
+// ============================================================================
+const RF_LISTA = {
+  // Mistura por dificuldade efetiva do assunto (efv: -1 dificuldade, 0 padrão, 1 domínio).
+  MIX: { '-1': { facil: 0.6, media: 0.3, dificil: 0.1 }, '0': { facil: 0.4, media: 0.4, dificil: 0.2 }, '1': { facil: 0.2, media: 0.4, dificil: 0.4 } },
+  DIAS_REFAZER: 30,      // acerto com mais de 30 dias pode voltar antes de um acerto recente
+  MIN_LISTA: 5,          // acerto recente só volta para a lista não ficar menor que isso
+  MAX_Q: 60,
+  chavePend() { return 'radix_rf_pend_' + ((state.usuario && state.usuario.id) || 'anon'); },
+  _seed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; },
+  _rand(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; },
+  // Monta a lista: prioridade questão nunca feita → errada na última vez → certa há mais de 30 dias → certa recente.
+  // Mesma atividade no mesmo dia → mesma lista (sorteio com semente), sem depender de nada gravado.
+  montar(o) {
+    const pool = (state.questoes || []).filter(q => q.tema === o.temaId);
+    if (!pool.length) return null;
+    const n = Math.max(1, Math.min(parseInt(o.n, 10) || 10, this.MAX_Q));
+    const { validas } = RX_MET.deduplicar(state.respostasAluno || []);
+    const hist = new Map();
+    validas.forEach(x => { const h = hist.get(x.qid) || { n: 0, ultOk: null, ultT: 0 }; h.n++; if (x.t >= h.ultT) { h.ultT = x.t; h.ultOk = x.ok; } hist.set(x.qid, h); });
+    const agora = RX_MET.agora();
+    const tier = q => { const h = hist.get(q.id); if (!h) return 0; if (!h.ultOk) return 1; if (agora - h.ultT > this.DIAS_REFAZER * 86400000) return 2; return 3; };
+    const rnd = this._rand(this._seed(String(o.key || o.temaId) + '|' + ((state.usuario && state.usuario.id) || '') + '|' + RX_MET.hojeFortaleza(agora)));
+    const embaralhado = pool.map(q => [q, rnd()]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+    const porDif = { facil: [], media: [], dificil: [] };
+    embaralhado.forEach(q => { porDif[porDif[q.dificuldade] ? q.dificuldade : 'media'].push(q); });
+    Object.keys(porDif).forEach(d => porDif[d].sort((a, b) => tier(a) - tier(b)));   // estável: mantém o sorteio dentro de cada faixa
+    const efv = o.nivel === 'facil' ? -1 : o.nivel === 'dificil' ? 1 : ((o.efv === -1 || o.efv === 1) ? o.efv : 0);
+    const mix = this.MIX[String(efv)];
+    const alvo = {}; let soma = 0; const restos = [];
+    ['facil', 'media', 'dificil'].forEach(d => { const x = n * mix[d]; alvo[d] = Math.floor(x); soma += alvo[d]; restos.push([d, x - alvo[d]]); });
+    restos.sort((a, b) => b[1] - a[1]);
+    for (let i = 0; soma < n; i++) { alvo[restos[i % 3][0]]++; soma++; }
+    const escolhidas = [];
+    // Questão que o aluno acertou há pouco só entra quando não há mais nenhuma nova ou errada em faixa alguma.
+    const pegar = (d, k, aceitaRecente) => {
+      const lista = porDif[d]; let got = 0;
+      for (let i = 0; i < lista.length && got < k;) { if (aceitaRecente || tier(lista[i]) < 3) { escolhidas.push(lista.splice(i, 1)[0]); got++; } else i++; }
+      return got;
+    };
+    let falta = 0;
+    ['facil', 'media', 'dificil'].forEach(d => { falta += alvo[d] - pegar(d, alvo[d], false); });
+    const spill = efv === -1 ? ['facil', 'media', 'dificil'] : efv === 1 ? ['dificil', 'media', 'facil'] : ['media', 'facil', 'dificil'];
+    for (const d of spill) { if (falta <= 0) break; falta -= pegar(d, falta, false); }
+    // Acerto recente só entra para a lista não ficar menor que MIN_LISTA (banco esgotado para o aluno).
+    const minimo = Math.min(n, this.MIN_LISTA);
+    for (const d of spill) { const k = minimo - escolhidas.length; if (k <= 0) break; pegar(d, k, true); }
+    const ORD = { facil: 0, media: 1, dificil: 2 };
+    escolhidas.sort((a, b) => (ORD[a.dificuldade] == null ? 1 : ORD[a.dificuldade]) - (ORD[b.dificuldade] == null ? 1 : ORD[b.dificuldade]));
+    const cont = d => escolhidas.filter(q => (porDif[q.dificuldade] ? q.dificuldade : 'media') === d).length;
+    const resumo = { facil: cont('facil'), media: cont('media'), dificil: cont('dificil'), novas: escolhidas.filter(q => tier(q) === 0).length, refazer: escolhidas.filter(q => tier(q) === 1).length,
+      recentes: escolhidas.filter(q => tier(q) === 3).length, disponiveis: pool.length, pedidas: n, efv, alvo: Object.assign({}, alvo) };
+    // "completada com a faixa vizinha": só quando sobrou banco e mesmo assim uma faixa não fechou (sem repetições).
+    resumo.completada = ['facil', 'media', 'dificil'].some(d => resumo[d] < alvo[d]) && escolhidas.length < pool.length && resumo.recentes === 0;
+    return { qs: escolhidas, resumo };
+  },
+  async iniciar(o) {
+    if (!state.questoesPronto && state.questoesPromise) { radixShowLoading('Montando sua lista…'); try { await state.questoesPromise; } finally { radixHideLoading(); } }
+    const tema = TEMAS.find(t => t.id === o.temaId);
+    const m = this.montar(o);
+    if (!m || !m.qs.length) { alert('Ainda não há questões de ' + (tema ? tema.nome : o.temaId) + ' disponíveis no seu banco. Abra o banco de questões para conferir.'); return; }
+    const semN = o.semana || (o.key ? parseInt(String(o.key).slice(1), 10) : null) || null;
+    const nome = 'Revisão Final' + (semN ? ' · Semana ' + semN : '') + (tema ? ' · ' + tema.nome : '');
+    const revisao = { key: o.key || null, semana: semN, temaId: o.temaId, n: m.qs.length, pedidas: m.resumo.pedidas, efv: m.resumo.efv, resumo: m.resumo, nome };
+    TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
+      const t = TENTATIVAS.criar({ tipo: 'estudo_prova', origem: { nome, revisao }, questoes_ids: m.qs.map(q => q.id) });
+      _estudoAtual = { modo: 'prova', qs: m.qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, revisao };
+      state.view = 'estudo-digital';
+      renderEstudoDigital();
+      try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
+    });
+  },
+  _txtResumo(r) {
+    const p = [];
+    if (r.facil) p.push(r.facil + (r.facil === 1 ? ' fácil' : ' fáceis'));
+    if (r.media) p.push(r.media + (r.media === 1 ? ' média' : ' médias'));
+    if (r.dificil) p.push(r.dificil + (r.dificil === 1 ? ' difícil' : ' difíceis'));
+    const q = [];
+    if (r.novas) q.push(r.novas + (r.novas === 1 ? ' que você nunca fez' : ' que você nunca fez'));
+    if (r.refazer) q.push(r.refazer + (r.refazer === 1 ? ' que errou antes' : ' que errou antes'));
+    return p.join(', ') + (q.length ? ' · ' + q.join(' e ') : '');
+  },
+  htmlBanner(e) {
+    const v = e && e.revisao; if (!v) return '';
+    const r = v.resumo || {};
+    const nivel = r.efv === -1 ? 'pensada com mais questões fáceis, porque este assunto está como dificuldade no seu plano' : r.efv === 1 ? 'pensada com mais médias e difíceis, porque você já domina este assunto' : 'com a mistura padrão de dificuldades';
+    let menos = '';
+    if (r.recentes && r.recentes === v.n) {
+      menos = (r.pedidas > v.n ? ' O plano pedia ' + r.pedidas + '.' : '') + ' Você acertou todas as questões deste assunto nos últimos 30 dias; a lista repete ' + v.n + ' delas para revisar.';
+    } else {
+      if (r.pedidas && r.pedidas > v.n) menos = r.disponiveis < r.pedidas
+        ? ' O plano pedia ' + r.pedidas + ', mas o banco tem ' + r.disponiveis + ' questões deste assunto.'
+        : ' O plano pedia ' + r.pedidas + '; as outras questões deste assunto você acertou nos últimos 30 dias.';
+      if (r.recentes) menos += ' Inclui ' + r.recentes + ' que você acertou há pouco, porque não há outras.';
+      if (r.completada) menos += ' O banco não tem questões suficientes em todas as faixas deste assunto; completamos com a faixa vizinha.';
+    }
+    return '<div class="rfl-banner"><span class="rx-tag">Plano</span><div><b>Lista pronta do seu plano</b> · ' + _escHtml(v.nome) + ' · <b>' + v.n + ' questões</b> (' + _escHtml(this._txtResumo(r)) + '), ' + nivel + '.' + _escHtml(menos)
+      + ' Ao encerrar, o resultado vai para a atividade do plano.'
+      + '<div class="rfl-acoes"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="RF_LISTA.baixarPDF()">Baixar esta lista em PDF</button></div></div></div>';
+  },
+  htmlResultado(r) {
+    const v = r && r.revisao; if (!v) return '';
+    return '<div class="rfl-banner ok"><span class="rx-tag">Plano</span><div><b>Atividade do plano concluída:</b> ' + r.acertos + ' de ' + r.total + ' acertos em ' + _escHtml(v.nome) + '.'
+      + (v.key ? ' O resultado é registrado na atividade quando você abrir a Revisão Final (não precisa digitar).' : '')
+      + '<div class="rfl-acoes"><button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="renderRevisaoFinal()">Voltar ao plano</button></div></div></div>';
+  },
+  registrar(v, acertos, total) {
+    if (!v || !v.key) return;
+    const p = rxLerJson(this.chavePend(), {}) || {};
+    p[v.key] = { hits: acertos, total, em: new Date(RX_MET.agora()).toISOString() };
+    rxGravarJson(this.chavePend(), p);
+    this.entregarPendentes();
+  },
+  entregarPendentes() {
+    const f = (typeof RF_EMBED !== 'undefined') ? RF_EMBED.frame() : null;
+    if (!f || !f.contentWindow) return;
+    const p = rxLerJson(this.chavePend(), {}) || {};
+    Object.keys(p).forEach(k => { try { f.contentWindow.postMessage({ radix: 'plano-registrar', key: k, hits: p[k].hits, total: p[k].total }, RF_EMBED.ORIGEM); } catch (e) {} });
+  },
+  confirmado(key) {
+    if (!key) return;
+    const p = rxLerJson(this.chavePend(), {}) || {};
+    if (p[key]) { delete p[key]; rxGravarJson(this.chavePend(), p); }
+  },
+  async baixarPDF() {
+    const e = _estudoAtual; if (!e || !e.revisao) return;
+    try { await gerarPDFQuestoes(e.qs, e.revisao.nome, true); } catch (err) { alert('Não foi possível gerar o PDF: ' + (err && err.message ? err.message : err)); }
+  }
+};
 
 // ========== INIT ==========
 (async function init() {

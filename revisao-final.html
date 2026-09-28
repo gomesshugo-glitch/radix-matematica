@@ -642,8 +642,22 @@ function _aplicarTema(tema) {
 addEventListener('message', function (ev) {
   if (ev.origin !== location.origin || ev.source !== window.parent) return;
   const d = ev.data;
-  if (!d || d.radix !== 'plano-tema') return;
-  _aplicarTema(d.tema === 'claro' ? 'claro' : 'escuro');
+  if (!d || !d.radix) return;
+  if (d.radix === 'plano-tema') { _aplicarTema(d.tema === 'claro' ? 'claro' : 'escuro'); return; }
+  // (28/09/2026) Resultado de uma lista pronta resolvida no app: marca a atividade com os acertos.
+  // Só vale para atividade de questões que existe no plano da semana liberada e ainda não foi concluída.
+  if (d.radix === 'plano-registrar') {
+    const key = String(d.key || ''); const hits = parseInt(d.hits, 10); const total = parseInt(d.total, 10);
+    try {
+      const n = parseInt(key.slice(1), 10);
+      const sem = SEMANAS.find(s => s.n === n);
+      const it = (sem && typeof app !== 'undefined' && app.perfil) ? (app.dosePara(sem).itens || []).find(x => x.key === key) : null;
+      if (it && it.tipo === 'q' && app.liberada(n) && !app.feito(key) && total > 0 && total <= 200 && hits >= 0 && hits <= total) {
+        app._marcar(key, hits, total);
+      }
+    } catch (e) { console.warn('[plano] registro:', e); }
+    try { window.parent.postMessage({ radix: 'plano-registrado', key: key }, location.origin); } catch (e) {}
+  }
 });
 
 const OFERTA = {
@@ -1016,19 +1030,34 @@ const app = {
   },
   // Dentro do app, pede a tela do banco já filtrada no tema. Fora dele, entra
   // no app pelo mesmo caminho (?tema=). Sem acesso, explica onde as questões estão.
-  abrirAtividade(temaId, nivel) {
+  // (28/09/2026) Dados da atividade do plano (chave, quantidade, dificuldade efetiva)
+  // para o app montar a lista pronta. Sem chave, ou item de vídeo, o app abre o banco filtrado.
+  _dadosAtividade(temaId, key) {
+    if (!key) return null;
+    const n = parseInt(String(key).slice(1), 10);
+    const sem = SEMANAS.find(s => s.n === n);
+    if (!sem || !this.perfil) return null;
+    const it = (this.dosePara(sem).itens || []).find(x => x.key === key);
+    if (!it || it.tipo !== 'q' || !(it.questoes > 0)) return null;
+    const efv = (it.efv === -1 || it.efv === 1 || it.efv === 0) ? it.efv : this.efDif(temaId).v;
+    return { key: key, questoes: it.questoes, efv: efv, semana: n };
+  },
+  abrirAtividade(temaId, nivel, key) {
     const nome = (T(temaId) || { nome: 'o tema' }).nome;
+    const dados = this._dadosAtividade(temaId, key);
     if (EMBUTIDO) {
       try {
-        window.parent.postMessage({ radix: 'plano-abrir-tema', tema: temaId, nivel: nivel || '' }, location.origin);
-        this.toast('ok', 'Abrindo as questões', 'Banco filtrado em ' + nome + '.');
+        window.parent.postMessage(Object.assign({ radix: 'plano-abrir-tema', tema: temaId, nivel: nivel || '' }, dados || {}), location.origin);
+        if (dados) this.toast('ok', 'Montando sua lista', dados.questoes + ' questões de ' + nome + ', prontas para resolver.');
+        else this.toast('ok', 'Abrindo as questões', 'Banco filtrado em ' + nome + '.');
       } catch (e) {
         this.toast('erro', 'Não consegui abrir', 'Procure ' + nome + ' no banco de questões do app.');
       }
       return;
     }
     if (ACESSO.modo === 'completo' || ACESSO.modo === 'amostra') {
-      location.href = '/?tema=' + encodeURIComponent(temaId) + (nivel ? '&nivel=' + encodeURIComponent(nivel) : '');
+      location.href = '/?tema=' + encodeURIComponent(temaId) + (nivel ? '&nivel=' + encodeURIComponent(nivel) : '')
+        + (dados ? '&rf=' + encodeURIComponent(dados.key) + '&n=' + dados.questoes + '&efv=' + dados.efv + '&sem=' + dados.semana : '');
       return;
     }
     this.toast('', 'As questões ficam no app', 'Entre na sua conta para abrir ' + nome + '.');
@@ -1743,7 +1772,7 @@ const app = {
       '<span>' + ic(prox.tipo === 'v' ? 'play' : 'book', 15) + ' ' + (prox.tipo === 'v' ? 'Vídeo-aula' : 'Questões no banco') + '</span>' +
       '<span>' + ic('cal', 15) + ' ' + DIAS_LONGOS[this.diaDe(prox)] + ' ' + fmtCurto(addDias(dt(sem.ini), this.diaDe(prox))) + '</span></div>' +
       '<p class="just">' + just + '</p>' +
-      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.abrirAtividade(\'' + prox.temaId + '\')">Abrir atividade</button>' +
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.abrirAtividade(\'' + prox.temaId + '\', \'\', \'' + prox.key + '\')">Abrir atividade</button>' +
       '<button type="button" class="btn btn-sec" data-foco="next:' + prox.key + '" onclick="app.concluir(\'' + prox.key + '\')">Marcar concluída</button></div></div>';
   },
   htmlProgresso(sem, dose) {
@@ -1790,7 +1819,7 @@ const app = {
         (estado === 'late' && !done ? '<span class="chip chip-atraso">Atrasada</span>' : '') +
         (done && o.total ? '<span class="ok">' + o.hits + '/' + o.total + ' acertos</span>' : (done ? '<span class="ok">Concluída</span>' : '')) +
         extras.join('') + '</div></div>' +
-      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\'' + (it.nivel ? ', \'' + it.nivel + '\'' : '') + ')">Abrir atividade</button>' + sel + '</div>' : '') +
+      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\', \'' + (it.nivel || '') + '\', \'' + it.key + '\')">Abrir atividade</button>' + sel + '</div>' : '') +
       '</article>';
   },
   htmlAgenda(sem, dose, atualN) {
