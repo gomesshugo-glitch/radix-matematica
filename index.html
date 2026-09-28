@@ -16462,15 +16462,10 @@ async function excluirAluno(alunoId, alunoNome) {
 async function atualizarBadgePendentes() {
   if (state.usuario?.perfil !== 'professor') return;
   atualizarBadgeReportes(); // avisos de erro em questão (mesmos gatilhos do badge de cadastros)
-  const { data } = await sb.from('perfis').select('id').eq('status', 'pendente');
-  const badge = document.getElementById('badge-pendentes');
-  if (!badge) return;
-  if (data && data.length > 0) {
-    badge.textContent = data.length;
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
-  }
+  const { data, error } = await sb.from('perfis').select('id').eq('status', 'pendente');
+  if (error) { console.warn('[pendentes] selo:', error.message); return; }   // falha de consulta não apaga o aviso
+  state._nPendentes = (data || []).length;
+  _pintarSelosProfessor();
 }
 
 
@@ -16560,14 +16555,8 @@ async function atualizarBadgeReportes() {
   if (state.usuario?.perfil !== 'professor') return;
   const { count, error } = await sb.from('questao_reporte').select('id', { count: 'exact', head: true }).eq('status', 'aberto');
   if (error) { console.warn('[questao_reporte] badge:', error.message); return; }
-  const n = count || 0;
-  const badge = document.getElementById('badge-reportes');
-  if (badge) { badge.textContent = n; badge.classList.toggle('hidden', n === 0); }
-  const aviso = document.getElementById('aviso-reportes');
-  if (aviso) {
-    aviso.classList.toggle('hidden', n === 0);
-    aviso.innerHTML = n ? `${ICONE_ALERTA_SVG}<span>${n} aviso${n > 1 ? 's' : ''} de erro em questão enviado${n > 1 ? 's' : ''} por alunos — clique para conferir</span>` : '';
-  }
+  state._nReportes = count || 0;
+  _pintarSelosProfessor();
 }
 
 async function renderReportesErro(filtro) {
@@ -25447,6 +25436,37 @@ const RF_LISTA = {
     try { await gerarPDFQuestoes(e.qs, e.revisao.nome, true); } catch (err) { alert('Não foi possível gerar o PDF: ' + (err && err.message ? err.message : err)); }
   }
 };
+
+// ============================================================================
+// Selos do painel do professor (28/09/2026): pinta com a última contagem conhecida
+// e atualiza sempre que a tela inicial do professor é desenhada.
+// ============================================================================
+function _pintarSelosProfessor() {
+  const np = state._nPendentes, nr = state._nReportes;
+  const bp = document.getElementById('badge-pendentes');
+  if (bp && np != null) { bp.textContent = np; bp.classList.toggle('hidden', !np); }
+  const br = document.getElementById('badge-reportes');
+  if (br && nr != null) { br.textContent = nr; br.classList.toggle('hidden', !nr); }
+  const aviso = document.getElementById('aviso-reportes');
+  if (aviso && nr != null) {
+    aviso.classList.toggle('hidden', !nr);
+    aviso.innerHTML = nr ? ICONE_ALERTA_SVG + '<span>' + nr + ' aviso' + (nr > 1 ? 's' : '') + ' de erro em questão enviado' + (nr > 1 ? 's' : '') + ' por alunos — clique para conferir</span>' : '';
+  }
+}
+(function () {
+  const orig = window.renderHome;
+  if (typeof orig !== 'function') return;
+  window.renderHome = function () {
+    const r = orig.apply(this, arguments);
+    try {
+      if (state.usuario && state.usuario.perfil === 'professor' && document.getElementById('badge-pendentes')) {
+        _pintarSelosProfessor();       // na hora, sem piscar
+        atualizarBadgePendentes();     // e busca a contagem atual (também atualiza os erros reportados)
+      }
+    } catch (e) { console.warn('[selos professor]', e); }
+    return r;
+  };
+})();
 
 // ========== INIT ==========
 (async function init() {
