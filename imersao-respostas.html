@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Respostas da Imersão</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0C0A12">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<style>
+:root{
+  --fundo:#0C0A12; --creme:#F0E4C6; --amarelo:#FCD236; --magenta:#F02A90;
+  --cartao:rgba(24,19,32,.92); --contorno:rgba(240,228,198,.16); --contorno-forte:rgba(240,228,198,.4);
+  --texto-2:rgba(240,228,198,.7); --texto-3:rgba(240,228,198,.5); --grade:rgba(240,228,198,.08);
+  --verde:#5BD68A; --vermelho:#FF7A9C;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--creme);font-family:Poppins,Montserrat,system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(60vmax 40vmax at 0% 0%,rgba(123,63,168,.35),transparent 70%),radial-gradient(50vmax 40vmax at 100% 100%,rgba(31,90,42,.35),transparent 70%);background-attachment:fixed}
+.pagina{max-width:1320px;margin:0 auto;padding:24px 16px 56px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:22px}
+.marca{display:flex;align-items:center;gap:8px;font-weight:700;font-size:22px}
+.marca em{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-weight:400;color:var(--texto-2)}
+.marca span{border:1.5px solid var(--contorno-forte);border-radius:999px;padding:2px 12px 4px}
+h1{margin:6px 0 0;font-size:15px;font-weight:600;color:var(--texto-2);text-transform:uppercase;letter-spacing:.1em}
+.acoes{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{appearance:none;font:inherit;font-weight:600;font-size:14px;border-radius:999px;padding:9px 16px;cursor:pointer;border:1.5px solid var(--contorno-forte);background:transparent;color:var(--creme);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{border-color:var(--creme)}
+.btn-pri{background:var(--amarelo);border-color:var(--amarelo);color:#15101C}
+.btn-pri:hover{filter:brightness(1.05);border-color:var(--amarelo)}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px}
+
+.aviso{background:var(--cartao);border:1px solid var(--contorno);border-radius:20px;padding:28px 24px;max-width:560px}
+.aviso h2{margin:0 0 8px;font-size:22px}
+.aviso p{margin:0 0 16px;color:var(--texto-2)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--cartao);border:1px solid var(--contorno);border-radius:18px;padding:16px 18px}
+.kpi .v{font-size:32px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:15px;font-weight:600;color:var(--texto-2)}
+.kpi .l{font-size:12px;color:var(--texto-2);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.kpi.destaque{background:var(--amarelo);border-color:var(--amarelo);color:#15101C}
+.kpi.destaque .l,.kpi.destaque .v small{color:rgba(21,16,28,.7)}
+
+.grade2{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-bottom:16px}
+@media (max-width:820px){.grade2{grid-template-columns:1fr}}
+.painel{background:var(--cartao);border:1px solid var(--contorno);border-radius:18px;padding:18px}
+.painel h3{margin:0 0 2px;font-size:15px;font-weight:700}
+.painel .sub{margin:0 0 14px;font-size:13px;color:var(--texto-2)}
+
+/* distribuição das notas: uma série, barras finas ancoradas na base */
+.hist{position:relative;display:grid;grid-template-columns:repeat(11,1fr);gap:6px;align-items:end;height:170px;padding-top:18px;border-bottom:1px solid var(--contorno-forte)}
+.hist .col{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:default}
+.hist .col::before{content:"";position:absolute;inset:0 -3px;border-radius:6px}
+.hist .col:hover::before{background:var(--grade)}
+.hist .bar{position:relative;width:min(70%,26px);background:var(--amarelo);border-radius:4px 4px 0 0;min-height:0}
+.hist .bar.zero{background:transparent}
+.hist .val{position:relative;font-size:12px;font-weight:600;color:var(--creme);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.hist-eixo{display:grid;grid-template-columns:repeat(11,1fr);gap:6px;margin-top:6px;text-align:center;font-size:12px;color:var(--texto-3);font-variant-numeric:tabular-nums}
+.hist-leg{display:flex;justify-content:space-between;font-size:12px;color:var(--texto-3);margin-top:2px}
+.dica{position:fixed;pointer-events:none;background:#1d1726;border:1px solid var(--contorno-forte);border-radius:10px;padding:6px 10px;font-size:13px;opacity:0;transition:opacity .1s;z-index:10;white-space:nowrap}
+.dica.on{opacity:1}
+
+.linhas{display:grid;gap:10px}
+.linha-dado{display:grid;grid-template-columns:130px 1fr 44px;gap:10px;align-items:center;font-size:14px}
+.linha-dado .trilho{height:10px;border-radius:0 4px 4px 0;background:var(--grade);overflow:hidden}
+.linha-dado .trilho i{display:block;height:100%;background:var(--creme);border-radius:0 4px 4px 0}
+.linha-dado .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--texto-2)}
+.bloco-linhas + .bloco-linhas{margin-top:18px}
+.bloco-linhas h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--texto-3);font-weight:600}
+
+.comentarios{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media (max-width:820px){.comentarios{grid-template-columns:1fr}}
+.lista-com{display:grid;gap:10px;max-height:420px;overflow:auto;padding-right:4px}
+.com{border-left:3px solid var(--contorno-forte);padding:2px 0 2px 12px}
+.com p{margin:0;font-size:14px;white-space:pre-wrap;word-break:break-word}
+.com small{color:var(--texto-3);font-size:12px}
+.nota-chip{display:inline-block;min-width:24px;text-align:center;border-radius:6px;padding:0 6px;font-weight:700;font-size:12px;background:var(--grade);color:var(--creme)}
+.vazio{color:var(--texto-3);font-size:14px}
+
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+.filtros input,.filtros select{font:inherit;font-size:14px;color:var(--creme);background:rgba(12,10,18,.7);border:1.5px solid var(--contorno);border-radius:12px;padding:8px 12px}
+.filtros input{flex:1;min-width:200px}
+.filtros .cont{font-size:13px;color:var(--texto-2);margin-left:auto}
+.tabela-wrap{overflow:auto;border:1px solid var(--contorno);border-radius:18px;background:var(--cartao)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:1250px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--contorno);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--texto-2);font-weight:600;position:sticky;top:0;background:#181320;cursor:pointer;user-select:none;white-space:nowrap}
+th[aria-sort="ascending"]::after{content:" ▲";font-size:10px}
+th[aria-sort="descending"]::after{content:" ▼";font-size:10px}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(240,228,198,.04)}
+td.num{text-align:center;font-variant-numeric:tabular-nums}
+td .zap{color:var(--amarelo);text-decoration:none;white-space:nowrap}
+td .zap:hover{text-decoration:underline}
+td.txt{min-width:220px;max-width:320px;color:var(--texto-2)}
+td.nw{white-space:nowrap}
+.sim{color:var(--verde);font-weight:600}
+.carregando{color:var(--texto-2);padding:24px 0}
+.erro{color:var(--vermelho)}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header>
+    <div>
+      <div class="marca">Imersão <em>em</em> <span>matemática</span></div>
+      <h1>Respostas e opinião · 27/09</h1>
+    </div>
+    <div class="acoes oculto" id="acoes">
+      <button type="button" id="atualizar">Atualizar</button>
+      <button type="button" class="btn-pri" id="csv">Baixar planilha (CSV)</button>
+    </div>
+  </header>
+
+  <div id="estado" class="carregando" role="status">Carregando…</div>
+
+  <main id="conteudo" class="oculto">
+    <section class="kpis" id="kpis" aria-label="Resumo"></section>
+
+    <section class="grade2">
+      <div class="painel">
+        <h3>Notas para a Imersão</h3>
+        <p class="sub">Quantas pessoas deram cada nota, de 0 a 10</p>
+        <div class="hist" id="hist" role="img"></div>
+        <div class="hist-eixo" id="hist-eixo" aria-hidden="true"></div>
+      </div>
+      <div class="painel">
+        <h3>Quem respondeu</h3>
+        <p class="sub">Número de pessoas em cada grupo</p>
+        <div id="perfil"></div>
+      </div>
+    </section>
+
+    <section class="comentarios">
+      <div class="painel">
+        <h3>O que mais gostaram</h3>
+        <p class="sub" id="sub-gostou"></p>
+        <div class="lista-com" id="lista-gostou"></div>
+      </div>
+      <div class="painel">
+        <h3>O que podemos melhorar</h3>
+        <p class="sub" id="sub-melhorar"></p>
+        <div class="lista-com" id="lista-melhorar"></div>
+      </div>
+    </section>
+
+    <section aria-label="Todas as respostas">
+      <div class="filtros">
+        <input type="search" id="busca" placeholder="Buscar por nome, e-mail ou WhatsApp" aria-label="Buscar">
+        <select id="f-novidades" aria-label="Filtrar por novidades">
+          <option value="">Todos</option>
+          <option value="sim">Querem novidades no WhatsApp</option>
+        </select>
+        <select id="f-participou" aria-label="Filtrar por participação">
+          <option value="">Qualquer participação</option>
+          <option value="ambos">Simulado e aulão</option>
+          <option value="manha">Só o simulado</option>
+          <option value="tarde">Só o aulão</option>
+        </select>
+        <span class="cont" id="cont"></span>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr>
+            <th data-col="criado_em" aria-sort="descending">Quando</th>
+            <th data-col="nome">Nome</th>
+            <th data-col="email">E-mail</th>
+            <th data-col="whatsapp">WhatsApp</th>
+            <th data-col="situacao">Fase</th>
+            <th data-col="participou">Participou</th>
+            <th data-col="nota">Nota</th>
+            <th data-col="gostou">Gostou</th>
+            <th data-col="melhorar">Melhorar</th>
+            <th data-col="quer_novidades">Novidades</th>
+          </tr></thead>
+          <tbody id="corpo"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="dica" id="dica" role="tooltip"></div>
+
+<script>
+(function(){
+  'use strict';
+  var URL_SB = 'https://bvvfalzwpwvkoghmjvom.supabase.co';
+  var KEY = 'sb_publishable_2_YTQi6igB_VeDBE6joJXg_SNPMIHcC';
+  var SITUACAO = { '3ano': '3º ano', concluiu: 'Já terminou o médio', '1ou2ano': '1º ou 2º ano', outro: 'Outro' };
+  var PARTICIPOU = { ambos: 'Simulado e aulão', manha: 'Só o simulado', tarde: 'Só o aulão' };
+
+  var sb = window.supabase.createClient(URL_SB, KEY);
+  var dados = [], ordem = { col: 'criado_em', dir: -1 };
+  var $ = function(id){ return document.getElementById(id); };
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
+  function fmtData(iso){ var d = new Date(iso); return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }); }
+  function fmtZap(z){ z = String(z || ''); return z.length === 11 ? '(' + z.slice(0,2) + ') ' + z.slice(2,7) + '-' + z.slice(7) : z.length === 10 ? '(' + z.slice(0,2) + ') ' + z.slice(2,6) + '-' + z.slice(6) : z; }
+  function num(n, casas){ return n.toLocaleString('pt-BR', { minimumFractionDigits: casas || 0, maximumFractionDigits: casas || 0 }); }
+
+  function mostrarAviso(titulo, texto, botao){
+    $('estado').className = '';
+    $('estado').innerHTML = '<div class="aviso"><h2>' + esc(titulo) + '</h2><p>' + esc(texto) + '</p>' + (botao || '') + '</div>';
+    $('conteudo').classList.add('oculto'); $('acoes').classList.add('oculto');
+  }
+
+  async function carregar(){
+    $('estado').className = 'carregando'; $('estado').textContent = 'Carregando…';
+    var s = await sb.auth.getSession();
+    if (!s.data || !s.data.session) {
+      return mostrarAviso('Entre com a sua conta de professor',
+        'Esta página usa o mesmo login do app do Radix. Entre no app, confirme o código do autenticador e volte para este endereço.',
+        '<a class="btn btn-pri" href="/">Abrir o app</a>');
+    }
+    var st = await sb.rpc('fn_status_atual');
+    if (st.data !== 'professor') {
+      return mostrarAviso('Acesso só para professor', 'A conta conectada neste navegador não é de professor.', '<a class="btn" href="/">Voltar ao app</a>');
+    }
+    var aal = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2') {
+      return mostrarAviso('Falta o código do autenticador', 'Abra o app, digite o código do autenticador e volte para este endereço.', '<a class="btn btn-pri" href="/">Abrir o app</a>');
+    }
+    var r = await sb.from('imersao_feedback')
+      .select('criado_em,nome,email,whatsapp,situacao,participou,nota,gostou,melhorar,quer_novidades,downloads')
+      .order('criado_em', { ascending: false }).limit(5000);
+    if (r.error) {
+      return mostrarAviso('Não foi possível carregar', 'Erro do servidor: ' + (r.error.message || 'desconhecido') + '. Tente atualizar a página.', '<button type="button" onclick="location.reload()">Tentar de novo</button>');
+    }
+    dados = r.data || [];
+    $('estado').classList.add('oculto');
+    $('conteudo').classList.remove('oculto'); $('acoes').classList.remove('oculto');
+    desenhar();
+  }
+
+  function desenhar(){
+    var n = dados.length;
+    var soma = 0, altas = 0, baixas = 0, novid = 0, coment = 0;
+    var dist = [0,0,0,0,0,0,0,0,0,0,0];
+    dados.forEach(function(d){
+      soma += d.nota; dist[d.nota]++;
+      if (d.nota >= 9) altas++; if (d.nota <= 6) baixas++;
+      if (d.quer_novidades) novid++;
+      if (d.gostou || d.melhorar) coment++;
+    });
+    var media = n ? soma / n : 0;
+    var pct = function(x){ return n ? Math.round(x / n * 100) : 0; };
+    $('kpis').innerHTML =
+      '<div class="kpi"><div class="v">' + num(n) + '</div><div class="l">Respostas</div></div>' +
+      '<div class="kpi destaque"><div class="v">' + (n ? num(media, 1) : '–') + ' <small>/ 10</small></div><div class="l">Nota média</div></div>' +
+      '<div class="kpi"><div class="v">' + pct(altas) + '% <small>(' + altas + ')</small></div><div class="l">Deram nota 9 ou 10</div></div>' +
+      '<div class="kpi"><div class="v">' + pct(baixas) + '% <small>(' + baixas + ')</small></div><div class="l">Deram nota 6 ou menos</div></div>' +
+      '<div class="kpi"><div class="v">' + num(novid) + '</div><div class="l">Querem novidades no WhatsApp</div></div>';
+
+    // histograma
+    var max = Math.max.apply(null, dist) || 1;
+    $('hist').setAttribute('aria-label', 'Distribuição das notas: ' + dist.map(function(q, i){ return 'nota ' + i + ', ' + q; }).join('; '));
+    $('hist').innerHTML = dist.map(function(q, i){
+      var h = q ? Math.max(3, q / max * 100) : 0;
+      return '<div class="col" data-nota="' + i + '" data-q="' + q + '">' +
+        (q ? '<span class="val">' + q + '</span>' : '') +
+        '<div class="bar' + (q ? '' : ' zero') + '" style="height:' + h + '%"></div></div>';
+    }).join('');
+    $('hist-eixo').innerHTML = dist.map(function(_, i){ return '<span>' + i + '</span>'; }).join('');
+
+    // perfil de quem respondeu
+    function bloco(titulo, mapa, campo){
+      var cont = {}; Object.keys(mapa).forEach(function(k){ cont[k] = 0; });
+      dados.forEach(function(d){ if (cont[d[campo]] !== undefined) cont[d[campo]]++; });
+      var m = Math.max.apply(null, Object.keys(cont).map(function(k){ return cont[k]; })) || 1;
+      return '<div class="bloco-linhas"><h4>' + titulo + '</h4><div class="linhas">' + Object.keys(mapa).map(function(k){
+        return '<div class="linha-dado"><span>' + esc(mapa[k]) + '</span><span class="trilho"><i style="width:' + (cont[k] / m * 100) + '%"></i></span><span class="n">' + cont[k] + '</span></div>';
+      }).join('') + '</div></div>';
+    }
+    $('perfil').innerHTML = bloco('Participou de', PARTICIPOU, 'participou') + bloco('Fase', SITUACAO, 'situacao');
+
+    // comentários
+    function lista(campo, alvo, sub){
+      var itens = dados.filter(function(d){ return d[campo]; });
+      $(sub).textContent = itens.length ? itens.length + (itens.length === 1 ? ' comentário' : ' comentários') : '';
+      $(alvo).innerHTML = itens.length ? itens.map(function(d){
+        return '<div class="com"><p>' + esc(d[campo]) + '</p><small><span class="nota-chip">' + d.nota + '</span> ' + esc(d.nome) + ' · ' + esc(PARTICIPOU[d.participou] || '') + '</small></div>';
+      }).join('') : '<p class="vazio">Ninguém escreveu aqui ainda.</p>';
+    }
+    lista('gostou', 'lista-gostou', 'sub-gostou');
+    lista('melhorar', 'lista-melhorar', 'sub-melhorar');
+
+    tabela();
+  }
+
+  function filtrados(){
+    var q = $('busca').value.trim().toLowerCase(), qd = q.replace(/\D/g, '');
+    var fn = $('f-novidades').value, fp = $('f-participou').value;
+    var lista = dados.filter(function(d){
+      if (fn === 'sim' && !d.quer_novidades) return false;
+      if (fp && d.participou !== fp) return false;
+      if (!q) return true;
+      return (d.nome || '').toLowerCase().indexOf(q) >= 0 || (d.email || '').indexOf(q) >= 0 || (qd && (d.whatsapp || '').indexOf(qd) >= 0);
+    });
+    var c = ordem.col, dir = ordem.dir;
+    lista.sort(function(a, b){
+      var x = a[c], y = b[c];
+      if (typeof x === 'string') { x = x.toLowerCase(); y = String(y || '').toLowerCase(); }
+      return (x > y ? 1 : x < y ? -1 : 0) * dir;
+    });
+    return lista;
+  }
+
+  function tabela(){
+    var lista = filtrados();
+    $('cont').textContent = lista.length + ' de ' + dados.length;
+    $('corpo').innerHTML = lista.length ? lista.map(function(d){
+      return '<tr><td class="nw">' + fmtData(d.criado_em) + '</td><td class="nw">' + esc(d.nome) + '</td><td class="nw">' + esc(d.email) + '</td>' +
+        '<td><a class="zap" href="https://wa.me/55' + esc(d.whatsapp) + '" target="_blank" rel="noopener">' + esc(fmtZap(d.whatsapp)) + '</a></td>' +
+        '<td>' + esc(SITUACAO[d.situacao] || d.situacao) + '</td><td>' + esc(PARTICIPOU[d.participou] || d.participou) + '</td>' +
+        '<td class="num"><span class="nota-chip">' + d.nota + '</span></td>' +
+        '<td class="txt">' + esc(d.gostou || '') + '</td><td class="txt">' + esc(d.melhorar || '') + '</td>' +
+        '<td class="num">' + (d.quer_novidades ? '<span class="sim">Sim</span>' : '') + '</td></tr>';
+    }).join('') : '<tr><td colspan="10" class="vazio">Nenhuma resposta com esse filtro.</td></tr>';
+  }
+
+  // ordenar pela coluna
+  document.querySelectorAll('th[data-col]').forEach(function(th){
+    th.tabIndex = 0;
+    function ordenar(){
+      var c = th.dataset.col;
+      ordem = { col: c, dir: ordem.col === c ? -ordem.dir : (c === 'criado_em' || c === 'nota' ? -1 : 1) };
+      document.querySelectorAll('th[data-col]').forEach(function(o){ o.removeAttribute('aria-sort'); });
+      th.setAttribute('aria-sort', ordem.dir === 1 ? 'ascending' : 'descending');
+      tabela();
+    }
+    th.addEventListener('click', ordenar);
+    th.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ordenar(); } });
+  });
+  ['busca', 'f-novidades', 'f-participou'].forEach(function(id){ $(id).addEventListener('input', tabela); });
+
+  // dica ao passar o mouse no histograma
+  var dica = $('dica');
+  $('hist').addEventListener('mousemove', function(e){
+    var col = e.target.closest('.col'); if (!col) { dica.classList.remove('on'); return; }
+    var q = +col.dataset.q, n = dados.length;
+    dica.textContent = 'Nota ' + col.dataset.nota + ': ' + q + (q === 1 ? ' pessoa' : ' pessoas') + (n ? ' (' + Math.round(q / n * 100) + '%)' : '');
+    dica.style.left = Math.min(e.clientX + 12, innerWidth - dica.offsetWidth - 8) + 'px';
+    dica.style.top = (e.clientY - 36) + 'px';
+    dica.classList.add('on');
+  });
+  $('hist').addEventListener('mouseleave', function(){ dica.classList.remove('on'); });
+
+  // planilha: separador ; e BOM para o Excel em português abrir certo
+  $('csv').addEventListener('click', function(){
+    var cab = ['Data','Nome','E-mail','WhatsApp','Fase','Participou','Nota','O que mais gostou','O que melhorar','Quer novidades','Downloads'];
+    function cel(v){ v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; }
+    var linhas = filtrados().map(function(d){
+      return [fmtData(d.criado_em), d.nome, d.email, fmtZap(d.whatsapp), SITUACAO[d.situacao] || d.situacao, PARTICIPOU[d.participou] || d.participou,
+        d.nota, d.gostou || '', d.melhorar || '', d.quer_novidades ? 'Sim' : 'Não', d.downloads].map(cel).join(';');
+    });
+    var blob = new Blob(['﻿' + [cab.map(cel).join(';')].concat(linhas).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'imersao-respostas-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  $('atualizar').addEventListener('click', carregar);
+  carregar().catch(function(e){ mostrarAviso('Não foi possível carregar', String(e && e.message || e), '<button type="button" onclick="location.reload()">Tentar de novo</button>'); });
+})();
+</script>
+</body>
+</html>
