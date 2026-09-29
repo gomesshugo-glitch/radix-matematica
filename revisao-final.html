@@ -68,6 +68,8 @@
   /* cartão-resposta do mini-simulado */
   .cr-tema{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);margin:var(--sp-4) 0 var(--sp-2)}
   .cr-tema:first-child{margin-top:var(--sp-2)}
+  .cr-res{font-size:var(--fs-xs);font-weight:700;color:var(--cyan);background:none;border:1px solid var(--cyan);border-radius:999px;padding:2px 9px;cursor:pointer;margin-left:var(--sp-2);white-space:nowrap}
+  .cr-res:hover{background:var(--cyan);color:#0b1220}
   .cr-t{font-size:var(--fs-xs);color:var(--muted,#8fa3cc);margin-right:var(--sp-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34%}
   .cr-linha{display:flex;align-items:center;gap:var(--sp-3);padding:3px 0}
   .cr-n{width:30px;flex-shrink:0;font-size:var(--fs-sm);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1186,6 +1188,17 @@ const app = {
      O mini é feito no papel. Aqui o aluno lança o que marcou nas 15 questões e
      a plataforma corrige contra o gabarito oficial da semana. São 3 questões
      por tema, na ordem dos temas da semana (a geometria fecha). */
+  /* (29/09/2026) Resolução no modelo do banco: as 15 questões do mini estão no banco
+     com origem_prova "RADIX RF S<n>"; o app abre a questão e mostra a explicação. */
+  abrirResolucaoMini(n, i) {
+    const m = this.minis[n] || {};
+    const resp = (m.resp && m.resp[i]) ? m.resp[i] : '-';
+    const gab = (GABARITOS[n] || '')[i] || '';
+    if (EMBUTIDO) {
+      try { window.parent.postMessage({ radix: 'plano-abrir-mini', semana: n, k: i + 1, resp: resp, gab: gab }, location.origin); return; } catch (e) {}
+    }
+    location.href = '/#/revisao-final/mini/' + n + '/' + (i + 1) + '/' + encodeURIComponent(resp) + '/' + encodeURIComponent(gab);
+  },
   corrigirMini(n, resp) {
     const gab = GABARITOS[n];
     if (!gab || !resp) return null;
@@ -1229,7 +1242,8 @@ const app = {
                  ' aria-label="Questão ' + (i + 1) + ', alternativa ' + L + '"' +
                  ' data-q="' + i + '" data-l="' + L + '" onclick="app._miniSet(this)">' + L + '</button>';
         }).join('') + '</div>' +
-        (corr ? '<span class="cr-marca">' + (corr.certas[i] ? 'acertou' : 'gabarito ' + corr.gabarito[i]) + '</span>' : '') +
+        (corr ? '<span class="cr-marca">' + (corr.certas[i] ? 'acertou' : 'gabarito ' + corr.gabarito[i]) + '</span>' +
+                '<button type="button" class="cr-res" onclick="app.abrirResolucaoMini(' + n + ',' + i + ')" aria-label="Ver a resolução da questão ' + (i + 1) + '">resolução</button>' : '') +
         '</div>';
     }
 

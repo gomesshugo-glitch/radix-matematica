@@ -9610,9 +9610,48 @@ const RF_EMBED = {
     if (d.radix === 'plano-registrado')  { RF_LISTA.confirmado(String(d.key || '')); return; }
     if (d.radix === 'plano-navegar')     { RF_EMBED.navegar(String(d.destino || '')); return; }
     if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || ''), String(d.nivel || ''), d); return; }
+    if (d.radix === 'plano-abrir-mini')  { abrirQuestaoDoMini(parseInt(d.semana, 10), parseInt(d.k, 10), String(d.resp || '-'), String(d.gab || '')); return; }
   }
 };
 window.addEventListener('message', RF_EMBED.aoReceber);
+
+// ============================================================
+// RESOLUÇÃO DO MINI-SIMULADO no modelo do banco (29/09/2026)
+// O mini é feito no papel; depois de lançar o cartão no plano, cada questão
+// tem o link "resolução". As 15 questões do mini entram no banco com
+// origem_prova "RADIX RF S<n>", na ordem 1..15 (ids crescentes). Antes de
+// mostrar, confere se a letra certa bate com o gabarito publicado: se o lote
+// ainda não foi publicado (ou a ordem não bate), avisa em vez de errar.
+// ============================================================
+async function abrirQuestaoDoMini(sem, k, resp, gab) {
+  if (!state.usuario) { renderHome(); return; }
+  if (!state.questoesPronto && state.questoesPromise) {
+    radixShowLoading('Carregando banco de questões…');
+    try { await state.questoesPromise; } finally { radixHideLoading(); }
+  }
+  const prova = 'RADIX RF S' + sem;
+  const lote = (state.questoes || []).filter(q => q.prova === prova).sort((a, b) => a.id - b.id);
+  const q = lote[k - 1];
+  const letraCerta = q ? String.fromCharCode(65 + q.correta) : '';
+  state.view = 'revisao-final-mini';
+  const main = document.getElementById('main-content');
+  const volta = '<div class="breadcrumb"><a onclick="ROTA.ir(\'revisao-final\')">← Revisão Final</a> / Mini-simulado da Semana ' + sem + ' / Questão ' + k + '</div>';
+  if (!q || (gab && /^[A-E]$/.test(gab) && letraCerta !== gab)) {
+    main.innerHTML = volta + '<div class="card" style="padding:18px"><h3 style="margin:0 0 6px">Resolução ainda não disponível</h3>' +
+      '<p class="rvp-muted" style="margin:0">A resolução comentada desta questão ' + (q ? 'não confere com o gabarito publicado' : 'ainda não foi publicada no banco') + '. Tente mais tarde.</p></div>';
+    return;
+  }
+  const idx = /^[A-E]$/.test(resp) ? resp.charCodeAt(0) - 65 : -1;
+  main.innerHTML = volta +
+    '<div class="rf-head"><div><h2 class="rf-h2">Mini-simulado da Semana ' + sem + ' · Questão ' + k + '</h2>' +
+    '<p class="rf-sub">' + (idx >= 0 ? 'Você marcou a alternativa ' + resp + ' na prova. ' : '') + 'A resolução comentada aparece abaixo, como no banco de questões.</p></div></div>' +
+    renderQuestao(q, k, false) +
+    '<div style="margin-top:14px"><button type="button" class="btn btn-secondary" onclick="ROTA.ir(\'revisao-final\')">Voltar ao plano</button></div>';
+  // mostra a correção sem gravar resposta de estudo (a resposta valeu na prova em papel)
+  _mostrarFeedbackQuestao(q, idx);
+  if (typeof renderMathInElement === 'function') { try { renderMathInElement(main, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false }); } catch (e) {} }
+  window.scrollTo(0, 0);
+}
 
 function renderRevisaoFinal() {
   state.view = 'revisao-final';
@@ -23782,6 +23821,7 @@ const ROTA = {
     ['cronograma', () => renderCronograma()],
     ['cronograma/:n', (n) => renderCronograma(Number(n))],
     ['revisao-final', () => renderRevisaoFinal()],
+    ['revisao-final/mini/:sem/:k/:resp/:gab', (sem, k, resp, gab) => abrirQuestaoDoMini(Number(sem), Number(k), resp, gab)],
     ['estatisticas', () => renderEstatisticasAvancadas()],
     ['perfil', () => abrirMeuPerfil()]
   ],
@@ -23794,7 +23834,7 @@ const ROTA = {
     if (r.startsWith('simulados')) return 'simulados';
     if (r.startsWith('listas')) return 'listas';
     if (r.startsWith('cronograma')) return 'cronograma';
-    if (r === 'revisao-final') return 'revisao-final';
+    if (r === 'revisao-final' || r.startsWith('revisao-final/')) return 'revisao-final';
     return '';
   },
   resolver(rota) {
