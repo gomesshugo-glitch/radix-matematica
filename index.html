@@ -9618,27 +9618,53 @@ window.addEventListener('message', RF_EMBED.aoReceber);
 // ============================================================
 // RESOLUÇÃO DO MINI-SIMULADO no modelo do banco (29/09/2026)
 // O mini é feito no papel; depois de lançar o cartão no plano, cada questão
-// tem o link "resolução". As 15 questões do mini entram no banco com
-// origem_prova "RADIX RF S<n>", na ordem 1..15 (ids crescentes). Antes de
-// mostrar, confere se a letra certa bate com o gabarito publicado: se o lote
-// ainda não foi publicado (ou a ordem não bate), avisa em vez de errar.
+// tem o link "resolução". As 15 questões do mini ficam na FILA DE REVISÃO
+// (questao_import, prova "RADIX RF S<n>", na ordem 1..15) e NÃO são publicadas
+// no banco: a RPC fn_mini_questao(semana, k) entrega a k-ésima questão só a
+// quem já lançou o cartão daquela semana. Antes de mostrar, confere se a letra
+// certa bate com o gabarito publicado; se não bater, avisa em vez de errar.
 // ============================================================
 async function abrirQuestaoDoMini(sem, k, resp, gab) {
   if (!state.usuario) { renderHome(); return; }
-  if (!state.questoesPronto && state.questoesPromise) {
-    radixShowLoading('Carregando banco de questões…');
-    try { await state.questoesPromise; } finally { radixHideLoading(); }
-  }
-  const prova = 'RADIX RF S' + sem;
-  const lote = (state.questoes || []).filter(q => q.prova === prova).sort((a, b) => a.id - b.id);
-  const q = lote[k - 1];
-  const letraCerta = q ? String.fromCharCode(65 + q.correta) : '';
   state.view = 'revisao-final-mini';
   const main = document.getElementById('main-content');
   const volta = '<div class="breadcrumb"><a onclick="ROTA.ir(\'revisao-final\')">← Revisão Final</a> / Mini-simulado da Semana ' + sem + ' / Questão ' + k + '</div>';
-  if (!q || (gab && /^[A-E]$/.test(gab) && letraCerta !== gab)) {
-    main.innerHTML = volta + '<div class="card" style="padding:18px"><h3 style="margin:0 0 6px">Resolução ainda não disponível</h3>' +
-      '<p class="rvp-muted" style="margin:0">A resolução comentada desta questão ' + (q ? 'não confere com o gabarito publicado' : 'ainda não foi publicada no banco') + '. Tente mais tarde.</p></div>';
+  const aviso = (titulo, msg) => {
+    main.innerHTML = volta + '<div class="card" style="padding:18px"><h3 style="margin:0 0 6px">' + titulo + '</h3>' +
+      '<p class="rvp-muted" style="margin:0">' + msg + '</p></div>' +
+      '<div style="margin-top:14px"><button type="button" class="btn btn-secondary" onclick="ROTA.ir(\'revisao-final\')">Voltar ao plano</button></div>';
+    window.scrollTo(0, 0);
+  };
+  radixShowLoading('Abrindo a resolução…');
+  let d = null, erro = null;
+  try {
+    const r = await sb.rpc('fn_mini_questao', { p_semana: sem, p_k: k });
+    d = r.data; erro = r.error;
+  } catch (e) { erro = e; }
+  finally { radixHideLoading(); }
+  if (erro) {
+    const m = String(erro.message || '');
+    aviso('Resolução indisponível', /cart[ãa]o/i.test(m)
+      ? 'Lance e salve o cartão-resposta da Semana ' + sem + ' no plano antes de abrir a resolução.'
+      : 'Não foi possível abrir a resolução agora. Tente mais tarde.');
+    return;
+  }
+  if (!d || d.correta == null) {
+    aviso('Resolução ainda não disponível', 'A resolução comentada desta questão ainda não foi carregada na plataforma. Tente mais tarde.');
+    return;
+  }
+  // mesmo formato do banco (v_questoes_legado → objeto do app)
+  const q = {
+    id: d.id, tema: d.tema, dificuldade: d.dificuldade,
+    enunciado: sanitizarTextoQuestao(d.enunciado || ''),
+    alternativas: (d.alternativas || []).map(a => sanitizarTextoQuestao(a)),
+    alternativasImg: d.alternativas_img || null, imagens: d.imagens || null,
+    correta: d.correta, explicacao: sanitizarTextoQuestao(d.explicacao || ''), _explOk: true,
+    prova: d.prova || null, _mini: true
+  };
+  const letraCerta = String.fromCharCode(65 + q.correta);
+  if (gab && /^[A-E]$/.test(gab) && letraCerta !== gab) {
+    aviso('Resolução ainda não disponível', 'A resolução desta questão não confere com o gabarito publicado. Avise o professor.');
     return;
   }
   const idx = /^[A-E]$/.test(resp) ? resp.charCodeAt(0) - 65 : -1;
@@ -9649,6 +9675,8 @@ async function abrirQuestaoDoMini(sem, k, resp, gab) {
     '<div style="margin-top:14px"><button type="button" class="btn btn-secondary" onclick="ROTA.ir(\'revisao-final\')">Voltar ao plano</button></div>';
   // mostra a correção sem gravar resposta de estudo (a resposta valeu na prova em papel)
   _mostrarFeedbackQuestao(q, idx);
+  // a questão não está no banco publicado: sem "caderno de erros" aqui
+  main.querySelectorAll('#explicacao-' + q.id + ' button').forEach(b => { const w = b.parentElement; if (w) w.remove(); });
   if (typeof renderMathInElement === 'function') { try { renderMathInElement(main, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false }); } catch (e) {} }
   window.scrollTo(0, 0);
 }

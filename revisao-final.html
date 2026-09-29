@@ -1188,9 +1188,14 @@ const app = {
      O mini é feito no papel. Aqui o aluno lança o que marcou nas 15 questões e
      a plataforma corrige contra o gabarito oficial da semana. São 3 questões
      por tema, na ordem dos temas da semana (a geometria fecha). */
-  /* (29/09/2026) Resolução no modelo do banco: as 15 questões do mini estão no banco
-     com origem_prova "RADIX RF S<n>"; o app abre a questão e mostra a explicação. */
-  abrirResolucaoMini(n, i) {
+  /* (29/09/2026) Resolução no modelo do banco: as 15 questões do mini ficam na fila de
+     revisão (prova "RADIX RF S<n>", não publicadas); o app abre a questão pela RPC
+     fn_mini_questao e mostra a explicação a quem já lançou o cartão da semana. */
+  async abrirResolucaoMini(n, i) {
+    if (typeof SYNC !== 'undefined' && SYNC.ativo && SYNC._timer) {
+      clearTimeout(SYNC._timer); SYNC._timer = null;
+      try { await SYNC.empurrar(); } catch (e) {}
+    }
     const m = this.minis[n] || {};
     const resp = (m.resp && m.resp[i]) ? m.resp[i] : '-';
     const gab = (GABARITOS[n] || '')[i] || '';
