@@ -68,6 +68,7 @@
   /* cartão-resposta do mini-simulado */
   .cr-tema{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);margin:var(--sp-4) 0 var(--sp-2)}
   .cr-tema:first-child{margin-top:var(--sp-2)}
+  .cr-t{font-size:var(--fs-xs);color:var(--muted,#8fa3cc);margin-right:var(--sp-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34%}
   .cr-linha{display:flex;align-items:center;gap:var(--sp-3);padding:3px 0}
   .cr-n{width:30px;flex-shrink:0;font-size:var(--fs-sm);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
   .cr-ops{display:flex;gap:6px;flex-wrap:wrap}
@@ -595,8 +596,15 @@ const KEY = 'mockup_revisao_final_v3';
    lançou. Sem gabarito publicado, as respostas ficam guardadas e a correção
    sai sozinha quando ele chegar. */
 const GABARITOS = {};
+/* (29/09/2026) A partir da Semana 2 os assuntos do mini vêm embaralhados. O
+   professor publica, junto com o gabarito, um MAPA de 15 dígitos (1 a 4 = os
+   temas da semana na ordem do plano, 5 = geometria). Sem mapa, vale a regra
+   antiga de blocos de 3. */
+const MAPAS = {};
 function temaDaQuestao(sem, i) {          // i de 0 a 14
   const lista = sem.temas.concat([sem.geo.id]);
+  const mapa = MAPAS[sem.n];
+  if (mapa && mapa.length === CONFIG.MINI_QTDE) return lista[parseInt(mapa[i], 10) - 1] || lista[Math.floor(i / 3)];
   return lista[Math.floor(i / 3)];
 }
 
@@ -1207,11 +1215,13 @@ const app = {
     let linhas = '';
     for (let i = 0; i < CONFIG.MINI_QTDE; i++) {
       const tema = temaDaQuestao(sem, i);
-      if (i % CONFIG.MINI_POR_TEMA === 0) linhas += '<div class="cr-tema">' + esc(T(tema).nome) + '</div>';
+      const embaralhado = !!MAPAS[n];
+      if (!embaralhado && i % CONFIG.MINI_POR_TEMA === 0) linhas += '<div class="cr-tema">' + esc(T(tema).nome) + '</div>';
       const marcada = this._miniTmp[i];
       const estado = corr ? (corr.certas[i] ? ' certa' : ' errada') : '';
       linhas += '<div class="cr-linha' + estado + '" data-q="' + i + '">' +
-        '<span class="cr-n">' + (i + 1) + '</span><div class="cr-ops">' +
+        '<span class="cr-n">' + (i + 1) + '</span>' +
+        (embaralhado ? '<span class="cr-t">' + esc(T(tema).nome) + '</span>' : '') + '<div class="cr-ops">' +
         ['A','B','C','D','E'].map(function (L) {
           const on = marcada === L;
           const ehGab = corr && corr.gabarito[i] === L;
@@ -1228,7 +1238,7 @@ const app = {
         '<div class="cr-portema">' + sem.temas.concat([sem.geo.id]).map(function (id) {
           return '<span class="chip ' + (corr.porTema[id] >= 2 ? 'chip-ok' : 'chip-neutro') + '">' + esc(T(id).nome) + ' ' + corr.porTema[id] + '/' + CONFIG.MINI_POR_TEMA + '</span>';
         }).join('') + '</div>'
-      : '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema. Marque o que você respondeu na prova.</p>' +
+      : '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema' + (MAPAS[n] ? ', em ordem embaralhada' : '') + '. Marque o que você respondeu na prova.</p>' +
         (gab ? '' : '<p class="cr-sem-gab">O gabarito desta semana ainda não foi publicado. Pode lançar as suas respostas: a correção aparece sozinha assim que o professor publicar.</p>');
 
     this.abrirModal(
@@ -2114,8 +2124,8 @@ const SYNC = {
     ]);
     // gabaritos oficiais: lista pública para quem está logado
     try {
-      const g = await sb.from('revisao_mini_gabarito').select('semana,gabarito');
-      if (!g.error) (g.data || []).forEach(x => { GABARITOS[x.semana] = x.gabarito; });
+      const g = await sb.from('revisao_mini_gabarito').select('semana,gabarito,mapa');
+      if (!g.error) (g.data || []).forEach(x => { GABARITOS[x.semana] = x.gabarito; if (x.mapa) MAPAS[x.semana] = x.mapa; });
     } catch (e) { console.warn('[sync] gabaritos indisponiveis:', e); }
     if (rp.error) throw rp.error;
     if (rp.data) {

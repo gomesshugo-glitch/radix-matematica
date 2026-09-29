@@ -6498,6 +6498,8 @@
   .rvp-gab:last-child{border-bottom:0}
   .rvp-gab .sem{font-size:13px;font-weight:800;white-space:nowrap}
   .rvp-gab .sem small{display:block;font-weight:600;color:var(--radix-text-muted,#8fa3cc)}
+  .rvp-gab-ins{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
+  @media (max-width:640px){.rvp-gab-ins{grid-template-columns:1fr}}
   .rvp-gab input{width:100%;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;text-transform:uppercase;font-size:15px;padding:9px 12px;border-radius:8px;border:1px solid var(--radix-border,rgba(255,255,255,.14));background:var(--radix-surface-2,#223464);color:var(--radix-text,#eaf1ff)}
   .rvp-gab input:focus{outline:2px solid var(--radix-cyan,#22d3ee);outline-offset:1px}
   /* (24/09/2026) o exemplo era o gabarito real da Semana 1; agora é uma instrução em texto normal */
@@ -9794,7 +9796,7 @@ async function _rvpCarregarGabaritos() {
   const box = document.getElementById('rvp-gabaritos');
   if (!box) return;
   const [g, m] = await Promise.all([
-    sb.from('revisao_mini_gabarito').select('semana,gabarito,atualizado_em'),
+    sb.from('revisao_mini_gabarito').select('semana,gabarito,mapa,atualizado_em'),
     sb.from('revisao_mini').select('semana')
   ]);
   if (g.error) {
@@ -9802,12 +9804,14 @@ async function _rvpCarregarGabaritos() {
     return;
   }
   const porSemana = {};
-  (g.data || []).forEach(x => { porSemana[x.semana] = x.gabarito; });
+  const mapaSemana = {};
+  (g.data || []).forEach(x => { porSemana[x.semana] = x.gabarito; mapaSemana[x.semana] = x.mapa || ''; });
   const lancados = {};
   (m.data || []).forEach(x => { lancados[x.semana] = (lancados[x.semana] || 0) + 1; });
 
   box.innerHTML = '<h3>Gabaritos dos mini-simulados</h3>' +
-    '<p class="rvp-muted">15 letras de A a E, na ordem das questões. São 3 questões por tema, seguindo os temas da semana com a geometria no fim. Publicado o gabarito, os cartões que os alunos já lançaram são corrigidos sozinhos.</p>' +
+    '<p class="rvp-muted">15 letras de A a E, na ordem das questões. Publicado o gabarito, os cartões que os alunos já lançaram são corrigidos sozinhos.</p>' +
+    '<p class="rvp-muted"><b>Mapa dos temas</b> (opcional): 15 dígitos, um por questão, dizendo o tema de cada uma. 1 a 4 são os quatro temas da semana, na ordem do plano; 5 é a geometria. Cada dígito aparece 3 vezes. Em branco, vale a ordem antiga: 3 questões por tema, na sequência dos temas, geometria no fim.</p>' +
     '<div style="margin-top:10px">' +
     RVP.SEMANAS.map(s => {
       const g0 = porSemana[s.n] || '';
@@ -9817,9 +9821,14 @@ async function _rvpCarregarGabaritos() {
         : '<span class="st warn">' + (qtd ? qtd + ' aguardando' : 'sem gabarito') + '</span>';
       return '<div class="rvp-gab">' +
         '<span class="sem">Semana ' + s.n + '<small>' + qtd + ' lançamento' + (qtd === 1 ? '' : 's') + '</small></span>' +
+        '<div class="rvp-gab-ins">' +
         '<input id="gab-' + s.n + '" value="' + RVP.esc(g0) + '" maxlength="15" spellcheck="false" autocomplete="off"' +
         ' placeholder="Digite as 15 letras (A a E)" aria-label="Gabarito da Semana ' + s.n + '"' +
         ' onkeydown="if(event.key===\'Enter\')_rvpSalvarGabarito(' + s.n + ')">' +
+        '<input id="mapa-' + s.n + '" value="' + RVP.esc(mapaSemana[s.n] || '') + '" maxlength="15" spellcheck="false" autocomplete="off" inputmode="numeric"' +
+        ' placeholder="Mapa dos temas (15 dígitos de 1 a 5)" aria-label="Mapa dos temas da Semana ' + s.n + '"' +
+        ' onkeydown="if(event.key===\'Enter\')_rvpSalvarGabarito(' + s.n + ')">' +
+        '</div>' +
         st + '</div>';
     }).join('') +
     '</div>' +
@@ -9846,7 +9855,18 @@ async function _rvpSalvarGabaritos(apenas) {
       return;
     }
     el.value = v;
-    linhas.push({ semana: s.n, gabarito: v, atualizado_em: new Date().toISOString(), atualizado_por: state.usuario ? state.usuario.id : null });
+    const elM = document.getElementById('mapa-' + s.n);
+    const mapa = elM ? (elM.value || '').replace(/[^1-5]/g, '') : '';
+    if (mapa) {
+      const contagem = [1, 2, 3, 4, 5].map(d => mapa.split('').filter(c => c === String(d)).length);
+      if (mapa.length !== 15 || contagem.some(c => c !== 3)) {
+        if (msg) { msg.textContent = 'Semana ' + s.n + ': o mapa precisa ter 15 dígitos de 1 a 5, cada um 3 vezes (essa tem ' + mapa.length + ': ' + contagem.join('/') + ').'; msg.style.color = 'var(--radix-red)'; }
+        elM.focus();
+        return;
+      }
+      elM.value = mapa;
+    }
+    linhas.push({ semana: s.n, gabarito: v, mapa: mapa || null, atualizado_em: new Date().toISOString(), atualizado_por: state.usuario ? state.usuario.id : null });
   }
   if (!linhas.length) {
     if (msg) { msg.textContent = 'Nada para salvar.'; msg.style.color = ''; }
