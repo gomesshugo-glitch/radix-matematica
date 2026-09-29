@@ -183,6 +183,23 @@ td.nw{white-space:nowrap}
         </table>
       </div>
     </section>
+
+    <section aria-label="Alunos do Colégio Simples" style="margin-top:28px">
+      <div class="filtros">
+        <div>
+          <h3 style="margin:0;font-size:17px">Alunos do Colégio Simples que baixaram</h3>
+          <p class="sub" style="margin:2px 0 0;font-size:13px;color:var(--texto-2)">Não foram à Imersão: entraram com o código do Colégio e não responderam a pesquisa.</p>
+        </div>
+        <span class="cont" id="cont-col"></span>
+        <button type="button" id="csv-col">Baixar lista (CSV)</button>
+      </div>
+      <div class="tabela-wrap">
+        <table style="min-width:560px">
+          <thead><tr><th>Quando</th><th>Nome</th><th>WhatsApp</th><th>Downloads</th></tr></thead>
+          <tbody id="corpo-col"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 </div>
 <div class="dica" id="dica" role="tooltip"></div>
@@ -196,6 +213,7 @@ td.nw{white-space:nowrap}
   var PARTICIPOU = { ambos: 'Simulado e aulão', manha: 'Só o simulado', tarde: 'Só o aulão' };
 
   var sb = window.supabase.createClient(URL_SB, KEY);
+  var colegio = [];
   var dados = [], ordem = { col: 'criado_em', dir: -1 };
   var $ = function(id){ return document.getElementById(id); };
 
@@ -233,6 +251,9 @@ td.nw{white-space:nowrap}
       return mostrarAviso('Não foi possível carregar', 'Erro do servidor: ' + (r.error.message || 'desconhecido') + '. Tente atualizar a página.', '<button type="button" onclick="location.reload()">Tentar de novo</button>');
     }
     dados = r.data || [];
+    var rc = await sb.from('imersao_colegio').select('criado_em,nome,whatsapp,downloads')
+      .order('criado_em', { ascending: false }).limit(5000);
+    colegio = rc.error ? [] : (rc.data || []);
     $('estado').classList.add('oculto');
     $('conteudo').classList.remove('oculto'); $('acoes').classList.remove('oculto');
     desenhar();
@@ -291,6 +312,16 @@ td.nw{white-space:nowrap}
     lista('melhorar', 'lista-melhorar', 'sub-melhorar');
 
     tabela();
+    tabelaColegio();
+  }
+
+  function tabelaColegio(){
+    $('cont-col').textContent = colegio.length + (colegio.length === 1 ? ' aluno' : ' alunos');
+    $('corpo-col').innerHTML = colegio.length ? colegio.map(function(d){
+      return '<tr><td class="nw">' + fmtData(d.criado_em) + '</td><td class="nw">' + esc(d.nome) + '</td>' +
+        '<td><a class="zap" href="https://wa.me/55' + esc(d.whatsapp) + '" target="_blank" rel="noopener">' + esc(fmtZap(d.whatsapp)) + '</a></td>' +
+        '<td class="num">' + d.downloads + '</td></tr>';
+    }).join('') : '<tr><td colspan="4" class="vazio">Ninguém baixou com o código do Colégio ainda.</td></tr>';
   }
 
   function filtrados(){
@@ -352,6 +383,19 @@ td.nw{white-space:nowrap}
   $('hist').addEventListener('mouseleave', function(){ dica.classList.remove('on'); });
 
   // planilha: separador ; e BOM para o Excel em português abrir certo
+  function baixarCsv(nome, cab, linhas){
+    function cel(v){ v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; }
+    var txt = [cab.map(cel).join(';')].concat(linhas.map(function(l){ return l.map(cel).join(';'); })).join(String.fromCharCode(13, 10));
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([String.fromCharCode(0xFEFF) + txt], { type: 'text/csv;charset=utf-8' }));
+    a.download = nome + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+  $('csv-col').addEventListener('click', function(){
+    baixarCsv('imersao-colegio', ['Data','Nome','WhatsApp','Downloads'],
+      colegio.map(function(d){ return [fmtData(d.criado_em), d.nome, fmtZap(d.whatsapp), d.downloads]; }));
+  });
   $('csv').addEventListener('click', function(){
     var cab = ['Data','Nome','E-mail','WhatsApp','Fase','Participou','Nota','O que mais gostou','O que melhorar','Quer novidades','Downloads'];
     function cel(v){ v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; }

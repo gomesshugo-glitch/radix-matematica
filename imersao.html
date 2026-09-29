@@ -102,6 +102,12 @@ input[type=text],input[type=email],input[type=tel],textarea{
   width:100%;font:inherit;font-size:16px;color:var(--creme-2);background:rgba(12,10,18,.6);
   border:1.5px solid var(--contorno);border-radius:14px;padding:12px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
 textarea{min-height:88px;resize:vertical}
+form.modo-colegio .so-evento{display:none!important}
+.tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tipo input{position:absolute;opacity:0;pointer-events:none}
+.tipo label{cursor:pointer;text-align:center;font-weight:600;font-size:14px;line-height:1.3;padding:12px 10px;border-radius:14px;border:1.5px solid var(--contorno);background:rgba(12,10,18,.45);transition:all .15s}
+.tipo input:checked+label{background:var(--creme);color:#15101C;border-color:var(--creme)}
+.tipo input:focus-visible+label{outline:2px solid var(--amarelo);outline-offset:2px}
 input.codigo{text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:20px;text-align:center}
 input.codigo::placeholder{text-transform:none;letter-spacing:0;font-weight:400;font-size:16px}
 input::placeholder,textarea::placeholder{color:rgba(240,228,198,.38)}
@@ -199,15 +205,22 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
       <p>As 45 questões passo a passo · PDF</p>
       <div class="cadeado" id="cadeado">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        Use o código mostrado no fim do aulão e responda em 1 minuto.
+        Use o seu código e libere o download.
       </div>
     </div>
   </section>
 
   <form id="form" novalidate>
     <div class="bloco">
+      <div class="campo">
+        <span class="rotulo" id="rot-tipo">Como você chegou aqui?</span>
+        <div class="tipo" role="radiogroup" aria-labelledby="rot-tipo">
+          <input type="radio" name="tipo" id="t1" value="evento" checked><label for="t1">Fui à Imersão</label>
+          <input type="radio" name="tipo" id="t2" value="colegio"><label for="t2">Sou do Colégio Simples e não fui</label>
+        </div>
+      </div>
       <div class="campo" data-campo="codigo">
-        <label for="codigo">Código do aulão <small>apareceu no telão</small></label>
+        <label for="codigo" id="rot-codigo">Código do aulão <small>apareceu no telão</small></label>
         <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" required placeholder="Digite o código" class="codigo">
         <span class="msg-campo" id="msg-codigo">Digite o código do aulão.</span>
       </div>
@@ -220,7 +233,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
         <input id="nome" name="nome" type="text" autocomplete="name" maxlength="120" required placeholder="Como você se chama?">
         <span class="msg-campo">Escreva seu nome.</span>
       </div>
-      <div class="campo" data-campo="email">
+      <div class="campo so-evento" data-campo="email">
         <label for="email">E-mail</label>
         <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="160" required placeholder="voce@email.com">
         <span class="msg-campo">Confira o e-mail.</span>
@@ -230,7 +243,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
         <input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel-national" inputmode="tel" maxlength="16" required placeholder="(84) 99999-9999">
         <span class="msg-campo">Confira o número com DDD.</span>
       </div>
-      <div class="campo" data-campo="situacao">
+      <div class="campo so-evento" data-campo="situacao">
         <span class="rotulo" id="rot-situacao">Você está em qual fase?</span>
         <div class="opcoes" role="radiogroup" aria-labelledby="rot-situacao">
           <input type="radio" name="situacao" id="s1" value="3ano"><label for="s1">3º ano</label>
@@ -242,7 +255,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
       </div>
     </div>
 
-    <div class="bloco">
+    <div class="bloco so-evento">
       <p class="bloco-tit"><b>02</b><span>Sua opinião</span></p>
       <div class="campo" data-campo="participou">
         <span class="rotulo" id="rot-part">Você participou de quê?</span>
@@ -270,7 +283,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
     </div>
 
     <div class="bloco">
-      <label class="check" style="margin-bottom:14px">
+      <label class="check so-evento" style="margin-bottom:14px">
         <input type="checkbox" name="novidades" id="novidades">
         <span><b>Quero receber no WhatsApp</b> os próximos aulões e materiais gratuitos.</span>
       </label>
@@ -327,6 +340,20 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
   var liberado = document.getElementById('liberado');
   var cadeado = document.getElementById('cadeado');
 
+  function modo(){ return valor('tipo') === 'colegio' ? 'colegio' : 'evento'; }
+  var ROT_CODIGO = {
+    evento: 'Código do aulão <small>apareceu no telão</small>',
+    colegio: 'Código do Colégio <small>passado pelo Colégio Simples</small>'
+  };
+  function aplicarModo(){
+    var m = modo();
+    form.classList.toggle('modo-colegio', m === 'colegio');
+    document.getElementById('rot-codigo').innerHTML = ROT_CODIGO[m];
+    form.querySelectorAll('.invalido').forEach(function(el){ el.classList.remove('invalido'); });
+    erroGeral.classList.remove('on');
+  }
+  form.querySelectorAll('[name="tipo"]').forEach(function(el){ el.addEventListener('change', aplicarModo); });
+
   // botões de nota 0..10
   var notas = document.getElementById('notas');
   for (var i = 0; i <= 10; i++) {
@@ -376,14 +403,17 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
     };
     var ok = true, primeiro = null;
     function checa(campo, cond){ if (!marca(campo, cond)) { ok = false; primeiro = primeiro || campo; } }
-    document.getElementById('msg-codigo').textContent = 'Digite o código do aulão.';
+    d.tipo = modo();
+    document.getElementById('msg-codigo').textContent = 'Digite o código.';
     checa('codigo', d.codigo.length > 0);
     checa('nome', d.nome.length >= 3);
-    checa('email', /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email) && d.email.length <= 160);
+    if (d.tipo === 'evento') checa('email', /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email) && d.email.length <= 160);
     checa('whatsapp', /^[0-9]{10,11}$/.test(d.whatsapp));
-    checa('situacao', !!d.situacao);
-    checa('participou', !!d.participou);
-    checa('nota', d.nota !== '');
+    if (d.tipo === 'evento') {
+      checa('situacao', !!d.situacao);
+      checa('participou', !!d.participou);
+      checa('nota', d.nota !== '');
+    }
     checa('consentimento', d.consentimento);
     if (!ok) {
       var alvo = form.querySelector('[data-campo="' + primeiro + '"]');
@@ -412,10 +442,13 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
   };
 
   function registrar(d){
-    return fetch(SUPABASE_URL + '/rest/v1/rpc/fn_imersao_registrar', {
+    var colegio = d.tipo === 'colegio';
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/' + (colegio ? 'fn_imersao_colegio' : 'fn_imersao_registrar'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({
+      body: JSON.stringify(colegio ? {
+        p_codigo: d.codigo, p_nome: d.nome, p_whatsapp: d.whatsapp, p_consentimento: d.consentimento
+      } : {
         p_codigo: d.codigo, p_nome: d.nome, p_email: d.email, p_whatsapp: d.whatsapp,
         p_situacao: d.situacao, p_participou: d.participou, p_nota: parseInt(d.nota, 10),
         p_gostou: d.gostou || null, p_melhorar: d.melhorar || null,
@@ -455,14 +488,15 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
       enviar.disabled = false;
       enviar.textContent = 'Liberar download';
       if (res.ok) {
-        gravarLocal({ codigo: d.codigo, nome: d.nome, email: d.email, whatsapp: form.whatsapp.value,
+        gravarLocal({ tipo: d.tipo, codigo: d.codigo, nome: d.nome, email: d.email, whatsapp: form.whatsapp.value,
                       situacao: d.situacao, participou: d.participou, nota: d.nota, novidades: d.novidades, consentimento: true });
         apontarArquivo(res.arquivo);
         mostrarLiberado(d.nome);
         return;
       }
       if (res.erro === 'codigo_invalido') {
-        document.getElementById('msg-codigo').textContent = 'Código errado. Confira o que apareceu no telão.';
+        document.getElementById('msg-codigo').textContent = d.tipo === 'colegio'
+          ? 'Código errado. Confira o código que o Colégio passou.' : 'Código errado. Confira o que apareceu no telão.';
         marca('codigo', false);
         form.querySelector('[data-campo="codigo"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
@@ -489,6 +523,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
     form.style.display = '';
     cadeado.style.display = '';
     form.reset();
+    aplicarModo();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
@@ -498,11 +533,12 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
   var salvo = lerLocal();
   if (salvo) {
     ['codigo','nome','email','whatsapp'].forEach(function(k){ if (salvo[k] && form[k]) form[k].value = salvo[k]; });
-    ['situacao','participou','nota'].forEach(function(k){
+    ['tipo','situacao','participou','nota'].forEach(function(k){
       var el = salvo[k] !== undefined && form.querySelector('[name="' + k + '"][value="' + salvo[k] + '"]'); if (el) el.checked = true;
     });
     form.novidades.checked = !!salvo.novidades;
     form.consentimento.checked = !!salvo.consentimento;
+    aplicarModo();
     enviar.textContent = 'Baixar de novo';
   }
 })();
