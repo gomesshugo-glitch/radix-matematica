@@ -1244,7 +1244,7 @@ const app = {
       const estado = corr ? (corr.certas[i] ? ' certa' : ' errada') : '';
       linhas += '<div class="cr-linha' + estado + '" data-q="' + i + '">' +
         '<span class="cr-n">' + (i + 1) + '</span>' +
-        (embaralhado ? '<span class="cr-t">' + esc(T(tema).nome) + '</span>' : '') + '<div class="cr-ops">' +
+        '<div class="cr-ops">' +   /* (30/09) sem o assunto por linha: o tema aparece só na resolução */
         ['A','B','C','D','E'].map(function (L) {
           const on = marcada === L;
           const ehGab = corr && corr.gabarito[i] === L;
