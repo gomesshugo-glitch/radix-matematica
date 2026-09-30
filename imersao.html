@@ -103,7 +103,8 @@ input[type=text],input[type=email],input[type=tel],textarea{
   border:1.5px solid var(--contorno);border-radius:14px;padding:12px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
 textarea{min-height:88px;resize:vertical}
 form.modo-colegio .so-evento{display:none!important}
-.tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tipo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:440px){.tipo{grid-template-columns:1fr}}
 .tipo input{position:absolute;opacity:0;pointer-events:none}
 .tipo label{cursor:pointer;text-align:center;font-weight:600;font-size:14px;line-height:1.3;padding:12px 10px;border-radius:14px;border:1.5px solid var(--contorno);background:rgba(12,10,18,.45);transition:all .15s}
 .tipo input:checked+label{background:var(--creme);color:#15101C;border-color:var(--creme)}
@@ -217,6 +218,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
         <div class="tipo" role="radiogroup" aria-labelledby="rot-tipo">
           <input type="radio" name="tipo" id="t1" value="evento" checked><label for="t1">Fui à Imersão</label>
           <input type="radio" name="tipo" id="t2" value="colegio"><label for="t2">Sou do Colégio Simples e não fui</label>
+          <input type="radio" name="tipo" id="t3" value="radix"><label for="t3">Sou aluno do Radix e não fui</label>
         </div>
       </div>
       <div class="campo" data-campo="codigo">
@@ -340,14 +342,15 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
   var liberado = document.getElementById('liberado');
   var cadeado = document.getElementById('cadeado');
 
-  function modo(){ return valor('tipo') === 'colegio' ? 'colegio' : 'evento'; }
+  function modo(){ var v = valor('tipo'); return (v === 'colegio' || v === 'radix') ? v : 'evento'; }
   var ROT_CODIGO = {
     evento: 'Código do aulão <small>apareceu no telão</small>',
-    colegio: 'Código do Colégio <small>passado pelo Colégio Simples</small>'
+    colegio: 'Código do Colégio <small>passado pelo Colégio Simples</small>',
+    radix: 'Código do Radix <small>passado pelo Radix</small>'
   };
   function aplicarModo(){
     var m = modo();
-    form.classList.toggle('modo-colegio', m === 'colegio');
+    form.classList.toggle('modo-colegio', m !== 'evento');
     document.getElementById('rot-codigo').innerHTML = ROT_CODIGO[m];
     form.querySelectorAll('.invalido').forEach(function(el){ el.classList.remove('invalido'); });
     erroGeral.classList.remove('on');
@@ -442,7 +445,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
   };
 
   function registrar(d){
-    var colegio = d.tipo === 'colegio';
+    var colegio = d.tipo !== 'evento';   // Colégio e Radix: fluxo curto, sem pesquisa
     return fetch(SUPABASE_URL + '/rest/v1/rpc/' + (colegio ? 'fn_imersao_colegio' : 'fn_imersao_registrar'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
@@ -495,8 +498,7 @@ footer .selos img{width:52px;height:52px;border-radius:12px;background:var(--cre
         return;
       }
       if (res.erro === 'codigo_invalido') {
-        document.getElementById('msg-codigo').textContent = d.tipo === 'colegio'
-          ? 'Código errado. Confira o código que o Colégio passou.' : 'Código errado. Confira o que apareceu no telão.';
+        document.getElementById('msg-codigo').textContent = d.tipo === 'colegio' ? 'Código errado. Confira o código que o Colégio passou.' : d.tipo === 'radix' ? 'Código errado. Confira o código que o Radix passou.' : 'Código errado. Confira o que apareceu no telão.';
         marca('codigo', false);
         form.querySelector('[data-campo="codigo"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;

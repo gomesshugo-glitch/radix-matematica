@@ -184,18 +184,18 @@ td.nw{white-space:nowrap}
       </div>
     </section>
 
-    <section aria-label="Alunos do Colégio Simples" style="margin-top:28px">
+    <section aria-label="Alunos que não foram" style="margin-top:28px">
       <div class="filtros">
         <div>
-          <h3 style="margin:0;font-size:17px">Alunos do Colégio Simples que baixaram</h3>
-          <p class="sub" style="margin:2px 0 0;font-size:13px;color:var(--texto-2)">Não foram à Imersão: entraram com o código do Colégio e não responderam a pesquisa.</p>
+          <h3 style="margin:0;font-size:17px">Alunos que não foram e baixaram</h3>
+          <p class="sub" style="margin:2px 0 0;font-size:13px;color:var(--texto-2)">Alunos do Colégio Simples e do Radix que entraram com o código próprio. Não responderam a pesquisa.</p>
         </div>
         <span class="cont" id="cont-col"></span>
         <button type="button" id="csv-col">Baixar lista (CSV)</button>
       </div>
       <div class="tabela-wrap">
-        <table style="min-width:560px">
-          <thead><tr><th>Quando</th><th>Nome</th><th>WhatsApp</th><th>Downloads</th></tr></thead>
+        <table style="min-width:680px">
+          <thead><tr><th>Quando</th><th>Nome</th><th>Origem</th><th>WhatsApp</th><th>Downloads</th></tr></thead>
           <tbody id="corpo-col"></tbody>
         </table>
       </div>
@@ -214,6 +214,7 @@ td.nw{white-space:nowrap}
 
   var sb = window.supabase.createClient(URL_SB, KEY);
   var colegio = [];
+  var ORIGEM = { colegio: 'Colégio Simples', radix: 'Radix' };
   var dados = [], ordem = { col: 'criado_em', dir: -1 };
   var $ = function(id){ return document.getElementById(id); };
 
@@ -251,7 +252,7 @@ td.nw{white-space:nowrap}
       return mostrarAviso('Não foi possível carregar', 'Erro do servidor: ' + (r.error.message || 'desconhecido') + '. Tente atualizar a página.', '<button type="button" onclick="location.reload()">Tentar de novo</button>');
     }
     dados = r.data || [];
-    var rc = await sb.from('imersao_colegio').select('criado_em,nome,whatsapp,downloads')
+    var rc = await sb.from('imersao_colegio').select('criado_em,nome,whatsapp,downloads,origem')
       .order('criado_em', { ascending: false }).limit(5000);
     colegio = rc.error ? [] : (rc.data || []);
     $('estado').classList.add('oculto');
@@ -318,10 +319,10 @@ td.nw{white-space:nowrap}
   function tabelaColegio(){
     $('cont-col').textContent = colegio.length + (colegio.length === 1 ? ' aluno' : ' alunos');
     $('corpo-col').innerHTML = colegio.length ? colegio.map(function(d){
-      return '<tr><td class="nw">' + fmtData(d.criado_em) + '</td><td class="nw">' + esc(d.nome) + '</td>' +
+      return '<tr><td class="nw">' + fmtData(d.criado_em) + '</td><td class="nw">' + esc(d.nome) + '</td><td class="nw">' + (ORIGEM[d.origem] || ORIGEM.colegio) + '</td>' +
         '<td><a class="zap" href="https://wa.me/55' + esc(d.whatsapp) + '" target="_blank" rel="noopener">' + esc(fmtZap(d.whatsapp)) + '</a></td>' +
         '<td class="num">' + d.downloads + '</td></tr>';
-    }).join('') : '<tr><td colspan="4" class="vazio">Ninguém baixou com o código do Colégio ainda.</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="vazio">Ninguém baixou com os códigos do Colégio ou do Radix ainda.</td></tr>';
   }
 
   function filtrados(){
@@ -393,8 +394,8 @@ td.nw{white-space:nowrap}
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
   }
   $('csv-col').addEventListener('click', function(){
-    baixarCsv('imersao-colegio', ['Data','Nome','WhatsApp','Downloads'],
-      colegio.map(function(d){ return [fmtData(d.criado_em), d.nome, fmtZap(d.whatsapp), d.downloads]; }));
+    baixarCsv('imersao-nao-foram', ['Data','Nome','Origem','WhatsApp','Downloads'],
+      colegio.map(function(d){ return [fmtData(d.criado_em), d.nome, ORIGEM[d.origem] || ORIGEM.colegio, fmtZap(d.whatsapp), d.downloads]; }));
   });
   $('csv').addEventListener('click', function(){
     var cab = ['Data','Nome','E-mail','WhatsApp','Fase','Participou','Nota','O que mais gostou','O que melhorar','Quer novidades','Downloads'];
