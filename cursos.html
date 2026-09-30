@@ -135,27 +135,32 @@
   .card::before {
     content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--c);
   }
-  .card::after {
-    content: ''; position: absolute; width: 220px; height: 220px; right: -90px; top: -90px; border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%);
-    pointer-events: none;
-  }
   .card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--c) 45%, var(--line)); box-shadow: var(--shadow); }
-  .card-top { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+  /* faixa de topo: matéria à esquerda, professor recortado à direita */
+  .card-hero {
+    position: relative; margin: -22px -22px 18px; height: 250px; padding: 22px 22px 20px;
+    display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+    background:
+      radial-gradient(260px 200px at 78% 70%, color-mix(in srgb, var(--c) 34%, transparent), transparent 70%),
+      linear-gradient(160deg, color-mix(in srgb, var(--c) 16%, var(--surface)), var(--surface) 75%);
+    border-bottom: 1px solid var(--line);
+  }
+  .card-hero img {
+    position: absolute; right: 0; bottom: 0; height: 92%; max-width: 64%;
+    object-fit: contain; object-position: right bottom;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.28)); transition: transform .3s ease;
+  }
+  .card:hover .card-hero img { transform: scale(1.03); transform-origin: right bottom; }
+  .hero-txt { position: relative; z-index: 1; max-width: 50%; }
   .glyph {
-    width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; flex: none;
-    background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c);
+    width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 10px;
+    background: color-mix(in srgb, var(--c) 20%, transparent); color: var(--c);
   }
-  .glyph svg { width: 28px; height: 28px; }
-  .card h3 { font-size: 24px; font-weight: 800; line-height: 1.1; }
-  .card .area { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-  .prof { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; padding: 12px; border-radius: 14px; background: var(--bg-2); }
-  .avatar {
-    width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center;
-    font: 700 15px 'Bricolage Grotesque', sans-serif; color: var(--bg); background: var(--c);
-  }
-  .prof small { display: block; font-size: 11.5px; color: var(--muted); }
-  .prof b { font-size: 15px; font-weight: 600; }
+  .glyph svg { width: 22px; height: 22px; }
+  .card h3 { font-size: 28px; font-weight: 800; line-height: 1.02; }
+  .card .area { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .quem { margin-top: 10px; font-size: 13px; color: var(--text-2); line-height: 1.3; }
+  .quem b { display: block; font-size: 15px; color: var(--text); font-weight: 700; }
   .card ul { list-style: none; display: grid; gap: 7px; font-size: 14px; color: var(--text-2); margin-bottom: 18px; }
   .card li { display: flex; gap: 9px; align-items: flex-start; }
   .card li svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--c); }
@@ -169,11 +174,11 @@
   :root[data-theme="light"] .btn-curso { color: #fff; }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .btn-curso { color: #fff; } }
   .badge {
-    align-self: flex-start; margin-bottom: 14px; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    position: relative; z-index: 1; align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: .06em;
     text-transform: uppercase; padding: 5px 9px; border-radius: 999px;
     background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c);
   }
-  .badge.soon { background: var(--surface-2); color: var(--muted); }
+  .badge.soon { background: color-mix(in srgb, var(--bg) 70%, transparent); color: var(--text-2); }
   .card.is-soon .btn-curso { background: transparent; color: var(--text-2); border-color: var(--line-2); }
 
   .m { --c: var(--mat); } .f { --c: var(--fis); } .b { --c: var(--bio); } .q { --c: var(--qui); }
@@ -429,25 +434,25 @@
 const RADIX_CURSOS = {
   whatsapp: '5584998131870',
   cursos: [
-    { id: 'matematica', classe: 'm', nome: 'Matemática', area: 'Matemática e suas Tecnologias', prof: 'Hugo Gomes',
+    { id: 'matematica', classe: 'm', nome: 'Matemática', area: 'Exatas', prof: 'Hugo Gomes', foto: 'cursos-hugo.webp',
       itens: ['Toda a matemática do ENEM', 'Banco de questões no app Radix', 'Simulados com nota TRI'],
       url: { presencial: 'https://app.radixmatematica.com.br/vendas', online: 'https://app.radixmatematica.com.br/vendas' }, precos: { presencial: null, online: null } },
-    { id: 'fisica', classe: 'f', nome: 'Física', area: 'Ciências da Natureza', prof: 'Rafael Medeiros',
+    { id: 'fisica', classe: 'f', nome: 'Física', area: 'Ciências da Natureza', prof: 'Rafael Medeiros', foto: 'cursos-rafael.webp',
       itens: ['Mecânica, eletricidade, ondas e óptica', 'Resolução de questões do ENEM', 'Revisão antes da prova'],
       url: null, precos: { presencial: null, online: null } },
-    { id: 'biologia', classe: 'b', nome: 'Biologia', area: 'Ciências da Natureza', prof: 'Mateus Medeiros',
+    { id: 'biologia', classe: 'b', nome: 'Biologia', area: 'Ciências da Natureza', prof: 'Mateus Medeiros', foto: 'cursos-mateus.webp',
       itens: ['Ecologia, genética e fisiologia', 'Resolução de questões do ENEM', 'Revisão antes da prova'],
       url: null, precos: { presencial: null, online: null } },
-    { id: 'quimica', classe: 'q', nome: 'Química', area: 'Ciências da Natureza', prof: 'Thiago Magalhães',
+    { id: 'quimica', classe: 'q', nome: 'Química', area: 'Ciências da Natureza', prof: 'Thiago Magalhães', foto: 'cursos-thiago.webp',
       itens: ['Geral, físico-química e orgânica', 'Resolução de questões do ENEM', 'Revisão antes da prova'],
       url: null, precos: { presencial: null, online: null } },
-    { id: 'humanas', classe: 'h', nome: 'Humanas', area: 'Ciências Humanas', prof: 'Sandro Cocco',
+    { id: 'humanas', classe: 'h', nome: 'Humanas', area: 'Ciências Humanas', prof: 'Sandro Cocco', foto: 'cursos-sandro.webp',
       itens: ['História, geografia, filosofia e sociologia', 'Leitura de mapas, gráficos e textos', 'Resolução de questões do ENEM'],
       url: null, precos: { presencial: null, online: null } },
-    { id: 'redacao', classe: 'r', nome: 'Redação', area: 'Redação ENEM', prof: 'Rhayara Lira',
+    { id: 'redacao', classe: 'r', nome: 'Redação', area: 'Redação ENEM', prof: 'Rhayara Lira', foto: 'cursos-rhayara.webp',
       itens: ['As 5 competências da correção', 'Temas e repertório', 'Correção individual de textos'],
       url: null, precos: { presencial: null, online: null } },
-    { id: 'linguagens', classe: 'l', nome: 'Linguagens', area: 'Linguagens e Códigos', prof: 'Milene Lima',
+    { id: 'linguagens', classe: 'l', nome: 'Linguagens', area: 'Linguagens', prof: 'Milene Lima', foto: 'cursos-milene.webp',
       itens: ['Interpretação de texto e gramática', 'Literatura e artes', 'Resolução de questões do ENEM'],
       url: null, precos: { presencial: null, online: null } }
   ]
@@ -468,7 +473,6 @@ const SETA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 
 let formato = 'presencial';
 const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const iniciais = n => n.split(' ').map(p => p[0]).slice(0, 2).join('');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const zap = msg => 'https://wa.me/' + RADIX_CURSOS.whatsapp + '?text=' + encodeURIComponent(msg || 'Olá! Quero saber dos isolados do Radix para 2027.');
 
@@ -481,14 +485,15 @@ function render() {
     const destino = aberto ? url : zap('Olá! Quero ser avisado quando abrir a matrícula do isolado de ' + c.nome + ' (' + formato + ') em 2027.');
     return `
     <article class="card ${c.classe} ${aberto ? '' : 'is-soon'}">
-      <span class="badge ${aberto ? '' : 'soon'}">${aberto ? 'Matrículas abertas' : 'Em breve'}</span>
-      <div class="card-top">
-        <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GLIFOS[c.id]}</svg></div>
-        <div><span class="area">${esc(c.area)}</span><h3>${esc(c.nome)}</h3></div>
-      </div>
-      <div class="prof">
-        <div class="avatar" aria-hidden="true">${esc(iniciais(c.prof))}</div>
-        <div><small>Professor(a)</small><b>${esc(c.prof)}</b></div>
+      <div class="card-hero">
+        <span class="badge ${aberto ? '' : 'soon'}">${aberto ? 'Matrículas abertas' : 'Em breve'}</span>
+        <img src="${esc(c.foto)}" alt="${esc(c.prof)}" loading="lazy" width="480" height="560">
+        <div class="hero-txt">
+          <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GLIFOS[c.id]}</svg></div>
+          <span class="area">${esc(c.area)}</span>
+          <h3>${esc(c.nome)}</h3>
+          <p class="quem">com<b>${esc(c.prof)}</b></p>
+        </div>
       </div>
       <ul>${c.itens.map(i => `<li>${CHECK}<span>${esc(i)}</span></li>`).join('')}</ul>
       <div class="card-foot">
