@@ -233,7 +233,9 @@
   .grupo-h.hoje{color:var(--cyan-2)}
   .grupo-h.atraso{color:var(--amber)}
   .grupo-h .n{background:rgba(120,150,220,.16);color:var(--text-2);border-radius:999px;padding:1px 8px;font-size:var(--fs-xs);letter-spacing:0}
-  .dia-lbl{font-size:var(--fs-xs);font-weight:700;color:var(--muted);margin:var(--sp-3) 0 var(--sp-2);letter-spacing:.04em}
+  .dia-lbl{font-size:var(--fs-xs);font-weight:700;color:var(--muted);margin:var(--sp-3) 0 var(--sp-2);letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);flex-wrap:wrap}
+  .dia-btn{letter-spacing:0;text-transform:none;font-weight:700}
+  .grupo-h .lado{margin-left:auto}
   .atv{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"chk body" "acts acts";gap:var(--sp-3) var(--sp-3);background:var(--s1);border-radius:var(--r-lg);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--sh-1);border-left:3px solid transparent;transition:background var(--dur),transform var(--dur),opacity var(--dur)}
   .atv:hover{background:#15234b}
   .atv.late{border-left-color:var(--amber)}
@@ -1054,9 +1056,45 @@ const app = {
     const efv = (it.efv === -1 || it.efv === 1 || it.efv === 0) ? it.efv : this.efDif(temaId).v;
     return { key: key, questoes: it.questoes, efv: efv, semana: n };
   },
+  /* (30/09/2026) Lista pronta do dia: todas as atividades de questões daquele dia numa lista só, em outra aba. */
+  _itensDoDia(n, dia) {
+    const sem = SEMANAS.find(s => s.n === n);
+    if (!sem || !this.perfil) return [];
+    return (this.dosePara(sem).itens || []).filter(it => it.tipo === 'q' && it.questoes > 0 && this.diaDe(it) === dia && !this.feito(it.key));
+  },
+  _btnListaDoDia(n, dia, itens) {
+    const qs = itens.filter(it => it.tipo === 'q' && it.questoes > 0 && !this.feito(it.key));
+    if (!qs.length) return '';
+    const total = qs.reduce((a, it) => a + it.questoes, 0);
+    return '<button type="button" class="btn btn-sec btn-sm dia-btn" onclick="app.abrirListaDoDia(' + n + ',' + dia + ')" title="Uma lista só com ' + qs.length + ' assunto' + (qs.length > 1 ? 's' : '') + ' deste dia">Abrir a lista do dia · ' + total + ' questões</button>';
+  },
+  abrirListaDoDia(n, dia) {
+    const itens = this._itensDoDia(n, dia);
+    if (!itens.length) { this.toast('', 'Nada pendente neste dia', 'As atividades de questões deste dia já foram concluídas.'); return; }
+    if (!(EMBUTIDO || ACESSO.modo === 'completo' || ACESSO.modo === 'amostra')) { this.toast('', 'As questões ficam no app', 'Entre na sua conta para abrir a lista do dia.'); return; }
+    const partes = itens.map(it => { const d = this._dadosAtividade(it.temaId, it.key) || {}; return { k: it.key, t: it.temaId, n: it.questoes, e: (d.efv === -1 || d.efv === 1) ? d.efv : 0 }; });
+    const url = '/?rfdia=' + n + '&itens=' + encodeURIComponent(JSON.stringify(partes));
+    let aba = null; try { aba = window.open(url, '_blank'); } catch (e) { aba = null; }
+    if (!aba) { if (!EMBUTIDO) { location.href = url; return; } this.toast('erro', 'Não consegui abrir a aba', 'Libere pop-ups para este site ou abra as atividades uma a uma.'); return; }
+    const total = partes.reduce((a, p) => a + p.n, 0);
+    this.toast('ok', 'Abrindo a lista do dia em outra aba', total + ' questões: ' + itens.map(it => (T(it.temaId) || { nome: it.temaId }).nome).join(', ') + '. Ao encerrar, cada atividade recebe seus acertos aqui.');
+  },
   abrirAtividade(temaId, nivel, key) {
     const nome = (T(temaId) || { nome: 'o tema' }).nome;
     const dados = this._dadosAtividade(temaId, key);
+    // (30/09/2026) A atividade abre em OUTRA ABA (o app com ?tema=…); o resultado volta pela aba do plano
+    // (o app avisa por 'storage'). Se o navegador bloquear a aba nova, cai no caminho antigo (mesma aba).
+    if (EMBUTIDO || ACESSO.modo === 'completo' || ACESSO.modo === 'amostra') {
+      const url = '/?tema=' + encodeURIComponent(temaId) + (nivel ? '&nivel=' + encodeURIComponent(nivel) : '')
+        + (dados ? '&rf=' + encodeURIComponent(dados.key) + '&n=' + dados.questoes + '&efv=' + dados.efv + '&sem=' + dados.semana : '');
+      let aba = null; try { aba = window.open(url, '_blank'); } catch (e) { aba = null; }
+      if (aba) {
+        if (dados) this.toast('ok', 'Abrindo em outra aba', dados.questoes + ' questões de ' + nome + '. Ao encerrar, o resultado aparece aqui.');
+        else this.toast('ok', 'Abrindo em outra aba', 'Banco filtrado em ' + nome + '.');
+        return;
+      }
+      if (!EMBUTIDO) { location.href = url; return; }
+    }
     if (EMBUTIDO) {
       try {
         window.parent.postMessage(Object.assign({ radix: 'plano-abrir-tema', tema: temaId, nivel: nivel || '' }, dados || {}), location.origin);
@@ -1239,7 +1277,7 @@ const app = {
     for (let i = 0; i < CONFIG.MINI_QTDE; i++) {
       const tema = temaDaQuestao(sem, i);
       const embaralhado = !!MAPAS[n];
-      if (!embaralhado && i % CONFIG.MINI_POR_TEMA === 0) linhas += '<div class="cr-tema">' + esc(T(tema).nome) + '</div>';
+      /* (30/09) sem títulos por bloco: o assunto aparece só na tela da resolução */
       const marcada = this._miniTmp[i];
       const estado = corr ? (corr.certas[i] ? ' certa' : ' errada') : '';
       linhas += '<div class="cr-linha' + estado + '" data-q="' + i + '">' +
@@ -1880,7 +1918,7 @@ const app = {
     }
     if (ehAtual) {
       const diaEstudo = dose.diasAtivos.indexOf(idxHoje) !== -1;
-      html += '<div class="grupo"><div class="grupo-h hoje">Hoje · ' + DIAS_LONGOS[idxHoje] + ' ' + fmtCurto(hoje) + (grupos.hoje.length ? ' <span class="n">' + grupos.hoje.length + '</span>' : '') + '</div>' +
+      html += '<div class="grupo"><div class="grupo-h hoje">Hoje · ' + DIAS_LONGOS[idxHoje] + ' ' + fmtCurto(hoje) + (grupos.hoje.length ? ' <span class="n">' + grupos.hoje.length + '</span>' : '') + '<span class="lado">' + self._btnListaDoDia(sem.n, idxHoje, grupos.hoje) + '</span></div>' +
         (grupos.hoje.length ? ordena(grupos.hoje).map(it => self._cardAtividade(sem, dose, it, 'hoje')).join('')
           : '<div class="vazio">' + (diaEstudo ? '<b>Nada pendente para hoje.</b> Adiante uma das próximas ou descanse: constância também é recuperação.' : '<b>Hoje não é dia de estudo no seu plano.</b> Se sobrar tempo, adiante uma das próximas atividades.') + '</div>') + '</div>';
     }
@@ -1889,7 +1927,7 @@ const app = {
       const porDia = {};
       grupos.prox.forEach(it => { const d = self.diaDe(it); (porDia[d] = porDia[d] || []).push(it); });
       Object.keys(porDia).map(Number).sort((a, b) => a - b).forEach(d => {
-        html += '<div class="dia-lbl">' + DIAS_LONGOS[d] + ' · ' + fmtCurto(addDias(dt(sem.ini), d)) + '</div>' +
+        html += '<div class="dia-lbl"><span>' + DIAS_LONGOS[d] + ' · ' + fmtCurto(addDias(dt(sem.ini), d)) + '</span>' + self._btnListaDoDia(sem.n, d, porDia[d]) + '</div>' +
           porDia[d].sort((a, b) => b.peso - a.peso).map(it => self._cardAtividade(sem, dose, it, 'prox')).join('');
       });
       html += '</div>';

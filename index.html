@@ -8392,6 +8392,7 @@ async function iniciarSessao() {
   state._destinoInicial =
       (_voltar === 'revisao-final') ? { tela: 'revisao-final' }
     : (_temaURL)                    ? { tela: 'tema', tema: _temaURL, nivel: _q.get('nivel') || '', extra: { key: _q.get('rf') || '', questoes: _q.get('n') || '', efv: _q.get('efv') || '', semana: _q.get('sem') || '' } }
+    : (_q.get('rfdia'))             ? { tela: 'rfdia', semana: _q.get('rfdia'), itens: _q.get('itens') || '' }   // (30/09) lista pronta do dia
     : null;
   await carregarDados();
   mostrarApp();
@@ -9624,6 +9625,10 @@ const RF_EMBED = {
   }
 };
 window.addEventListener('message', RF_EMBED.aoReceber);
+// (30/09/2026) A atividade abre em outra aba: quando ela termina, grava o pendente no localStorage e esta aba
+// (com o plano na moldura) recebe 'storage' e entrega ao plano. 'focus' é a rede de segurança.
+window.addEventListener('storage', function (e) { try { if (e.key && e.key.indexOf('radix_rf_pend_') === 0 && typeof RF_LISTA !== 'undefined') RF_LISTA.entregarPendentes(); } catch (err) {} });
+window.addEventListener('focus', function () { try { if (typeof RF_LISTA !== 'undefined') RF_LISTA.entregarPendentes(); } catch (err) {} });
 
 // ============================================================
 // RESOLUÇÃO DO MINI-SIMULADO no modelo do banco (29/09/2026)
@@ -9774,6 +9779,7 @@ function _abrirDestinoInicial() {
   try {
     if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
     if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel, d.extra); return; }
+    if (d.tela === 'rfdia') { if (state.usuario && state.usuario.perfil !== 'professor') RF_LISTA.iniciarDia(d.semana, d.itens); return; }
   } catch (e) { console.warn('[destino inicial]', e); }
 }
 
@@ -23555,7 +23561,7 @@ async function _finalizarEstudoDigital() {
     }
     FILA.enfileirar({ id: opId, tipo: 'gravar', payload: { tipo: 'respostas', dados: { itens, tentativa_id: tentativaId, finaliza: true, tentativa: t ? TENTATIVAS.retrato(t) : null } } });
     TENTATIVAS.finalizar(tentativaId, opId);
-    if (_estudoAtual && _estudoAtual.revisao) { try { RF_LISTA.registrar(_estudoAtual.revisao, acertos, total); } catch (e) { console.warn('[revisao] registro:', e); } }
+    if (_estudoAtual && _estudoAtual.revisao) { try { RF_LISTA.registrar(_estudoAtual.revisao, acertos, total, detalhes); } catch (e) { console.warn('[revisao] registro:', e); } }
     _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId, tentativaId, recuperacao: (_estudoAtual && _estudoAtual.recuperacao) || null, revisao: (_estudoAtual && _estudoAtual.revisao) || null });
     _estudoAtual = null;
   } finally { _finalizarEstudoDigital._ocupado = false; }
@@ -25496,6 +25502,38 @@ const RF_LISTA = {
     resumo.completada = ['facil', 'media', 'dificil'].some(d => resumo[d] < alvo[d]) && escolhidas.length < pool.length && resumo.recentes === 0;
     return { qs: escolhidas, resumo };
   },
+  // (30/09/2026) Lista pronta do DIA: várias atividades (assuntos) numa lista só; cada parte registra seus acertos.
+  async iniciarDia(semana, itensJson) {
+    let itens = [];
+    try { itens = JSON.parse(String(itensJson || '[]')); } catch (e) { itens = []; }
+    if (!Array.isArray(itens)) itens = [];
+    const semN = parseInt(semana, 10) || null;
+    itens = itens.filter(p => p && typeof p.k === 'string' && /^s\d+:/.test(p.k) && TEMAS.some(t => t.id === p.t) && parseInt(p.n, 10) > 0).slice(0, 12);
+    if (!itens.length) { renderRevisaoFinal(); return; }
+    if (!state.questoesPronto && state.questoesPromise) { radixShowLoading('Montando a lista do dia…'); try { await state.questoesPromise; } finally { radixHideLoading(); } }
+    const partes = [], qs = [], vistos = new Set();
+    itens.forEach(p => {
+      const m = this.montar({ temaId: p.t, n: parseInt(p.n, 10), efv: parseInt(p.e, 10), key: p.k });
+      if (!m || !m.qs.length) return;
+      const meus = m.qs.filter(q => !vistos.has(q.id)); meus.forEach(q => vistos.add(q.id));
+      const tema = TEMAS.find(t => t.id === p.t);
+      partes.push({ key: p.k, temaId: p.t, nome: tema ? tema.nome : p.t, qids: meus.map(q => q.id), pedidas: m.resumo.pedidas, resumo: m.resumo });
+      qs.push.apply(qs, meus);
+    });
+    if (!qs.length) { alert('Ainda não há questões desses assuntos disponíveis no seu banco.'); renderRevisaoFinal(); return; }
+    const nome = 'Revisão Final' + (semN ? ' · Semana ' + semN : '') + ' · Lista do dia';
+    const revisao = { key: null, semana: semN, temaId: null, n: qs.length, pedidas: partes.reduce((a, p) => a + p.pedidas, 0), efv: 0, partes, nome };
+    TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
+      const t = TENTATIVAS.criar({ tipo: 'estudo_prova', origem: { nome, revisao }, questoes_ids: qs.map(q => q.id) });
+      _estudoAtual = { modo: 'prova', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, revisao };
+      state.view = 'estudo-digital';
+      renderEstudoDigital();
+      try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
+    });
+  },
+  _partesDetalhe(v, detalhes) {
+    return (v.partes || []).map(p => { const ids = new Set(p.qids); const ds = (detalhes || []).filter(d => ids.has(d.q.id)); return { key: p.key, nome: p.nome, total: p.qids.length, hits: ds.filter(d => d.correto).length }; });
+  },
   async iniciar(o) {
     if (!state.questoesPronto && state.questoesPromise) { radixShowLoading('Montando sua lista…'); try { await state.questoesPromise; } finally { radixHideLoading(); } }
     const tema = TEMAS.find(t => t.id === o.temaId);
@@ -25524,6 +25562,11 @@ const RF_LISTA = {
   },
   htmlBanner(e) {
     const v = e && e.revisao; if (!v) return '';
+    if (v.partes) {
+      return '<div class="rfl-banner"><span class="rx-tag">Plano</span><div><b>Lista pronta do dia</b> · ' + _escHtml(v.nome) + ' · <b>' + v.n + ' questões</b>: '
+        + v.partes.map(p => p.qids.length + ' de ' + _escHtml(p.nome)).join(', ') + '. As questões vêm em blocos por assunto. Ao encerrar, cada atividade do plano recebe os seus acertos.'
+        + '<div class="rfl-acoes"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="RF_LISTA.baixarPDF()">Baixar esta lista em PDF</button></div></div></div>';
+    }
     const r = v.resumo || {};
     const nivel = r.efv === -1 ? 'pensada com mais questões fáceis, porque este assunto está como dificuldade no seu plano' : r.efv === 1 ? 'pensada com mais médias e difíceis, porque você já domina este assunto' : 'com a mistura padrão de dificuldades';
     let menos = '';
@@ -25542,14 +25585,26 @@ const RF_LISTA = {
   },
   htmlResultado(r) {
     const v = r && r.revisao; if (!v) return '';
+    if (v.partes) {
+      const ps = this._partesDetalhe(v, r.detalhes);
+      return '<div class="rfl-banner ok"><span class="rx-tag">Plano</span><div><b>Lista do dia concluída:</b> ' + r.acertos + ' de ' + r.total + ' acertos. '
+        + ps.map(p => _escHtml(p.nome) + ' ' + p.hits + '/' + p.total).join(' · ') + '. Cada atividade do plano recebe o seu resultado' + (window.opener ? ' na aba da Revisão Final' : ' quando você abrir a Revisão Final') + '.'
+        + '<div class="rfl-acoes"><button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="renderRevisaoFinal()">Voltar ao plano</button></div></div></div>';
+    }
     return '<div class="rfl-banner ok"><span class="rx-tag">Plano</span><div><b>Atividade do plano concluída:</b> ' + r.acertos + ' de ' + r.total + ' acertos em ' + _escHtml(v.nome) + '.'
       + (v.key ? ' O resultado é registrado na atividade quando você abrir a Revisão Final (não precisa digitar).' : '')
       + '<div class="rfl-acoes"><button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="renderRevisaoFinal()">Voltar ao plano</button></div></div></div>';
   },
-  registrar(v, acertos, total) {
-    if (!v || !v.key) return;
+  registrar(v, acertos, total, detalhes) {
+    if (!v) return;
     const p = rxLerJson(this.chavePend(), {}) || {};
-    p[v.key] = { hits: acertos, total, em: new Date(RX_MET.agora()).toISOString() };
+    const em = new Date(RX_MET.agora()).toISOString();
+    if (v.partes) {   // lista do dia: um registro por atividade
+      this._partesDetalhe(v, detalhes).forEach(x => { if (x.key && x.total > 0) p[x.key] = { hits: x.hits, total: x.total, em }; });
+      rxGravarJson(this.chavePend(), p); this.entregarPendentes(); return;
+    }
+    if (!v.key) return;
+    p[v.key] = { hits: acertos, total, em };
     rxGravarJson(this.chavePend(), p);
     this.entregarPendentes();
   },
