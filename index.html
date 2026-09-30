@@ -6528,6 +6528,13 @@
   .rf-h2{font-size:20px;font-weight:800;margin:0 0 4px}
   .rf-sub{color:var(--radix-text-muted,#8fa3cc);font-size:13.5px;margin:0;max-width:62ch;line-height:1.5}
   .rf-moldura{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--radix-border,rgba(255,255,255,.10));background:var(--radix-surface,#19284e);min-height:420px}
+  .rfm-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .rfm-chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;justify-content:center;min-width:200px}
+  .rfm-chip{width:28px;height:28px;border-radius:50%;border:1px solid #94a3b8;background:transparent;font-size:12px;font-weight:700;cursor:pointer;color:inherit;padding:0}
+  .rfm-chip.certa{background:#16a34a;border-color:#16a34a;color:#fff}
+  .rfm-chip.errada{background:#dc2626;border-color:#dc2626;color:#fff}
+  .rfm-chip.atual{outline:3px solid #2563eb;outline-offset:2px}
+  .rfm-nav .btn[disabled]{opacity:.45;cursor:default}
   .rf-moldura iframe{display:block;width:100%;border:0;height:560px;transition:height .18s ease}
   .rf-aviso{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;color:var(--radix-text-muted,#8fa3cc);font-size:14px;line-height:1.6;background:var(--radix-surface,#19284e)}
   .rf-spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--radix-line-2,rgba(255,255,255,.14));border-top-color:var(--radix-cyan,#22d3ee);animation:rf-gira .8s linear infinite}
@@ -9610,7 +9617,10 @@ const RF_EMBED = {
     if (d.radix === 'plano-registrado')  { RF_LISTA.confirmado(String(d.key || '')); return; }
     if (d.radix === 'plano-navegar')     { RF_EMBED.navegar(String(d.destino || '')); return; }
     if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || ''), String(d.nivel || ''), d); return; }
-    if (d.radix === 'plano-abrir-mini')  { abrirQuestaoDoMini(parseInt(d.semana, 10), parseInt(d.k, 10), String(d.resp || '-'), String(d.gab || '')); return; }
+    if (d.radix === 'plano-abrir-mini')  { delete RF_MINI_CACHE[parseInt(d.semana, 10)]; abrirQuestaoDoMini(parseInt(d.semana, 10), parseInt(d.k, 10), String(d.resp || '-'), String(d.gab || '')); return; }
+    // (30/09/2026) modal do plano (cartão do mini): rola até o topo da moldura e volta ao fechar
+    if (d.radix === 'plano-modal-aberto')  { RF_EMBED._rolagemAntes = window.scrollY; const y = window.scrollY + f.getBoundingClientRect().top - 72; window.scrollTo({ top: Math.max(0, y), behavior: 'auto' }); return; }
+    if (d.radix === 'plano-modal-fechado') { if (typeof RF_EMBED._rolagemAntes === 'number') { window.scrollTo({ top: RF_EMBED._rolagemAntes, behavior: 'auto' }); RF_EMBED._rolagemAntes = null; } return; }
   }
 };
 window.addEventListener('message', RF_EMBED.aoReceber);
@@ -9624,6 +9634,36 @@ window.addEventListener('message', RF_EMBED.aoReceber);
 // quem já lançou o cartão daquela semana. Antes de mostrar, confere se a letra
 // certa bate com o gabarito publicado; se não bater, avisa em vez de errar.
 // ============================================================
+// Cartão do aluno (respostas) + gabarito da semana, para navegar entre as 15 questões da resolução.
+let RF_MINI_CACHE = {};
+async function _miniCartao(sem) {
+  if (RF_MINI_CACHE[sem]) return RF_MINI_CACHE[sem];
+  let resp = '', gab = '';
+  try {
+    const [a, b] = await Promise.all([
+      sb.from('revisao_mini').select('respostas').eq('semana', sem).eq('aluno_id', state.usuario.id).maybeSingle(),
+      sb.from('revisao_mini_gabarito').select('gabarito').eq('semana', sem).maybeSingle()
+    ]);
+    resp = (a.data && a.data.respostas) || ''; gab = (b.data && b.data.gabarito) || '';
+  } catch (e) {}
+  return (RF_MINI_CACHE[sem] = { resp: resp, gab: gab });
+}
+function irQuestaoDoMini(sem, k) {
+  const c = RF_MINI_CACHE[sem] || { resp: '', gab: '' };
+  abrirQuestaoDoMini(sem, k, c.resp[k - 1] || '-', c.gab[k - 1] || '');
+}
+function _miniNavHtml(sem, k, c) {
+  const n = 15, chips = [];
+  for (let i = 1; i <= n; i++) {
+    const r = c.resp[i - 1] || '-', g = c.gab[i - 1] || '';
+    const cls = (r === '-' || !g) ? '' : (r === g ? ' certa' : ' errada');
+    chips.push('<button type="button" class="rfm-chip' + cls + (i === k ? ' atual' : '') + '" onclick="irQuestaoDoMini(' + sem + ',' + i + ')" aria-label="Questão ' + i + (cls === ' certa' ? ', acertou' : (cls === ' errada' ? ', errou' : '')) + '" aria-current="' + (i === k) + '">' + i + '</button>');
+  }
+  return '<div class="rfm-nav">' +
+    '<button type="button" class="btn btn-secondary" ' + (k > 1 ? 'onclick="irQuestaoDoMini(' + sem + ',' + (k - 1) + ')"' : 'disabled') + '>← Anterior</button>' +
+    '<div class="rfm-chips">' + chips.join('') + '</div>' +
+    '<button type="button" class="btn" ' + (k < n ? 'onclick="irQuestaoDoMini(' + sem + ',' + (k + 1) + ')"' : 'disabled') + '>Próxima →</button></div>';
+}
 async function abrirQuestaoDoMini(sem, k, resp, gab) {
   if (!state.usuario) { renderHome(); return; }
   state.view = 'revisao-final-mini';
@@ -9662,6 +9702,9 @@ async function abrirQuestaoDoMini(sem, k, resp, gab) {
     correta: d.correta, explicacao: sanitizarTextoQuestao(d.explicacao || ''), _explOk: true,
     prova: d.prova || null, _mini: true
   };
+  const cart = await _miniCartao(sem);
+  if (!/^[A-E-]$/.test(resp)) resp = cart.resp[k - 1] || '-';
+  if (!gab) gab = cart.gab[k - 1] || '';
   const letraCerta = String.fromCharCode(65 + q.correta);
   if (gab && /^[A-E]$/.test(gab) && letraCerta !== gab) {
     aviso('Resolução ainda não disponível', 'A resolução desta questão não confere com o gabarito publicado. Avise o professor.');
@@ -9671,7 +9714,9 @@ async function abrirQuestaoDoMini(sem, k, resp, gab) {
   main.innerHTML = volta +
     '<div class="rf-head"><div><h2 class="rf-h2">Mini-simulado da Semana ' + sem + ' · Questão ' + k + '</h2>' +
     '<p class="rf-sub">' + (idx >= 0 ? 'Você marcou a alternativa ' + resp + ' na prova. ' : '') + 'A resolução comentada aparece abaixo, como no banco de questões.</p></div></div>' +
+    _miniNavHtml(sem, k, cart) +
     renderQuestao(q, k, false) +
+    _miniNavHtml(sem, k, cart) +
     '<div style="margin-top:14px"><button type="button" class="btn btn-secondary" onclick="ROTA.ir(\'revisao-final\')">Voltar ao plano</button></div>';
   // mostra a correção sem gravar resposta de estudo (a resposta valeu na prova em papel)
   _mostrarFeedbackQuestao(q, idx);

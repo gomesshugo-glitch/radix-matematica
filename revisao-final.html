@@ -178,6 +178,8 @@
   body.embutido .top,body.embutido .bnav,body.embutido #aviso-login{display:none!important}
   body.embutido .wrap{max-width:100%;padding:16px}
   body.embutido footer{display:none}
+  /* (30/09/2026) na moldura o overlay cobre a moldura inteira: modal no topo, e o app rola até lá */
+  body.embutido .overlay{align-items:flex-start;padding-top:24px}
   .layout{display:grid;grid-template-columns:1fr;gap:var(--sp-6);align-items:start}
   .col-main{min-width:0}
   .col-side{min-width:0;display:none}
@@ -1111,6 +1113,7 @@ const app = {
     const root = document.getElementById('modal-root');
     root.innerHTML = html;
     document.body.classList.add('modal-aberto');
+    if (EMBUTIDO) { try { window.parent.postMessage({ radix: 'plano-modal-aberto' }, location.origin); } catch (e) {} }
     const box = root.querySelector('.modal');
     if (!box) return;
     const focaveis = () => Array.prototype.filter.call(
@@ -1132,6 +1135,7 @@ const app = {
     document.addEventListener('keydown', this._modalKeyFn);
   },
   fecharModal() {
+    if (EMBUTIDO && document.body.classList.contains('modal-aberto')) { try { window.parent.postMessage({ radix: 'plano-modal-fechado' }, location.origin); } catch (e) {} }
     if (this._modalKeyFn) { document.removeEventListener('keydown', this._modalKeyFn); this._modalKeyFn = null; }
     document.getElementById('modal-root').innerHTML = '';
     document.body.classList.remove('modal-aberto');
