@@ -9703,7 +9703,7 @@ async function abrirQuestaoDoMini(sem, k, resp, gab) {
     prova: d.prova || null, _mini: true
   };
   const cart = await _miniCartao(sem);
-  if (!/^[A-E-]$/.test(resp)) resp = cart.resp[k - 1] || '-';
+  if (!/^[A-E]$/.test(resp)) resp = cart.resp[k - 1] || '-';   // '-' na rota = desconhecido: usa o cartão
   if (!gab) gab = cart.gab[k - 1] || '';
   const letraCerta = String.fromCharCode(65 + q.correta);
   if (gab && /^[A-E]$/.test(gab) && letraCerta !== gab) {
