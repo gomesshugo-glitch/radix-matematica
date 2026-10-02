@@ -6474,6 +6474,159 @@
   .rfl-banner b { color: var(--rx-text); }
   .rfl-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 
+  /* ---------- Estudo digital (Modo Prova/Teste, listas prontas da Revisão Final): alternativas legíveis nos dois temas (02/10/2026).
+     O cartão .estudo-q-card não recebia as regras de tema de .questao-card e caía no estilo base (fundo branco) com o texto claro do tema escuro. ---------- */
+  .estudo-q-card .alternativas { gap: 10px; }
+  .estudo-q-card .alternativa { background: var(--radix-bg-2); border: 1px solid var(--radix-line-2); border-radius: 12px; padding: 14px 18px; gap: 16px; color: var(--radix-text); }
+  .estudo-q-card .alternativa > div:last-child { color: var(--radix-text); font-size: 15px; line-height: 1.5; }
+  .estudo-q-card .alternativa-letra { width: 34px; height: 34px; border: 1.5px solid var(--radix-line-2); background: var(--radix-bg); color: var(--radix-text); font-weight: 700; }
+  .estudo-q-card .alternativa:hover:not(.correta):not(.errada):not(.selecionada) { border-color: var(--radix-cyan); background: var(--radix-surface-2); }
+  .estudo-q-card .alternativa.selecionada { border-color: var(--radix-cyan); background: rgba(34,211,238,.12); box-shadow: none; }
+  .estudo-q-card .alternativa.selecionada .alternativa-letra { background: var(--radix-cyan); border-color: var(--radix-cyan); color: #0e1a36; }
+  .estudo-q-card .alternativa.selecionada::after { background: rgba(34,211,238,.18); color: var(--radix-cyan); }
+  .estudo-q-card .alternativa.correta { border-color: var(--radix-success); background: rgba(52,211,153,.12); }
+  .estudo-q-card .alternativa.correta .alternativa-letra { background: var(--radix-success); border-color: var(--radix-success); color: #0e1a36; }
+  .estudo-q-card .alternativa.correta::after { background: rgba(52,211,153,.18); color: var(--radix-success); }
+  .estudo-q-card .alternativa.errada { border-color: var(--radix-coral); background: rgba(255,122,92,.12); }
+  .estudo-q-card .alternativa.errada .alternativa-letra { background: var(--radix-coral); border-color: var(--radix-coral); color: #fff; }
+  .estudo-q-card .alternativa.errada::after { background: rgba(255,122,92,.18); color: var(--radix-coral); }
+  body.theme-light .estudo-q-card .alternativa { background: #fff; border-color: #d5deea; }
+  body.theme-light .estudo-q-card .alternativa-letra { background: #f4f7fb; border-color: #b8c4d4; color: #0f172a; }
+  body.theme-light .estudo-q-card .alternativa:hover:not(.correta):not(.errada):not(.selecionada) { border-color: #0891b2; background: #f2f9fc; }
+  body.theme-light .estudo-q-card .alternativa.selecionada { border-color: #0891b2; background: #ecf8fb; }
+  body.theme-light .estudo-q-card .alternativa.selecionada .alternativa-letra { background: #0891b2; border-color: #0891b2; color: #fff; }
+  body.theme-light .estudo-q-card .alternativa.selecionada::after { background: #d3eff5; color: #0e7490; }
+  body.theme-light .estudo-q-card .alternativa.correta { border-color: #16a34a; background: #f0fdf4; }
+  body.theme-light .estudo-q-card .alternativa.correta .alternativa-letra { background: #16a34a; border-color: #16a34a; color: #fff; }
+  body.theme-light .estudo-q-card .alternativa.correta::after { background: #dcfce7; color: #15803d; }
+  body.theme-light .estudo-q-card .alternativa.errada { border-color: #dc2626; background: #fef2f2; }
+  body.theme-light .estudo-q-card .alternativa.errada .alternativa-letra { background: #dc2626; border-color: #dc2626; color: #fff; }
+  body.theme-light .estudo-q-card .alternativa.errada::after { background: #fee2e2; color: #b91c1c; }
+  @media (max-width: 600px) { .estudo-q-card .alternativa { padding: 12px 14px; gap: 12px; } .estudo-q-card .alternativa-letra { width: 30px; height: 30px; } .estudo-q-card .alternativa > div:last-child { font-size: 14px; } }
+
+  /* ---------- Banco de questões: Gerar lista no topo e Voltar ao início no fim (02/10/2026) ---------- */
+  .qbk2-head-acoes { flex-wrap: wrap; justify-content: flex-end; }
+  .qbk2-btn-gerar { background: transparent; color: #93c5fd; border: 1.5px solid rgba(96,165,250,.7); }
+  .qbk2-btn-gerar:hover:not([disabled]) { background: rgba(59,130,246,.14); filter: none; }
+  body.theme-light .qbk2-btn-gerar { background: #fff; color: #1d4ed8; border-color: #3b82f6; }
+  body.theme-light .qbk2-btn-gerar:hover:not([disabled]) { background: #eff6ff; }
+  .qbk2-btn-gerar[disabled] { opacity: .5; cursor: not-allowed; filter: none; }
+  .qbk2-topo { display: flex; justify-content: center; margin: 18px 0 8px; }
+  .qbk2-topo .rx-btn svg, .qbk2-btn-gerar svg { width: 16px; height: 16px; }
+  @media (max-width: 900px) { .qbk2-topo { margin-bottom: 76px; } }
+  /* ---------- Materiais do professor (Vídeo-aulas, PDFs e gabaritos): visual novo (02/10/2026) ---------- */
+  .matg { display: flex; flex-direction: column; gap: 14px; }
+  .matg svg { width: 16px; height: 16px; flex: none; }
+  .matg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .matg-head-txt { min-width: 0; flex: 1 1 320px; }
+  .matg-head-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .matg-abas { display: inline-flex; gap: 4px; padding: 4px; background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: 12px; width: max-content; max-width: 100%; }
+  .matg-aba { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 8px 14px; border: 0; border-radius: 9px; background: transparent; color: var(--rx-text-2);
+    font: 700 var(--rx-fs-sm)/1.2 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+  .matg-aba:hover { background: var(--rx-surface-2); color: var(--rx-text); }
+  .matg-aba.is-on { background: rgba(59,130,246,.2); color: #dbeafe; }
+  body.theme-light .matg-aba.is-on { background: #e8f0fe; color: #1d4ed8; }
+  .matg-aba.is-integral.is-on { background: rgba(168,85,247,.16); color: #c084fc; }
+  body.theme-light .matg-aba.is-integral.is-on { background: rgba(126,34,206,.1); color: #7e22ce; }
+  .matg-aba svg { width: 14px; height: 14px; }
+  .matg-aba-n { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--rx-surface-3); color: var(--rx-text-2); font-size: 11px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; }
+  .matg-aba.is-on .matg-aba-n { background: var(--rx-primary); color: #fff; }
+  .matg-aba.is-integral.is-on .matg-aba-n { background: #c084fc; color: #2e1065; }
+  body.theme-light .matg-aba.is-integral.is-on .matg-aba-n { background: #7e22ce; }
+  .matg-nota { margin: -4px 0 0; font-size: var(--rx-fs-sm); color: var(--rx-muted); line-height: 1.5; }
+  .matg-nota strong { color: var(--rx-text-2); }
+
+  .matg-mod { background: var(--rx-surface); border: 1px solid var(--rx-line); border-radius: var(--rx-r-lg); box-shadow: var(--rx-shadow-sm); overflow: hidden; }
+  .matg-mod.is-open:not(.is-fixo) { border-color: rgba(34,211,238,.35); }
+  .matg-mod-head { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: transparent; border: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+  button.matg-mod-head:hover { background: var(--rx-surface-2); }
+  div.matg-mod-head { cursor: default; }
+  .matg-mod.is-open .matg-mod-head { border-bottom: 1px solid var(--rx-line); }
+  .matg-mod-num { width: 38px; height: 38px; border-radius: 10px; background: var(--mod-cor, var(--rx-primary)); color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; flex: none; }
+  .matg .matg-mod-num svg { width: 18px; height: 18px; }
+  .matg-mod-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .matg-mod-nome { font-size: var(--rx-fs-md); font-weight: 800; color: var(--rx-text); line-height: 1.3; }
+  .matg-mod-sub { font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .matg-mod-agora { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--rx-accent-soft); color: var(--rx-accent); white-space: nowrap; }
+  .matg-mod-seta { color: var(--rx-muted); display: inline-flex; transition: transform .2s; }
+  .matg .matg-mod-seta svg { width: 20px; height: 20px; }
+  .matg-mod.is-open .matg-mod-seta { transform: rotate(180deg); }
+  .matg-mod-corpo { display: none; padding: 14px 18px 18px; flex-direction: column; gap: 12px; }
+  .matg-mod.is-open .matg-mod-corpo { display: flex; }
+
+  .matg-sem { border: 1px solid var(--rx-line); border-radius: var(--rx-r); background: var(--rx-bg); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  body.theme-light .matg-sem { background: #f6f8fc; }
+  .matg-sem.is-atual { border-color: rgba(34,211,238,.45); box-shadow: inset 3px 0 0 var(--rx-accent); }
+  .matg-sem.is-vazia { background: transparent; border-style: dashed; padding: 10px 14px; }
+  .matg-sem.is-alerta { border-color: rgba(251,191,36,.45); }
+  .matg-sem-head { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; }
+  .matg-sem-tit { min-width: 0; flex: 1 1 280px; }
+  .matg-sem-linha { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+  .matg-sem-num { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: var(--rx-surface-3); color: var(--rx-text-2); }
+  .matg-sem-data { font-size: var(--rx-fs-xs); font-weight: 600; color: var(--rx-muted); }
+  .matg-sem-agora { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--rx-accent); }
+  .matg-sem-vazia { font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .matg-sem-nome { font-size: var(--rx-fs); font-weight: 700; color: var(--rx-text); line-height: 1.35; }
+  .matg-sem.is-vazia .matg-sem-nome { font-weight: 600; color: var(--rx-text-2); }
+  .matg-sem-nome.is-dica { font-weight: 500; font-size: var(--rx-fs-sm); color: var(--rx-muted); }
+  .matg-sem-alerta { display: inline-flex; align-items: center; gap: 6px; font-size: var(--rx-fs-sm); font-weight: 800; color: var(--rx-warning); }
+  body.theme-light .matg-sem-alerta { color: #b45309; }
+  .matg-add { display: flex; gap: 6px; flex-wrap: wrap; }
+  .matg-add-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 5px 11px; border-radius: 8px; border: 1px dashed var(--rx-line-2); background: transparent; color: var(--rx-text-2);
+    font: 600 var(--rx-fs-xs)/1.2 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+  .matg .matg-add-btn svg { width: 14px; height: 14px; }
+  .matg-add-btn:hover { border-style: solid; border-color: var(--rx-accent); color: var(--rx-accent); background: var(--rx-accent-soft); }
+
+  .matg-lista { display: flex; flex-direction: column; gap: 8px; }
+  .matg-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--rx-surface); border: 1px solid var(--rx-line); }
+  body.theme-light .matg-item { background: #fff; }
+  .matg-item.is-oculto { border-style: dashed; }
+  .matg-item.is-oculto .matg-tipo, .matg-item.is-oculto .matg-titulo, .matg-item.is-oculto .matg-ord { opacity: .55; }
+  .matg-ord { width: 22px; height: 22px; border-radius: 50%; background: var(--rx-surface-3); color: var(--rx-text-2); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+  .matg-tipo { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .matg-tipo.t-video { background: rgba(255,122,92,.14); color: var(--rx-coral); }
+  .matg-tipo.t-pdf { background: rgba(251,191,36,.16); color: var(--rx-warning); }
+  .matg-tipo.t-link { background: rgba(34,211,238,.14); color: var(--rx-accent); }
+  body.theme-light .matg-tipo.t-pdf { color: #b45309; }
+  .matg-info { flex: 1; min-width: 0; }
+  .matg-titulo { font-size: var(--rx-fs); font-weight: 600; color: var(--rx-text); line-height: 1.35; overflow-wrap: anywhere; }
+  .matg-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 3px; font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .matg-tag-oculto, .matg-tag-herdado { padding: 1px 8px; border-radius: 999px; font-weight: 700; }
+  .matg-tag-oculto { background: rgba(251,191,36,.16); color: var(--rx-warning); }
+  body.theme-light .matg-tag-oculto { color: #b45309; }
+  .matg-tag-herdado { background: var(--rx-accent-soft); color: var(--rx-accent); }
+  .matg-acoes { display: flex; align-items: center; gap: 4px; flex: none; }
+  .matg-acoes-sep { width: 1px; height: 22px; background: var(--rx-line-2); margin: 0 3px; }
+  .matg-ib { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  body.theme-light .matg-ib { background: #fff; }
+  .matg-ib:hover:not([disabled]) { color: var(--rx-text); border-color: var(--rx-accent); }
+  .matg-ib[disabled] { opacity: .35; cursor: not-allowed; }
+  .matg-ib.is-off { color: var(--rx-warning); border-color: rgba(251,191,36,.55); }
+  body.theme-light .matg-ib.is-off { color: #b45309; }
+  .matg-ib.is-danger:hover:not([disabled]) { color: var(--rx-coral); border-color: rgba(255,122,92,.6); background: rgba(255,122,92,.1); }
+  .matg-herdados { border: 1px dashed rgba(34,211,238,.45); background: rgba(34,211,238,.05); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .matg-herdados-tit { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--rx-accent); }
+  .matg-herdados-tit small { font-size: var(--rx-fs-xs); font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--rx-muted); }
+  .matg-herdado-nota { font-size: 11px; color: var(--rx-muted); white-space: nowrap; }
+  @media (max-width: 700px) {
+    .matg-head-acoes { width: 100%; }
+    .matg-head-acoes .rx-btn { flex: 1 1 0; padding: 8px 10px; }
+    .matg-abas { width: 100%; }
+    .matg-aba { flex: 1 1 0; justify-content: center; padding: 8px 10px; }
+    .matg-mod-head { padding: 12px 14px; gap: 10px; }
+    .matg-mod-num { width: 32px; height: 32px; font-size: 13px; }
+    .matg-mod-agora { display: none; }
+    .matg-mod-corpo { padding: 12px; }
+    .matg-sem { padding: 10px 12px; }
+    .matg-add { width: 100%; }
+    .matg-add-btn { flex: 1 1 0; justify-content: center; }
+    .matg-item { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px 10px; }
+    .matg-item.sem-ord { grid-template-columns: auto minmax(0, 1fr); }
+    .matg-acoes { grid-column: 1 / -1; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--rx-line); }
+    .matg-ib { width: 38px; height: 38px; }
+  }
   /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
   #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
   #radix-sync.on{display:flex}
@@ -17358,6 +17511,88 @@ async function baixarPDFComMarcaDagua(matId) {
 
 // ========== GERENCIAR MATERIAIS (Professor) ==========
 
+// ---------- Materiais do professor (Vídeo-aulas, PDFs e gabaritos): visual novo, 02/10/2026 ----------
+// Mesmas ações de antes (adicionar por semana, subir/descer, editar, ocultar/mostrar, excluir);
+// ícones em SVG, módulos recolhíveis (abre o da semana atual) e linhas que não espremem no celular.
+function _matgIco(n) {
+  const P = {
+    video: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="m10 9 5 3-5 3z"/>',
+    pdf: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    mais: '<path d="M12 5v14M5 12h14"/>',
+    subir: '<path d="m18 15-6-6-6 6"/>',
+    descer: '<path d="m6 9 6 6 6-6"/>',
+    editar: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    ver: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    oculto: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="m1 1 22 22"/>',
+    excluir: '<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+    raio: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+    alerta: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
+    herdado: '<path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>',
+    pasta: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    seta: '<polyline points="6 9 12 15 18 9"/>'
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[n] || '') + '</svg>';
+}
+function _matgTipo(t) {
+  return ({ aula_youtube: { ico: 'video', rot: 'Vídeo-aula', cls: 't-video' }, pdf: { ico: 'pdf', rot: 'PDF', cls: 't-pdf' }, link_externo: { ico: 'link', rot: 'Link', cls: 't-link' } })[t]
+    || { ico: 'pdf', rot: 'Material', cls: 't-pdf' };
+}
+// Número da semana mais recente (data <= hoje) do cronograma informado.
+function _matgSemanaAtualN(semanas) {
+  const hoje = new Date(); let melhor = null, n = null;
+  (semanas || []).forEach(s => {
+    if (!s.data || !/^\d{2}\/\d{2}$/.test(s.data)) return;
+    const [d, m] = s.data.split('/').map(Number); const dt = new Date(2026, m - 1, d);
+    if (dt <= hoje && (!melhor || dt > melhor)) { melhor = dt; n = s.n; }
+  });
+  return n;
+}
+function matgToggleMod(btn) {
+  const bloco = btn.closest('.matg-mod'); if (!bloco) return;
+  const aberto = bloco.classList.toggle('is-open');
+  btn.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+  if (!(state._matGerAbertos instanceof Set)) state._matGerAbertos = new Set();
+  const k = bloco.getAttribute('data-k');
+  if (aberto) state._matGerAbertos.add(k); else state._matGerAbertos.delete(k);
+}
+// Uma linha de material. o = { idx, total, semN } para as linhas com ordem; o.herdado para as do Regular vistas no Integral.
+function _matgLinha(mat, o) {
+  o = o || {};
+  const t = _matgTipo(mat.tipo);
+  const oculto = !mat.visivel && !o.herdado;
+  const comOrdem = typeof o.idx === 'number';
+  const meta = '<span>' + t.rot + '</span>'
+    + (mat.duracao_min ? '<span>' + mat.duracao_min + ' min</span>' : '')
+    + (oculto ? '<span class="matg-tag-oculto">Oculto para os alunos</span>' : '')
+    + (o.herdado ? '<span class="matg-tag-herdado">do Regular</span>' : '');
+  let acoes;
+  if (o.herdado) {
+    acoes = '<span class="matg-herdado-nota">gerenciar na aba Regular</span>';
+  } else {
+    acoes = (comOrdem
+        ? `<button type="button" class="matg-ib" ${o.idx === 0 ? 'disabled' : ''} onclick="moverMaterial(${mat.id}, -1, ${o.semN})" title="Subir" aria-label="Subir">${_matgIco('subir')}</button>`
+        + `<button type="button" class="matg-ib" ${o.idx === o.total - 1 ? 'disabled' : ''} onclick="moverMaterial(${mat.id}, 1, ${o.semN})" title="Descer" aria-label="Descer">${_matgIco('descer')}</button>`
+        + '<span class="matg-acoes-sep" aria-hidden="true"></span>'
+        : '')
+      + `<button type="button" class="matg-ib" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar" aria-label="Editar">${_matgIco('editar')}</button>`
+      + (comOrdem
+        ? `<button type="button" class="matg-ib${mat.visivel ? '' : ' is-off'}" onclick="toggleVisivelMaterial(${mat.id})" title="${mat.visivel ? 'Ocultar dos alunos' : 'Mostrar aos alunos'}" aria-label="${mat.visivel ? 'Ocultar dos alunos' : 'Mostrar aos alunos'}">${_matgIco(mat.visivel ? 'ver' : 'oculto')}</button>`
+        : '')
+      + `<button type="button" class="matg-ib is-danger" onclick="excluirMaterial(${mat.id})" title="Excluir" aria-label="Excluir">${_matgIco('excluir')}</button>`;
+  }
+  return `
+    <div class="matg-item${comOrdem ? '' : ' sem-ord'}${oculto ? ' is-oculto' : ''}${o.herdado ? ' is-herdado' : ''}">
+      ${comOrdem ? `<span class="matg-ord">${o.idx + 1}</span>` : ''}
+      <span class="matg-tipo ${t.cls}">${_matgIco(t.ico)}</span>
+      <div class="matg-info">
+        <div class="matg-titulo">${_escHtml(mat.titulo)}</div>
+        <div class="matg-meta">${meta}</div>
+      </div>
+      <div class="matg-acoes">${acoes}</div>
+    </div>`;
+}
+
 async function renderGerenciarMateriais() {
   state.view = 'gerenciar-materiais';
   await carregarMateriais();
@@ -17379,207 +17614,167 @@ async function renderGerenciarMateriais() {
   // Filtra os materiais que pertencem ao cronograma DA TAB (default 'regular' se NULL)
   const matsDoCrono = (materiaisCache || []).filter(m => (m.cronograma || 'regular') === cronoEdit);
 
-  // Materiais sem semana definida (vão para "soltos") — só do cronograma ativo
-  const semSemana = matsDoCrono.filter(m => m.visivel !== false && (m.semana_numero === null || m.semana_numero === undefined));
-
   // Contadores pra tabs
   const cntRegular  = (materiaisCache || []).filter(m => (m.cronograma || 'regular') === 'regular').length;
   const cntIntegral = (materiaisCache || []).filter(m => m.cronograma === 'integral').length;
+  const nOcultos = matsDoCrono.filter(m => !m.visivel).length;
 
-  main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Gerenciar Materiais</div>
-    <h2 class="section-title has-actions">
-      <span><span class="section-title-accent"></span>🎬 Vídeo-aulas, PDFs e Gabaritos</span>
-      <span>
-        <button class="btn-add-material" onclick="abrirNovoMaterial('aula_youtube')"><span class="ico">+</span> Vídeo-aula</button>
-        <button class="btn-add-material" onclick="abrirNovoMaterial('pdf')"><span class="ico">+</span> PDF</button>
-        <button class="btn-add-material" onclick="abrirNovoMaterial('link_externo')"><span class="ico">+</span> Link</button>
-      </span>
-    </h2>
+  // Módulos que aparecem: no Regular escondemos módulos vazios (tela curada). No Integral
+  // mostramos TODOS os módulos/semanas mesmo sem material — senão a aba fica em branco e
+  // o professor não tem onde clicar pra adicionar.
+  const modsTela = cronoModulos.map(mod => {
+    const semanas = semanasPorMod[mod.id] || [];
+    const matsDesseModulo = matsDoCrono.filter(mat => mat.modulo_id === mod.id || (mat.semana_numero !== null && semanas.some(s => s.n === mat.semana_numero)));
+    if (matsDesseModulo.length === 0 && cronoEdit !== 'integral') return null;
+    return { mod, semanas, matsDesseModulo };
+  }).filter(Boolean);
 
-    <!-- Tabs Regular / Integral -->
-    <div style="display:flex;gap:8px;margin:14px 0 10px;padding:4px;background:var(--radix-surface-2,#f3f4f6);border-radius:10px;width:max-content;max-width:100%;">
-      <button class="${cronoEdit==='regular'?'btn btn-success':'btn btn-secondary'}"
-              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;"
-              onclick="state._matGerCrono='regular';renderGerenciarMateriais();">
-        Cronograma Regular <span style="opacity:0.7;font-weight:600;">(${cntRegular})</span>
-      </button>
-      <button class="${cronoEdit==='integral'?'btn btn-success':'btn btn-secondary'}"
-              style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;${cronoEdit==='integral'?'background:linear-gradient(135deg,#7e22ce,#a855f7);border-color:#7e22ce;':''}"
-              onclick="state._matGerCrono='integral';renderGerenciarMateriais();">
-        ⚡ Integral <span style="opacity:0.7;font-weight:600;">(${cntIntegral})</span>
-      </button>
-    </div>
+  // Módulos abertos: na primeira visita de cada aba, abre o da semana atual (ou o mais recente).
+  const nAtual = _matgSemanaAtualN(cronoSemanas);
+  if (!(state._matGerAbertos instanceof Set)) state._matGerAbertos = new Set();
+  if (!state._matGerIni) state._matGerIni = {};
+  if (!state._matGerIni[cronoEdit]) {
+    state._matGerIni[cronoEdit] = true;
+    const semAt = cronoSemanas.find(s => s.n === nAtual);
+    let alvo = semAt && modsTela.some(x => x.mod.id === semAt.moduloId) ? semAt.moduloId : null;
+    if (!alvo && modsTela.length) alvo = modsTela[modsTela.length - 1].mod.id;
+    if (alvo) state._matGerAbertos.add(cronoEdit + ':' + alvo);
+  }
 
-    <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
-      ${cronoEdit === 'integral'
-        ? 'Materiais EXCLUSIVOS do <strong>Cronograma Integral</strong> (Turma 05). Estes não aparecem pros alunos do regular.'
-        : 'Materiais do <strong>Cronograma Regular</strong>. Alunos do Integral também veem estes via mapeamento por tema (a aula equivalente do integral mostra o mesmo material).'}
-    </p>
+  const btnAdd = (semN, modId, tipo, rot, titulo) =>
+    `<button type="button" class="matg-add-btn" title="${titulo}" onclick="abrirNovoMaterialParaSemana(${semN}, '${modId}', '${tipo}')">${_matgIco('mais')}${rot}</button>`;
 
-    ${cronoModulos.map(mod => {
-      const semanas = semanasPorMod[mod.id] || [];
-      const matsDesseModulo = matsDoCrono.filter(mat => mat.modulo_id === mod.id || (mat.semana_numero !== null && semanas.some(s => s.n === mat.semana_numero)));
-      // No Regular escondemos módulos vazios (tela curada). No Integral mostramos
-      // TODOS os módulos/semanas mesmo sem material — senão a aba fica em branco e
-      // o professor não tem onde clicar pra adicionar.
-      if (matsDesseModulo.length === 0 && cronoEdit !== 'integral') return '';
-      // Integral: quantos materiais do Regular este módulo herda (só visíveis).
-      const herdadosModulo = cronoEdit === 'integral'
-        ? semanas.reduce((acc, s) => acc + _materiaisRegularHerdadosDaSemanaIntegral(s, materiaisCache).filter(m => m.visivel !== false).length, 0)
-        : 0;
+  const htmlModulos = modsTela.map(({ mod, semanas, matsDesseModulo }) => {
+    // Integral: quantos materiais do Regular este módulo herda (só visíveis).
+    const herdadosModulo = cronoEdit === 'integral'
+      ? semanas.reduce((acc, s) => acc + _materiaisRegularHerdadosDaSemanaIntegral(s, materiaisCache).filter(m => m.visivel !== false).length, 0)
+      : 0;
+    const ocultosMod = matsDesseModulo.filter(m => !m.visivel).length;
+    const k = cronoEdit + ':' + mod.id;
+    const aberto = state._matGerAbertos.has(k);
+    const temAtual = semanas.some(s => s.n === nAtual);
+    const sub = cronoEdit === 'integral'
+      ? `${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'exclusivo' : 'exclusivos'} · ${herdadosModulo} do Regular`
+      : `${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'material' : 'materiais'}${ocultosMod ? ` · ${ocultosMod} ${ocultosMod === 1 ? 'oculto' : 'ocultos'}` : ''}`;
+
+    const htmlSemanas = semanas.map(sem => {
+      // Filtra só os materiais do cronograma ATIVO (regular ou integral)
+      const matsDestaSem = matsDoCrono
+        .filter(mat => mat.semana_numero === sem.n)
+        .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+      // Integral: materiais do Regular herdados por esta semana (só visíveis,
+      // read-only aqui — a gestão deles é na aba Regular).
+      const herdados = cronoEdit === 'integral'
+        ? _materiaisRegularHerdadosDaSemanaIntegral(sem, materiaisCache)
+            .filter(m => m.visivel !== false)
+            .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+        : [];
+      const vazia = matsDestaSem.length === 0 && herdados.length === 0;
+      const atual = sem.n === nAtual;
+      // Sempre mostra a semana, mesmo sem materiais — pra ter onde clicar pra adicionar.
       return `
-        <div class="cron-modulo-bloco" style="--mod-cor:${mod.cor};margin-bottom:18px;">
-          <div class="cron-modulo-header">
-            <div class="cron-modulo-numero">${mod.numero}</div>
-            <div class="cron-modulo-info">
-              <h3>${mod.nome}</h3>
-              <p>${cronoEdit === 'integral'
-                ? `${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'exclusivo' : 'exclusivos'} · ${herdadosModulo} do Regular`
-                : `${matsDesseModulo.length} ${matsDesseModulo.length === 1 ? 'material' : 'materiais'}`}</p>
+        <div class="matg-sem${vazia ? ' is-vazia' : ''}${atual ? ' is-atual' : ''}">
+          <div class="matg-sem-head">
+            <div class="matg-sem-tit">
+              <div class="matg-sem-linha">
+                <span class="matg-sem-num">Semana ${String(sem.n).padStart(2, '0')}</span>
+                <span class="matg-sem-data">${sem.data || '—'}</span>
+                ${atual ? '<span class="matg-sem-agora">Esta semana</span>' : ''}
+                ${vazia ? '<span class="matg-sem-vazia">sem materiais</span>' : ''}
+              </div>
+              <div class="matg-sem-nome">${_escHtml(sem.titulo)}</div>
+            </div>
+            <div class="matg-add" role="group" aria-label="Adicionar na semana ${String(sem.n).padStart(2, '0')}">
+              ${btnAdd(sem.n, mod.id, 'aula_youtube', 'Vídeo', 'Adicionar vídeo-aula nesta semana')}
+              ${btnAdd(sem.n, mod.id, 'pdf', 'PDF', 'Adicionar PDF/apostila nesta semana')}
+              ${btnAdd(sem.n, mod.id, 'link_externo', 'Link', 'Adicionar link externo nesta semana')}
             </div>
           </div>
-          <div style="padding:10px 14px;">
-            ${semanas.map(sem => {
-              // Filtra só os materiais do cronograma ATIVO (regular ou integral)
-              const matsDestaSem = matsDoCrono
-                .filter(mat => mat.semana_numero === sem.n)
-                .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-              // Integral: materiais do Regular herdados por esta semana (só visíveis,
-              // read-only aqui — a gestão deles é na aba Regular).
-              const herdados = cronoEdit === 'integral'
-                ? _materiaisRegularHerdadosDaSemanaIntegral(sem, materiaisCache)
-                    .filter(m => m.visivel !== false)
-                    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
-                : [];
-              // Sempre mostra a semana, mesmo sem materiais — pra ter onde clicar pra adicionar.
-              return `
-                <div class="gerencia-semana">
-                  <div class="gerencia-semana-titulo">
-                    <strong>Semana ${String(sem.n).padStart(2, '0')} · ${sem.data || '—'} · ${_escHtml(sem.titulo)}</strong>
-                    <span style="display:inline-flex;gap:6px;flex-wrap:wrap;">
-                      <button class="btn-mini" title="Adicionar vídeo-aula nesta semana"   onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'aula_youtube')">🎬 + Vídeo</button>
-                      <button class="btn-mini" title="Adicionar PDF/apostila nesta semana" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'pdf')">📄 + PDF</button>
-                      <button class="btn-mini" title="Adicionar link externo nesta semana" onclick="abrirNovoMaterialParaSemana(${sem.n}, '${mod.id}', 'link_externo')">🔗 + Link</button>
-                    </span>
-                  </div>
-                  <div class="gerencia-materiais-lista">
-                    ${matsDestaSem.map((mat, idx) => {
-                      const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
-                      const tipoLabel = { aula_youtube: 'Vídeo-aula', pdf: 'PDF', link_externo: 'Link' }[mat.tipo];
-                      const isPrimeiro = idx === 0;
-                      const isUltimo = idx === matsDestaSem.length - 1;
-                      return `
-                        <div class="gerencia-mat-item ${!mat.visivel ? 'oculto' : ''}">
-                          <span class="gerencia-mat-ordem">${idx + 1}</span>
-                          <span class="gerencia-mat-ico">${ico}</span>
-                          <div class="gerencia-mat-info">
-                            <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}${!mat.visivel ? ' (oculto)' : ''}</div>
-                            <div class="gerencia-mat-tipo">${tipoLabel}${mat.duracao_min ? ' · ' + mat.duracao_min + ' min' : ''}</div>
-                          </div>
-                          <div class="gerencia-mat-acoes">
-                            <button class="btn-mini-icon" ${isPrimeiro ? 'disabled style="opacity:0.3;"' : ''} onclick="moverMaterial(${mat.id}, -1, ${sem.n})" title="Subir">↑</button>
-                            <button class="btn-mini-icon" ${isUltimo ? 'disabled style="opacity:0.3;"' : ''} onclick="moverMaterial(${mat.id}, 1, ${sem.n})" title="Descer">↓</button>
-                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
-                            <button class="btn-mini-icon" onclick="toggleVisivelMaterial(${mat.id})" title="${mat.visivel ? 'Ocultar' : 'Mostrar'}">${mat.visivel ? '👁️' : '🙈'}</button>
-                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir">🗑️</button>
-                          </div>
-                        </div>
-                      `;
-                    }).join('')}
-                  </div>
-                  ${herdados.length > 0 ? `
-                    <div style="margin:2px 10px 4px;padding:8px 10px;background:rgba(34,211,238,0.06);border:1px dashed rgba(34,211,238,0.45);border-radius:8px;">
-                      <div style="font-size:10.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--radix-cyan,#0891b2);margin-bottom:6px;">
-                        ↩ Herdados do Regular · ${herdados.length} ${herdados.length === 1 ? 'material' : 'materiais'}
-                        <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:0.75;">— os alunos do Integral já recebem estes automaticamente</span>
-                      </div>
-                      ${herdados.map(mat => {
-                        const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
-                        const tipoLabel = { aula_youtube: 'Vídeo-aula', pdf: 'PDF', link_externo: 'Link' }[mat.tipo];
-                        return `
-                          <div class="gerencia-mat-item" style="opacity:0.92;">
-                            <span class="gerencia-mat-ico">${ico}</span>
-                            <div class="gerencia-mat-info">
-                              <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}</div>
-                              <div class="gerencia-mat-tipo">${tipoLabel}${mat.duracao_min ? ' · ' + mat.duracao_min + ' min' : ''} · <span style="color:var(--radix-cyan,#0891b2);font-weight:700;">do Regular</span></div>
-                            </div>
-                            <div class="gerencia-mat-acoes">
-                              <span style="font-size:10px;color:var(--radix-gray-light);white-space:nowrap;">gerenciar na aba Regular</span>
-                            </div>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
-            ${(() => {
-              // Materiais ligados ao módulo mas sem semana definida (só do cronograma ativo)
-              const semSem = matsDoCrono.filter(mat => mat.modulo_id === mod.id && (mat.semana_numero === null || mat.semana_numero === undefined));
-              if (semSem.length === 0) return '';
-              return `
-                <div class="gerencia-semana" style="border-left-color:#9CA3AF;">
-                  <div class="gerencia-semana-titulo">
-                    <strong style="color:#6B7280;">⚠️ Sem semana definida</strong>
-                    <span style="font-size:11px;color:#9CA3AF;">Edite cada material e atribua a uma semana</span>
-                  </div>
-                  <div class="gerencia-materiais-lista">
-                    ${semSem.map((mat, idx) => {
-                      const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
-                      return `
-                        <div class="gerencia-mat-item ${!mat.visivel ? 'oculto' : ''}">
-                          <span class="gerencia-mat-ico">${ico}</span>
-                          <div class="gerencia-mat-info">
-                            <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}</div>
-                          </div>
-                          <div class="gerencia-mat-acoes">
-                            <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})" title="Editar">✏️</button>
-                            <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})" title="Excluir">🗑️</button>
-                          </div>
-                        </div>
-                      `;
-                    }).join('')}
-                  </div>
-                </div>
-              `;
-            })()}
-          </div>
-        </div>
-      `;
-    }).join('')}
+          ${matsDestaSem.length ? `<div class="matg-lista">${matsDestaSem.map((mat, idx) => _matgLinha(mat, { idx, total: matsDestaSem.length, semN: sem.n })).join('')}</div>` : ''}
+          ${herdados.length > 0 ? `
+            <div class="matg-herdados">
+              <div class="matg-herdados-tit">${_matgIco('herdado')}Herdados do Regular · ${herdados.length} ${herdados.length === 1 ? 'material' : 'materiais'}
+                <small>os alunos do Integral já recebem estes automaticamente</small></div>
+              ${herdados.map(mat => _matgLinha(mat, { herdado: true })).join('')}
+            </div>` : ''}
+        </div>`;
+    }).join('');
 
-    ${(() => {
-      // Materiais sem módulo definido (só do cronograma ativo)
-      const sem = matsDoCrono.filter(m => !m.modulo_id);
-      if (sem.length === 0) return '';
-      return `
-        <div class="cron-modulo-bloco" style="--mod-cor:#6B7280;margin-bottom:18px;">
-          <div class="cron-modulo-header">
-            <div class="cron-modulo-numero">+</div>
-            <div class="cron-modulo-info"><h3>Materiais gerais</h3><p>Sem módulo definido</p></div>
-          </div>
-          <div style="padding:10px 14px;">
-            ${sem.map(mat => {
-              const ico = { aula_youtube: '🎬', pdf: '📄', link_externo: '🔗' }[mat.tipo];
-              return `
-                <div class="gerencia-mat-item">
-                  <span class="gerencia-mat-ico">${ico}</span>
-                  <div class="gerencia-mat-info">
-                    <div class="gerencia-mat-titulo">${_escHtml(mat.titulo)}</div>
-                  </div>
-                  <div class="gerencia-mat-acoes">
-                    <button class="btn-mini-icon" onclick="abrirEdicaoMaterial(${mat.id})">✏️</button>
-                    <button class="btn-mini-icon" style="color:#DC2626;" onclick="excluirMaterial(${mat.id})">🗑️</button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
+    // Materiais ligados ao módulo mas sem semana definida (só do cronograma ativo)
+    const semSem = matsDoCrono.filter(mat => mat.modulo_id === mod.id && (mat.semana_numero === null || mat.semana_numero === undefined));
+    const htmlSemSemana = semSem.length === 0 ? '' : `
+      <div class="matg-sem is-alerta">
+        <div class="matg-sem-head">
+          <div class="matg-sem-tit">
+            <div class="matg-sem-linha"><span class="matg-sem-alerta">${_matgIco('alerta')}Sem semana definida</span></div>
+            <div class="matg-sem-nome is-dica">Edite cada material e atribua a uma semana</div>
           </div>
         </div>
-      `;
-    })()}
+        <div class="matg-lista">${semSem.map(mat => _matgLinha(mat)).join('')}</div>
+      </div>`;
+
+    return `
+      <section class="matg-mod${aberto ? ' is-open' : ''}" data-k="${k}" style="--mod-cor:${mod.cor};">
+        <button type="button" class="matg-mod-head" aria-expanded="${aberto ? 'true' : 'false'}" onclick="matgToggleMod(this)">
+          <span class="matg-mod-num">${mod.numero}</span>
+          <span class="matg-mod-info">
+            <span class="matg-mod-nome">${mod.nome}</span>
+            <span class="matg-mod-sub">${sub}</span>
+          </span>
+          ${temAtual ? '<span class="matg-mod-agora">Semana atual</span>' : ''}
+          <span class="matg-mod-seta">${_matgIco('seta')}</span>
+        </button>
+        <div class="matg-mod-corpo">${htmlSemanas}${htmlSemSemana}</div>
+      </section>`;
+  }).join('');
+
+  // Materiais sem módulo definido (só do cronograma ativo)
+  const gerais = matsDoCrono.filter(m => !m.modulo_id);
+  const htmlGerais = gerais.length === 0 ? '' : `
+    <section class="matg-mod is-open is-fixo" style="--mod-cor:#64748b;">
+      <div class="matg-mod-head">
+        <span class="matg-mod-num">${_matgIco('pasta')}</span>
+        <span class="matg-mod-info">
+          <span class="matg-mod-nome">Materiais gerais</span>
+          <span class="matg-mod-sub">Sem módulo definido · ${gerais.length} ${gerais.length === 1 ? 'material' : 'materiais'}</span>
+        </span>
+      </div>
+      <div class="matg-mod-corpo"><div class="matg-lista">${gerais.map(mat => _matgLinha(mat)).join('')}</div></div>
+    </section>`;
+
+  main.innerHTML = `
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Vídeo-aulas e PDFs</div>
+    <div class="matg">
+      <div class="matg-head">
+        <div class="matg-head-txt">
+          <span class="rx-kicker">Materiais do curso</span>
+          <h2 class="rx-h1">Vídeo-aulas, PDFs e gabaritos</h2>
+          <p class="rx-sub">${matsDoCrono.length} ${matsDoCrono.length === 1 ? 'material' : 'materiais'} neste cronograma${nOcultos ? ` · ${nOcultos} ${nOcultos === 1 ? 'oculto' : 'ocultos'} para os alunos` : ''}. Os botões de cada semana já adicionam no lugar certo.</p>
+        </div>
+        <div class="matg-head-acoes">
+          <button type="button" class="rx-btn rx-btn-primary" onclick="abrirNovoMaterial('aula_youtube')">${_matgIco('mais')}Vídeo-aula</button>
+          <button type="button" class="rx-btn rx-btn-secondary" onclick="abrirNovoMaterial('pdf')">${_matgIco('mais')}PDF</button>
+          <button type="button" class="rx-btn rx-btn-secondary" onclick="abrirNovoMaterial('link_externo')">${_matgIco('mais')}Link</button>
+        </div>
+      </div>
+
+      <div class="matg-abas" role="tablist" aria-label="Cronograma">
+        <button type="button" role="tab" aria-selected="${cronoEdit === 'regular'}" class="matg-aba${cronoEdit === 'regular' ? ' is-on' : ''}"
+                onclick="state._matGerCrono='regular';renderGerenciarMateriais();">Cronograma Regular <span class="matg-aba-n">${cntRegular}</span></button>
+        <button type="button" role="tab" aria-selected="${cronoEdit === 'integral'}" class="matg-aba is-integral${cronoEdit === 'integral' ? ' is-on' : ''}"
+                onclick="state._matGerCrono='integral';renderGerenciarMateriais();">${_matgIco('raio')}Integral <span class="matg-aba-n">${cntIntegral}</span></button>
+      </div>
+
+      <p class="matg-nota">
+        ${cronoEdit === 'integral'
+          ? 'Materiais EXCLUSIVOS do <strong>Cronograma Integral</strong> (Turma 05). Estes não aparecem pros alunos do regular.'
+          : 'Materiais do <strong>Cronograma Regular</strong>. Alunos do Integral também veem estes via mapeamento por tema (a aula equivalente do integral mostra o mesmo material).'}
+      </p>
+
+      ${htmlModulos}
+      ${htmlGerais}
+      ${!htmlModulos && !htmlGerais ? '<div class="rx-empty"><b>Nenhum material neste cronograma ainda</b>Use os botões acima para adicionar a primeira vídeo-aula, PDF ou link.</div>' : ''}
+    </div>
   `;
 }
 
@@ -17648,9 +17843,9 @@ function abrirModalMaterial(material, tipo) {
   const modsCrono = cronograma === 'integral' ? MODULOS_INTEGRAL : MODULOS;
   const semsCrono = cronograma === 'integral' ? CRONOGRAMA_INTEGRAL_2026 : CRONOGRAMA_2026;
   const maxN = semsCrono.reduce((mx, s) => Math.max(mx, s.n || 0), 0);
-  const tipoLabel = { 'aula_youtube': '🎬 Vídeo-aula (YouTube)', 'pdf': '📄 PDF / Apostila', 'link_externo': '🔗 Link externo' }[tipo];
+  const tipoLabel = { 'aula_youtube': 'Vídeo-aula (YouTube)', 'pdf': 'PDF / Apostila', 'link_externo': 'Link externo' }[tipo];
   const cronoBadge = cronograma === 'integral'
-    ? '<span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#7e22ce,#a855f7);color:#fff;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.05em;margin-left:10px;vertical-align:middle;">⚡ INTEGRAL</span>'
+    ? '<span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#7e22ce,#a855f7);color:#fff;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.05em;margin-left:10px;vertical-align:middle;">INTEGRAL</span>'
     : '<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(34,211,238,0.18);color:var(--radix-cyan,#0891b2);padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.05em;margin-left:10px;vertical-align:middle;">REGULAR</span>';
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalMaterial()">
@@ -24366,7 +24561,8 @@ function renderTelaQuestoes() {
     + '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Banco de Questões</div>'
     + '<div class="qbk2-head"><div><h1 class="rx-h1">Banco de questões</h1><p class="rx-sub">' + totalGeral + (totalGeral === 1 ? ' questão disponível' : ' questões disponíveis') + '. Resolva aqui ou monte sua lista de estudos.</p></div>'
     + '<div class="qbk2-head-acoes"><button type="button" class="rx-btn rx-btn-secondary qbk2-btn-filtros" onclick="qbkAbrirFiltros()">' + rxIco('filtro') + 'Filtros <span class="rx-badge is-zero" id="qbk2-nfiltros">0</span></button>'
-    + '<button type="button" class="rx-btn rx-btn-primary qbk2-btn-lista" onclick="qbkAbrirLista()">' + rxIco('lista') + 'Minha lista <span class="rx-badge" id="qbk2-lista-cnt" style="background:rgba(255,255,255,.22);color:#fff">' + n + '</span></button></div></div>'
+    + '<button type="button" class="rx-btn rx-btn-primary qbk2-btn-lista" onclick="qbkAbrirLista()">' + rxIco('lista') + 'Minha lista <span class="rx-badge" id="qbk2-lista-cnt" style="background:rgba(255,255,255,.22);color:#fff">' + n + '</span></button>'
+    + '<button type="button" class="rx-btn qbk2-btn-gerar" id="qbk2-btn-gerar" onclick="abrirModalGerar()"' + (n ? '' : ' disabled') + ' title="' + (n ? 'Gerar a lista com as questões selecionadas (PDF ou resolução no app)' : 'Adicione questões à lista para gerar') + '">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>' + 'Gerar lista</button></div></div>'
     + '<div class="qbk-busca-wrap">' + rxIco('busca').replace('<svg ', '<svg width="16" height="16" ') + '<label class="rx-visually-hidden" for="filtro-busca">Buscar no texto da questão ou alternativas</label><input type="search" id="filtro-busca" class="qbk-busca" placeholder="Buscar no texto da questão ou alternativas…" value="' + _escHtml(state._qbkBusca || '') + '" oninput="agendarFiltrarQuestoes()" autocomplete="off"></div>'
     + '<div id="qbk-filtros-ativos"></div>'
     + '<div class="qbk2-grid"><aside class="qbk2-filtros" id="qbk2-filtros" aria-label="Filtros">' + _htmlFiltrosBanco() + '</aside><main id="lista-questoes" class="qbk2-main" aria-live="polite"></main></div>'
@@ -24411,7 +24607,8 @@ function filtrarQuestoes() {
   const pagina = questoes.slice(ini, fim);
   container.innerHTML = '<div class="qbk2-info"><div>Mostrando <b>' + (ini + 1) + '–' + fim + '</b> de <b>' + questoes.length + '</b> ' + (questoes.length === 1 ? 'questão' : 'questões') + '</div></div>'
     + pagina.map((q, idx) => renderQuestaoCardLinha(q, ini + idx + 1)).join('')
-    + (totalPag > 1 ? renderPaginacaoQuestoes(totalPag) : '');
+    + (totalPag > 1 ? renderPaginacaoQuestoes(totalPag) : '')
+    + '<div class="qbk2-topo"><button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="qbkIrAoTopo()">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>' + 'Voltar ao início</button></div>';
   const abertas = pagina.filter(q => state._expandidoQuestoes && state._expandidoQuestoes.has(q.id));
   if (abertas.length) setTimeout(() => abertas.forEach(q => _qbkKatex(q.id)), 30);
 }
@@ -25654,6 +25851,24 @@ function _pintarSelosProfessor() {
     } catch (e) { console.warn('[selos professor]', e); }
     return r;
   };
+})();
+
+// ---------- Banco de questões: Gerar lista no topo e Voltar ao início no fim (02/10/2026) ----------
+function _qbkAtualizarBotaoGerar() {
+  const b = document.getElementById('qbk2-btn-gerar'); if (!b) return;
+  const n = (state.questoesSelecionadas || []).length;
+  b.disabled = !n;
+  b.title = n ? 'Gerar a lista com as questões selecionadas (PDF ou resolução no app)' : 'Adicione questões à lista para gerar';
+}
+function qbkIrAoTopo() {
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+  const h = document.querySelector('.qbk2 .rx-h1');
+  if (h) { h.setAttribute('tabindex', '-1'); try { h.focus({ preventScroll: true }); } catch (e) {} }
+}
+(function () {
+  if (typeof NAV === 'undefined' || typeof NAV.atualizarBadges !== 'function') return;
+  const orig = NAV.atualizarBadges.bind(NAV);
+  NAV.atualizarBadges = function () { const r = orig.apply(this, arguments); try { _qbkAtualizarBotaoGerar(); } catch (e) {} return r; };
 })();
 
 // ========== INIT ==========
