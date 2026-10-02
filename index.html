@@ -6627,6 +6627,76 @@
     .matg-acoes { grid-column: 1 / -1; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--rx-line); }
     .matg-ib { width: 38px; height: 38px; }
   }
+  /* ---------- Minhas listas e lista salva: visual novo (02/10/2026) ---------- */
+  .mlx { display: flex; flex-direction: column; gap: 16px; }
+  .mlx svg { width: 16px; height: 16px; flex: none; }
+  .mlx-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; }
+  .mlx-head-txt { min-width: 0; flex: 1 1 320px; }
+  .mlx-head .rx-h1 { overflow-wrap: anywhere; }
+  .mlx-total { font-size: var(--rx-fs-sm); font-weight: 700; color: var(--rx-text-2); padding: 6px 12px; border-radius: 999px; background: var(--rx-surface); border: 1px solid var(--rx-line); white-space: nowrap; }
+
+  .mlx-aviso { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--rx-r-lg); background: var(--rx-primary-soft); border: 1px solid rgba(59,130,246,.35); }
+  .mlx-aviso-ico { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--rx-primary); color: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
+  .mlx .mlx-aviso-ico svg { width: 20px; height: 20px; }
+  .mlx-aviso-ico i { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--rx-accent); color: #0e1a36; font: 800 11px/20px 'Inter', system-ui, sans-serif; text-align: center; font-style: normal; }
+  .mlx-aviso-txt { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mlx-aviso-txt b { font-size: var(--rx-fs); color: var(--rx-text); }
+  .mlx-aviso-txt span { font-size: var(--rx-fs-sm); color: var(--rx-text-2); line-height: 1.45; }
+
+  .mlx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+  .mlx-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--rx-r-lg); background: var(--rx-surface); border: 1px solid var(--rx-line); box-shadow: var(--rx-shadow-sm);
+    cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; }
+  .mlx-card:hover { border-color: rgba(59,130,246,.5); transform: translateY(-2px); box-shadow: var(--rx-shadow); }
+  .mlx-card:focus-visible { outline: none; box-shadow: var(--rx-focus); }
+  .mlx-card-topo { display: flex; align-items: flex-start; gap: 12px; }
+  .mlx-card-ico { width: 40px; height: 40px; border-radius: 11px; background: var(--rx-primary-soft); color: var(--rx-primary); display: flex; align-items: center; justify-content: center; flex: none; }
+  body:not(.theme-light) .mlx-card-ico { color: #93c5fd; }
+  .mlx .mlx-card-ico svg { width: 20px; height: 20px; }
+  .mlx-card-txt { flex: 1; min-width: 0; }
+  .mlx-card-nome { margin: 0; font-size: var(--rx-fs-md); font-weight: 800; color: var(--rx-text); line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .mlx-card-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: var(--rx-fs-xs); color: var(--rx-muted); }
+  .mlx-card-meta b { color: var(--rx-text-2); font-weight: 700; }
+  .mlx-card-temas { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mlx-card-temas span { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--rx-surface-2); border: 1px solid var(--rx-line); color: var(--rx-text-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mlx-card-temas span.is-mais { color: var(--rx-muted); }
+  .mlx-card-acoes { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--rx-line); }
+  .mlx-esp { flex: 1; }
+  .mlx-ib { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--rx-line-2); background: var(--rx-surface-2); color: var(--rx-text-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  body.theme-light .mlx-ib { background: #fff; }
+  .mlx-ib:hover { color: var(--rx-text); border-color: var(--rx-primary); }
+  .mlx-ib.is-danger:hover { color: var(--rx-coral); border-color: rgba(255,122,92,.6); background: rgba(255,122,92,.1); }
+
+  .mlx-vazio { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 36px 20px; border: 1px dashed var(--rx-line-2); border-radius: var(--rx-r-lg); background: var(--rx-surface); color: var(--rx-muted); }
+  .mlx-vazio-ico { width: 52px; height: 52px; border-radius: 14px; background: var(--rx-primary-soft); color: var(--rx-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+  body:not(.theme-light) .mlx-vazio-ico { color: #93c5fd; }
+  .mlx .mlx-vazio-ico svg { width: 26px; height: 26px; }
+  .mlx-vazio b { font-size: var(--rx-fs-md); color: var(--rx-text); }
+  .mlx-vazio p { margin: 0 0 6px; max-width: 460px; font-size: var(--rx-fs-sm); line-height: 1.5; }
+
+  .mlx-alerta { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--rx-r); background: rgba(255,122,92,.1); border: 1px solid rgba(255,122,92,.35); color: var(--rx-coral); font-size: var(--rx-fs-sm); font-weight: 600; }
+  .mlx-acoes-lista { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mlx-mod { border-radius: var(--rx-r-lg); background: var(--rx-surface); border: 1px solid var(--rx-line); box-shadow: var(--rx-shadow-sm); overflow: hidden; }
+  .mlx-mod-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--rx-line); }
+  .mlx-mod-num { width: 32px; height: 32px; border-radius: 9px; background: var(--mod-cor, var(--rx-primary)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex: none; }
+  .mlx-mod-nome { flex: 1; min-width: 0; font-size: var(--rx-fs-md); font-weight: 800; color: var(--rx-text); }
+  .mlx-mod-n { font-size: var(--rx-fs-xs); font-weight: 700; color: var(--rx-text-2); padding: 3px 10px; border-radius: 999px; background: var(--rx-surface-2); border: 1px solid var(--rx-line); white-space: nowrap; }
+  .mlx-qs { display: flex; flex-direction: column; }
+  .mlx-q { display: flex; gap: 14px; padding: 14px 16px; }
+  .mlx-q + .mlx-q { border-top: 1px solid var(--rx-line); }
+  .mlx-q-num { width: 28px; height: 28px; border-radius: 50%; background: var(--rx-surface-3); color: var(--rx-text); font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .mlx-q-txt { flex: 1; min-width: 0; }
+  .mlx-q-topo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .mlx-q-tema { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--rx-accent); }
+  body.theme-light .mlx-q-tema { color: #0e7490; }
+  .mlx-q-enun { margin: 0; font-size: var(--rx-fs); color: var(--rx-text-2); line-height: 1.5; overflow-wrap: anywhere; }
+  @media (max-width: 700px) {
+    .mlx-aviso .rx-btn { width: 100%; }
+    .mlx-grid { grid-template-columns: 1fr; }
+    .mlx-acoes-lista .rx-btn { flex: 1 1 calc(50% - 4px); }
+    .mlx-q { gap: 10px; padding: 12px; }
+    .mlx-mod-head { padding: 12px; }
+  }
   /* ---------- Etapa 1 (confiabilidade, 25/09/2026): chip de sincronização e modais ---------- */
   #radix-sync{position:fixed;left:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--radix-surface,#19284e);color:var(--radix-text,#eaf1ff);border:1px solid var(--radix-border,rgba(255,255,255,.12));box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 28px);line-height:1.3}
   #radix-sync.on{display:flex}
@@ -10763,6 +10833,28 @@ function toggleQuestaoLista(qid) {
 }
 
 
+// ---------- Minhas listas: visual novo (02/10/2026) ----------
+// Mesmas ações de antes (abrir, baixar PDF, excluir, ir ao banco); ícones em SVG e cartões no padrão rx-*.
+function _mlxIco(n) {
+  const P = {
+    lista: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>',
+    arquivo: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/>',
+    baixar: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    excluir: '<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+    seta: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+    banco: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    conferir: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    editar: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    alerta: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>'
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[n] || '') + '</svg>';
+}
+function _mlxData(l) {
+  return l.ultimoDownloadEm
+    ? new Date(l.ultimoDownloadEm).toLocaleDateString('pt-BR')
+    : (l.criadaEm ? new Date(l.criadaEm).toLocaleDateString('pt-BR') : '—');
+}
+
 function renderMontarLista() {
   state.view = 'montar-lista';
   const main = document.getElementById('main-content');
@@ -10775,79 +10867,73 @@ function renderMontarLista() {
   // Ordena pelas mais recentes (último download)
   listas.sort((a, b) => String(b.ultimoDownloadEm || b.criadaEm || '').localeCompare(String(a.ultimoDownloadEm || a.criadaEm || '')));
 
-  // ----- Seção 1: cards das listas salvas -----
+  // ----- Cartões das listas salvas -----
   const cardsListasHtml = listas.length === 0
-    ? `<div style="text-align:center;padding:32px;background:var(--radix-surface);border-radius:14px;border:1px dashed var(--radix-border);color:var(--radix-gray-light);">
-         <div style="font-size:40px;margin-bottom:6px;">📚</div>
-         <p style="margin:0;font-size:14px;">Você ainda não tem listas salvas.<br>
-           <span style="font-size:12px;">Monte uma seleção abaixo e clique em <strong>"Baixar PDF"</strong> — a lista vira um arquivo aqui automaticamente.</span>
-         </p>
+    ? `<div class="mlx-vazio">
+         <span class="mlx-vazio-ico">${_mlxIco('lista')}</span>
+         <b>Você ainda não tem listas salvas</b>
+         <p>Monte uma seleção no banco de questões e baixe o PDF ou comece a resolver no app. A lista vira um arquivo aqui automaticamente.</p>
+         <button type="button" class="rx-btn rx-btn-primary" onclick="abrirTema('')">${_mlxIco('banco')}Ir ao banco de questões</button>
        </div>`
-    : `<div class="listas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+    : `<div class="mlx-grid">
         ${listas.map(l => {
           const n = (l.questaoIds || []).length;
-          const dataStr = l.ultimoDownloadEm
-            ? new Date(l.ultimoDownloadEm).toLocaleDateString('pt-BR')
-            : (l.criadaEm ? new Date(l.criadaEm).toLocaleDateString('pt-BR') : '—');
           const nomeEsc = String(l.nome || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          // Assuntos da lista (até 2 nomes + quantos faltam), quando o banco já carregou
+          const temasIds = [];
+          (l.questaoIds || []).forEach(qid => { const q = (state.questoes || []).find(x => x.id === qid); if (q && q.tema && !temasIds.includes(q.tema)) temasIds.push(q.tema); });
+          const temasNomes = temasIds.map(t => { const tt = (typeof TEMAS !== 'undefined' ? TEMAS : []).find(x => x.id === t); return tt ? tt.nome : null; }).filter(Boolean);
+          const temasHtml = temasNomes.length
+            ? `<div class="mlx-card-temas">${temasNomes.slice(0, 2).map(t => `<span>${_escHtml(t)}</span>`).join('')}${temasNomes.length > 2 ? `<span class="is-mais">+${temasNomes.length - 2}</span>` : ''}</div>`
+            : '';
           return `
-            <div class="lista-card" onclick="abrirListaSalva(${l.id})"
-                 style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:14px;padding:16px;cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column;gap:8px;"
-                 onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)';"
-                 onmouseout="this.style.transform='';this.style.boxShadow='';">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(20,184,166,0.12);display:flex;align-items:center;justify-content:center;color:var(--radix-teal,#0d9488);font-weight:700;">📄</div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-weight:700;color:var(--radix-text,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${nomeEsc}">${nomeEsc}</div>
-                  <div style="font-size:12px;color:var(--radix-gray-light);">${n} ${n===1?'questão':'questões'} · ${dataStr}</div>
+            <article class="mlx-card" role="button" tabindex="0" onclick="abrirListaSalva(${l.id})"
+                     onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();abrirListaSalva(${l.id});}">
+              <div class="mlx-card-topo">
+                <span class="mlx-card-ico">${_mlxIco('arquivo')}</span>
+                <div class="mlx-card-txt">
+                  <h3 class="mlx-card-nome" title="${nomeEsc}">${nomeEsc}</h3>
+                  <div class="mlx-card-meta"><b>${n} ${n === 1 ? 'questão' : 'questões'}</b><span>Salva em ${_mlxData(l)}</span></div>
                 </div>
               </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center;">
-                <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="event.stopPropagation();abrirListaSalva(${l.id})">Abrir →</button>
-                <button class="btn-icon" title="Baixar PDF dessa lista" onclick="event.stopPropagation();baixarListaSalvaPDF(${l.id})">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                </button>
-                <button class="btn-icon danger" title="Excluir lista" onclick="event.stopPropagation();excluirListaSalva(${l.id})">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
+              ${temasHtml}
+              <div class="mlx-card-acoes">
+                <button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="event.stopPropagation();abrirListaSalva(${l.id})">Abrir${_mlxIco('seta')}</button>
+                <span class="mlx-esp"></span>
+                <button type="button" class="mlx-ib" title="Baixar PDF dessa lista" aria-label="Baixar PDF dessa lista" onclick="event.stopPropagation();baixarListaSalvaPDF(${l.id})">${_mlxIco('baixar')}</button>
+                <button type="button" class="mlx-ib is-danger" title="Excluir lista" aria-label="Excluir lista" onclick="event.stopPropagation();excluirListaSalva(${l.id})">${_mlxIco('excluir')}</button>
               </div>
-            </div>`;
+            </article>`;
         }).join('')}
       </div>`;
 
   // ----- Aviso da lista em construção (agora vive na "cesta" do Banco) -----
   // Se houver uma seleção em andamento, sugere voltar pro Banco pra concluir.
   const avisoSelecaoHtml = nSelAtual === 0 ? '' : `
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;margin-bottom:18px;
-                background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.22);border-radius:12px;">
-      <div style="font-size:22px;">🛒</div>
-      <div style="flex:1;min-width:200px;">
-        <div style="font-weight:700;color:var(--radix-text,#111);font-size:13.5px;">
-          Você tem ${nSelAtual} ${nSelAtual === 1 ? 'questão' : 'questões'} na sua lista atual
-        </div>
-        <div style="font-size:12px;color:var(--radix-gray-light);margin-top:2px;">
-          Volte ao Banco de Questões pra estudar (digital ou PDF) — quando você baixar/iniciar, a lista vira um arquivo aqui.
-        </div>
+    <div class="mlx-aviso">
+      <span class="mlx-aviso-ico">${_mlxIco('lista')}<i>${nSelAtual}</i></span>
+      <div class="mlx-aviso-txt">
+        <b>Você tem ${nSelAtual} ${nSelAtual === 1 ? 'questão' : 'questões'} na sua lista atual</b>
+        <span>Volte ao banco para resolver no app ou baixar o PDF. Quando você baixar ou começar, ela vira uma lista salva aqui.</span>
       </div>
-      <button class="btn" onclick="abrirTema('')" style="padding:8px 14px;font-size:13px;">📚 Ir pro Banco</button>
+      <button type="button" class="rx-btn rx-btn-primary" onclick="abrirTema('')">Continuar no banco${_mlxIco('seta')}</button>
     </div>
   `;
 
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minhas Listas</div>
-
-    <h2 class="section-title">
-      <span class="section-title-accent"></span>
-      <span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></span>
-      Minhas Listas
-    </h2>
-    <p style="color:var(--radix-gray-light);font-size:13px;margin-top:-6px;margin-bottom:18px;">
-      Suas listas salvas ficam aqui. Clique em uma para abrir, conferir o gabarito ou baixar o PDF de novo.
-    </p>
-
-    ${avisoSelecaoHtml}
-
-    ${cardsListasHtml}
+    <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Minhas listas</div>
+    <div class="mlx">
+      <div class="mlx-head">
+        <div class="mlx-head-txt">
+          <span class="rx-kicker">Estudo</span>
+          <h2 class="rx-h1">Minhas listas</h2>
+          <p class="rx-sub">Suas listas salvas ficam aqui. Abra uma para conferir o gabarito ou baixar o PDF de novo.</p>
+        </div>
+        ${listas.length ? `<span class="mlx-total">${listas.length} ${listas.length === 1 ? 'lista salva' : 'listas salvas'}</span>` : ''}
+      </div>
+      ${avisoSelecaoHtml}
+      ${cardsListasHtml}
+    </div>
   `;
 }
 
@@ -10917,78 +11003,63 @@ function renderListaSalva(lista) {
     if (modId && porMod[modId]) porMod[modId].push(q);
   });
 
-  const dataStr = lista.ultimoDownloadEm
-    ? new Date(lista.ultimoDownloadEm).toLocaleDateString('pt-BR')
-    : (lista.criadaEm ? new Date(lista.criadaEm).toLocaleDateString('pt-BR') : '—');
+  const dataStr = _mlxData(lista);
   const nomeEsc = String(lista.nome || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const rotDif = { facil: 'Fácil', media: 'Média', dificil: 'Difícil' };
 
   main.innerHTML = `
     <div class="breadcrumb">
       <a onclick="renderHome()">← Início</a> /
-      <a onclick="renderMontarLista()">Minhas Listas</a> /
+      <a onclick="renderMontarLista()">Minhas listas</a> /
       ${nomeEsc}
     </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
-      <h2 class="section-title" style="margin:0;">
-        <span class="section-title-accent"></span>
-        <span class="st-ico coral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
-        ${nomeEsc}
-      </h2>
-    </div>
-    <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
-      ${qs.length} ${qs.length === 1 ? 'questão' : 'questões'} · Salva em ${dataStr}${faltando > 0 ? ` · <span style="color:#DC2626;">⚠ ${faltando} ${faltando === 1 ? 'questão não está' : 'questões não estão'} mais no banco</span>` : ''}
-    </p>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
-      <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;" onclick="iniciarConferenciaGabarito((${JSON.stringify(lista.questaoIds)}).map(id => state.questoes.find(q => q.id === id)).filter(Boolean), { tipo:'lista_salva', id:${lista.id} })">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Conferir gabarito
-      </button>
-      <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;" onclick="baixarListaSalvaPDF(${lista.id})">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Baixar PDF
-      </button>
-      <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;" onclick="renomearListaSalva(${lista.id})">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-        Renomear
-      </button>
-      <button class="btn btn-danger" style="padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;" onclick="excluirListaSalva(${lista.id})">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        Excluir
-      </button>
-    </div>
-
-    ${qs.length === 0 ? `
-      <div style="text-align:center;padding:32px;background:var(--radix-surface);border-radius:14px;border:1px solid var(--radix-border);color:var(--radix-gray-light);">
-        Nenhuma das questões dessa lista está mais disponível no banco.
+    <div class="mlx">
+      <div class="mlx-head">
+        <div class="mlx-head-txt">
+          <span class="rx-kicker">Lista salva</span>
+          <h2 class="rx-h1">${nomeEsc}</h2>
+          <p class="rx-sub">${qs.length} ${qs.length === 1 ? 'questão' : 'questões'} · Salva em ${dataStr}</p>
+        </div>
       </div>
-    ` : MODULOS.map(mod => {
-        const arr = porMod[mod.id];
-        if (!arr || arr.length === 0) return '';
-        return `
-          <div class="lista-mod-bloco">
-            <div class="lista-mod-header" style="--mod-cor:${mod.cor};">
-              <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
-              <span class="dash-pill">${arr.length} ${arr.length === 1 ? 'questão' : 'questões'}</span>
-            </div>
-            <div class="lista-questoes">
-              ${arr.map(q => {
-                const tema = TEMAS.find(t => t.id === q.tema);
-                const ordem = (lista.questaoIds || []).indexOf(q.id) + 1;
-                return `
-                  <div class="lista-item">
-                    <div class="lista-num">${ordem}</div>
-                    <div class="lista-conteudo">
-                      <div class="lista-tema">${tema ? tema.nome : '—'}</div>
-                      <div class="lista-enun">${_escHtml(q.enunciado.substring(0, 200))}${q.enunciado.length > 200 ? '...' : ''}</div>
-                    </div>
-                  </div>`;
-              }).join('')}
-            </div>
-          </div>`;
-      }).join('')
-    }
+      ${faltando > 0 ? `<div class="mlx-alerta">${_mlxIco('alerta')}${faltando} ${faltando === 1 ? 'questão desta lista não está' : 'questões desta lista não estão'} mais no banco.</div>` : ''}
+
+      <div class="mlx-acoes-lista">
+        <button type="button" class="rx-btn rx-btn-primary" onclick="iniciarConferenciaGabarito((${JSON.stringify(lista.questaoIds)}).map(id => state.questoes.find(q => q.id === id)).filter(Boolean), { tipo:'lista_salva', id:${lista.id} })">${_mlxIco('conferir')}Conferir gabarito</button>
+        <button type="button" class="rx-btn rx-btn-secondary" onclick="baixarListaSalvaPDF(${lista.id})">${_mlxIco('baixar')}Baixar PDF</button>
+        <button type="button" class="rx-btn rx-btn-secondary" onclick="renomearListaSalva(${lista.id})">${_mlxIco('editar')}Renomear</button>
+        <button type="button" class="rx-btn rx-btn-danger" onclick="excluirListaSalva(${lista.id})">${_mlxIco('excluir')}Excluir</button>
+      </div>
+
+      ${qs.length === 0 ? `
+        <div class="mlx-vazio"><b>Nenhuma das questões dessa lista está mais disponível no banco.</b></div>
+      ` : MODULOS.map(mod => {
+          const arr = porMod[mod.id];
+          if (!arr || arr.length === 0) return '';
+          return `
+            <section class="mlx-mod" style="--mod-cor:${mod.cor};">
+              <div class="mlx-mod-head">
+                <span class="mlx-mod-num">${mod.numero}</span>
+                <span class="mlx-mod-nome">${mod.nome}</span>
+                <span class="mlx-mod-n">${arr.length} ${arr.length === 1 ? 'questão' : 'questões'}</span>
+              </div>
+              <div class="mlx-qs">
+                ${arr.map(q => {
+                  const tema = TEMAS.find(t => t.id === q.tema);
+                  const ordem = (lista.questaoIds || []).indexOf(q.id) + 1;
+                  return `
+                    <div class="mlx-q">
+                      <span class="mlx-q-num">${ordem}</span>
+                      <div class="mlx-q-txt">
+                        <div class="mlx-q-topo"><span class="mlx-q-tema">${tema ? tema.nome : '—'}</span>${rotDif[q.dificuldade] ? `<span class="rx-tag ${q.dificuldade}">${rotDif[q.dificuldade]}</span>` : ''}</div>
+                        <p class="mlx-q-enun">${_escHtml(q.enunciado.substring(0, 200))}${q.enunciado.length > 200 ? '...' : ''}</p>
+                      </div>
+                    </div>`;
+                }).join('')}
+              </div>
+            </section>`;
+        }).join('')
+      }
+    </div>
   `;
 }
 
