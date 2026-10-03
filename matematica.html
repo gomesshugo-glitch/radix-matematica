@@ -91,7 +91,7 @@ h2{font-size:clamp(26px,3.4vw,40px);line-height:1.12;font-weight:800;margin-top:
 .hero-photo .sign{position:absolute;left:-6px;bottom:64px;background:rgba(10,19,41,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
 .hero-photo .sign b{display:block;font-family:var(--display);font-size:17px}
 .hero-photo .sign span{font-size:13px;color:var(--muted)}
-.hero-photo .float{position:absolute;right:-4px;top:22%;background:rgba(10,19,41,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(34,211,238,.4);border-radius:14px;padding:12px 16px;text-align:left}
+.hero-photo .float{position:absolute;right:-8px;bottom:150px;background:rgba(10,19,41,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(34,211,238,.4);border-radius:14px;padding:12px 16px;text-align:left}
 .hero-photo .float small{display:block;font-size:11px;letter-spacing:.1em;font-weight:800;color:var(--muted);text-transform:uppercase}
 .hero-photo .float b{font-family:var(--display);font-size:28px;color:var(--cyan);line-height:1.1}
 .hero-photo .float span{display:block;font-size:12.5px;color:var(--text-2)}
@@ -186,8 +186,8 @@ h2{font-size:clamp(26px,3.4vw,40px);line-height:1.12;font-weight:800;margin-top:
 .tri-num{display:flex;flex-wrap:wrap;gap:22px;margin-top:22px}
 .tri-num b{display:block;font-family:var(--display);font-size:32px;color:var(--cyan);line-height:1}
 .tri-num span{font-size:13px;color:var(--muted)}
-.tri-photo{min-height:300px;background:url(mat27-hugo-tri.webp) center 20%/cover no-repeat;position:relative}
-.tri-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,#122450 0%,rgba(18,36,80,0) 45%)}
+.tri-photo{min-height:300px;background:url(mat27-hugo-tri.webp) right bottom/contain no-repeat;position:relative;margin-top:10px}
+.tri-photo::after{content:none}
 
 /* ====== Módulos ====== */
 .mods{display:grid;grid-template-columns:1fr;gap:12px;margin-top:30px}
@@ -208,7 +208,7 @@ h2{font-size:clamp(26px,3.4vw,40px);line-height:1.12;font-weight:800;margin-top:
 
 /* ====== Professor ====== */
 .prof{display:grid;grid-template-columns:1fr;gap:30px;align-items:center;margin-top:10px}
-.prof-photo{position:relative;border-radius:24px;overflow:hidden;background:#1b2440;max-width:460px;justify-self:center;width:100%}
+.prof-photo{position:relative;border-radius:24px;overflow:hidden;background:radial-gradient(120% 80% at 50% 25%,#2a4580,#14244c 70%);padding-top:28px;max-width:460px;justify-self:center;width:100%}
 .prof-photo img{width:100%;height:auto}
 .prof-photo .cap{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(10,19,41,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:14px;padding:12px 14px;font-size:13.5px;color:var(--text-2)}
 .prof-photo .cap b{color:var(--text)}
@@ -258,7 +258,7 @@ h2{font-size:clamp(26px,3.4vw,40px);line-height:1.12;font-weight:800;margin-top:
 .final-grid{display:grid;grid-template-columns:1fr;gap:10px;align-items:end}
 .final-copy{padding:60px 0 30px}
 .final-copy h2{max-width:18ch}
-.final-photo{justify-self:center;width:min(360px,80%)}
+.final-photo{justify-self:center;width:min(560px,100%)}
 .final-photo img{width:100%;height:auto;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent);mask-image:linear-gradient(to bottom,#000 72%,transparent)}
 footer{background:var(--bg-deep);border-top:1px solid var(--line);padding:30px 0 96px;font-size:14px;color:var(--muted)}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px}
@@ -291,7 +291,7 @@ footer a{color:var(--text-2)}
   .flow{grid-template-columns:repeat(4,1fr)}
   .prof{grid-template-columns:.85fr 1.15fr;gap:56px}
   .plans{grid-template-columns:1fr 1fr;max-width:900px}
-  .final-grid{grid-template-columns:1.3fr .7fr}
+  .final-grid{grid-template-columns:1fr 1fr}
   .final-copy{padding:80px 0 80px}
   .mbar{display:none}
   footer{padding-bottom:30px}
@@ -346,7 +346,7 @@ footer a{color:var(--text-2)}
         <p class="microcopy">Presencial em Mossoró ou online, de qualquer lugar. A plataforma vem nos dois.</p>
       </div>
       <div class="hero-photo">
-        <img src="mat27-hugo-hero.webp" width="733" height="1100" alt="Prof. Hugo Gomes, de camisa preta do Radix, apontando para a frente" fetchpriority="high">
+        <img src="mat27-hugo-hero.webp" width="734" height="1100" alt="Prof. Hugo Gomes sorrindo, de camisa preta do Radix, com as mãos nos bolsos" fetchpriority="high">
         <div class="float"><small>Nota TRI</small><b>como o INEP</b><span>no simulado da plataforma</span></div>
         <div class="sign"><b>Prof. Hugo Gomes</b><span>Fundador do Radix · desde 2010</span></div>
       </div>
@@ -544,7 +544,7 @@ footer a{color:var(--text-2)}
           <div><b>99,9%</b><span>das notas a menos de 0,5 ponto</span></div>
         </div>
       </div>
-      <div class="tri-photo" role="img" aria-label="Prof. Hugo Gomes, pensativo, com a mão no queixo"></div>
+      <div class="tri-photo" role="img" aria-label="Prof. Hugo Gomes, pensativo, com a mão no queixo e o celular na mão"></div>
     </div>
 
     <!-- Outras ferramentas -->
@@ -601,7 +601,7 @@ footer a{color:var(--text-2)}
   <div class="wrap">
     <div class="prof">
       <div class="prof-photo">
-        <img src="mat27-hugo-sobre.webp" width="667" height="1000" alt="Prof. Hugo Gomes sorrindo, com as mãos nos bolsos e a camisa do Radix" loading="lazy">
+        <img src="mat27-hugo-sobre.webp" width="686" height="1000" alt="Prof. Hugo Gomes de óculos e blazer preto sobre a camisa do Radix" loading="lazy">
         <div class="cap"><b>Hugo Gomes</b> · professor de Matemática e fundador do Radix</div>
       </div>
       <div>
@@ -709,7 +709,7 @@ footer a{color:var(--text-2)}
           <a class="btn btn-ghost" data-wa href="#">Falar no WhatsApp</a>
         </div>
       </div>
-      <div class="final-photo"><img src="mat27-hugo-cta.webp" width="708" height="900" alt="Prof. Hugo Gomes explicando, com a mão levantada" loading="lazy"></div>
+      <div class="final-photo"><img src="mat27-hugo-cta.webp" width="1372" height="900" alt="Prof. Hugo Gomes de óculos, com o dedo indicador apontando para cima" loading="lazy"></div>
     </div>
   </div>
 </section>
