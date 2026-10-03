@@ -6793,6 +6793,13 @@
   .rvp-bar .b{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden} .rvp-bar .b i{display:block;height:100%;background:linear-gradient(90deg,#fb7185,#fbbf24);border-radius:99px}
   .rvp-bar .v{color:var(--radix-text-muted,#8fa3cc);white-space:nowrap;font-size:12px}
   .rvp-lista{columns:2;gap:24px;margin:10px 0 0 18px;font-size:13.5px;line-height:1.7}
+  .rvp-aluno{display:flex;align-items:center;gap:10px;min-width:210px}
+  .rvp-av{flex:none;padding:0;border:0;background:none;border-radius:50%;cursor:zoom-in;line-height:0;display:inline-flex}
+  .rvp-av .avatar-img,.rvp-av .avatar-iniciais{border-color:var(--radix-border,rgba(255,255,255,.18))}
+  .rvp-av:hover .avatar-img,.rvp-av:hover .avatar-iniciais{border-color:var(--radix-cyan,#22d3ee)}
+  .rvp-av:focus-visible{outline:2px solid var(--radix-cyan,#22d3ee);outline-offset:2px}
+  .rvp-lista{list-style:none;margin-left:0}
+  .rvp-lista li{display:flex;align-items:center;gap:8px;break-inside:avoid;padding:3px 0}
   @media (max-width:700px){.rvp-lista{columns:1}.rvp-bar{grid-template-columns:1fr;gap:4px}}
 
   /* ---------- semanas de revisão: chips dos assuntos ---------- */
@@ -10105,7 +10112,7 @@ function _rvpRender() {
       const hSem = (Number(l.horas_dia) * ((l.dias || []).length)).toFixed(1).replace('.', ',') + 'h';
       const aberto = r.aberto === l.aluno_id;
       return '<tr class="rvp-linha' + (aberto ? ' aberta' : '') + '" onclick="state._rvp.aberto = state._rvp.aberto === \'' + l.aluno_id + '\' ? null : \'' + l.aluno_id + '\'; _rvpRender()">' +
-        '<td><b>' + esc(l.nome) + '</b><br><small class="rvp-muted">' + esc(RVP.nomeTurma(l.turma)) + '</small></td>' +
+        '<td><div class="rvp-aluno">' + _rvpAvatarBotao(l.aluno_id, l.nome, 48) + '<div><b>' + esc(l.nome) + '</b><br><small class="rvp-muted">' + esc(RVP.nomeTurma(l.turma)) + '</small></div></div></td>' +
         '<td>' + l.meta + '/45<br><small class="rvp-muted">' + hSem + '</small></td>' +
         '<td>' + (l.semanas_iniciadas || 0) + '</td><td>' + (l.atividades_feitas || 0) + '</td><td>' + pct + '</td>' +
         RVP.SEMANAS.map(s => '<td class="rvp-c">' + (mp[s.n] != null ? '<span class="rvp-mini ' + (mp[s.n] >= Math.round(l.meta / 3) ? 'ok' : 'warn') + '">' + mp[s.n] + '</span>' : '<span class="rvp-muted">·</span>') + '</td>').join('') +
@@ -10119,12 +10126,14 @@ function _rvpRender() {
     html += '<div class="card rvp-card"><h3>Onde a turma diz que tem dificuldade</h3><p class="rvp-muted">Autoavaliação do questionário. Cada barra é quantos alunos marcaram "tenho dificuldade" no assunto.</p>' +
       mapa.map(m => '<div class="rvp-bar"><span class="n">' + esc(RVP.nomeTema(m.id)) + '</span><span class="b"><i style="width:' + Math.round(m.dif / maxDif * 100) + '%"></i></span><span class="v">' + m.dif + ' com dificuldade · ' + m.dom + ' dominam</span></div>').join('') + '</div>';
   }
-  html += '<details class="card rvp-card"><summary><b>Ainda não começaram</b> · ' + naoComecaram.length + ' aluno' + (naoComecaram.length === 1 ? '' : 's') + ' aprovado' + (naoComecaram.length === 1 ? '' : 's') + ' sem questionário</summary>' +
-    (naoComecaram.length ? '<ul class="rvp-lista">' + naoComecaram.map(x => '<li>' + esc(x.nome) + ' <small class="rvp-muted">' + esc(RVP.nomeTurma(x.turma)) + '</small></li>').join('') + '</ul>' : '<p class="rvp-muted">Todos começaram.</p>') + '</details>';
+  r._idsNao = naoComecaram.map(x => x.id);
+  html += '<details class="card rvp-card" ontoggle="if(this.open)_rvpCarregarFotos(state._rvp._idsNao)"><summary><b>Ainda não começaram</b> · ' + naoComecaram.length + ' aluno' + (naoComecaram.length === 1 ? '' : 's') + ' aprovado' + (naoComecaram.length === 1 ? '' : 's') + ' sem questionário</summary>' +
+    (naoComecaram.length ? '<ul class="rvp-lista">' + naoComecaram.map(x => '<li>' + _rvpAvatarBotao(x.id, x.nome, 28) + '<span>' + esc(x.nome) + ' <small class="rvp-muted">' + esc(RVP.nomeTurma(x.turma)) + '</small></span></li>').join('') + '</ul>' : '<p class="rvp-muted">Todos começaram.</p>') + '</details>';
   html += '<div class="card rvp-card" id="rvp-gabaritos"><h3>Gabaritos dos mini-simulados</h3>' +
     '<p class="rvp-muted">Carregando…</p></div>';
   el.innerHTML = html;
   _rvpCarregarGabaritos();
+  _rvpCarregarFotos(ord.map(l => l.aluno_id));
 }
 
 // ============================================================
@@ -10234,6 +10243,56 @@ function _rvpDetalhe(l) {
     '<div><b>Domino:</b> ' + (doms.length ? esc(doms.join(', ')) : '<span class="rvp-muted">nenhum marcado</span>') + '</div>' +
     '<div><b>Rotina:</b> ' + Number(l.horas_dia).toString().replace('.', ',') + 'h por dia · ' + esc(dias || '—') + '</div>' +
     '<div><b>Questionário:</b> ' + (l.perfil_em ? new Date(l.perfil_em).toLocaleDateString('pt-BR') : '—') + ' · <b>acertos nas atividades:</b> ' + (l.acertos_atividades || 0) + '/' + (l.total_atividades || 0) + '</div></div>';
+}
+
+// ---------- Fotos dos alunos no painel (03/10/2026) ----------
+// As listas do professor vêm sem foto_base64 (Etapa 7: ~14 MB). Aqui as fotos são buscadas
+// em lotes só para os alunos que aparecem, e ficam guardadas em state._rvpFotos enquanto a página estiver aberta.
+const _rvpBuscando = new Set();
+function _rvpAvatar(id, nome, tam) {
+  const f = state._rvpFotos ? state._rvpFotos[id] : undefined;
+  return avatarHTML({ nome: nome, foto_base64: f || null }, tam);
+}
+function _rvpAvatarBotao(id, nome, tam) {
+  const esc = RVP.esc;
+  return '<button type="button" class="rvp-av" style="width:' + tam + 'px;height:' + tam + 'px" data-rvp-av="' + esc(id) + '" data-nome="' + esc(nome) + '" data-tam="' + tam + '"' +
+    ' onclick="event.stopPropagation();rvpAbrirFoto(\'' + esc(id) + '\')" title="Ver foto" aria-label="Ver foto de ' + esc(nome) + '">' + _rvpAvatar(id, nome, tam) + '</button>';
+}
+async function _rvpCarregarFotos(ids) {
+  if (!state._rvpFotos) state._rvpFotos = {};
+  const cache = state._rvpFotos;
+  // reaproveita as fotos que o Gerenciar Alunos já baixou
+  (state._alunoListaAtual || []).forEach(p => { if (p.foto_base64 !== undefined && cache[p.id] === undefined) cache[p.id] = p.foto_base64 || null; });
+  const pinta = id => document.querySelectorAll('[data-rvp-av="' + id + '"]').forEach(el => {
+    el.innerHTML = _rvpAvatar(id, el.getAttribute('data-nome'), Number(el.getAttribute('data-tam')) || 40);
+  });
+  const todos = Array.from(new Set(ids || []));
+  todos.forEach(id => { if (cache[id]) pinta(id); });
+  const faltam = todos.filter(id => cache[id] === undefined && !_rvpBuscando.has(id));
+  for (let i = 0; i < faltam.length; i += 30) {
+    if (!document.querySelector('.rvp-tabela')) return;   // saiu do painel
+    const lote = faltam.slice(i, i + 30);
+    lote.forEach(id => _rvpBuscando.add(id));
+    const { data, error } = await sb.from('perfis').select('id, foto_base64').in('id', lote);
+    lote.forEach(id => _rvpBuscando.delete(id));
+    if (error) { console.warn('[rvp fotos]', error.message); return; }
+    (data || []).forEach(x => { cache[x.id] = x.foto_base64 || null; if (cache[x.id]) pinta(x.id); });
+    lote.forEach(id => { if (cache[id] === undefined) cache[id] = null; });
+  }
+}
+// Foto grande: reaproveita a janela do Gerenciar Alunos (abrirFotoAluno).
+async function rvpAbrirFoto(id) {
+  let p = (state._alunoListaAtual || []).find(x => x.id === id);
+  if (!p || p.foto_base64 === undefined || p.email === undefined) {
+    const { data } = await sb.from('perfis').select('id, nome, email, perfil, turma, status, telefone, foto_base64').eq('id', id).maybeSingle();
+    const base = ((state._rvp && state._rvp.alunos) || []).find(x => x.id === id) || ((state._rvp && state._rvp.linhas) || []).find(x => x.aluno_id === id) || {};
+    p = data || { id: id, nome: base.nome || '', turma: base.turma || null, foto_base64: null };
+  }
+  if (!state._rvpFotos) state._rvpFotos = {};
+  state._rvpFotos[id] = p.foto_base64 || null;
+  const antes = state._alunoListaAtual;
+  state._alunoListaAtual = [p];
+  try { await abrirFotoAluno(id); } finally { state._alunoListaAtual = antes; }
 }
 
 function _rvpFoco(id) { const el = document.getElementById('rvp-' + id); if (el) { const v = el.value; el.focus(); el.setSelectionRange(v.length, v.length); } }
