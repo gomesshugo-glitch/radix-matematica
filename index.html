@@ -12452,7 +12452,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     assets = await PDF_LISTA.carregar();
   } catch (e) {
     console.warn('[pdf lista] layout radix2026 indisponível, usando o clássico:', e && e.message);
-    return gerarPDFQuestoesClassico(questoes, tituloLista, includeGabaritoEmpty);
+    return gerarPDFQuestoesClassico(questoes, tituloLista, false);
   }
 
   const { data: perfil } = await sb.from('perfis').select('nome,cpf').eq('id', state.usuario.id).single();
@@ -12749,7 +12749,7 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     let ts = 15; while (ts > 11 && larg(sub, fB, ts) > 420) ts -= 0.5;
     while (larg(sub, fB, ts) > 420 && sub.length > 4) sub = sub.slice(0, -2).trimEnd() + '…';
     texto(capa, sub, 299.4 - larg(sub, fB, ts) / 2, 113.5, fB, ts, PRETO);
-    const comFolha = !!includeGabaritoEmpty;
+    const comFolha = false;   // 06/10/2026: a lista não leva folha de respostas (o aluno lança as respostas na plataforma)
     const instr = [
       { t: 'Este CADERNO DE QUESTÕES contém ' + N + (N === 1 ? ' questão numerada de 1 a 1' : ' questões numeradas de 1 a ' + N) + (comFolha ? ', uma FOLHA DE RESPOSTAS' : '') + ' e uma FOLHA DE RASCUNHO, dispostas da seguinte maneira:',
         sub: [['a)', (N === 1 ? 'questão de número 1' : 'questões de número 1 a ' + N) + ', relativas à área de Matemática e suas Tecnologias;']].concat(comFolha ? [['b)', 'FOLHA DE RESPOSTAS;'], ['c)', 'FOLHA DE RASCUNHO.']] : [['b)', 'FOLHA DE RASCUNHO.']]) },
