@@ -481,7 +481,7 @@ const CONFIG = {
   ALUNO: 'Ana Clara',                   // no app real: state.usuario.nome
   MIN_QUESTAO: 4,                       // minutos por questão (resolver + corrigir)
   MIN_VIDEO: 25,
-  MIN_MINI: 50,
+  MIN_MINI: 50, MIN_MINI_20: 65,       // mini de 15 / mini de 20 (com retorno)
   MINI_QTDE: 15, MINI_POR_TEMA: 3,
   AMOSTRA_MIN_Q: 10,                    // reclassificação: mínimo de questões...
   AMOSTRA_MIN_FONTES: 2                 // ...ou mínimo de avaliações distintas
@@ -607,11 +607,39 @@ const GABARITOS = {};
    temas da semana na ordem do plano, 5 = geometria). Sem mapa, vale a regra
    antiga de blocos de 3. */
 const MAPAS = {};
-function temaDaQuestao(sem, i) {          // i de 0 a 14
+/* (05/10/2026) Mini de 20: a partir da Semana 3 o caderno traz as 15 da semana
+   e mais 5 de RETORNO (geometria das semanas anteriores). O tamanho vem do
+   gabarito publicado (15 ou 20). No mapa, dígitos 1 a 5 = temas da semana e
+   letras = temas de retorno (MAPA_EXTRA). */
+const MAPA_EXTRA = { P: 'geo-plana', E: 'geo-espacial', A: 'geo-analitica', T: 'trigonometria', G: 'pg',
+                     F: 'financeira', S: 'sistemas-lineares', M: 'matrizes', R: 'potencias', L: 'logica', C: 'conjuntos' };
+function miniQtde(n) {
+  const g = GABARITOS[n], m = MAPAS[n];
+  if (g && g.length > CONFIG.MINI_QTDE) return g.length;
+  if (m && m.length > CONFIG.MINI_QTDE) return m.length;
+  return CONFIG.MINI_QTDE;
+}
+function miniMin(n) { return miniQtde(n) > CONFIG.MINI_QTDE ? CONFIG.MIN_MINI_20 : CONFIG.MIN_MINI; }
+function miniDescr(n) {
+  const q = miniQtde(n);
+  return q > CONFIG.MINI_QTDE ? q + ' questões · 15 da semana + ' + (q - CONFIG.MINI_QTDE) + ' de retorno de geometria'
+                              : q + ' questões · ' + CONFIG.MINI_POR_TEMA + ' por tema';
+}
+function miniTemas(sem) {          // temas do cartão: os da semana + os de retorno que o mapa trouxer
+  const lista = sem.temas.concat([sem.geo.id]);
+  const q = miniQtde(sem.n);
+  for (let i = 0; i < q; i++) { const t = temaDaQuestao(sem, i); if (lista.indexOf(t) === -1) lista.push(t); }
+  return lista;
+}
+function temaDaQuestao(sem, i) {          // i de 0 a miniQtde(sem.n) - 1
   const lista = sem.temas.concat([sem.geo.id]);
   const mapa = MAPAS[sem.n];
-  if (mapa && mapa.length === CONFIG.MINI_QTDE) return lista[parseInt(mapa[i], 10) - 1] || lista[Math.floor(i / 3)];
-  return lista[Math.floor(i / 3)];
+  if (mapa && mapa.length >= CONFIG.MINI_QTDE && i < mapa.length) {
+    const c = mapa[i];
+    if (MAPA_EXTRA[c]) return MAPA_EXTRA[c];
+    return lista[parseInt(c, 10) - 1] || lista[Math.floor(i / 3)] || sem.geo.id;
+  }
+  return lista[Math.floor(i / 3)] || sem.geo.id;
 }
 
 /* ---------- Etapa 10 (10/09/2026): acesso por status ----------
@@ -837,7 +865,7 @@ const app = {
     }
     for (const n in this.minis) {
       const m = this.minis[n];
-      if (m.porTema && m.porTema[temaId] != null) { hits += m.porTema[temaId]; total += CONFIG.MINI_POR_TEMA; fontes++; }
+      if (m.porTema && m.porTema[temaId] != null) { hits += m.porTema[temaId]; total += (m.porTemaN && m.porTemaN[temaId]) || CONFIG.MINI_POR_TEMA; fontes++; }
     }
     return { hits, total, fontes };
   },
@@ -896,12 +924,13 @@ const app = {
 
     // mini é a âncora — só sai se nem ele couber
     let temMini = true;
-    let restante = budget - CONFIG.MIN_MINI;
+    const minMini = miniMin(sem.n);
+    let restante = budget - minMini;
     if (restante < 0) {
       temMini = false; restante = budget;
-      avisos.push('Seu tempo semanal não cobre nem o mini-simulado (' + CONFIG.MIN_MINI + ' min). Amplie a disponibilidade no perfil.');
-    } else if (capDia < CONFIG.MIN_MINI) {
-      avisos.push('O mini-simulado leva ' + CONFIG.MIN_MINI + ' min de uma vez, mais que os ' + capDia + ' min que você marcou por dia. Reserve um dia maior para ele.');
+      avisos.push('Seu tempo semanal não cobre nem o mini-simulado (' + minMini + ' min). Amplie a disponibilidade no perfil.');
+    } else if (capDia < minMini) {
+      avisos.push('O mini-simulado leva ' + minMini + ' min de uma vez, mais que os ' + capDia + ' min que você marcou por dia. Reserve um dia maior para ele.');
     }
 
     // vídeos: só dificuldade efetiva, em ordem de prioridade, e só se sobrar
@@ -956,7 +985,7 @@ const app = {
     // Cada dia tem a capacidade que o aluno declarou. Um bloco de questões é
     // fatiado entre os dias quando não cabe num só. O mini fecha o último dia.
     const dias = diasAtivos.map(d => ({ dia: d, livre: capDia }));
-    if (temMini) dias[dias.length - 1].livre -= CONFIG.MIN_MINI;
+    if (temMini) dias[dias.length - 1].livre -= minMini;
 
     const itens = [];
     function lugarPara(min) {                    // primeiro dia com espaço
@@ -1009,7 +1038,7 @@ const app = {
 
     itens.forEach(it => { it.diaDefault = it.dia; });
 
-    const totalMin = itens.reduce((s,it)=>s+it.min, 0) + (temMini ? CONFIG.MIN_MINI : 0);
+    const totalMin = itens.reduce((s,it)=>s+it.min, 0) + (temMini ? minMini : 0);
     return { budget, capDia, totalMin, itens, avisos, fora, diasAtivos, temMini, sugestao, congelado:false };
   },
 
@@ -1251,16 +1280,19 @@ const app = {
     const gab = GABARITOS[n];
     if (!gab || !resp) return null;
     const sem = SEMANAS.find(s => s.n === n);
-    const porTema = {};
-    sem.temas.concat([sem.geo.id]).forEach(id => { porTema[id] = 0; });
+    const q = miniQtde(n);
+    const porTema = {}, porTemaN = {};
+    miniTemas(sem).forEach(id => { porTema[id] = 0; porTemaN[id] = 0; });
     let total = 0;
     const certas = [];
-    for (let i = 0; i < CONFIG.MINI_QTDE; i++) {
+    for (let i = 0; i < q; i++) {
+      const t = temaDaQuestao(sem, i);
+      porTemaN[t] = (porTemaN[t] || 0) + 1;
       const acertou = resp[i] === gab[i];
       certas.push(acertou);
-      if (acertou) { porTema[temaDaQuestao(sem, i)]++; total++; }
+      if (acertou) { porTema[t] = (porTema[t] || 0) + 1; total++; }
     }
-    return { porTema: porTema, total: total, certas: certas, gabarito: gab };
+    return { porTema: porTema, porTemaN: porTemaN, total: total, qtde: q, certas: certas, gabarito: gab };
   },
 
   modalMini(n) {
@@ -1269,14 +1301,20 @@ const app = {
     const existente = this.minis[n];
     const gab = GABARITOS[n];
     // '-' = em branco. Reaproveita o que já foi lançado.
-    this._miniTmp = (existente && existente.resp) ? existente.resp.split('') : new Array(CONFIG.MINI_QTDE).fill('-');
+    const q = miniQtde(n);
+    this._miniTmp = (existente && existente.resp) ? existente.resp.split('') : new Array(q).fill('-');
+    while (this._miniTmp.length < q) this._miniTmp.push('-');   // cartão antigo de 15 num mini que virou 20
     const corr = (existente && existente.resp) ? this.corrigirMini(n, existente.resp) : null;
     const self = this;
 
     let linhas = '';
-    for (let i = 0; i < CONFIG.MINI_QTDE; i++) {
+    for (let i = 0; i < q; i++) {
       const tema = temaDaQuestao(sem, i);
       const embaralhado = !!MAPAS[n];
+      if (q > CONFIG.MINI_QTDE && i === CONFIG.MINI_QTDE) {
+        const extras = miniTemas(sem).slice(5).map(id => T(id) ? T(id).nome : id).join(' e ');
+        linhas += '<div class="cr-tema">Retorno · ' + esc(extras || 'Geometria') + '</div>';
+      }
       /* (30/09) sem títulos por bloco: o assunto aparece só na tela da resolução */
       const marcada = this._miniTmp[i];
       const estado = corr ? (corr.certas[i] ? ' certa' : ' errada') : '';
@@ -1296,11 +1334,13 @@ const app = {
     }
 
     const cabeca = corr
-      ? '<div class="cr-resumo"><span class="n">' + corr.total + '</span><span class="sub">de ' + CONFIG.MINI_QTDE + ' acertos</span></div>' +
-        '<div class="cr-portema">' + sem.temas.concat([sem.geo.id]).map(function (id) {
-          return '<span class="chip ' + (corr.porTema[id] >= 2 ? 'chip-ok' : 'chip-neutro') + '">' + esc(T(id).nome) + ' ' + corr.porTema[id] + '/' + CONFIG.MINI_POR_TEMA + '</span>';
+      ? '<div class="cr-resumo"><span class="n">' + corr.total + '</span><span class="sub">de ' + corr.qtde + ' acertos</span></div>' +
+        '<div class="cr-portema">' + Object.keys(corr.porTema).map(function (id) {
+          const nq = (corr.porTemaN && corr.porTemaN[id]) || CONFIG.MINI_POR_TEMA;
+          const retorno = sem.temas.indexOf(id) === -1 && id !== sem.geo.id;
+          return '<span class="chip ' + (corr.porTema[id] / nq >= 2 / 3 ? 'chip-ok' : 'chip-neutro') + '">' + (retorno ? 'Retorno · ' : '') + esc(T(id) ? T(id).nome : id) + ' ' + corr.porTema[id] + '/' + nq + '</span>';
         }).join('') + '</div>'
-      : '<p class="sub">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por tema' + (MAPAS[n] ? ', em ordem embaralhada' : '') + '. Marque o que você respondeu na prova.</p>' +
+      : '<p class="sub">' + miniDescr(n) + (MAPAS[n] ? ', em ordem embaralhada' : '') + '. Marque o que você respondeu na prova.</p>' +
         (gab ? '' : '<p class="cr-sem-gab">O gabarito desta semana ainda não foi publicado. Pode lançar as suas respostas: a correção aparece sozinha assim que o professor publicar.</p>');
 
     this.abrirModal(
@@ -1332,7 +1372,7 @@ const app = {
     if (!this.liberada(n)) { this.bloqueada(n); return; }
     const resp = this._miniTmp.join('');
     const brancos = this._miniTmp.filter(function (x) { return x === '-'; }).length;
-    if (brancos === CONFIG.MINI_QTDE) {
+    if (brancos === this._miniTmp.length) {
       document.getElementById('mini-erro').textContent = 'Marque pelo menos uma resposta.';
       return;
     }
@@ -1342,6 +1382,7 @@ const app = {
     this.minis[n] = {
       resp: resp,
       porTema: corr ? corr.porTema : (anterior ? anterior.porTema : {}),
+      porTemaN: corr ? corr.porTemaN : (anterior ? anterior.porTemaN : undefined),
       total: corr ? corr.total : (anterior ? anterior.total : 0),
       em: new Date().toISOString()
     };
@@ -1355,7 +1396,7 @@ const app = {
     const dose = this.dosePara(SEMANAS[n - 1]);
     const tudoFeito = dose.itens.every(it => this.feito(it.key));
     if (tudoFeito) this.celebrarSemana(n);
-    else this.toast('ok', 'Mini-simulado corrigido', corr.total + '/' + CONFIG.MINI_QTDE + ' acertos' + (brancos ? ' (' + brancos + ' em branco)' : '') + '. Diagnóstico atualizado na seção Evolução.');
+    else this.toast('ok', 'Mini-simulado corrigido', corr.total + '/' + corr.qtde + ' acertos' + (brancos ? ' (' + brancos + ' em branco)' : '') + '. Diagnóstico atualizado na seção Evolução.');
   },
 
   proximaAtividade(n) {
@@ -1767,7 +1808,7 @@ const app = {
   _numerosSemana(sem, dose) {
     const self = this;
     const feitas = dose.itens.filter(it => self.feito(it.key));
-    const feitoMin = feitas.reduce((s, it) => s + it.min, 0) + (dose.temMini && this.minis[sem.n] ? CONFIG.MIN_MINI : 0);
+    const feitoMin = feitas.reduce((s, it) => s + it.min, 0) + (dose.temMini && this.minis[sem.n] ? miniMin(sem.n) : 0);
     const totalAtv = dose.itens.length + (dose.temMini ? 1 : 0);
     const feitasAtv = feitas.length + (dose.temMini && this.minis[sem.n] ? 1 : 0);
     return { feitoMin, totalMin: dose.totalMin, pct: dose.totalMin ? Math.round(feitoMin / dose.totalMin * 100) : 0,
@@ -1824,7 +1865,7 @@ const app = {
     if (!prox) {
       return '<div class="next"><span class="eyebrow">Seu próximo passo</span>' +
         '<h2>Mini-simulado da Semana ' + sem.n + '</h2>' +
-        '<div class="infos"><span>' + ic('clock', 15) + ' ~' + CONFIG.MIN_MINI + ' min</span><span>' + ic('book', 15) + ' ' + CONFIG.MINI_QTDE + ' questões · ' + CONFIG.MINI_POR_TEMA + ' por tema</span></div>' +
+        '<div class="infos"><span>' + ic('clock', 15) + ' ~' + miniMin(sem.n) + ' min</span><span>' + ic('book', 15) + ' ' + miniDescr(sem.n) + '</span></div>' +
         '<p class="just">Todas as atividades da semana foram concluídas. O mini fecha o ciclo e mede a sua evolução real.</p>' +
         '<div class="acts"><button type="button" class="btn btn-pri" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>' +
         '<button type="button" class="btn btn-sec" onclick="app.toast(\'\',\'Demonstração\',\'No app real: inicia o mini-simulado cronometrado na plataforma.\')">Fazer na plataforma</button></div></div>';
@@ -1863,7 +1904,7 @@ const app = {
         '<div class="kpi"><div class="v">' + this._hm(n.totalMin) + '</div><div class="l">planejado</div></div>' +
       '</div></div>' +
       '<div class="resumo-foot"><span>Plano montado dentro das <b>' + this._hm(dose.budget) + '</b> que você marcou no perfil' + (sobra >= CONFIG.MIN_QUESTAO ? ' (' + sobra + ' min livres)' : '') + '.</span>' +
-        (dose.temMini ? '<span class="chip ' + (n.miniFeito ? 'chip-ok' : 'chip-neutro') + '">' + (n.miniFeito ? 'Mini feito · ' + this.minis[sem.n].total + '/' + CONFIG.MINI_QTDE : 'Mini pendente') + '</span>' : '') +
+        (dose.temMini ? '<span class="chip ' + (n.miniFeito ? 'chip-ok' : 'chip-neutro') + '">' + (n.miniFeito ? 'Mini feito · ' + this.minis[sem.n].total + '/' + miniQtde(sem.n) : 'Mini pendente') + '</span>' : '') +
         (dose.avisos.length ? '<span class="chip chip-atraso tip" data-tip="' + esc(dose.avisos[0]) + '" tabindex="0">' + ic('alert', 12) + ' Tempo curto</span>' : '') +
       '</div></div>';
   },
@@ -1941,9 +1982,9 @@ const app = {
       const mini = this.minis[sem.n];
       const sab = addDias(dt(sem.ini), nDias >= 7 ? 5 : nDias - 1);
       html += '<div class="mini"><span class="ic">' + ic('clock', 22) + '</span>' +
-        '<div class="inf"><div class="t">Mini-simulado da semana</div><div class="s">' + CONFIG.MINI_QTDE + ' questões, ' + CONFIG.MINI_POR_TEMA + ' por assunto · ~' + CONFIG.MIN_MINI + ' min · sugerido para ' + DIAS_LONGOS[nDias >= 7 ? 5 : nDias - 1].toLowerCase() + ' ' + fmtCurto(sab) + '</div></div>' +
+        '<div class="inf"><div class="t">Mini-simulado da semana</div><div class="s">' + miniDescr(sem.n) + ' · ~' + miniMin(sem.n) + ' min · sugerido para ' + DIAS_LONGOS[nDias >= 7 ? 5 : nDias - 1].toLowerCase() + ' ' + fmtCurto(sab) + '</div></div>' +
         '<div class="act">' + (mini
-          ? '<div class="mini-res"><b>' + mini.total + '/' + CONFIG.MINI_QTDE + '</b><button type="button" class="btn btn-ghost btn-sm" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Ver ou editar</button></div>'
+          ? '<div class="mini-res"><b>' + mini.total + '/' + miniQtde(sem.n) + '</b><button type="button" class="btn btn-ghost btn-sm" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Ver ou editar</button></div>'
           : '<button type="button" class="btn btn-sec btn-sm" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>') + '</div></div>';
     }
     if (grupos.feitas.length) {
@@ -1997,49 +2038,53 @@ const app = {
     return { dose, n, st, passada, futura };
   },
   htmlEvolucao(atualN) {
-    const metaMini = Math.round(this.perfil.meta / 3);
+    const metaFrac = this.perfil.meta / 45;                       // meta como fração: vale para minis de 15 e de 20
+    const metaDe = n => Math.round(metaFrac * miniQtde(n));
+    const metaMini = metaDe(1);
     const regs = SEMANAS.map(s => this.minis[s.n] ? this.minis[s.n].total : null);
     const feitosN = SEMANAS.map(s => s.n).filter(n => this.minis[n]);
     const titulo = '<div class="sec-title"><span class="ic">' + ic('chart', 18) + '</span>Evolução até a prova</div>';
     if (!feitosN.length) {
-      return titulo + '<div class="vazio"><b>Seus mini-simulados vão aparecer aqui.</b> Cada semana fecha com um mini de ' + CONFIG.MINI_QTDE + ' questões; a meta é ' + metaMini + ' acertos por mini (proporcional à sua meta de ' + this.perfil.meta + '/45).</div>';
+      return titulo + '<div class="vazio"><b>Seus mini-simulados vão aparecer aqui.</b> Cada semana fecha com um mini; a meta é ' + Math.round(metaFrac * 100) + '% de acertos (proporcional à sua meta de ' + this.perfil.meta + '/45).</div>';
     }
     const selN = (this._evoSel && this.minis[this._evoSel]) ? this._evoSel : feitosN[feitosN.length - 1];
-    const metaPct = Math.min(100, metaMini / CONFIG.MINI_QTDE * 100);
-    const descr = SEMANAS.map((s, i) => regs[i] != null ? 'Semana ' + s.n + ': ' + regs[i] + ' de ' + CONFIG.MINI_QTDE + '. ' : '').join('');
+    const metaPct = Math.min(100, metaFrac * 100);
+    const descr = SEMANAS.map((s, i) => regs[i] != null ? 'Semana ' + s.n + ': ' + regs[i] + ' de ' + miniQtde(s.n) + '. ' : '').join('');
     const barras = SEMANAS.map((s, i) => {
       const v = regs[i];
       const futura = this.hoje() < dt(s.ini);
       const atual = s.n === atualN && v == null;
       const cls = v != null ? '' : (atual ? ' atual' : ' off');
-      const alt = 'Semana ' + s.n + (v != null ? ': ' + v + ' de ' + CONFIG.MINI_QTDE : atual ? ': em curso, mini ainda não registrado' : futura ? ': futura' : ': sem registro');
+      const alt = 'Semana ' + s.n + (v != null ? ': ' + v + ' de ' + miniQtde(s.n) : atual ? ': em curso, mini ainda não registrado' : futura ? ': futura' : ': sem registro');
       return '<button type="button" class="evo-col" data-foco="evo:' + s.n + '" aria-label="' + alt + '" aria-pressed="' + (s.n === selN) + '"' + (v != null ? ' onclick="app.evoSelecionar(' + s.n + ')"' : ' disabled') + '>' +
         '<span class="evo-v">' + (v != null ? v : (atual ? '…' : '')) + '</span>' +
-        '<div class="evo-bar' + cls + (s.n === selN ? ' sel' : '') + '" style="height:' + (v != null ? Math.max(6, v / CONFIG.MINI_QTDE * 100) : (atual ? 30 : 18)) + '%"></div>' +
+        '<div class="evo-bar' + cls + (s.n === selN ? ' sel' : '') + '" style="height:' + (v != null ? Math.max(6, v / miniQtde(s.n) * 100) : (atual ? 30 : 18)) + '%"></div>' +
         '<span class="evo-l">S' + s.n + '</span></button>';
     }).join('');
-    const grafico = '<div class="evo" role="group" aria-label="Acertos por mini-simulado. ' + descr + 'Meta: ' + metaMini + ' de ' + CONFIG.MINI_QTDE + '. Toque em uma semana para ver o diagnóstico.">' +
-      '<div class="meta-line" style="bottom:' + metaPct + '%"><small>meta ' + metaMini + '</small></div>' + barras + '</div>' +
+    const grafico = '<div class="evo" role="group" aria-label="Acertos por mini-simulado. ' + descr + 'Meta: ' + Math.round(metaFrac * 100) + '% de acertos. Toque em uma semana para ver o diagnóstico.">' +
+      '<div class="meta-line" style="bottom:' + metaPct + '%"><small>meta ' + Math.round(metaFrac * 100) + '%</small></div>' + barras + '</div>' +
       '<div class="legenda"><span><i style="background:var(--blue)"></i>registrado</span><span><i style="background:var(--coral)"></i>semana atual</span><span><i style="border:1px dashed var(--line-2)"></i>futura ou sem registro</span><span><i style="border-top:2px dashed var(--green);height:0;border-radius:0"></i>meta por mini</span></div>' +
-      '<table class="sr-only"><caption>Acertos por mini-simulado</caption><tbody><tr>' + SEMANAS.map(s => '<th scope="col">Semana ' + s.n + '</th>').join('') + '</tr><tr>' + regs.map(v => '<td>' + (v == null ? 'sem registro' : v + ' de ' + CONFIG.MINI_QTDE) + '</td>').join('') + '</tr></tbody></table>';
+      '<table class="sr-only"><caption>Acertos por mini-simulado</caption><tbody><tr>' + SEMANAS.map(s => '<th scope="col">Semana ' + s.n + '</th>').join('') + '</tr><tr>' + regs.map((v, i) => '<td>' + (v == null ? 'sem registro' : v + ' de ' + miniQtde(SEMANAS[i].n)) + '</td>').join('') + '</tr></tbody></table>';
     // diagnóstico da semana selecionada
     const m = this.minis[selN];
     const pares = Object.keys(m.porTema).map(id => [id, m.porTema[id]]);
     const melhor = pares.slice().sort((a, b) => b[1] - a[1])[0], pior = pares.slice().sort((a, b) => a[1] - b[1])[0];
-    const pct = Math.round(m.total / CONFIG.MINI_QTDE * 100), delta = m.total - metaMini;
+    const qSel = miniQtde(selN), nDe = id => (m.porTemaN && m.porTemaN[id]) || CONFIG.MINI_POR_TEMA;
+    const pct = Math.round(m.total / qSel * 100), delta = m.total - metaDe(selN);
     const antN = feitosN.filter(n => n < selN).pop();
-    const deltaAnt = antN ? m.total - this.minis[antN].total : null;
+    const pctAnt = antN ? Math.round(this.minis[antN].total / miniQtde(antN) * 100) : null;
+    const deltaAnt = antN ? pct - pctAnt : null;   // em pontos de porcentagem
     const reaparece = SEMANAS.find(s => s.n > selN && (s.temas.indexOf(pior[0]) !== -1 || s.geo.id === pior[0]));
-    const rec = pior[1] >= 3 ? 'Desempenho sólido em todos os assuntos. Mantenha o ritmo na próxima semana.'
+    const rec = pior[1] >= nDe(pior[0]) ? 'Desempenho sólido em todos os assuntos. Mantenha o ritmo na próxima semana.'
       : reaparece ? 'Reforce ' + T(pior[0]).nome + ': ele volta na Semana ' + reaparece.n + ', e o plano aumenta a carga se o desempenho continuar baixo.'
       : 'Reserve uns 30 minutos extras para ' + T(pior[0]).nome + ' na próxima semana: ele não volta no roteiro fixo.';
     const diag = '<div class="diag"><div class="h3">Diagnóstico · mini da Semana ' + selN + '</div>' +
       '<div class="stats">' +
-      '<div class="stat"><div class="v">' + m.total + '/' + CONFIG.MINI_QTDE + '</div><div class="l">' + pct + '% DE ACERTOS</div></div>' +
-      '<div class="stat ' + (delta >= 0 ? 'pos' : 'warn') + '"><div class="v">' + (delta >= 0 ? '+' : '') + delta + '</div><div class="l">VS. META (' + metaMini + ')</div></div>' +
-      (deltaAnt != null ? '<div class="stat ' + (deltaAnt > 0 ? 'pos' : deltaAnt < 0 ? 'neg' : '') + '"><div class="v">' + (deltaAnt > 0 ? '+' : '') + deltaAnt + '</div><div class="l">VS. SEMANA ' + antN + '</div></div>' : '<div class="stat"><div class="v">1º</div><div class="l">PRIMEIRO MINI</div></div>') +
-      '<div class="stat pos"><div class="v">' + esc(T(melhor[0]).nome) + '</div><div class="l">MELHOR · ' + melhor[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div>' +
-      '<div class="stat neg"><div class="v">' + esc(T(pior[0]).nome) + '</div><div class="l">ATENÇÃO · ' + pior[1] + '/' + CONFIG.MINI_POR_TEMA + '</div></div></div>' +
+      '<div class="stat"><div class="v">' + m.total + '/' + qSel + '</div><div class="l">' + pct + '% DE ACERTOS</div></div>' +
+      '<div class="stat ' + (delta >= 0 ? 'pos' : 'warn') + '"><div class="v">' + (delta >= 0 ? '+' : '') + delta + '</div><div class="l">VS. META (' + metaDe(selN) + ')</div></div>' +
+      (deltaAnt != null ? '<div class="stat ' + (deltaAnt > 0 ? 'pos' : deltaAnt < 0 ? 'neg' : '') + '"><div class="v">' + (deltaAnt > 0 ? '+' : '') + deltaAnt + '%</div><div class="l">VS. SEMANA ' + antN + '</div></div>' : '<div class="stat"><div class="v">1º</div><div class="l">PRIMEIRO MINI</div></div>') +
+      '<div class="stat pos"><div class="v">' + esc(T(melhor[0]).nome) + '</div><div class="l">MELHOR · ' + melhor[1] + '/' + nDe(melhor[0]) + '</div></div>' +
+      '<div class="stat neg"><div class="v">' + esc(T(pior[0]).nome) + '</div><div class="l">ATENÇÃO · ' + pior[1] + '/' + nDe(pior[0]) + '</div></div></div>' +
       '<p class="rec">' + rec + '</p>' +
       '<div class="mt-10"><button type="button" class="btn btn-ghost btn-sm" onclick="app.modalMini(' + selN + ')">Ver ou editar lançamento</button></div></div>';
     return titulo + grafico + diag;
@@ -2111,7 +2156,7 @@ const app = {
       const d = self.dosePara(s);
       minT += d.totalMin;
       d.itens.forEach(it => { atvT++; if (self.feito(it.key)) { atvF++; minF += it.min; } });
-      if (d.temMini) { atvT++; if (self.minis[s.n]) { atvF++; minF += CONFIG.MIN_MINI; minisFeitos++; } }
+      if (d.temMini) { atvT++; if (self.minis[s.n]) { atvF++; minF += miniMin(s.n); minisFeitos++; } }
     });
     const comAmostra = TEMAS.map(t => ({ t, a: self.amostraTema(t.id) })).filter(x => x.a.total >= 4);
     comAmostra.sort((x, y) => (y.a.hits / y.a.total) - (x.a.hits / x.a.total));
@@ -2308,7 +2353,7 @@ const SYNC = {
     const m = app.minis[n];
     if (!m || !m.resp) return;
     const c = app.corrigirMini(parseInt(n), m.resp);
-    if (c && c.total !== m.total) { m.porTema = c.porTema; m.total = c.total; app.salvar(); }
+    if (c && (c.total !== m.total || !m.porTemaN)) { m.porTema = c.porTema; m.porTemaN = c.porTemaN; m.total = c.total; app.salvar(); }
   });
   app.podarLocal();
   const demoBar = document.querySelector('.demo');
