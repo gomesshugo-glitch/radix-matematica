@@ -7739,11 +7739,12 @@ function sanitizarTextoQuestao(s) {
 const LIBS_EXTERNAS = {
   xlsx:   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   pdfjs:  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
-  pdflib: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'
+  pdflib: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+  fontkit: 'https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js'
 };
 const _libsCarregando = {};
 function carregarLib(nome) {
-  const pronta = { xlsx: () => window.XLSX, pdfjs: () => window.pdfjsLib, pdflib: () => window.PDFLib }[nome];
+  const pronta = { xlsx: () => window.XLSX, pdfjs: () => window.pdfjsLib, pdflib: () => window.PDFLib, fontkit: () => window.fontkit }[nome];
   if (pronta && pronta()) return Promise.resolve();
   if (!_libsCarregando[nome]) {
     _libsCarregando[nome] = new Promise((res, rej) => {
@@ -11754,7 +11755,7 @@ async function baixarQuestoesFiltradasPDF() {
   await gerarPDFQuestoes(questoes, nome);
 }
 
-async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
+async function gerarPDFQuestoesClassico(questoes, tituloLista, includeGabaritoEmpty) {
   try { await carregarLib('pdflib'); } catch (e) { alert(e.message); return; }
   if (questoes.length === 0) { alert('Nada para gerar.'); return; }
 
@@ -12346,6 +12347,541 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
     a.click();
     setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
 
+  } catch (e) {
+    console.error('Erro PDF:', e);
+    alert('Erro: ' + (e.message || e));
+  } finally {
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = oldT; }
+  }
+}
+
+// ============================================================================
+// PDF da lista do aluno no layout do caderno (marca radix2026) — protótipo 06/10/2026.
+// Segue Handoff 2026-05-18\Lista do aluno layout Radix 2026-10\ORIENTACAO_PDF_lista_do_aluno_radix2026.md.
+// Páginas-base prontas (capa, internas par/ímpar, rascunho) + fonte Carlito embutida (OFL, métricas da Calibri).
+// Se os arquivos do layout não carregarem, cai no gerador clássico (gerarPDFQuestoesClassico).
+// Coordenadas da orientação em pt com y medido do topo: yPdf = H - yTopo.
+// ============================================================================
+const PDF_LISTA = {
+  BASE: '/assets/lista-radix2026/',
+  W: 595.32, H: 841.92,
+  COLS: [{ x0: 28.3, x1: 285.4 }, { x0: 311.8, x1: 568.9 }],
+  TOPO: 79.7, TOPO_P2: 118.7, FUNDO: 790,
+  _cache: null,
+  async carregar() {
+    if (this._cache) return this._cache;
+    const get = async (nome) => {
+      const r = await fetch(this.BASE + nome, { cache: 'force-cache' });
+      if (!r.ok) throw new Error('arquivo do layout ausente: ' + nome);
+      return new Uint8Array(await r.arrayBuffer());
+    };
+    const [base, reg, bold, A, B, C, D, E] = await Promise.all([
+      get('paginas_base_radix2026.pdf'), get('Carlito-Regular.ttf'), get('Carlito-Bold.ttf'),
+      get('letra_A.png'), get('letra_B.png'), get('letra_C.png'), get('letra_D.png'), get('letra_E.png')
+    ]);
+    this._cache = { base, reg, bold, letras: [A, B, C, D, E] };
+    return this._cache;
+  }
+};
+
+// LaTeX -> texto (mesma lógica do gerador clássico; com a Carlito os símbolos saem como são).
+function _pdfLatexToPlain(tex) {
+  const grupo = (str, i) => { let d = 0, j = i; for (; j < str.length; j++) { if (str[j] === '{') d++; else if (str[j] === '}') { d--; if (d === 0) { j++; break; } } } return [str.slice(i + 1, j - 1), j]; };
+  const arg = (str, i) => { while (str[i] === ' ') i++; if (str[i] === '{') return grupo(str, i); if (str[i] === '\\') { const m = str.slice(i).match(/^\\[a-zA-Z]+/); if (m) return [m[0], i + m[0].length]; } return [str[i] || '', i + 1]; };
+  let s = String(tex == null ? '' : tex), guard = 0;
+  while (/\\(d|t)?frac/.test(s) && guard++ < 40) {
+    let out = '', i = 0;
+    while (i < s.length) {
+      const m = s.slice(i).match(/^\\(d|t)?frac\s*/);
+      if (m) { i += m[0].length; let a, b; [a, i] = arg(s, i); [b, i] = arg(s, i);
+        const pa = _pdfLatexToPlain(a), pb = _pdfLatexToPlain(b);
+        const simples = x => /^[\w.,²³]+$/.test(x);
+        out += (simples(pa) ? pa : '(' + pa + ')') + '/' + (simples(pb) ? pb : '(' + pb + ')'); }
+      else { out += s[i]; i++; }
+    }
+    s = out;
+  }
+  s = s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g, (m, n, x) => (n === '3' ? '∛' : n === '4' ? '∜' : n + '√') + '(' + x + ')');
+  { let r = '', i = 0; while (i < s.length) { const m = s.slice(i).match(/^\\sqrt\s*/); if (m) { i += m[0].length; let x; [x, i] = arg(s, i); r += /^[\w.,]+$/.test(x) ? '√' + x : '√(' + x + ')'; } else { r += s[i]; i++; } } s = r; }
+  s = s.replace(/\\(text|mathrm|mathbf|mathit|mathsf|operatorname)\s*\{([^{}]*)\}/g, '$2');
+  const SUP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻', '+': '⁺', 'n': 'ⁿ' };
+  const SUB = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' };
+  // expoente/índice: dígitos viram caractere Unicode; o resto vai entre marcadores (\u0001..\u0002 sobe, \u0003..\u0004 desce)
+  // e é desenhado menor. Espaços internos viram espaço fixo para a palavra não se partir.
+  const conv = (t, M) => t.split('').every(c => M[c]) ? t.split('').map(c => M[c]).join('') : null;
+  const marca = (a, t, b) => a + t.replace(/ /g, ' ') + b;
+  s = s.replace(/\^\{([^{}]*)\}/g, (m, t) => conv(t, SUP) || marca('\u0001', t, '\u0002')).replace(/\^([0-9])/g, (m, t) => SUP[t]).replace(/\^([a-zA-Z])/g, (m, t) => marca('\u0001', t, '\u0002'));
+  s = s.replace(/_\{([^{}]*)\}/g, (m, t) => conv(t, SUB) || marca('\u0003', t, '\u0004')).replace(/_([0-9])/g, (m, t) => SUB[t]).replace(/_([a-zA-Z])/g, (m, t) => marca('\u0003', t, '\u0004'));
+  s = s.replace(/\\left\s*/g, '').replace(/\\right\s*/g, '').replace(/\\,|\\;|\\:|\\ |~/g, ' ').replace(/\\!/g, '').replace(/\\quad|\\qquad/g, '  ');
+  const sym = { '\\cdot': '·', '\\times': '×', '\\div': '÷', '\\pm': '±', '\\ast': '*', '\\leq': '≤', '\\le': '≤', '\\geq': '≥', '\\ge': '≥', '\\neq': '≠', '\\ne': '≠',
+    '\\approx': '≈', '\\equiv': '≡', '\\sim': '~', '\\propto': '∝', '\\infty': '∞', '\\rightarrow': '→', '\\to': '→', '\\leftarrow': '←', '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔',
+    '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε', '\\varepsilon': 'ε', '\\theta': 'θ', '\\lambda': 'λ', '\\mu': 'μ', '\\pi': 'π', '\\rho': 'ρ',
+    '\\sigma': 'σ', '\\tau': 'τ', '\\phi': 'φ', '\\varphi': 'φ', '\\omega': 'ω', '\\Delta': 'Δ', '\\Sigma': 'Σ', '\\Omega': 'Ω', '\\ldots': '…', '\\dots': '…', '\\cdots': '⋯',
+    '\\circ': '°', '\\degree': '°', '\\%': '%', '\\$': '$', '\\&': '&', '\\#': '#', '\\_': '_', '\\{': '{', '\\}': '}', '\\mathbb{R}': 'ℝ', '\\in': '∈', '\\mid': '|' };
+  Object.keys(sym).sort((a, b) => b.length - a.length).forEach(k => { s = s.split(k).join(sym[k]); });
+  s = s.replace(/\\([a-zA-Z]+)/g, '$1').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+  return s.replace(/-/g, '−').replace(/(\w)−(\w)/g, (m, a, b) => /[A-Za-zÀ-ú]/.test(a) && /[A-Za-zÀ-ú]/.test(b) ? a + '-' + b : a + '−' + b);
+}
+function _pdfDesLatex(txt) {
+  if (!txt || String(txt).indexOf('$') === -1) return String(txt || '');
+  return String(txt).replace(/\$\$([^$]+?)\$\$/g, (m, t) => _pdfLatexToPlain(t)).replace(/(^|[^R\\])\$([^$\n]+?)\$/g, (m, p, t) => p + _pdfLatexToPlain(t));
+}
+// Tempo sugerido por extenso (3 min por questão), como no caderno.
+function _pdfExtenso(n) {
+  const U = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+  const D = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+  const C = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+  if (n < 20) return U[n];
+  if (n < 100) return D[Math.floor(n / 10)] + (n % 10 ? ' e ' + U[n % 10] : '');
+  if (n === 100) return 'cem';
+  return C[Math.floor(n / 100)] + (n % 100 ? ' e ' + _pdfExtenso(n % 100) : '');
+}
+function _pdfTempoExtenso(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  const hs = h === 1 ? 'uma hora' : h === 2 ? 'duas horas' : h ? _pdfExtenso(h) + ' horas' : '';
+  const ms = m ? (m === 1 ? 'um minuto' : _pdfExtenso(m) + ' minutos') : '';
+  return hs && ms ? hs + ' e ' + ms : (hs || ms);
+}
+
+async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
+  try { await carregarLib('pdflib'); } catch (e) { alert(e.message); return; }
+  if (!questoes || questoes.length === 0) { alert('Nada para gerar.'); return; }
+  let assets;
+  try {
+    await carregarLib('fontkit');
+    assets = await PDF_LISTA.carregar();
+  } catch (e) {
+    console.warn('[pdf lista] layout radix2026 indisponível, usando o clássico:', e && e.message);
+    return gerarPDFQuestoesClassico(questoes, tituloLista, includeGabaritoEmpty);
+  }
+
+  const { data: perfil } = await sb.from('perfis').select('nome,cpf').eq('id', state.usuario.id).single();
+  let cpf = perfil?.cpf;
+  if (!cpf) {
+    const cpfInput = prompt('Para baixar o PDF, informe seu CPF (so numeros).');
+    if (!cpfInput) return;
+    cpf = cpfInput.replace(/\D/g, '');
+    if (cpf.length !== 11) { alert('CPF invalido.'); return; }
+    const { error: eCpf } = await sb.rpc('fn_set_meu_cpf', { p_cpf: cpf });   // validado no servidor (formato + dígitos)
+    if (eCpf) { alert('CPF inválido. Confira os 11 dígitos e tente de novo.'); return; }
+  }
+  const cpfFmt = cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+  const nomeAluno = (perfil?.nome || state.usuario.nome || '').toUpperCase();
+
+  let btnEl = null;
+  document.querySelectorAll('button').forEach(b => { if (b.textContent.includes('Baixar em PDF') || b.textContent.includes('Baixar PDF')) btnEl = b; });
+  const oldT = btnEl ? btnEl.textContent : '';
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Gerando PDF...'; }
+
+  try {
+    const { PDFDocument, rgb } = window.PDFLib;
+    const L = PDF_LISTA, W = L.W, H = L.H, N = questoes.length;
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(window.fontkit);
+    pdfDoc.setTitle(String(tituloLista || 'Lista'));
+    pdfDoc.setAuthor('Radix Matemática');
+    // fonte inteira: o recorte (subset) do pdf-lib/fontkit perde glifos da Carlito; ligaduras desligadas porque o "ti" abria buracos
+    const SEM_LIG = { liga: false, clig: false, dlig: false, calt: false, rlig: false };
+    const fR = await pdfDoc.embedFont(assets.reg, { subset: false, features: SEM_LIG });
+    const fB = await pdfDoc.embedFont(assets.bold, { subset: false, features: SEM_LIG });
+    const baseDoc = await PDFDocument.load(assets.base);
+    const bases = await pdfDoc.embedPages([0, 1, 2, 3, 4].map(i => baseDoc.getPage(i)));
+    const letras = await Promise.all(assets.letras.map(b => pdfDoc.embedPng(b)));
+
+    const hex = h => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
+    const PRETO = rgb(0, 0, 0), C231 = hex('#231F20'), C585 = hex('#58595B'), C808 = hex('#808080');
+    const FIO_ESC = hex('#373435'), FIO_AZ = hex('#91D8F7'), FAIXA = hex('#E8F6FD'), FAIXA_FIL = hex('#B9E5FA'), CINZA_TAB = hex('#D9D9D9');
+
+    // Caracteres que a Carlito não tem viram equivalentes (ou "?"), como no sanit() clássico.
+    const temGlifo = new Set(fR.getCharacterSet());
+    const TROCA = { '∈': 'pertence a', '∉': 'não pertence a', '⊂': 'contido em', '∪': 'U', '∩': '∩', '⇒': '→', '⇔': '↔', '■': '•', '▪': '•', '◦': '∘', '′': "'", '″': '"',
+      '∠': 'ângulo ', '⊥': 'perpendicular a', '∥': '//', '≅': '≈', '∼': '~', '∛': '³√', '∜': '⁴√', '⋯': '…', 'ℝ': 'R', '⁻': '-', '⁺': '+', 'ⁿ': '^n', '≡': '=' };
+    const limpa = (s) => {
+      let out = '';
+      for (const ch of String(s == null ? '' : s).replace(/[\r\t\v\f]+/g, ' ').replace(/[\x00\x05-\x08\x0B-\x1F\x7F]/g, '')) {
+        const cp = ch.codePointAt(0);
+        if (cp === 10 || cp === 32 || (cp >= 1 && cp <= 4) || temGlifo.has(cp)) { out += ch; continue; }
+        const t = TROCA[ch];
+        out += t !== undefined ? [...t].map(c => temGlifo.has(c.codePointAt(0)) ? c : '?').join('') : '?';
+      }
+      return out.replace(/ {2,}/g, ' ');
+    };
+    // Texto com expoente/índice: segmentos [{t, dy, k}] (k = escala da fonte, dy = deslocamento vertical em fração do tamanho).
+    const segmentos = (t) => {
+      const out = []; let modo = 0, buf = '';
+      const empurra = () => { if (buf) out.push({ t: buf, dy: modo === 1 ? 0.36 : modo === 2 ? -0.18 : 0, k: modo ? 0.7 : 1 }); buf = ''; };
+      for (const ch of t) {
+        if (ch === '\u0001') { empurra(); modo = 1; } else if (ch === '\u0003') { empurra(); modo = 2; }
+        else if (ch === '\u0002' || ch === '\u0004') { empurra(); modo = 0; } else buf += ch;
+      }
+      empurra(); return out;
+    };
+    const larg = (t, f, s) => /[\u0001-\u0004]/.test(t) ? segmentos(t).reduce((a, g) => a + f.widthOfTextAtSize(g.t, s * g.k), 0) : f.widthOfTextAtSize(t, s);
+
+    // Quebra em linhas (palavras; palavra maior que a largura é cortada por caractere).
+    function quebrar(texto, f, s, w, recuo1) {
+      const linhas = [];
+      const pal = String(texto).split(' ').filter(x => x.length);
+      let atual = [], wAtual = 0, lim = w - (recuo1 || 0);
+      const esp = larg(' ', f, s);
+      const fecha = () => { linhas.push(atual); atual = []; wAtual = 0; lim = w; };
+      for (let p of pal) {
+        let wp = larg(p, f, s);
+        while (wp > lim && p.length > 1) {          // palavra comprida demais
+          if (atual.length) fecha();
+          let k = p.length; while (k > 1 && larg(p.slice(0, k), f, s) > lim) k--;
+          atual = [p.slice(0, k)]; fecha(); p = p.slice(k); wp = larg(p, f, s);
+        }
+        if (atual.length && wAtual + esp + wp > lim) fecha();
+        wAtual += (atual.length ? esp : 0) + wp; atual.push(p);
+      }
+      if (atual.length) linhas.push(atual);
+      return linhas;
+    }
+    // Desenha linhas justificadas (última à esquerda). ops recebe {t,x,y,f,s,c}.
+    function opsLinhas(ops, linhas, f, s, x0, w, yBase, lh, cor, recuo1, alinhar) {
+      const esp = larg(' ', f, s);
+      linhas.forEach((pal, i) => {
+        const y = yBase + i * lh, xi = x0 + (i === 0 ? (recuo1 || 0) : 0), wi = w - (i === 0 ? (recuo1 || 0) : 0);
+        const txt = pal.join(' '), wt = larg(txt, f, s);
+        if (alinhar === 'dir') { ops.push({ t: txt, x: x0 + w - wt, y, f, s, c: cor }); return; }
+        const ultima = i === linhas.length - 1;
+        if (ultima || pal.length < 2 || alinhar === 'esq') { ops.push({ t: txt, x: xi, y, f, s, c: cor }); return; }
+        const wPal = pal.reduce((a, p) => a + larg(p, f, s), 0);
+        const gap = Math.min((wi - wPal) / (pal.length - 1), esp * 4);
+        let x = xi;
+        pal.forEach(p => { ops.push({ t: p, x, y, f, s, c: cor }); x += larg(p, f, s) + gap; });
+      });
+    }
+
+    // ---------- imagens ----------
+    // Resolução gravada no arquivo (PNG pHYs / JPEG JFIF): dá o tamanho de impressão da figura.
+    function dpiDaImagem(b, png) {
+      try {
+        if (png) {
+          for (let i = 8; i + 12 < b.length;) {
+            const len = (b[i] << 24 | b[i + 1] << 16 | b[i + 2] << 8 | b[i + 3]) >>> 0, tipo = String.fromCharCode(b[i + 4], b[i + 5], b[i + 6], b[i + 7]);
+            if (tipo === 'pHYs' && b[i + 16] === 1) return ((b[i + 8] << 24 | b[i + 9] << 16 | b[i + 10] << 8 | b[i + 11]) >>> 0) * 0.0254;
+            if (tipo === 'IDAT' || tipo === 'IEND') break;
+            i += 12 + len;
+          }
+        } else if (b[6] === 0x4A && b[7] === 0x46 && b[8] === 0x49 && b[9] === 0x46) {   // JFIF
+          const unid = b[13], x = b[14] << 8 | b[15];
+          if (unid === 1 && x > 1) return x; if (unid === 2 && x > 1) return x * 2.54;
+        }
+      } catch (e) {}
+      return 0;
+    }
+    const _img = {};
+    async function embedImg(srcRaw) {
+      const src = String(srcRaw || '').trim();
+      if (!src) return null;
+      if (_img[src] !== undefined) return _img[src];
+      try {
+        let bytes;
+        if (src.startsWith('data:')) bytes = Uint8Array.from(atob(src.split(',')[1] || ''), c => c.charCodeAt(0));
+        else if (/^https?:/i.test(src) || src.startsWith('/')) { const r = await fetch(src, { mode: 'cors', cache: 'force-cache' }); if (!r.ok) throw new Error('HTTP ' + r.status); bytes = new Uint8Array(await r.arrayBuffer()); }
+        else { _img[src] = null; return null; }
+        const png = bytes[0] === 0x89 && bytes[1] === 0x50, jpg = bytes[0] === 0xFF && bytes[1] === 0xD8;
+        _img[src] = png ? await pdfDoc.embedPng(bytes) : jpg ? await pdfDoc.embedJpg(bytes) : (/\.png/i.test(src) ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes));
+        if (_img[src]) _img[src]._dpi = dpiDaImagem(bytes, png);
+      } catch (e) { console.warn('[pdf lista] imagem falhou', src, e); _img[src] = null; }
+      return _img[src];
+    }
+
+    // ---------- questão -> blocos ----------
+    const FONTE_RE = /^(Disponível em:|Disponivel em:|Fonte:|Adaptado de|BRASIL\.|[A-ZÇÃÕÉÁÂÊÍÓÚ][A-ZÇÃÕÉÁÂÊÍÓÚ ,.]{4,}\.\s)/;
+    function blocosDaQuestao(q) {
+      const md = String(q.enunciado || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/?(b|strong|i|em|u|span|p|div)[^>]*>/gi, '').replace(/\*\*([^*]+)\*\*/g, '$1');
+      const blocos = [];
+      const paragrafos = md.split(/\n\s*\n/);
+      paragrafos.forEach(par => {
+        const linhas = par.split('\n');
+        // tabela em markdown
+        if (linhas.filter(l => /^\s*\|/.test(l)).length >= 2 && linhas.every(l => /^\s*\|/.test(l) || !l.trim())) {
+          const rows = linhas.filter(l => /^\s*\|/.test(l))
+            .map(l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()));
+          const ok = rows.filter(r => !r.every(c => /^:?-{2,}:?$/.test(c) || c === ''))
+            .map(r => r.map(c => limpa(_pdfDesLatex(c))));
+          if (ok.length) { blocos.push({ tipo: 'tabela', rows: ok }); return; }
+        }
+        // imagens dentro do parágrafo, na posição em que aparecem
+        let resto = par, m; const re = /!\[([^\]]*)\]\(([^)\s]+)\)(\{[^}]*\})?/g, partes = []; let ult = 0;
+        while ((m = re.exec(par))) { partes.push({ tipo: 'txt', s: par.slice(ult, m.index) }); partes.push({ tipo: 'img', src: m[2] }); ult = m.index + m[0].length; }
+        partes.push({ tipo: 'txt', s: par.slice(ult) });
+        partes.forEach(p => {
+          if (p.tipo === 'img') { blocos.push({ tipo: 'figura', src: p.src }); return; }
+          const t = p.s.split('\n').map(l => l.trim()).filter(Boolean);
+          if (!t.length) return;
+          const txt = limpa(_pdfDesLatex(t.join('\n')));
+          blocos.push({ tipo: FONTE_RE.test(txt) ? 'fonte' : 'texto', s: txt });
+        });
+      });
+      // q.imagens (formato antigo): antes do último parágrafo (o comando), como no caderno
+      (Array.isArray(q.imagens) ? q.imagens : []).forEach(src => {
+        let k = blocos.length; for (let i = blocos.length - 1; i >= 0; i--) { if (blocos[i].tipo === 'texto') { k = i; break; } }
+        blocos.splice(k > 0 ? k : blocos.length, 0, { tipo: 'figura', src });
+      });
+      return blocos;
+    }
+
+    // Monta a questão como lista de operações com y relativo ao topo do título (0).
+    // Retorna { ops, alt: y da última baseline, quebras: [{i, y}] } (pontos onde pode partir, se for gigante).
+    async function montarQuestao(q, num, colW, escalaFig) {
+      const ops = [], quebras = [];
+      const t = 'QUESTÃO ' + num, tw = larg(t, fB, 11);
+      ops.push({ t, x: 0, y: 8.3, f: fB, s: 11, c: PRETO });
+      const fioIni = tw + 12, fioFim = colW - 3;
+      ops.push({ r: true, x: fioIni, y: 2.7, w: fioFim - fioIni, h: 3.5, c: FIO_ESC });
+      ops.push({ r: true, x: fioIni, y: 3.6, w: Math.max(0, fioFim - 33.7 - fioIni), h: 2.6, c: FIO_AZ });
+      let base = 8.3, depois = 15.2;            // próxima baseline = base + depois
+      let primeiroTexto = true;
+      const blocos = blocosDaQuestao(q);
+      for (const b of blocos) {
+        if (ops.length > 3) quebras.push({ i: ops.length, y: base });
+        if (b.tipo === 'texto') {
+          b.s.split('\n').forEach((linhaPar, kk, arr) => {
+            const cor = primeiroTexto ? C231 : PRETO, recuo = (primeiroTexto && kk === 0) ? 17.1 : 0;
+            const ls = quebrar(linhaPar, fR, 10, colW, recuo);
+            const y0 = base + depois;
+            opsLinhas(ops, ls, fR, 10, 0, colW, y0, 12.15, cor, recuo);
+            base = y0 + (ls.length - 1) * 12.15;
+            depois = kk < arr.length - 1 ? 12.15 : 12.15 + (primeiroTexto ? 2 : 3);
+          });
+          primeiroTexto = false;
+        } else if (b.tipo === 'fonte') {
+          const ls = quebrar(b.s, fR, 7, colW, 0);
+          const y0 = base + 11.2;
+          opsLinhas(ops, ls, fR, 7, 0, colW, y0, 8.8, PRETO, 0, 'dir');
+          base = y0 + (ls.length - 1) * 8.8; depois = 17.4;
+        } else if (b.tipo === 'figura') {
+          const img = await embedImg(b.src);
+          if (!img) continue;
+          // largura = tamanho de impressão gravado na imagem (DPI); sem DPI, 96 por polegada. Limitada à coluna.
+          const larguraMax = colW - 13;
+          let w = Math.min(larguraMax, img.width * 72 / (img._dpi > 30 ? img._dpi : 96)) * (escalaFig || 1);
+          let h = w * img.height / img.width;
+          // figura alta: até 320 pt de altura, sem ficar mais estreita que 60% da coluna
+          const maxH = Math.max(320, larguraMax * 0.6 * img.height / img.width) * (escalaFig || 1);
+          if (h > maxH) { h = maxH; w = h * img.width / img.height; }
+          const top = base + 8.5;
+          ops.push({ img, x: (colW - w) / 2, y: top, w, h });
+          base = top + h; depois = 15.7;      // próxima baseline = fundo da figura + 15,7 (como no protótipo)
+        } else if (b.tipo === 'tabela') {
+          const nc = Math.max(...b.rows.map(r => r.length));
+          let s = 10; const pad = 4;
+          let wc = Array.from({ length: nc }, (_, j) => Math.max(...b.rows.map((r, i) => larg(r[j] || '', i === 0 ? fB : fR, s))) + pad * 2);
+          let tot = wc.reduce((a, x) => a + x, 0);
+          while (tot > colW && s > 7) { s -= 0.5; wc = wc.map((x, j) => Math.max(...b.rows.map((r, i) => larg(r[j] || '', i === 0 ? fB : fR, s))) + pad * 2); tot = wc.reduce((a, x) => a + x, 0); }
+          if (tot > colW) wc = wc.map(x => x * colW / tot), tot = colW;
+          const lh = s * 1.6, x0 = (colW - tot) / 2, top = base + 8.5;
+          b.rows.forEach((r, i) => {
+            let x = x0;
+            for (let j = 0; j < nc; j++) {
+              const y = top + i * lh, txt = r[j] || '', f = i === 0 ? fB : fR;
+              ops.push({ r: true, x, y, w: wc[j], h: lh, c: i === 0 ? CINZA_TAB : null, borda: PRETO });
+              let tt = txt; while (tt.length > 1 && larg(tt, f, s) > wc[j] - 2) tt = tt.slice(0, -2) + '…';
+              ops.push({ t: tt, x: x + (wc[j] - larg(tt, f, s)) / 2, y: y + lh * 0.68, f, s, c: PRETO });
+              x += wc[j];
+            }
+          });
+          base = top + b.rows.length * lh; depois = 15.7;
+        }
+      }
+      // alternativas: comando e alternativas ficam juntos (sem ponto de quebra aqui)
+      if (quebras.length && quebras[quebras.length - 1].i === ops.length) quebras.pop();
+      const altsImg = (q.alternativasImg && q.alternativasImg.length) ? q.alternativasImg : null;
+      if (altsImg) {
+        const cel = colW / 2, maxW = Math.min(120, cel - 18);
+        let y = base + 15.2;
+        for (let k = 0; k < altsImg.length; k += 2) {
+          let hRow = 0;
+          for (let j = 0; j < 2 && k + j < altsImg.length; j++) {
+            const img = await embedImg(altsImg[k + j]); const x = j * cel;
+            ops.push({ img: letras[k + j] || letras[4], x, y: y - 10.1, w: 10.1, h: 10.1 });
+            if (img) { const w = Math.min(maxW, img.width * 0.75), h = w * img.height / img.width; ops.push({ img, x: x + 13, y: y - 10.1, w, h }); hRow = Math.max(hRow, h); }
+          }
+          y += Math.max(15.2, hRow + 6);
+        }
+        base = y - 15.2;
+      } else {
+        const alts = (q.alternativas || []).map(a => String(a).replace(/^\s*[A-E]\)\s*/, ''));
+        alts.forEach((a, k) => {
+          let txt = limpa(_pdfDesLatex(a)).replace(/\n+/g, ' ').trim();
+          if (txt && !/[.!?…:]$/.test(txt)) txt += '.';
+          const y0 = base + (k === 0 ? 15.2 : 15.2);
+          const ls = quebrar(txt, fR, 10, colW - 13, 0);
+          ops.push({ img: letras[k] || letras[4], x: 0, y: y0 - 9.7, w: 10.1, h: 10.1 });
+          opsLinhas(ops, ls, fR, 10, 13, colW - 13, y0, 12.15, PRETO, 0, 'esq');
+          base = y0 + (ls.length - 1) * 12.15;
+        });
+      }
+      return { ops, alt: base, quebras };
+    }
+
+    // ---------- páginas ----------
+    const paginas = [];
+    function novaPagina(baseIdx) {
+      const p = pdfDoc.addPage([W, H]);
+      p.drawPage(bases[baseIdx], { x: 0, y: 0, width: W, height: H });
+      p._base = baseIdx;
+      paginas.push(p);
+      return p;
+    }
+    const texto = (p, t, x, yTopo, f, s, c) => p.drawText(t, { x, y: H - yTopo, size: s, font: f, color: c });
+    function desenhar(p, ops, x0, yTopo) {
+      for (const o of ops) {
+        if (o.r) p.drawRectangle({ x: x0 + o.x, y: H - (yTopo + o.y) - o.h, width: o.w, height: o.h, color: o.c || undefined, borderColor: o.borda, borderWidth: o.borda ? 0.5 : 0 });
+        else if (o.img) p.drawImage(o.img, { x: x0 + o.x, y: H - (yTopo + o.y) - o.h, width: o.w, height: o.h });
+        else if (/[\u0001-\u0004]/.test(o.t)) {
+          let x = x0 + o.x;
+          for (const g of segmentos(o.t)) { p.drawText(g.t, { x, y: H - (yTopo + o.y) + g.dy * o.s, size: o.s * g.k, font: o.f, color: o.c }); x += o.f.widthOfTextAtSize(g.t, o.s * g.k); }
+        }
+        else p.drawText(o.t, { x: x0 + o.x, y: H - (yTopo + o.y), size: o.s, font: o.f, color: o.c });
+      }
+    }
+
+    // capa
+    const capa = novaPagina(0);
+    const idLista = 'RADIX-2026-L' + String(Date.now()).slice(-4);
+    texto(capa, idLista, 299 - larg(idLista, fR, 14) / 2, 43.4, fR, 14, PRETO);
+    let sub = limpa(String(tituloLista || '').trim().toUpperCase()) || 'LISTA DE MATEMÁTICA E SUAS TECNOLOGIAS';
+    let ts = 15; while (ts > 11 && larg(sub, fB, ts) > 420) ts -= 0.5;
+    while (larg(sub, fB, ts) > 420 && sub.length > 4) sub = sub.slice(0, -2).trimEnd() + '…';
+    texto(capa, sub, 299.4 - larg(sub, fB, ts) / 2, 113.5, fB, ts, PRETO);
+    const comFolha = !!includeGabaritoEmpty;
+    const instr = [
+      { t: 'Este CADERNO DE QUESTÕES contém ' + N + (N === 1 ? ' questão numerada de 1 a 1' : ' questões numeradas de 1 a ' + N) + (comFolha ? ', uma FOLHA DE RESPOSTAS' : '') + ' e uma FOLHA DE RASCUNHO, dispostas da seguinte maneira:',
+        sub: [['a)', (N === 1 ? 'questão de número 1' : 'questões de número 1 a ' + N) + ', relativas à área de Matemática e suas Tecnologias;']].concat(comFolha ? [['b)', 'FOLHA DE RESPOSTAS;'], ['c)', 'FOLHA DE RASCUNHO.']] : [['b)', 'FOLHA DE RASCUNHO.']]) },
+      { t: 'Confira se a quantidade e a ordem das questões do seu CADERNO DE QUESTÕES estão de acordo com as instruções anteriores. Caso o caderno esteja incompleto, tenha defeito ou apresente qualquer divergência, gere a lista novamente na plataforma Radix.' },
+      { t: 'Para cada uma das questões objetivas, são apresentadas 5 opções. Apenas uma responde corretamente à questão.' },
+      { t: 'O tempo sugerido para esta lista é de ' + _pdfTempoExtenso(3 * N) + '.' },
+      { t: 'Lance suas respostas no CARTÃO-RESPOSTA da lista, na plataforma Radix, para receber a correção.' },
+      { t: 'Use a FOLHA DE RASCUNHO para os cálculos. Só as respostas lançadas na plataforma são corrigidas.' },
+      { t: 'Depois da correção, abra a resolução comentada de cada questão que você errou e refaça a questão sem olhar.' },
+      { t: 'Volte a esta lista em alguns dias e refaça as questões em que errou. Acompanhe sua evolução na plataforma.' }
+    ];
+    let lh = 15.2, gapItem = 5.6;
+    const alturaInstr = () => { let y = 0; instr.forEach((it, i) => { y += quebrar(it.t, fR, 12, 561.7 - 50.6).length * lh; (it.sub || []).forEach(() => { y += 18.1; }); if (i < instr.length - 1) y += gapItem; }); return y; };
+    if (434.1 + alturaInstr() > 715) { lh = 14.6; gapItem = 4.6; }
+    let yb = 434.1;
+    const opsCapa = [];
+    instr.forEach((it, i) => {
+      opsCapa.push({ t: (i + 1) + '.', x: 36.5, y: yb, f: fB, s: 11, c: C231 });
+      const ls = quebrar(limpa(it.t), fR, 12, 561.7 - 50.6);
+      opsLinhas(opsCapa, ls, fR, 12, 50.6, 561.7 - 50.6, yb, lh, C231, 0);
+      yb += (ls.length - 1) * lh;
+      (it.sub || []).forEach(([rot, s]) => { yb += 18.1; opsCapa.push({ t: rot, x: 50.6, y: yb, f: fR, s: 11, c: C231 }); opsCapa.push({ t: limpa(s), x: 61.7, y: yb, f: fR, s: 12, c: C231 }); });
+      yb += lh + gapItem;
+    });
+    desenhar(capa, opsCapa, 0, 0);
+    const ident = limpa('ALUNO(A): ' + nomeAluno + ' · CPF ' + cpfFmt + ' · DATA ' + new Date().toLocaleDateString('pt-BR'));
+    let isz = 9; while (isz > 6.5 && larg(ident, fR, isz) > 520) isz -= 0.5;
+    // identificação logo acima da linha de microtexto (o painel claro vai até y = 790 na base)
+    texto(capa, ident, 297.6 - larg(ident, fR, isz) / 2, Math.max(yb + 4, 776), fR, isz, C585);
+    // linha de microtexto "RADIX2026..." que separa o painel do rodapé, como no caderno
+    { const un = 'RADIX2026'; let mt = ''; while (larg(mt + un, fB, 3.22) < 585) mt += un; texto(capa, mt, 5.5, 789, fB, 3.22, C231); }
+    // rodapé da capa: endereço à esquerda (logo no centro e código de barras à direita estão na base)
+    texto(capa, 'app.radixmatematica.com.br', 28.4, 819, fR, 9, C585);
+
+    // páginas de questões
+    const baseDaPagina = n => n === 2 ? 1 : (n % 2 === 0 ? 3 : 2);
+    let pag = novaPagina(1), col = 0;
+    texto(pag, limpa(N === 1 ? 'Questão 1' : 'Questões de 1 a ' + N), 35.4, 108.9, fB, 11, C231);
+    let cursor = L.TOPO_P2;
+    const proximaColuna = () => {
+      if (col === 0) { col = 1; cursor = L.TOPO; }
+      else { pag = novaPagina(baseDaPagina(paginas.length + 1)); col = 0; cursor = L.TOPO; }
+    };
+    for (let i = 0; i < N; i++) {
+      const c = L.COLS[col], colW = c.x1 - c.x0;
+      let m = await montarQuestao(questoes[i], i + 1, colW, 1);
+      const cabe = (top, mm) => top + mm.alt + 2.6 <= L.FUNDO;
+      const alturaColunaCheia = L.FUNDO - L.TOPO;
+      // figura alta demais: reduz até 60% da largura antes de desistir de caber numa coluna cheia
+      let esc = 1;
+      while (m.alt + 2.6 > alturaColunaCheia && esc > 0.6) { esc -= 0.1; m = await montarQuestao(questoes[i], i + 1, colW, esc); }
+      if (!cabe(cursor, m)) {
+        proximaColuna();
+        if (!cabe(cursor, m) && m.alt + 2.6 > alturaColunaCheia) {
+          // questão maior que a coluna: parte entre blocos (título nunca sozinho; comando + alternativas juntos)
+          let ini = 0, desloc = 0;
+          for (let k = 0; k <= m.quebras.length; k++) {
+            const fimOps = k < m.quebras.length ? m.quebras[k].i : m.ops.length;
+            const proxY = k < m.quebras.length ? m.quebras[k].y : m.alt;
+            if (cursor + (proxY - desloc) + 2.6 > L.FUNDO && ini > 0) {
+              proximaColuna();
+              const yIni = m.ops[ini] ? (m.ops[ini].y || 0) : 0;
+              desloc = Math.max(0, yIni - 12);
+            }
+            desenhar(pag, m.ops.slice(ini, fimOps).map(o => Object.assign({}, o, { y: o.y - desloc })), L.COLS[col].x0, cursor);
+            ini = fimOps;
+          }
+          cursor = cursor + (m.alt - desloc) + 16.7;
+          continue;
+        }
+      }
+      desenhar(pag, m.ops, L.COLS[col].x0, cursor);
+      cursor = cursor + m.alt + 16.7;      // próximo título: 25 pt abaixo da última baseline
+    }
+
+    // folha de respostas
+    if (comFolha) {
+      let fp = novaPagina(baseDaPagina(paginas.length + 1));
+      const faixa = (p) => {
+        p.drawRectangle({ x: 28.4, y: H - 111.9, width: 279.7 - 28.4, height: 111.9 - 82.1, color: FAIXA });
+        p.drawRectangle({ x: 28.4, y: H - 111.9, width: 3, height: 111.9 - 82.1, color: FAIXA_FIL });
+        texto(p, 'FOLHA DE RESPOSTAS', 35.4, 94.8, fB, 11, C231);
+        texto(p, limpa(N === 1 ? 'Questão 1' : 'Questões de 1 a ' + N), 35.4, 108.3, fB, 11, C231);
+      };
+      faixa(fp);
+      let colF = 0, y = 136;
+      for (let i = 0; i < N; i++) {
+        if (y > 772) { if (colF === 0) { colF = 1; y = 98; } else { fp = novaPagina(baseDaPagina(paginas.length + 1)); faixa(fp); colF = 0; y = 136; } }
+        const x0 = L.COLS[colF].x0 + 4;
+        texto(fp, 'QUESTÃO ' + String(i + 1).padStart(2, '0'), x0, y, fB, 10, C231);
+        for (let k = 0; k < 5; k++) fp.drawImage(letras[k], { x: x0 + 82 + k * 22, y: H - y - 1.5, width: 12, height: 12 });
+        y += 22;
+      }
+      const nota = limpa('O gabarito completo e a resolução comentada estão disponíveis no app, em "Conferir gabarito".');
+      const opsN = []; const lsN = quebrar(nota, fR, 9, 257 - 8, 0);
+      const yN = Math.min(y + 14, 780);
+      opsLinhas(opsN, lsN, fR, 9, 0, 249, 0, 11, C585, 0, 'esq');
+      desenhar(fp, opsN, L.COLS[colF].x0 + 4, yN);
+    }
+
+    // rascunho (sempre a última)
+    novaPagina(4);
+
+    // número da página e identificação em todas as páginas internas
+    const idPag = limpa(nomeAluno + ' · CPF ' + cpfFmt);
+    paginas.forEach((p, idx) => {
+      const n = idx + 1;
+      if (n === 1) return;
+      const sn = String(n);
+      // o lado do número segue o rodapé da página-base (o RASCUNHO tem rodapé de página ímpar)
+      const esquerda = p._base === 1 || p._base === 3;
+      // nome e CPF na linha do rodapé, ao lado do número (o outro lado tem "MATEMÁTICA E SUAS TECNOLOGIAS | ...")
+      const wn = larg(sn, fB, 9);
+      let si = 8; while (si > 6 && larg(idPag, fR, si) > 250) si -= 0.25;
+      if (esquerda) {
+        texto(p, sn, 28.4, 822, fB, 9, C231);
+        texto(p, idPag, 28.4 + wn + 12, 822, fR, si, C585);
+      } else {
+        texto(p, sn, 555.2 - wn, 822, fB, 9, C231);
+        texto(p, idPag, 555.2 - wn - 12 - larg(idPag, fR, si), 822, fR, si, C585);
+      }
+    });
+
+    const bytes = await pdfDoc.save();
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = _safeFileName(tituloLista, 'Lista') + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
   } catch (e) {
     console.error('Erro PDF:', e);
     alert('Erro: ' + (e.message || e));
