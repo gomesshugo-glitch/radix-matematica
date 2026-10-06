@@ -622,7 +622,7 @@ function miniQtde(n) {
 function miniMin(n) { return miniQtde(n) > CONFIG.MINI_QTDE ? CONFIG.MIN_MINI_20 : CONFIG.MIN_MINI; }
 function miniDescr(n) {
   const q = miniQtde(n);
-  return q > CONFIG.MINI_QTDE ? q + ' questões · 15 da semana + ' + (q - CONFIG.MINI_QTDE) + ' de retorno de geometria'
+  return q > CONFIG.MINI_QTDE ? q + ' questões'
                               : q + ' questões · ' + CONFIG.MINI_POR_TEMA + ' por tema';
 }
 function miniTemas(sem) {          // temas do cartão: os da semana + os de retorno que o mapa trouxer
@@ -1311,10 +1311,7 @@ const app = {
     for (let i = 0; i < q; i++) {
       const tema = temaDaQuestao(sem, i);
       const embaralhado = !!MAPAS[n];
-      if (q > CONFIG.MINI_QTDE && i === CONFIG.MINI_QTDE) {
-        const extras = miniTemas(sem).slice(5).map(id => T(id) ? T(id).nome : id).join(' e ');
-        linhas += '<div class="cr-tema">Retorno · ' + esc(extras || 'Geometria') + '</div>';
-      }
+      /* (06/10) mini de 20 é lista contínua: sem título de bloco nas questões 16-20 */
       /* (30/09) sem títulos por bloco: o assunto aparece só na tela da resolução */
       const marcada = this._miniTmp[i];
       const estado = corr ? (corr.certas[i] ? ' certa' : ' errada') : '';
@@ -1337,8 +1334,7 @@ const app = {
       ? '<div class="cr-resumo"><span class="n">' + corr.total + '</span><span class="sub">de ' + corr.qtde + ' acertos</span></div>' +
         '<div class="cr-portema">' + Object.keys(corr.porTema).map(function (id) {
           const nq = (corr.porTemaN && corr.porTemaN[id]) || CONFIG.MINI_POR_TEMA;
-          const retorno = sem.temas.indexOf(id) === -1 && id !== sem.geo.id;
-          return '<span class="chip ' + (corr.porTema[id] / nq >= 2 / 3 ? 'chip-ok' : 'chip-neutro') + '">' + (retorno ? 'Retorno · ' : '') + esc(T(id) ? T(id).nome : id) + ' ' + corr.porTema[id] + '/' + nq + '</span>';
+          return '<span class="chip ' + (corr.porTema[id] / nq >= 2 / 3 ? 'chip-ok' : 'chip-neutro') + '">' + esc(T(id) ? T(id).nome : id) + ' ' + corr.porTema[id] + '/' + nq + '</span>';
         }).join('') + '</div>'
       : '<p class="sub">' + miniDescr(n) + (MAPAS[n] ? ', em ordem embaralhada' : '') + '. Marque o que você respondeu na prova.</p>' +
         (gab ? '' : '<p class="cr-sem-gab">O gabarito desta semana ainda não foi publicado. Pode lançar as suas respostas: a correção aparece sozinha assim que o professor publicar.</p>');
