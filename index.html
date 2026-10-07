@@ -12639,7 +12639,18 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
       const ops = [], quebras = [];
       const t = 'QUESTÃO ' + num, tw = larg(t, fB, 11);
       ops.push({ t, x: 0, y: 8.3, f: fB, s: 11, c: PRETO });
-      const fioIni = tw + 12, fioFim = colW - 3;
+      // Prova de origem (q.prova) no fim da linha do título, em cinza; o fio encurta para caber.
+      let fioFim = colW - 3;
+      const origem = limpa(String(q.prova || '').trim());
+      if (origem) {
+        let so = 8, ot = origem;
+        while (so > 6.5 && larg(ot, fR, so) > colW * 0.45) so -= 0.25;
+        while (ot.length > 4 && larg(ot, fR, so) > colW * 0.45) ot = ot.slice(0, -2).trimEnd() + '…';
+        const ow = larg(ot, fR, so);
+        ops.push({ t: ot, x: colW - 3 - ow, y: 7.6, f: fR, s: so, c: C585 });
+        fioFim = colW - 3 - ow - 6;
+      }
+      const fioIni = tw + 12;
       ops.push({ r: true, x: fioIni, y: 2.7, w: fioFim - fioIni, h: 3.5, c: FIO_ESC });
       ops.push({ r: true, x: fioIni, y: 3.6, w: Math.max(0, fioFim - 33.7 - fioIni), h: 2.6, c: FIO_AZ });
       let base = 8.3, depois = 15.2;            // próxima baseline = base + depois
