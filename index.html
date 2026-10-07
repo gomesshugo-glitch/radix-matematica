@@ -7276,8 +7276,16 @@ function _materiaisDaSemanaPraAluno(sem, todos) {
 //     Então casamos primeiro pela(s) semana(s) regular(es) de MESMO TÍTULO; só
 //     se nenhuma bater caímos no tema.
 function _materiaisRegularHerdadosDaSemanaIntegral(sem, todos) {
-  if (!sem || !sem.temaId) return [];
+  if (!sem) return [];
   const arr = todos || [];
+  // (C) Revisões não têm tema: a Revisão N do Integral herda a Revisão N do Regular.
+  if (sem.revisaoN) {
+    const setRev = new Set((CRONOGRAMA_2026 || [])
+      .filter(s => s.tipo === 'revisao' && s.revisaoN === sem.revisaoN)
+      .map(s => s.n));
+    return arr.filter(m => (m.cronograma || 'regular') === 'regular' && setRev.has(m.semana_numero));
+  }
+  if (!sem.temaId) return [];
   const norm = s => String(s || '').trim().toLowerCase();
   const semsMesmoTitulo = (CRONOGRAMA_2026 || [])
     .filter(s => s.titulo && sem.titulo && norm(s.titulo) === norm(sem.titulo))
@@ -17836,10 +17844,13 @@ function renderListaModulos() {
     // Materiais desse módulo: ou (a) cadastrados com modulo_id direto = mod.id,
     // ou (b) cujo tema (via _temaDoMaterial) pertence a esse módulo.
     // O caminho (a) só funciona pra módulos do regular; pra integral funciona o (b).
+    // Integral: material do Regular sem tema (as revisões) entra no módulo da semana que o herda.
+    const semanasHerdeiras = tipoAluno === 'integral' ? merged.filter(s => s.moduloId === mod.id) : [];
     const matsMod = filtrados.filter(m => {
       if (m.modulo_id === mod.id) return true;
       const t = _temaDoMaterial(m);
-      return t && temasDoMod.has(t);
+      if (t) return temasDoMod.has(t);
+      return semanasHerdeiras.some(s => _materiaisRegularHerdadosDaSemanaIntegral(s, [m]).length > 0);
     });
     if (matsMod.length === 0) return '';
 
