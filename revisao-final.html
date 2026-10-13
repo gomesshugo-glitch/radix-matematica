@@ -1074,7 +1074,7 @@ const app = {
   // Dentro do app, pede a tela do banco já filtrada no tema. Fora dele, entra
   // no app pelo mesmo caminho (?tema=). Sem acesso, explica onde as questões estão.
   // (28/09/2026) Dados da atividade do plano (chave, quantidade, dificuldade efetiva)
-  // para o app montar a lista pronta. Sem chave, ou item de vídeo, o app abre o banco filtrado.
+  // para o app montar a lista pronta. Sem chave, o app abre o banco filtrado. Item de vídeo vai para abrirVideoAula().
   _dadosAtividade(temaId, key) {
     if (!key) return null;
     const n = parseInt(String(key).slice(1), 10);
@@ -1108,7 +1108,27 @@ const app = {
     const total = partes.reduce((a, p) => a + p.n, 0);
     this.toast('ok', 'Abrindo a lista do dia em outra aba', total + ' questões: ' + itens.map(it => (T(it.temaId) || { nome: it.temaId }).nome).join(', ') + '. Ao encerrar, cada atividade recebe seus acertos aqui.');
   },
+  // (13/10/2026) Atividade de vídeo: abre as vídeo-aulas do assunto no app, em outra aba.
+  // Dentro do app, se o navegador bloquear a aba nova, pede a tela pela moldura ('plano-abrir-aulas').
+  abrirVideoAula(temaId) {
+    const nome = (T(temaId) || { nome: 'o tema' }).nome;
+    if (!(EMBUTIDO || ACESSO.modo === 'completo' || ACESSO.modo === 'amostra')) {
+      this.toast('', 'As vídeo-aulas ficam no app', 'Entre na sua conta para assistir às aulas de ' + nome + '.');
+      return;
+    }
+    const url = '/?aulas=' + encodeURIComponent(temaId);
+    let aba = null; try { aba = window.open(url, '_blank'); } catch (e) { aba = null; }
+    if (aba) { this.toast('ok', 'Abrindo em outra aba', 'Vídeo-aulas de ' + nome + '. Depois de assistir, marque a atividade como concluída.'); return; }
+    if (!EMBUTIDO) { location.href = url; return; }
+    try {
+      window.parent.postMessage({ radix: 'plano-abrir-aulas', tema: temaId }, location.origin);
+      this.toast('ok', 'Abrindo as vídeo-aulas', 'Vídeo-aulas de ' + nome + '.');
+    } catch (e) {
+      this.toast('erro', 'Não consegui abrir', 'Procure ' + nome + ' em Aulas e materiais, no app.');
+    }
+  },
   abrirAtividade(temaId, nivel, key) {
+    if (key && /:v$/.test(String(key))) { this.abrirVideoAula(temaId); return; }
     const nome = (T(temaId) || { nome: 'o tema' }).nome;
     const dados = this._dadosAtividade(temaId, key);
     // (30/09/2026) A atividade abre em OUTRA ABA (o app com ?tema=…); o resultado volta pela aba do plano
@@ -1881,7 +1901,7 @@ const app = {
       '<span>' + ic(prox.tipo === 'v' ? 'play' : 'book', 15) + ' ' + (prox.tipo === 'v' ? 'Vídeo-aula' : 'Questões no banco') + '</span>' +
       '<span>' + ic('cal', 15) + ' ' + DIAS_LONGOS[this.diaDe(prox)] + ' ' + fmtCurto(addDias(dt(sem.ini), this.diaDe(prox))) + '</span></div>' +
       '<p class="just">' + just + '</p>' +
-      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.abrirAtividade(\'' + prox.temaId + '\', \'\', \'' + prox.key + '\')">Abrir atividade</button>' +
+      '<div class="acts"><button type="button" class="btn btn-pri" onclick="app.abrirAtividade(\'' + prox.temaId + '\', \'\', \'' + prox.key + '\')">' + (prox.tipo === 'v' ? 'Ver vídeo-aulas' : 'Abrir atividade') + '</button>' +
       '<button type="button" class="btn btn-sec" data-foco="next:' + prox.key + '" onclick="app.concluir(\'' + prox.key + '\')">Marcar concluída</button></div></div>';
   },
   htmlProgresso(sem, dose) {
@@ -1928,7 +1948,7 @@ const app = {
         (estado === 'late' && !done ? '<span class="chip chip-atraso">Atrasada</span>' : '') +
         (done && o.total ? '<span class="ok">' + o.hits + '/' + o.total + ' acertos</span>' : (done ? '<span class="ok">Concluída</span>' : '')) +
         extras.join('') + '</div></div>' +
-      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\', \'' + (it.nivel || '') + '\', \'' + it.key + '\')">Abrir atividade</button>' + sel + '</div>' : '') +
+      (!done ? '<div class="atv-acts"><button type="button" class="btn btn-sec btn-sm" onclick="app.abrirAtividade(\'' + it.temaId + '\', \'' + (it.nivel || '') + '\', \'' + it.key + '\')">' + (it.tipo === 'v' ? 'Ver vídeo-aulas' : 'Abrir atividade') + '</button>' + sel + '</div>' : '') +
       '</article>';
   },
   htmlAgenda(sem, dose, atualN) {

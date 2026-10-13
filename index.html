@@ -8632,6 +8632,7 @@ async function iniciarSessao() {
       (_voltar === 'revisao-final') ? { tela: 'revisao-final' }
     : (_temaURL)                    ? { tela: 'tema', tema: _temaURL, nivel: _q.get('nivel') || '', extra: { key: _q.get('rf') || '', questoes: _q.get('n') || '', efv: _q.get('efv') || '', semana: _q.get('sem') || '' } }
     : (_q.get('rfdia'))             ? { tela: 'rfdia', semana: _q.get('rfdia'), itens: _q.get('itens') || '' }   // (30/09) lista pronta do dia
+    : (_q.get('aulas'))             ? { tela: 'aulas', tema: _q.get('aulas') }   // (13/10) vídeo-aulas do assunto (atividade de vídeo do plano)
     : null;
   await carregarDados();
   mostrarApp();
@@ -9857,6 +9858,7 @@ const RF_EMBED = {
     if (d.radix === 'plano-registrado')  { RF_LISTA.confirmado(String(d.key || '')); return; }
     if (d.radix === 'plano-navegar')     { RF_EMBED.navegar(String(d.destino || '')); return; }
     if (d.radix === 'plano-abrir-tema')  { RF_EMBED.abrirTemaDoPlano(String(d.tema || ''), String(d.nivel || ''), d); return; }
+    if (d.radix === 'plano-abrir-aulas') { const t = String(d.tema || ''); if (typeof TEMAS !== 'undefined' && TEMAS.some(x => x.id === t)) abrirAulasDoTema(t); return; }
     if (d.radix === 'plano-abrir-mini')  { delete RF_MINI_CACHE[parseInt(d.semana, 10)]; abrirQuestaoDoMini(parseInt(d.semana, 10), parseInt(d.k, 10), String(d.resp || '-'), String(d.gab || '')); return; }
     // (30/09/2026) modal do plano (cartão do mini): rola até o topo da moldura e volta ao fechar
     if (d.radix === 'plano-modal-aberto')  { RF_EMBED._rolagemAntes = window.scrollY; const y = window.scrollY + f.getBoundingClientRect().top - 72; window.scrollTo({ top: Math.max(0, y), behavior: 'auto' }); return; }
@@ -10019,6 +10021,7 @@ function _abrirDestinoInicial() {
     if (d.tela === 'revisao-final') { renderRevisaoFinal(); return; }
     if (d.tela === 'tema') { RF_EMBED.abrirTemaDoPlano(d.tema, d.nivel, d.extra); return; }
     if (d.tela === 'rfdia') { if (state.usuario && state.usuario.perfil !== 'professor') RF_LISTA.iniciarDia(d.semana, d.itens); return; }
+    if (d.tela === 'aulas') { abrirAulasDoTema(String(d.tema || '')); return; }
   } catch (e) { console.warn('[destino inicial]', e); }
 }
 
@@ -13833,6 +13836,7 @@ function copiarMensagem(notifId, btn) {
 
 
 async function abrirMateriaisDaSemana(semanaNum) {
+  state._matTema = '';
   await renderVideoAulas();
   // Aguarda o render, depois scrolla pra seção dessa semana
   setTimeout(() => {
@@ -17767,6 +17771,8 @@ async function renderVideoAulas() {
       </div>
     </div>
 
+    ${_faixaTemaMateriais(visiveis)}
+
     <!-- Filtros: chips de tipo + busca -->
     <div class="qbk-filtros-bloco">
       <div class="qbk-chips">
@@ -17800,12 +17806,49 @@ async function renderVideoAulas() {
 // Aplica filtro de tipo + busca por texto sobre os materiais visíveis.
 function filtrarMaterialQueQuer(m) {
   const termo = _normBusca(state._matBusca || '');
+  if (state._matTema && !_materialDoTema(m, state._matTema)) return false;
   if (state._matFiltroTipo && m.tipo !== state._matFiltroTipo) return false;
   if (termo) {
     const corpo = _normBusca((m.titulo || '') + ' ' + (m.descricao || ''));
     return termo.split(' ').filter(Boolean).every(t => corpo.includes(t));
   }
   return true;
+}
+
+// (13/10/2026) Vídeo-aulas de um assunto: a atividade "Assistir vídeo-aula" da Revisão Final abre aqui.
+// Um material é do assunto da semana em que foi cadastrado (no cronograma dele); nas semanas de revisão,
+// de todos os assuntos revisados nela.
+function _materialDoTema(m, temaId) {
+  if (!m || m.semana_numero == null || !temaId) return false;
+  const base = (m.cronograma === 'integral') ? CRONOGRAMA_INTEGRAL_2026 : CRONOGRAMA_2026;
+  const sem = (base || []).find(s => s.n === m.semana_numero);
+  if (!sem) return false;
+  if (sem.temaId === temaId) return true;
+  return sem.tipo === 'revisao' && Array.isArray(sem.temas) && sem.temas.indexOf(temaId) >= 0;
+}
+function abrirAulasDoTema(temaId) {
+  const t = (typeof TEMAS !== 'undefined') ? TEMAS.find(x => x.id === temaId) : null;
+  state._matTema = t ? t.id : '';
+  state._matFiltroTipo = t ? 'aula_youtube' : '';
+  state._matBusca = '';
+  state._matAbertos = new Set(getModulosCronograma().map(m => m.id));
+  return renderVideoAulas();
+}
+function limparTemaMateriais() {
+  state._matTema = '';
+  state._matFiltroTipo = '';
+  renderVideoAulas();
+}
+function _faixaTemaMateriais(visiveis) {
+  if (!state._matTema) return '';
+  const t = (typeof TEMAS !== 'undefined') ? TEMAS.find(x => x.id === state._matTema) : null;
+  const nome = t ? t.nome : state._matTema;
+  const nAulas = (visiveis || []).filter(m => m.tipo === 'aula_youtube' && _materialDoTema(m, state._matTema)).length;
+  return '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:0 0 12px;">'
+    + '<div><b>Vídeo-aulas de ' + _escHtml(nome) + '</b><div style="font-size:13px;opacity:.8;">'
+    + (nAulas ? nAulas + (nAulas === 1 ? ' vídeo-aula do curso e das aulas de revisão' : ' vídeo-aulas do curso e das aulas de revisão') : 'Ainda não há vídeo-aula deste assunto')
+    + '</div></div>'
+    + '<button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="limparTemaMateriais()">Ver todos os materiais</button></div>';
 }
 
 // Render dos blocos accordion de módulo (chamado tanto no render inicial
@@ -17841,7 +17884,7 @@ function renderListaModulos() {
           <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </div>
         <h3>Nenhum material encontrado</h3>
-        <p>${termo ? `Tente outras palavras ou limpe a busca.` : 'Tente trocar o filtro de tipo.'}</p>
+        <p>${termo ? `Tente outras palavras ou limpe a busca.` : (state._matTema ? 'Este assunto ainda não tem material deste tipo. Use "Ver todos os materiais" acima ou troque o filtro de tipo.' : 'Tente trocar o filtro de tipo.')}</p>
       </div>`;
   }
 
@@ -17989,7 +18032,7 @@ function selecionarTipoMaterial(tipo) {
   state._matFiltroTipo = tipo || '';
   // Quando filtra, abre todos os módulos pra ver o resultado completo
   if (tipo) {
-    state._matAbertos = new Set(MODULOS.map(m => m.id));
+    state._matAbertos = new Set(getModulosCronograma().map(m => m.id));
   }
   // Re-render completo (chips precisam mudar de active)
   renderVideoAulas();
@@ -24772,7 +24815,8 @@ const ROTA = {
     ['inicio', () => renderHome()],
     ['estudar', () => (state._qbkVisitado ? renderTelaQuestoes() : abrirTema(''))],
     ['estudar/tema/:id', (id) => abrirTema(id)],
-    ['aulas', () => renderVideoAulas()],
+    ['aulas', () => { state._matTema = ''; renderVideoAulas(); }],
+    ['aulas/tema/:id', (id) => abrirAulasDoTema(id)],
     ['revisar', () => renderMinhasRevisoes()],
     ['caderno', () => renderCadernoErros()],
     ['simulados', () => renderSimulados()],
@@ -24792,7 +24836,7 @@ const ROTA = {
   secao(rota) {
     const r = String(rota || '');
     if (r === 'inicio') return 'inicio';
-    if (r.startsWith('estudar') || r === 'aulas') return 'estudar';
+    if (r.startsWith('estudar') || r === 'aulas' || r.startsWith('aulas/')) return 'estudar';
     if (r === 'revisar' || r === 'caderno') return 'revisar';
     if (r.startsWith('simulados')) return 'simulados';
     if (r.startsWith('listas')) return 'listas';
@@ -25434,7 +25478,7 @@ function limparCestaLateral() {
 [['renderHome', () => 'inicio'],
  ['abrirTema', (id) => (id ? 'estudar/tema/' + encodeURIComponent(id) : 'estudar')],
  ['renderTelaQuestoes', () => (String(ROTA.atual || '').startsWith('estudar') ? null : 'estudar')],
- ['renderVideoAulas', () => 'aulas'],
+ ['renderVideoAulas', () => (state._matTema ? 'aulas/tema/' + encodeURIComponent(state._matTema) : 'aulas')],
  ['renderMinhasRevisoes', () => 'revisar'],
  ['renderCadernoErros', () => 'caderno'],
  ['renderSimulados', (aba) => (aba && typeof aba === 'string' ? 'simulados/' + aba : 'simulados')],
