@@ -324,6 +324,18 @@
   .tl-mini button.done{background:rgba(52,211,153,.18);color:var(--green)}
   .tl-mini button.atual{background:rgba(34,211,238,.16);color:var(--cyan-2)}
   .tl-mini button.sel{border-color:var(--cyan)}
+  /* (14/10/2026) mini-simulado de semana encerrada sem registro */
+  .mini-pend{display:flex;gap:var(--sp-3);align-items:flex-start;border-left:3px solid var(--amber);background:rgba(251,191,36,.08);border-radius:var(--r-lg);padding:var(--sp-4)}
+  .mini-pend .ic{flex:0 0 40px;width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:var(--amber);background:rgba(251,191,36,.14)}
+  .mini-pend .t{font-weight:800;font-size:var(--fs-md)}
+  .mini-pend .s{font-size:var(--fs-sm);color:var(--text-2);margin-top:2px;line-height:var(--lh)}
+  .mini-pend .acts{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
+  .tl-mini button{position:relative}
+  .tl-mini button.mini-falta::after{content:'';position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--amber)}
+  .st.st-mini{background:rgba(251,191,36,.16);color:var(--amber)}
+  .evo-bar.falta{background:transparent;border:1px dashed var(--amber)}
+  .evo-col.falta .evo-v{color:var(--amber)}
+  .side-pend{margin-top:var(--sp-3);font-size:var(--fs-sm);color:var(--text-2)}
 
   /* ---------- questionário ---------- */
   .q-wrap{max-width:720px;margin:var(--sp-5) auto 0}
@@ -1821,6 +1833,21 @@ const app = {
   _hm(min) { min = Math.max(0, Math.round(min)); return Math.floor(min / 60) + 'h' + String(min % 60).padStart(2, '0'); },
   _fimSemana(sem) { return addDias(dt(sem.ini), (sem.dias || 7) - 1); },
   _semanaPassada(sem) { return this.hoje() > this._fimSemana(sem); },
+  // (14/10/2026) Semanas já encerradas, liberadas, com mini no plano e sem lançamento (da mais recente para a mais antiga).
+  _minisPendentes() {
+    return SEMANAS.filter(s => this.liberada(s.n) && this._semanaPassada(s) && !this.minis[s.n] && this.dosePara(s).temMini)
+      .sort((a, b) => b.n - a.n);
+  },
+  htmlMiniPendentes(pend) {
+    if (!pend || !pend.length) return '';
+    const nums = pend.map(s => s.n).sort((a, b) => a - b);
+    const quais = nums.length === 1 ? 'da Semana ' + nums[0] : 'das Semanas ' + nums.slice(0, -1).join(', ') + ' e ' + nums[nums.length - 1];
+    return '<section id="sec-minis-pend" aria-label="Mini-simulados sem registro"><div class="mini-pend"><span class="ic">' + ic('alert', 20) + '</span><div>' +
+      '<div class="t">' + (nums.length === 1 ? 'Mini-simulado da Semana ' + nums[0] + ' sem registro' : 'Mini-simulados sem registro') + '</div>' +
+      '<div class="s">Fez o mini ' + quais + ' no papel? Lance as respostas do cartão-resposta: a plataforma corrige e mostra o diagnóstico na aba Evolução.</div>' +
+      '<div class="acts">' + pend.map(s => '<button type="button" class="btn btn-sec btn-sm" onclick="app.modalMini(' + s.n + ')">Registrar mini da Semana ' + s.n + '</button>').join('') + '</div>' +
+      '</div></div></section>';
+  },
   _numerosSemana(sem, dose) {
     const self = this;
     const feitas = dose.itens.filter(it => self.feito(it.key));
@@ -1841,6 +1868,7 @@ const app = {
       this.htmlSaudacao(atualN, antes, sem) + this.htmlBannerAmostra() +
       '<div class="layout"><div class="col-main stack-v">' +
         (antes ? this.htmlPre() : '') +
+        this.htmlMiniPendentes(this._minisPendentes()) +
         '<section id="sec-next" aria-label="Seu próximo passo">' + this.htmlNext(sem, dose, atualN, antes) + '</section>' +
         '<section class="only-mobile" aria-label="Resumo da semana"><div class="card">' + resumo + '</div></section>' +
         '<section id="sec-agenda" aria-label="Agenda da semana">' + this.htmlAgenda(sem, dose, atualN) + '</section>' +
@@ -1883,8 +1911,7 @@ const app = {
         '<h2>Mini-simulado da Semana ' + sem.n + '</h2>' +
         '<div class="infos"><span>' + ic('clock', 15) + ' ~' + miniMin(sem.n) + ' min</span><span>' + ic('book', 15) + ' ' + miniDescr(sem.n) + '</span></div>' +
         '<p class="just">Todas as atividades da semana foram concluídas. O mini fecha o ciclo e mede a sua evolução real.</p>' +
-        '<div class="acts"><button type="button" class="btn btn-pri" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button>' +
-        '<button type="button" class="btn btn-sec" onclick="app.toast(\'\',\'Demonstração\',\'No app real: inicia o mini-simulado cronometrado na plataforma.\')">Fazer na plataforma</button></div></div>';
+        '<div class="acts"><button type="button" class="btn btn-pri" data-foco="mini:' + sem.n + '" onclick="app.modalMini(' + sem.n + ')">Registrar resultado</button></div></div>';
     }
     const just = prox.auto
       ? (prox.efv === -1 ? 'Ajustado pelo seu desempenho: seus registros neste assunto ficaram abaixo de 50%, então a carga aumentou.'
@@ -2059,9 +2086,11 @@ const app = {
     const metaMini = metaDe(1);
     const regs = SEMANAS.map(s => this.minis[s.n] ? this.minis[s.n].total : null);
     const feitosN = SEMANAS.map(s => s.n).filter(n => this.minis[n]);
+    const pend = this._minisPendentes(), pendN = pend.map(s => s.n);
     const titulo = '<div class="sec-title"><span class="ic">' + ic('chart', 18) + '</span>Evolução até a prova</div>';
     if (!feitosN.length) {
-      return titulo + '<div class="vazio"><b>Seus mini-simulados vão aparecer aqui.</b> Cada semana fecha com um mini; a meta é ' + Math.round(metaFrac * 100) + '% de acertos (proporcional à sua meta de ' + this.perfil.meta + '/45).</div>';
+      return titulo + '<div class="vazio"><b>Seus mini-simulados vão aparecer aqui.</b> Cada semana fecha com um mini; a meta é ' + Math.round(metaFrac * 100) + '% de acertos (proporcional à sua meta de ' + this.perfil.meta + '/45).' +
+        (pend.length ? '<div class="mt-10">' + pend.map(s => '<button type="button" class="btn btn-sec btn-sm" onclick="app.modalMini(' + s.n + ')">Registrar mini da Semana ' + s.n + '</button>').join(' ') + '</div>' : '') + '</div>';
     }
     const selN = (this._evoSel && this.minis[this._evoSel]) ? this._evoSel : feitosN[feitosN.length - 1];
     const metaPct = Math.min(100, metaFrac * 100);
@@ -2070,16 +2099,17 @@ const app = {
       const v = regs[i];
       const futura = this.hoje() < dt(s.ini);
       const atual = s.n === atualN && v == null;
-      const cls = v != null ? '' : (atual ? ' atual' : ' off');
-      const alt = 'Semana ' + s.n + (v != null ? ': ' + v + ' de ' + miniQtde(s.n) : atual ? ': em curso, mini ainda não registrado' : futura ? ': futura' : ': sem registro');
-      return '<button type="button" class="evo-col" data-foco="evo:' + s.n + '" aria-label="' + alt + '" aria-pressed="' + (s.n === selN) + '"' + (v != null ? ' onclick="app.evoSelecionar(' + s.n + ')"' : ' disabled') + '>' +
-        '<span class="evo-v">' + (v != null ? v : (atual ? '…' : '')) + '</span>' +
+      const falta = v == null && !atual && pendN.indexOf(s.n) !== -1;
+      const cls = v != null ? '' : (atual ? ' atual' : falta ? ' falta' : ' off');
+      const alt = 'Semana ' + s.n + (v != null ? ': ' + v + ' de ' + miniQtde(s.n) : atual ? ': em curso, mini ainda não registrado' : falta ? ': mini sem registro, toque para lançar' : futura ? ': futura' : ': sem registro');
+      return '<button type="button" class="evo-col' + (falta ? ' falta' : '') + '" data-foco="evo:' + s.n + '" aria-label="' + alt + '" aria-pressed="' + (s.n === selN) + '"' + (v != null ? ' onclick="app.evoSelecionar(' + s.n + ')"' : falta ? ' onclick="app.modalMini(' + s.n + ')" title="Registrar o mini da Semana ' + s.n + '"' : ' disabled') + '>' +
+        '<span class="evo-v">' + (v != null ? v : (atual ? '…' : falta ? '+' : '')) + '</span>' +
         '<div class="evo-bar' + cls + (s.n === selN ? ' sel' : '') + '" style="height:' + (v != null ? Math.max(6, v / miniQtde(s.n) * 100) : (atual ? 30 : 18)) + '%"></div>' +
         '<span class="evo-l">S' + s.n + '</span></button>';
     }).join('');
     const grafico = '<div class="evo" role="group" aria-label="Acertos por mini-simulado. ' + descr + 'Meta: ' + Math.round(metaFrac * 100) + '% de acertos. Toque em uma semana para ver o diagnóstico.">' +
       '<div class="meta-line" style="bottom:' + metaPct + '%"><small>meta ' + Math.round(metaFrac * 100) + '%</small></div>' + barras + '</div>' +
-      '<div class="legenda"><span><i style="background:var(--blue)"></i>registrado</span><span><i style="background:var(--coral)"></i>semana atual</span><span><i style="border:1px dashed var(--line-2)"></i>futura ou sem registro</span><span><i style="border-top:2px dashed var(--green);height:0;border-radius:0"></i>meta por mini</span></div>' +
+      '<div class="legenda"><span><i style="background:var(--blue)"></i>registrado</span><span><i style="background:var(--coral)"></i>semana atual</span>' + (pend.length ? '<span><i style="border:1px dashed var(--amber)"></i>sem registro: toque para lançar</span>' : '') + '<span><i style="border:1px dashed var(--line-2)"></i>futura ou sem registro</span><span><i style="border-top:2px dashed var(--green);height:0;border-radius:0"></i>meta por mini</span></div>' +
       '<table class="sr-only"><caption>Acertos por mini-simulado</caption><tbody><tr>' + SEMANAS.map(s => '<th scope="col">Semana ' + s.n + '</th>').join('') + '</tr><tr>' + regs.map((v, i) => '<td>' + (v == null ? 'sem registro' : v + ' de ' + miniQtde(SEMANAS[i].n)) + '</td>').join('') + '</tr></tbody></table>';
     // diagnóstico da semana selecionada
     const m = this.minis[selN];
@@ -2113,10 +2143,11 @@ const app = {
           '<span class="n">Semana ' + s.n + '<span class="st">Revisão Final</span></span><span class="d">' + rotSemana(s) + '</span><span class="bar"><i style="width:0%"></i></span></button>';
       }
       const e = self._estadoSemana(s, atualN);
-      const rot = e.st === 'done' ? 'Concluída' : e.st === 'atual' ? 'Atual' : e.st === 'incompleta' ? e.n.pct + '% feita' : 'Futura';
+      const faltaMini = e.passada && e.dose.temMini && !self.minis[s.n];
+      const rot = faltaMini ? 'Mini pendente' : e.st === 'done' ? 'Concluída' : e.st === 'atual' ? 'Atual' : e.st === 'incompleta' ? e.n.pct + '% feita' : 'Futura';
       return '<button type="button" class="tl-item ' + e.st + (s.n === selN ? ' sel' : '') + '" aria-pressed="' + (s.n === selN) + '"' + (s.n === atualN ? ' aria-current="date"' : '') +
         ' aria-label="Semana ' + s.n + ', ' + rotSemana(s) + ', ' + rot.toLowerCase() + (s.n === selN ? ', selecionada' : '') + '" onclick="app.selecionarSemana(' + s.n + ')">' +
-        '<span class="n">Semana ' + s.n + '<span class="st">' + rot + '</span></span><span class="d">' + rotSemana(s) + '</span>' +
+        '<span class="n">Semana ' + s.n + '<span class="st' + (faltaMini ? ' st-mini' : '') + '">' + rot + '</span></span><span class="d">' + rotSemana(s) + '</span>' +
         '<span class="bar"><i style="width:' + e.n.pct + '%"></i></span></button>';
     }).join('');
     return '<div class="sec-title"><span class="ic">' + ic('flag', 18) + '</span>As 7 semanas</div>' +
@@ -2128,12 +2159,14 @@ const app = {
     const self = this;
     const dias = Math.ceil((dt(CONFIG.PROVA2) - this.hoje()) / 86400000);
     const semSel = SEMANAS.find(s => s.n === selN);
+    const pend = this._minisPendentes(), pendN = pend.map(s => s.n);
     return '<div class="sec-title mb-8"><span class="ic">' + ic('flag', 18) + '</span>As 7 semanas</div>' +
       '<div class="tl-mini" role="group" aria-label="Escolher semana">' + SEMANAS.map(s => {
         if (!self.liberada(s.n)) return '<button type="button" class="lock" aria-label="Semana ' + s.n + ', disponível na Revisão Final" onclick="app.bloqueada(' + s.n + ')">' + s.n + '</button>';
         const e = self._estadoSemana(s, atualN);
-        return '<button type="button" class="' + e.st + (s.n === selN ? ' sel' : '') + '" aria-pressed="' + (s.n === selN) + '" aria-label="Semana ' + s.n + ', ' + (e.st === 'done' ? 'concluída' : e.st === 'atual' ? 'atual' : e.st === 'incompleta' ? e.n.pct + ' por cento feita' : 'futura') + '" onclick="app.selecionarSemana(' + s.n + ')">' + s.n + '</button>';
+        return '<button type="button" class="' + e.st + (s.n === selN ? ' sel' : '') + (pendN.indexOf(s.n) !== -1 ? ' mini-falta' : '') + '" aria-pressed="' + (s.n === selN) + '" aria-label="Semana ' + s.n + ', ' + (e.st === 'done' ? 'concluída' : e.st === 'atual' ? 'atual' : e.st === 'incompleta' ? e.n.pct + ' por cento feita' : 'futura') + (pendN.indexOf(s.n) !== -1 ? ', mini sem registro' : '') + '" onclick="app.selecionarSemana(' + s.n + ')">' + s.n + '</button>';
       }).join('') + '</div>' +
+      (pend.length ? '<p class="side-pend">Mini sem registro: ' + pend.slice().reverse().map(s => '<button type="button" class="btn btn-ghost btn-sm btn-inline" onclick="app.modalMini(' + s.n + ')">Semana ' + s.n + '</button>').join(' · ') + '</p>' : '') +
       '<p class="sub mt-10">Vendo a <b class="txt-2">Semana ' + selN + '</b> · ' + rotSemana(semSel) + (selN !== atualN && atualN ? ' · <button type="button" class="btn btn-ghost btn-sm btn-inline" onclick="app.semanaSel=null;app.render({scrollPara:\'sec-next\'})">voltar à atual</button>' : '') + '</p>' +
       '<div class="divider"></div>' +
       '<div class="kpis kpis-2"><div class="kpi"><div class="v c-coral">' + (dias > 0 ? dias : 0) + '</div><div class="l">dias para Matemática</div></div>' +
