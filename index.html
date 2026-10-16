@@ -7555,7 +7555,19 @@ function formatarEnunciado(texto) {
   // cifrão de moeda ANTES do KaTeX (senão dois "R$" viram um span de fórmula
   // e embaralham o texto entre eles). Restaurado após a extração de fórmulas.
   s = s.replace(/(R|US|U)\\\$/g, '$1$$');          // "R\$" escapado vira R$ normal
-  s = s.replace(/\b(R|US|U)\$/g, ' $1CASH ');
+  // (16/10/2026) Só é moeda o "R$"/"US$"/"U$" que aparece FORA de fórmula: dentro dela, "$R$", "$x = R$" e "\pi R$$"
+  // fecham a fórmula. Percorre os cifrões guardando se está dentro de "$...$"; "$$" não muda o estado.
+  s = (function (txt) {
+    let out = '', dentro = false;
+    for (let i = 0; i < txt.length; i++) {
+      if (txt[i] !== '$') { out += txt[i]; continue; }
+      if (txt[i + 1] === '$') { out += '$$'; i++; continue; }
+      const m = dentro ? null : /(?:^|[^A-Za-z0-9])(US|R|U)$/.exec(out.slice(-3));
+      if (m) { out = out.slice(0, out.length - m[1].length) + ' ' + m[1] + 'CASH '; continue; }
+      dentro = !dentro; out += '$';
+    }
+    return out;
+  })(s);
   // $$...$$ (display)
   s = s.replace(/\$\$([^$]+?)\$\$/g, (m, tex) => _stashKatex(tex.trim(), true) || m);
   // $...$ (inline) — evita capturar moeda "$ 100" exigindo que o conteúdo tenha letra ou comando \
@@ -7822,9 +7834,27 @@ async function carregarFotosLista(btn) {
   lista.forEach(p => { if (p.foto_base64 === undefined) p.foto_base64 = null; });
   if (btn) { btn.textContent = 'Fotos carregadas'; }
 }
+// RADIX_PATCH_RESOLUCAO_TITULOS_2026-10-01: resoluções geradas por IA trazem títulos
+// markdown ("## Resolução Comentada") e frações em pé (\dfrac) no meio da linha. O
+// formatarEnunciado não interpreta "#" (aparecia literal) e a fração em pé encavala as
+// linhas. Só para a resolução: o título genérico some, outro título vira negrito e
+// \dfrac dentro de fórmula em linha ($...$) vira \frac (tamanho de texto).
+function formatarResolucao(texto) {
+  if (!texto) return '';
+  let s = String(texto).replace(/\r\n?/g, '\n');
+  s = s.replace(/^[ \t]*#{1,6}[ \t]+(.+?)[ \t#]*$/gm, (m, t) => {
+    const titulo = t.trim().replace(/\*\*/g, '');
+    return /^resolu[cç][aã]o(\s+comentada)?\s*:?$/i.test(titulo) ? '' : '**' + titulo + '**';
+  });
+  s = s.replace(/^\s*\n/, '');
+  s = s.replace(/\b(R|US|U)\$/g, (m, p) => p + '\u0002');   // moeda não é delimitador
+  s = s.replace(/(^|[^$])\$([^$\n]+?)\$(?!\$)/g, (m, pre, tex) => pre + '$' + tex.replace(/\\dfrac/g, '\\frac') + '$');
+  s = s.replace(/\u0002/g, () => '$');
+  return formatarEnunciado(s);
+}
 function _htmlExplicacao(q) {
   if (q && q._explOk === false) return '<em class="expl-carregando">Carregando resolução…</em>';
-  return formatarEnunciado(q ? (q.explicacao || '') : '');
+  return formatarResolucao(q ? (q.explicacao || '') : '');
 }
 async function garantirExplicacoes(lista) {
   const pend = (lista || []).filter(q => q && q._explOk === false);
@@ -7850,7 +7880,7 @@ async function _preencherExplicacoes(lista) {
   document.querySelectorAll('[data-expl]').forEach(el => {
     const id = el.getAttribute('data-expl');
     const q = (lista || []).find(x => x && String(x.id) === id) || (state.questoes || []).find(x => String(x.id) === id);
-    if (q && q._explOk !== false) el.innerHTML = formatarEnunciado(q.explicacao || '');
+    if (q && q._explOk !== false) el.innerHTML = formatarResolucao(q.explicacao || '');
   });
 }
 
@@ -14413,7 +14443,7 @@ function previewQuestaoImport(id, fromForm) {
           <div class="alternativas">${altsHtml}</div>
           <div class="explicacao" style="margin-top:16px;">
             <strong>Gabarito:</strong> ${corrIdx >= 0 ? String.fromCharCode(65 + corrIdx) + ')' : (p.gabarito_oficial || '—')}<br>
-            <strong>Resolução:</strong> ${resTxt ? formatarEnunciado(resTxt)
+            <strong>Resolução:</strong> ${resTxt ? formatarResolucao(resTxt)
               : '<em style="color:var(--radix-text-muted);">— sem resolução cadastrada —</em>'}
           </div>
         </div>
@@ -14622,7 +14652,7 @@ function renderQuestaoCompletaGer(q) {
   const resHtml = q.explicacao ? `
     <div class="explicacao" style="margin-top:12px;">
       <strong>Resolução:</strong><br>
-      ${formatarEnunciado(q.explicacao)}
+      ${formatarResolucao(q.explicacao)}
     </div>` : '';
 
   return `
