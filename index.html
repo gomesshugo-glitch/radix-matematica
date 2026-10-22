@@ -10068,8 +10068,9 @@ const RVP = {
     { n:5, ini:'2026-10-26' }, { n:6, ini:'2026-11-02' }, { n:7, ini:'2026-11-09', dias:6 }
   ],
   dt(s) { return new Date(s + 'T12:00:00'); },
+  qtde(n) { const q = state._rvp && state._rvp.qtde ? state._rvp.qtde[n] : null; return q || this.MINI_QTDE; },   // (22/10/2026) tamanho do mini da semana pelo gabarito publicado
   semanaAtual() {
-    const h = new Date();
+    const n0 = new Date(), h = new Date(n0.getFullYear(), n0.getMonth(), n0.getDate(), 12);   // (22/10/2026) pela data, como dt()
     for (const s of this.SEMANAS) { const f = new Date(this.dt(s.ini)); f.setDate(f.getDate() + (s.dias || 7) - 1); if (h >= this.dt(s.ini) && h <= f) return s.n; }
     return h < this.dt(this.SEMANAS[0].ini) ? 0 : 8;   // 0 = antes; 8 = depois
   },
@@ -10083,17 +10084,27 @@ async function renderRevisaoPainel() {
   const el = document.getElementById('main-content');
   const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Revisão Final</div>';
   el.innerHTML = bc + '<p class="rvp-muted">Carregando dados da revisão…</p>';
-  const [v, a] = await Promise.all([
+  const [v, a, g] = await Promise.all([
     sb.from('v_revisao_painel').select('*'),
-    sb.from('perfis').select('id, nome, turma').eq('perfil', 'aluno').eq('status', 'aprovado').order('nome')
+    sb.from('perfis').select('id, nome, turma').eq('perfil', 'aluno').eq('status', 'aprovado').order('nome'),
+    sb.from('revisao_mini_gabarito').select('semana,gabarito')
   ]);
   if (v.error) {
     el.innerHTML = bc + '<div class="card"><h3>Não consegui carregar o painel</h3><p>' + RVP.esc(v.error.message) + '</p><p class="rvp-muted">Se as tabelas <code>revisao_*</code> ainda não existirem, rode o SQL_revisao_final.sql no Supabase.</p></div>';
     return;
   }
-  state._rvp = { linhas: v.data || [], alunos: a.data || [], turma: 'todas', busca: '', aberto: null, ordem: 'ultima' };
+  const qtde = {}; ((g && g.data) || []).forEach(x => { qtde[x.semana] = (x.gabarito || '').length; });
+  state._rvp = { linhas: v.data || [], alunos: a.data || [], turma: 'todas', busca: '', aberto: null, ordem: 'ultima', qtde };
   _rvpRender();
 }
+
+// (22/10/2026) Média dos minis em % de acerto: os minis têm 15, 20 ou 25 questões, e a média das notas brutas misturava tamanhos.
+function _rvpMediaNum(l) {
+  const mp = l.minis_por_semana || {}, ks = Object.keys(mp).filter(k => mp[k] != null);
+  if (!ks.length) return null;
+  return ks.reduce((s, k) => s + Number(mp[k]) / RVP.qtde(+k), 0) / ks.length * 100;
+}
+function _rvpMediaPct(l) { const m = _rvpMediaNum(l); return m == null ? '—' : Math.round(m) + '%'; }
 
 function _rvpFiltrados() {
   const r = state._rvp, b = (r.busca || '').toLowerCase();
@@ -10130,7 +10141,7 @@ function _rvpRender() {
     tile(r.linhas.length + '<small> / ' + r.alunos.length + '</small>', 'preencheram o questionário') +
     tile(ativos7, 'ativos nos últimos 7 dias', 'ok') +
     tile(parados, 'parados há mais de 7 dias', parados ? 'warn' : '') +
-    (semN >= 1 && semN <= 7 ? tile(mediaSem != null ? mediaSem + '<small> / ' + RVP.MINI_QTDE + '</small>' : '—', 'média do mini da Semana ' + semN + (minisSem.length ? ' (' + minisSem.length + ' alunos)' : '')) : '') +
+    (semN >= 1 && semN <= 7 ? tile(mediaSem != null ? mediaSem + '<small> / ' + RVP.qtde(semN) + '</small>' : '—', 'média do mini da Semana ' + semN + (minisSem.length ? ' (' + minisSem.length + ' alunos)' : '')) : '') +
     '</div>' +
     '<div class="rvp-filtros"><input type="search" placeholder="Buscar aluno" value="' + esc(r.busca) + '" oninput="state._rvp.busca=this.value;_rvpRender();_rvpFoco(\'busca\')" id="rvp-busca">' +
     '<select onchange="state._rvp.turma=this.value;_rvpRender()"><option value="todas"' + (r.turma === 'todas' ? ' selected' : '') + '>Todas as turmas</option>' +
@@ -10140,7 +10151,7 @@ function _rvpRender() {
   const ord = linhas.slice().sort((x, y) => {
     if (r.ordem === 'nome') return (x.nome || '').localeCompare(y.nome || '');
     if (r.ordem === 'progresso') return (y.atividades_feitas || 0) - (x.atividades_feitas || 0);
-    if (r.ordem === 'mini') return (Number(y.media_mini) || 0) - (Number(x.media_mini) || 0);
+    if (r.ordem === 'mini') return (_rvpMediaNum(y) || 0) - (_rvpMediaNum(x) || 0);
     return String(y.ultima_atividade || '').localeCompare(String(x.ultima_atividade || ''));
   });
 
@@ -10157,8 +10168,8 @@ function _rvpRender() {
         '<td><div class="rvp-aluno">' + _rvpAvatarBotao(l.aluno_id, l.nome, 48) + '<div><b>' + esc(l.nome) + '</b><br><small class="rvp-muted">' + esc(RVP.nomeTurma(l.turma)) + '</small></div></div></td>' +
         '<td>' + l.meta + '/45<br><small class="rvp-muted">' + hSem + '</small></td>' +
         '<td>' + (l.semanas_iniciadas || 0) + '</td><td>' + (l.atividades_feitas || 0) + '</td><td>' + pct + '</td>' +
-        RVP.SEMANAS.map(s => '<td class="rvp-c">' + (mp[s.n] != null ? '<span class="rvp-mini ' + (mp[s.n] >= Math.round(l.meta / 3) ? 'ok' : 'warn') + '">' + mp[s.n] + '</span>' : '<span class="rvp-muted">·</span>') + '</td>').join('') +
-        '<td>' + (l.media_mini != null ? Number(l.media_mini).toFixed(1).replace('.', ',') : '—') + '</td>' +
+        RVP.SEMANAS.map(s => '<td class="rvp-c">' + (mp[s.n] != null ? '<span class="rvp-mini ' + (mp[s.n] >= Math.round(l.meta / 45 * RVP.qtde(s.n)) ? 'ok' : 'warn') + '">' + mp[s.n] + '</span>' : '<span class="rvp-muted">·</span>') + '</td>').join('') +
+        '<td>' + _rvpMediaPct(l) + '</td>' +
         '<td><span class="rvp-chip ' + st[1] + '">' + st[0] + '</span></td></tr>' +
         (aberto ? '<tr class="rvp-detalhe"><td colspan="' + (7 + RVP.SEMANAS.length) + '">' + _rvpDetalhe(l) + '</td></tr>' : '');
     }).join('') : '<tr><td colspan="' + (7 + RVP.SEMANAS.length) + '" class="rvp-muted" style="text-align:center;padding:24px">Nenhum aluno com questionário preenchido neste filtro.</td></tr>') +
@@ -10202,8 +10213,8 @@ async function _rvpCarregarGabaritos() {
   (m.data || []).forEach(x => { lancados[x.semana] = (lancados[x.semana] || 0) + 1; });
 
   box.innerHTML = '<h3>Gabaritos dos mini-simulados</h3>' +
-    '<p class="rvp-muted">15 ou 20 letras de A a E, na ordem das questões (20 quando o mini traz as 5 de retorno). Publicado o gabarito, os cartões que os alunos já lançaram são corrigidos sozinhos.</p>' +
-    '<p class="rvp-muted"><b>Mapa dos temas</b> (opcional): um caractere por questão, dizendo o tema de cada uma. 1 a 4 são os quatro temas da semana, na ordem do plano; 5 é a geometria da semana; cada dígito aparece 3 vezes. Nas questões de retorno, use a letra do tema: P = Geometria Plana, E = Geometria Espacial, A = Geometria Analítica, T = Trigonometria, G = PG. Em branco, vale a ordem antiga: 3 questões por tema, na sequência dos temas, geometria no fim.</p>' +
+    '<p class="rvp-muted">15, 20 ou 25 letras de A a E, na ordem das questões (20 quando o mini traz as 5 de retorno; 25 com as 10 motivadoras). Publicado o gabarito, os cartões que os alunos já lançaram são corrigidos sozinhos.</p>' +
+    '<p class="rvp-muted"><b>Mapa dos temas</b> (opcional): um caractere por questão, dizendo o tema de cada uma. 1 a 4 são os quatro temas da semana, na ordem do plano; 5 é a geometria da semana; cada dígito aparece pelo menos 3 vezes. Nas questões de retorno ou motivadoras, use o dígito do tema, se for da semana, ou a letra do tema: P = Geometria Plana, E = Geometria Espacial, A = Geometria Analítica, T = Trigonometria, G = PG, O = 4 operações, Q = Razão e proporção, I = Gráficos e tabelas. Em branco, vale a ordem antiga: 3 questões por tema, na sequência dos temas, geometria no fim.</p>' +
     '<div style="margin-top:10px">' +
     RVP.SEMANAS.map(s => {
       const g0 = porSemana[s.n] || '';
@@ -10214,11 +10225,11 @@ async function _rvpCarregarGabaritos() {
       return '<div class="rvp-gab">' +
         '<span class="sem">Semana ' + s.n + '<small>' + qtd + ' lançamento' + (qtd === 1 ? '' : 's') + '</small></span>' +
         '<div class="rvp-gab-ins">' +
-        '<input id="gab-' + s.n + '" value="' + RVP.esc(g0) + '" maxlength="20" spellcheck="false" autocomplete="off"' +
-        ' placeholder="Digite as 15 ou 20 letras (A a E)" aria-label="Gabarito da Semana ' + s.n + '"' +
+        '<input id="gab-' + s.n + '" value="' + RVP.esc(g0) + '" maxlength="25" spellcheck="false" autocomplete="off"' +
+        ' placeholder="Digite as 15, 20 ou 25 letras (A a E)" aria-label="Gabarito da Semana ' + s.n + '"' +
         ' onkeydown="if(event.key===\'Enter\')_rvpSalvarGabarito(' + s.n + ')">' +
-        '<input id="mapa-' + s.n + '" value="' + RVP.esc(mapaSemana[s.n] || '') + '" maxlength="20" spellcheck="false" autocomplete="off"' +
-        ' placeholder="Mapa dos temas (1 a 5; letras no retorno)" aria-label="Mapa dos temas da Semana ' + s.n + '"' +
+        '<input id="mapa-' + s.n + '" value="' + RVP.esc(mapaSemana[s.n] || '') + '" maxlength="25" spellcheck="false" autocomplete="off"' +
+        ' placeholder="Mapa dos temas (1 a 5; letras no retorno e nas motivadoras)" aria-label="Mapa dos temas da Semana ' + s.n + '"' +
         ' onkeydown="if(event.key===\'Enter\')_rvpSalvarGabarito(' + s.n + ')">' +
         '</div>' +
         st + '</div>';
@@ -10241,19 +10252,19 @@ async function _rvpSalvarGabaritos(apenas) {
     if (!el) continue;
     const v = (el.value || '').toUpperCase().replace(/[^A-E]/g, '');
     if (!v) continue;
-    if (v.length !== 15 && v.length !== 20) {
-      if (msg) { msg.textContent = 'Semana ' + s.n + ': são 15 ou 20 letras de A a E (essa tem ' + v.length + ').'; msg.style.color = 'var(--radix-red)'; }
+    if (v.length !== 15 && v.length !== 20 && v.length !== 25) {
+      if (msg) { msg.textContent = 'Semana ' + s.n + ': são 15, 20 ou 25 letras de A a E (essa tem ' + v.length + ').'; msg.style.color = 'var(--radix-red)'; }
       el.focus();
       return;
     }
     el.value = v;
     const elM = document.getElementById('mapa-' + s.n);
-    const mapa = elM ? (elM.value || '').toUpperCase().replace(/[^1-5PEATGFSMRLC]/g, '') : '';
+    const mapa = elM ? (elM.value || '').toUpperCase().replace(/[^1-5PEATGFSMRLCOQI]/g, '') : '';
     if (mapa) {
       const contagem = [1, 2, 3, 4, 5].map(d => mapa.split('').filter(c => c === String(d)).length);
       const letras = mapa.replace(/[1-5]/g, '').length;
-      if (mapa.length !== v.length || contagem.some(c => c !== 3) || letras !== v.length - 15) {
-        if (msg) { msg.textContent = 'Semana ' + s.n + ': o mapa precisa ter ' + v.length + ' caracteres, com os dígitos 1 a 5 três vezes cada' + (v.length > 15 ? ' e ' + (v.length - 15) + ' letras de tema nas questões de retorno' : '') + ' (essa tem ' + mapa.length + ': ' + contagem.join('/') + ', ' + letras + ' letra' + (letras === 1 ? '' : 's') + ').'; msg.style.color = 'var(--radix-red)'; }
+      if (mapa.length !== v.length || contagem.some(c => c < 3)) {
+        if (msg) { msg.textContent = 'Semana ' + s.n + ': o mapa precisa ter ' + v.length + ' caracteres, com cada dígito de 1 a 5 pelo menos 3 vezes (essa tem ' + mapa.length + ': ' + contagem.join('/') + ', ' + letras + ' letra' + (letras === 1 ? '' : 's') + ').'; msg.style.color = 'var(--radix-red)'; }
         elM.focus();
         return;
       }
@@ -10271,6 +10282,7 @@ async function _rvpSalvarGabaritos(apenas) {
     if (msg) { msg.textContent = 'Não consegui salvar: ' + r.error.message; msg.style.color = 'var(--radix-red)'; }
     return;
   }
+  if (state._rvp && state._rvp.qtde) linhas.forEach(x => { state._rvp.qtde[x.semana] = x.gabarito.length; });   // (22/10/2026)
   const aviso = linhas.length === 1 ? 'Gabarito da Semana ' + linhas[0].semana + ' publicado.' : linhas.length + ' gabaritos publicados.';
   await _rvpCarregarGabaritos();   // redesenha o bloco; a mensagem entra depois
   const msg2 = document.getElementById('gab-msg');

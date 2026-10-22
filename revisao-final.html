@@ -493,7 +493,7 @@ const CONFIG = {
   ALUNO: 'Ana Clara',                   // no app real: state.usuario.nome
   MIN_QUESTAO: 4,                       // minutos por questão (resolver + corrigir)
   MIN_VIDEO: 25,
-  MIN_MINI: 50, MIN_MINI_20: 65,       // mini de 15 / mini de 20 (com retorno)
+  MIN_MINI: 50, MIN_MINI_20: 65,       // mini de 15 / mini de 20 ou 25 (com questões extras)
   MINI_QTDE: 15, MINI_POR_TEMA: 3,
   AMOSTRA_MIN_Q: 10,                    // reclassificação: mínimo de questões...
   AMOSTRA_MIN_FONTES: 2                 // ...ou mínimo de avaliações distintas
@@ -621,10 +621,11 @@ const GABARITOS = {};
 const MAPAS = {};
 /* (05/10/2026) Mini de 20: a partir da Semana 3 o caderno traz as 15 da semana
    e mais 5 de RETORNO (geometria das semanas anteriores). O tamanho vem do
-   gabarito publicado (15 ou 20). No mapa, dígitos 1 a 5 = temas da semana e
+   gabarito publicado (15, 20 ou 25; 25 na Semana 5, com 10 motivadoras). No mapa, dígitos 1 a 5 = temas da semana e
    letras = temas de retorno (MAPA_EXTRA). */
 const MAPA_EXTRA = { P: 'geo-plana', E: 'geo-espacial', A: 'geo-analitica', T: 'trigonometria', G: 'pg',
-                     F: 'financeira', S: 'sistemas-lineares', M: 'matrizes', R: 'potencias', L: 'logica', C: 'conjuntos' };
+                     F: 'financeira', S: 'sistemas-lineares', M: 'matrizes', R: 'potencias', L: 'logica', C: 'conjuntos',
+                     O: 'operacoes', Q: 'razao-proporcao', I: 'interp-graficos' };   // (21-22/10/2026) motivadoras do mini de 25
 function miniQtde(n) {
   const g = GABARITOS[n], m = MAPAS[n];
   if (g && g.length > CONFIG.MINI_QTDE) return g.length;
@@ -738,7 +739,7 @@ const app = {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        this.perfil = d.perfil||null; this.ov = d.ov||{}; this.minis = d.minis||{}; this.planos = d.planos||{};
+        this.perfil = d.perfil||null; this.ov = d.ov||{}; this.minis = d.minis||{}; this.planos = d.planos||{}; this._excl = d.excl || null;
         if (this.perfil && !this.perfil.dias) {
           const nd = Math.min(this.perfil.diasSemana || 5, 7);
           this.perfil.dias = []; for (let i = 0; i < nd; i++) this.perfil.dias.push(i);
@@ -746,8 +747,10 @@ const app = {
       }
     } catch(e) {}
   },
+  // (22/10/2026) Semanas cujo mini o aluno excluiu neste aparelho e que ainda faltam apagar no servidor.
+  _exclLista() { if (!this._excl || !Array.isArray(this._excl.minis)) this._excl = { minis: [] }; return this._excl; },
   salvarLocal() {
-    try { localStorage.setItem(KEY, JSON.stringify({ v:3, perfil:this.perfil, ov:this.ov, minis:this.minis, planos:this.planos })); } catch(e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ v:3, perfil:this.perfil, ov:this.ov, minis:this.minis, planos:this.planos, excl:this._excl || null })); } catch(e) {}
   },
   salvar() { this.salvarLocal(); if (typeof SYNC !== 'undefined') SYNC.agendar(); },
 
@@ -855,7 +858,11 @@ const app = {
   hoje() {
     const _sel = document.getElementById('demo-data');   // só existe no mockup
     const v = _sel ? _sel.value : 'real';
-    return v === 'real' ? new Date() : dt(v);
+    // (22/10/2026) "hoje" é o dia local ao meio-dia, a mesma convenção de dt(). Antes, de domingo 12h a segunda 12h
+    // nenhuma semana batia (semanaAtualN() = null) e, antes do meio-dia, o dia do plano ficava um atrás.
+    if (v !== 'real') return dt(v);
+    const n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate(), 12);
   },
   semanaAtualN() {
     const h = this.hoje();
@@ -1335,7 +1342,7 @@ const app = {
     // '-' = em branco. Reaproveita o que já foi lançado.
     const q = miniQtde(n);
     this._miniTmp = (existente && existente.resp) ? existente.resp.split('') : new Array(q).fill('-');
-    while (this._miniTmp.length < q) this._miniTmp.push('-');   // cartão antigo de 15 num mini que virou 20
+    while (this._miniTmp.length < q) this._miniTmp.push('-');   // cartão antigo de 15 num mini que virou 20 ou 25
     const corr = (existente && existente.resp) ? this.corrigirMini(n, existente.resp) : null;
     const self = this;
 
@@ -1578,7 +1585,7 @@ const app = {
         return;
       }
     }
-    this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {};
+    this.perfil = null; this.ov = {}; this.minis = {}; this.planos = {}; this._excl = null;
     this.semanaSel = null; this.qStep = 0; this._qTemp = null; this._editando = false; this._evoSel = null;
     try { localStorage.removeItem(KEY); } catch (e) { this.toast('erro', 'Não consegui limpar o armazenamento', 'Verifique as permissões do navegador.'); }
     this._apagando = false;
@@ -1607,6 +1614,7 @@ const app = {
     if (!confirmado) return this.confirmar({ titulo: 'Excluir o mini da Semana ' + n + '?', perigo: true, ok: 'Excluir',
       texto: 'O lançamento sai do histórico e o diagnóstico e o gráfico de evolução são recalculados. Você pode registrar de novo depois.' }, () => self.excluirMini(n, true));
     delete this.minis[n];
+    const ex = this._exclLista(); if (ex.minis.indexOf(+n) === -1) ex.minis.push(+n);   // (22/10/2026) apagar só este no servidor
     if (this._evoSel === n) this._evoSel = null;
     this.salvar();
     this.render({ foco: 'mini:' + n });
@@ -2291,10 +2299,13 @@ const SYNC = {
       (rg.data || []).forEach(x => { app.ov[x.atividade_key] = { dia: x.dia == null ? undefined : x.dia, done: x.feito_em || null, hits: x.acertos, total: x.total }; });
       app.minis = {};
       (rm.data || []).forEach(x => { app.minis[x.semana] = { porTema: x.acertos_por_tema || {}, total: x.total, em: x.feito_em, resp: x.respostas || null }; });
+      const pend = app._exclLista().minis.filter(n => app.minis[n]);   // (22/10/2026) exclusão feita sem conexão, ainda não enviada
+      pend.forEach(n => { delete app.minis[n]; });
       app.planos = {};
       (rpl.data || []).forEach(x => { app.planos[x.semana] = Object.assign({}, x.plano || {}, { budget: x.budget, totalMin: x.total_min, congelado: true, criadoEm: x.criado_em }); });
       app.salvarLocal();
       this.status('ok');
+      if (pend.length) this.agendar();
     } else if (app.perfil) {
       await this.empurrar();
     } else {
@@ -2330,8 +2341,12 @@ const SYNC = {
 
       const minis = Object.keys(app.minis).filter(n => app.liberada(parseInt(n))).map(n => ({ aluno_id: uid, semana: parseInt(n), acertos_por_tema: app.minis[n].porTema || {}, respostas: app.minis[n].resp || null, total: app.minis[n].total, feito_em: app.minis[n].em || new Date().toISOString() }));
       if (minis.length) { const r = await sb.from('revisao_mini').upsert(minis); if (r.error) throw r.error; }
-      const semMini = Object.keys(app.minis).map(Number);
-      await sb.from('revisao_mini').delete().eq('aluno_id', uid).not('semana', 'in', '(' + (semMini.length ? semMini.join(',') : '0') + ')');
+      // (22/10/2026) Só apaga no servidor o mini que o aluno excluiu neste aparelho. Antes apagava todo mini ausente da
+      // memória local, e um celular aberto há dias apagava o mini lançado no computador.
+      const excl = app._exclLista();
+      const apagar = excl.minis.filter(n => !app.minis[n]);
+      if (apagar.length) { const r = await sb.from('revisao_mini').delete().eq('aluno_id', uid).in('semana', apagar); if (r.error) throw r.error; }
+      if (excl.minis.length) { excl.minis = []; app.salvarLocal(); }
 
       const planos = Object.keys(app.planos).filter(n => app.liberada(parseInt(n))).map(n => {
         const d = app.planos[n];
@@ -2340,8 +2355,7 @@ const SYNC = {
                  criado_em: d.criadoEm || new Date().toISOString() };
       });
       if (planos.length) { const r = await sb.from('revisao_plano').upsert(planos); if (r.error) throw r.error; }
-      const semPl = Object.keys(app.planos).map(Number);
-      await sb.from('revisao_plano').delete().eq('aluno_id', uid).not('semana', 'in', '(' + (semPl.length ? semPl.join(',') : '0') + ')');
+      // (22/10/2026) Planos não são apagados aqui: nenhum caminho do aluno exclui um plano (recalcular regrava; recomeçar usa apagarTudo).
       this.status('ok');
     } catch (e) {
       console.warn('[sync] falha ao salvar:', e);
