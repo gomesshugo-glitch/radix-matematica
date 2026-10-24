@@ -76,14 +76,14 @@
      =================================================================== */
   /* superfícies escuras nos cards que antes eram brancos */
   .quick-card, .modulo-bloco, .simulado-header,
-  .stat-card, table, .resultado-box,
+  .stat-card, table, .resultado-box, .chart-container,
   .lista-mod-bloco, .gerencia-mat-item, .dash-card,
   .modal {
     background: var(--radix-surface) !important;
     color: var(--radix-text);
     border-color: var(--radix-line) !important;
   }
-  .quick-card h3, .stat-card .value, .dash-card h3, .modal h2, .modal h3 {
+  .quick-card h3, .stat-card .value, .dash-card h3, .chart-container h3, .modal h2, .modal h3 {
     color: var(--radix-text) !important;
   }
   .quick-card p, .stat-card .label, .breadcrumb, .dash-tagline,
@@ -6064,6 +6064,29 @@
   .rx-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--rx-accent); color: #0e1a36; }
   .rx-badge.is-zero { background: var(--rx-surface-3); color: var(--rx-text-2); }
   body.theme-light .rx-badge.is-zero { background: var(--rx-surface-3); }
+  /* (Onda 1, 24/10/2026) contador zerado não aparece no menu lateral nem na barra inferior */
+  .rx-side .rx-badge.is-zero, .rx-bottom .rx-badge.is-zero { display: none; }
+  /* (Onda 1) gráficos com altura fixa: o Chart.js não calcula mais a altura pela largura */
+  .rx-chart-h { position: relative; height: 260px; }
+  .rx-chart-h.sm { height: 220px; }
+  @media (max-width: 720px) { .rx-chart-h { height: 230px; } .rx-chart-h.sm { height: 200px; } }
+  /* (Onda 1) ícones em SVG no lugar dos emojis */
+  .rx-i { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
+  .cron-semana-rev-badge .rx-i, .cron-semana-erro-badge .rx-i { width: 11px; height: 11px; vertical-align: -1px; }
+  .qbk-escolha-ico .rx-i { width: 28px; height: 28px; vertical-align: 0; }
+  .ce-na-semana-item .mini-btn .rx-i { width: 13px; height: 13px; vertical-align: -2px; }
+  .ce-cat-ico { display: inline-flex; width: 14px; height: 14px; vertical-align: -2px; }
+  .ce-cat-ico svg { width: 14px; height: 14px; }
+  .rev-grupo-titulo .rev-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; }
+  .rx-ico-grande { display: inline-flex; width: 44px; height: 44px; color: var(--rx-primary); margin-bottom: 8px; }
+  .rx-ico-grande .rx-i { width: 100%; height: 100%; vertical-align: 0; }
+  /* (Onda 1) semana atual no cronograma */
+  .cron-semana.cron-semana-atual, .crv-card.cron-semana-atual { outline: 2px solid var(--radix-cyan); outline-offset: 2px; }
+  .crv-week .cron-atual-tipo { margin-left: 6px; }
+  .cron-tipo.cron-atual-tipo { background: rgba(34,211,238,.18) !important; color: var(--radix-cyan) !important; }
+  /* (Onda 1) rótulo "Revisão Final" na barra inferior */
+  .rx-bottom a span { white-space: nowrap; }
+  .rx-bottom a[data-secao="revisao-final"] span { font-size: 10.5px; letter-spacing: -.2px; }
   .rx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 11px; border-radius: 999px; font-size: var(--rx-fs-xs); font-weight: 600; background: var(--rx-surface-2); border: 1px solid var(--rx-line-2); color: var(--rx-text-2); }
   .rx-chip button { border: 0; background: transparent; color: var(--rx-muted); width: 20px; height: 20px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .rx-chip button:hover { background: rgba(255,122,92,.18); color: var(--rx-coral); }
@@ -7669,7 +7692,7 @@ function formatarEnunciado(texto) {
     // Caminho local não disponível — placeholder com nome do arquivo
     const fileName = src.split('/').pop();
     return '<span class="img-faltando" title="Imagem não disponível neste servidor: ' +
-           src.replace(/"/g,'&quot;') + '">📷 imagem ausente: ' + fileName + '</span>';
+           src.replace(/"/g,'&quot;') + '">Imagem ausente: ' + fileName + '</span>';
   });
 
   // 5) Tabela: linhas no formato  \| col1 \| col2 \| col3 \|
@@ -7979,7 +8002,7 @@ async function carregarDados() {
     } else {
       state.questoes = [];
       console.error('[Radix] FALHA: não foi possível carregar questões do Supabase.');
-      alert('Erro ao carregar banco de questões. Recarregue a página em alguns segundos. Se persistir, entre em contato com o suporte.');
+      alert('Não consegui carregar o banco de questões. Recarregue a página em alguns segundos; se continuar, avise o professor.');
     }
     state.questoesPronto = true;
     try { if (state.usuario && state.usuario.perfil !== 'professor') TENTATIVAS.finalizarVencidas(); } catch (e) { console.warn('[tentativas] vencidas:', e); }
@@ -9217,8 +9240,7 @@ async function salvarTurmaObrigatoria() {
       .select('turma').eq('id', state.usuario.id).single();
     if (!check || check.turma !== turmaId) {
       throw new Error(
-        'A turma não persistiu no banco. Provavelmente a função fn_set_minha_turma ainda não foi criada no Supabase. ' +
-        'Avise o professor pra rodar SQL_fix_salvar_turma.sql.'
+        'A turma não foi salva. Tente de novo; se continuar, avise o professor.'
       );
     }
 
@@ -9738,8 +9760,8 @@ async function salvarMeuPerfil() {
   if (turmaNova) {
     const { error: eT } = await sb.rpc('fn_set_minha_turma', { p_turma: turmaNova });
     if (eT) {
-      alert('Perfil salvo, mas a troca de turma falhou: ' + eT.message +
-            '\n\nVerifique se a função fn_set_minha_turma existe no Supabase.');
+      console.error('[perfil] troca de turma', eT);
+      alert('Seu perfil foi salvo, mas a turma não mudou. Tente de novo; se continuar, peça ao professor para ajustar.');
       return;
     }
     state.usuario.turma = turmaNova;
@@ -9751,7 +9773,7 @@ async function salvarMeuPerfil() {
   _fotoTemp = null;
   atualizarHeaderAvatar();
 
-  alert('✅ Perfil atualizado com sucesso!');
+  alert('Perfil atualizado.');
   fecharMeuPerfil();
 }
 
@@ -10396,10 +10418,6 @@ function renderHome() {
           </div>
           <span id="badge-pendentes" class="badge-pendentes hidden"></span>
         </div>
-        <div class="quick-card" onclick="renderLeadsDegustacao()">
-          <div class="icon icon-coral"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
-          <div><h3>Degustação</h3><p>Leads dos 7 dias grátis, uso e conversão</p></div>
-        </div>
         <div class="quick-card" onclick="renderReportesErro()" style="position:relative;">
           <div class="icon icon-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
           <div><h3>Erros reportados</h3><p>Avisos dos alunos sobre questões</p></div>
@@ -10806,26 +10824,26 @@ async function renderEstatisticasAvancadas() {
     </div>
 
     <div class="chart-container">
-      <h3>📊 Evolução nas últimas 12 semanas</h3>
+      <h3>Evolução nas últimas 12 semanas</h3>
       <p style="font-size:12px;color:var(--radix-gray-light);margin-bottom:14px;">% de acerto por semana (pontos vazios = sem atividade naquela semana)</p>
-      <canvas id="chart-evolucao" height="100"></canvas>
+      <div class="rx-chart-h"><canvas id="chart-evolucao"></canvas></div>
     </div>
 
     <div class="chart-container">
-      <h3>🆚 Você vs Turma — por tema</h3>
+      <h3>Você e a turma, por tema</h3>
       <p style="font-size:12px;color:var(--radix-gray-light);margin-bottom:14px;">Sua taxa de acerto em cada tema comparada à média de todos os alunos</p>
-      <canvas id="chart-vs-turma" height="120"></canvas>
+      <div class="rx-chart-h"><canvas id="chart-vs-turma"></canvas></div>
     </div>
 
     <div class="chart-container">
-      <h3>🎯 Desempenho por dificuldade</h3>
-      <canvas id="chart-dif" height="80"></canvas>
+      <h3>Desempenho por dificuldade</h3>
+      <div class="rx-chart-h sm"><canvas id="chart-dif"></canvas></div>
     </div>
 
     ${sims.length >= 3 ? `
       <div class="chart-container">
-        <h3>📅 Linha do tempo dos simulados</h3>
-        <canvas id="chart-sim-linha" height="80"></canvas>
+        <h3>Linha do tempo dos simulados</h3>
+        <div class="rx-chart-h sm"><canvas id="chart-sim-linha"></canvas></div>
       </div>
     ` : ''}
   `;
@@ -10847,7 +10865,7 @@ async function renderEstatisticasAvancadas() {
         pointBackgroundColor: '#1E88E5'
       }]
     },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
   });
 
   // Comparação com turma por tema
@@ -10867,7 +10885,7 @@ async function renderEstatisticasAvancadas() {
         { label: 'Média da turma', data: turmaTaxa, backgroundColor: '#B0BEC5', borderRadius: 4 }
       ]
     },
-    options: { scales: { y: { beginAtZero: true, max: 100 } } }
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
   });
 
   // Por dificuldade
@@ -10886,7 +10904,7 @@ async function renderEstatisticasAvancadas() {
         borderRadius: 6
       }]
     },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
   });
 
   // Linha do tempo dos simulados (se >= 3)
@@ -10907,7 +10925,7 @@ async function renderEstatisticasAvancadas() {
           pointBackgroundColor: '#16A34A'
         }]
       },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
     });
   }
 }
@@ -11385,7 +11403,7 @@ async function finalizarConferenciaGabarito() {
       const btnCaderno = podeCaderno ? `
         <div style="margin-top:10px;">
           <button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;color:#fff;display:inline-flex;align-items:center;gap:6px;" onclick="abrirModalErroDaQuestao(${q.id})">
-            📕 Adicionar ao caderno de erros
+            Adicionar ao caderno de erros
           </button>
         </div>` : '';
       return `
@@ -11398,7 +11416,7 @@ async function finalizarConferenciaGabarito() {
           ${imgsHtml}
           <div class="alternativas ${q.alternativasImg ? 'alts-em-imagem' : ''}">${altsHtml}</div>
           <div class="explicacao">
-            <strong>Sua resposta:</strong> ${String.fromCharCode(65 + d.minhaResp)}) ${d.correto ? '✅ Correto!' : '❌ Incorreto'}<br>
+            <strong>Sua resposta:</strong> ${String.fromCharCode(65 + d.minhaResp)}) ${d.correto ? '✓ Correto!' : '✗ Incorreto'}<br>
             <strong>Gabarito:</strong> ${String.fromCharCode(65 + q.correta)})<br>
             <strong>Explicação:</strong> <span data-expl="${q.id}">${_htmlExplicacao(q)}</span>
             ${btnCaderno}
@@ -11564,13 +11582,13 @@ function _modalGerarCorpoStep1() {
   return `
     <div class="qbk-escolha-grid">
       <button class="qbk-escolha-card ec-digital" onclick="escolherDigital()">
-        <div class="qbk-escolha-ico">💻</div>
+        <div class="qbk-escolha-ico">${_RXI2.monitor}</div>
         <h3 class="qbk-escolha-titulo">Resolver digitalmente</h3>
         <p class="qbk-escolha-desc">Marque as respostas aqui no app. Salva no seu histórico automaticamente.</p>
         <span class="qbk-escolha-tag">Recomendado</span>
       </button>
       <button class="qbk-escolha-card ec-pdf" onclick="escolherPDF()">
-        <div class="qbk-escolha-ico">📄</div>
+        <div class="qbk-escolha-ico">${_RXI2.arquivo}</div>
         <h3 class="qbk-escolha-titulo">Baixar PDF impresso</h3>
         <p class="qbk-escolha-desc">Gera um arquivo com as questões e gabarito. Bom pra resolver no papel.</p>
         <span class="qbk-escolha-tag">Lista vira arquivo</span>
@@ -11582,13 +11600,13 @@ function _modalGerarCorpoStep2() {
   return `
     <div class="qbk-escolha-grid">
       <button class="qbk-escolha-card ec-teste" onclick="escolherModoTeste()">
-        <div class="qbk-escolha-ico">🎯</div>
+        <div class="qbk-escolha-ico">${_RXI2.alvo}</div>
         <h3 class="qbk-escolha-titulo">Modo Teste</h3>
         <p class="qbk-escolha-desc">Vê o gabarito e o comentário <b>logo após responder</b> cada questão. Ideal pra aprender enquanto pratica.</p>
         <span class="qbk-escolha-tag">Feedback imediato</span>
       </button>
       <button class="qbk-escolha-card ec-prova" onclick="escolherModoProva()">
-        <div class="qbk-escolha-ico">⏱</div>
+        <div class="qbk-escolha-ico">${_RXI2.relogio}</div>
         <h3 class="qbk-escolha-titulo">Modo Prova</h3>
         <p class="qbk-escolha-desc">Responde tudo de uma vez e <b>só vê o resultado no final</b>. Simula a pressão da prova de verdade.</p>
         <span class="qbk-escolha-tag">Corrige só no fim</span>
@@ -11640,7 +11658,7 @@ function renderEstudoDigital() {
   const corAcento = ehTeste ? '#a855f7' : '#dc2626';
   const corBgSuave = ehTeste ? 'rgba(168,85,247,.08)' : 'rgba(220,38,38,.06)';
   const corBorda = ehTeste ? 'rgba(168,85,247,.3)' : 'rgba(220,38,38,.3)';
-  const tituloModo = ehTeste ? '🎯 Modo Teste' : '⏱ Modo Prova';
+  const tituloModo = ehTeste ? 'Modo Teste' : 'Modo Prova';
   const subtituloModo = ehTeste
     ? 'Veja o gabarito e o comentário logo após responder cada questão.'
     : 'Responda tudo. O resultado só aparece no final.';
@@ -11707,7 +11725,7 @@ function renderEstudoDigital() {
   const podeEncerrar = true;
   const btnEncerrarTxt = ehTeste
     ? '✓ Finalizar estudo'
-    : (respN === total ? '🎯 Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
+    : (respN === total ? 'Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
 
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="_sairEstudoDigital()">← Banco de Questões</a> / ${tituloModo}</div>
@@ -11815,10 +11833,10 @@ async function gerarPDFQuestoesClassico(questoes, tituloLista, includeGabaritoEm
   const { data: perfil } = await sb.from('perfis').select('nome,cpf').eq('id', state.usuario.id).single();
   let cpf = perfil?.cpf;
   if (!cpf) {
-    const cpfInput = prompt('Para baixar o PDF, informe seu CPF (so numeros).');
+    const cpfInput = prompt('Para proteger o material, o PDF sai com seu CPF na marca d\'água. Digite os 11 números do seu CPF.');
     if (!cpfInput) return;
     cpf = cpfInput.replace(/\D/g, '');
-    if (cpf.length !== 11) { alert('CPF invalido.'); return; }
+    if (cpf.length !== 11) { alert('CPF inválido: confira os 11 dígitos.'); return; }
     const { error: eCpf } = await sb.rpc('fn_set_meu_cpf', { p_cpf: cpf });   // validado no servidor (formato + dígitos)
     if (eCpf) { alert('CPF inválido. Confira os 11 dígitos e tente de novo.'); return; }
   }
@@ -12511,10 +12529,10 @@ async function gerarPDFQuestoes(questoes, tituloLista, includeGabaritoEmpty) {
   const { data: perfil } = await sb.from('perfis').select('nome,cpf').eq('id', state.usuario.id).single();
   let cpf = perfil?.cpf;
   if (!cpf) {
-    const cpfInput = prompt('Para baixar o PDF, informe seu CPF (so numeros).');
+    const cpfInput = prompt('Para proteger o material, o PDF sai com seu CPF na marca d\'água. Digite os 11 números do seu CPF.');
     if (!cpfInput) return;
     cpf = cpfInput.replace(/\D/g, '');
-    if (cpf.length !== 11) { alert('CPF invalido.'); return; }
+    if (cpf.length !== 11) { alert('CPF inválido: confira os 11 dígitos.'); return; }
     const { error: eCpf } = await sb.rpc('fn_set_meu_cpf', { p_cpf: cpf });   // validado no servidor (formato + dígitos)
     if (eCpf) { alert('CPF inválido. Confira os 11 dígitos e tente de novo.'); return; }
   }
@@ -13427,7 +13445,7 @@ function abrirSimuladoConfig() {
   const main = document.getElementById('main-content');
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Configurar Simulado</div>
-    <h2 class="section-title"><span class="section-title-accent"></span>⏱ Novo Simulado</h2>
+    <h2 class="section-title"><span class="section-title-accent"></span>Novo simulado</h2>
     <div class="config-box">
       <div class="form-group">
         <label>Número de questões</label>
@@ -13614,7 +13632,7 @@ function renderResultadoSimulado(registro, porTempo) {
 
   main.innerHTML = `
     <h2 class="section-title"><span class="section-title-accent"></span>√ Resultado do Simulado</h2>
-    ${porTempo ? '<div style="background:#FFEBEE;color:var(--radix-red);padding:12px;border-radius:8px;margin-bottom:16px;font-weight:600;">⏰ Tempo esgotado! O simulado foi finalizado automaticamente.</div>' : ''}
+    ${porTempo ? '<div style="background:#FFEBEE;color:var(--radix-red);padding:12px;border-radius:8px;margin-bottom:16px;font-weight:600;">Tempo esgotado. O simulado foi finalizado automaticamente.</div>' : ''}
     <div class="resultado-box">
       <div style="color:var(--radix-gray-light);">Você acertou</div>
       <div class="nota">${registro.acertos}/${registro.total}</div>
@@ -16284,14 +16302,14 @@ function renderRelatorioProfessor() {
     </div>
 
     <div class="chart-container">
-      <h3>🏆 Top 10 Alunos (mínimo 5 respostas)</h3>
+      <h3>Top 10 alunos (mínimo 5 respostas)</h3>
       ${ranking.length === 0 ? '<p style="color:var(--radix-gray-light);">Ainda não há dados suficientes.</p>' : `
         <table>
           <thead><tr><th style="width:50px;">Pos.</th><th>Aluno</th><th>Respondidas</th><th>Acertos</th><th>% Acerto</th></tr></thead>
           <tbody>
             ${ranking.map((a, i) => `
               <tr>
-                <td><strong>${['🥇','🥈','🥉'][i] || (i+1)+'º'}</strong></td>
+                <td><strong>${(i+1)+'º'}</strong></td>
                 <td><strong>${_escHtml(a.nome)}</strong></td>
                 <td>${a.total}</td>
                 <td>${a.acertos}</td>
@@ -16304,7 +16322,7 @@ function renderRelatorioProfessor() {
     </div>
 
     <div class="chart-container">
-      <h3>📉 Top 10 Questões mais erradas (mínimo 3 respostas)</h3>
+      <h3>Top 10 questões mais erradas (mínimo 3 respostas)</h3>
       ${piores.length === 0 ? '<p style="color:var(--radix-gray-light);">Ainda não há dados suficientes.</p>' : `
         <table>
           <thead><tr><th>Tema</th><th>Questão (preview)</th><th>Respostas</th><th>% Acerto</th></tr></thead>
@@ -16323,17 +16341,17 @@ function renderRelatorioProfessor() {
     </div>
 
     <div class="chart-container">
-      <h3>📅 Atividade nos últimos 30 dias</h3>
-      <canvas id="chart-linha" height="80"></canvas>
+      <h3>Atividade nos últimos 30 dias</h3>
+      <div class="rx-chart-h sm"><canvas id="chart-linha"></canvas></div>
     </div>
 
     <div class="chart-container">
-      <h3>🎯 Taxa de Acerto por Tema</h3>
-      <canvas id="chart-rel" height="100"></canvas>
+      <h3>Taxa de acerto por tema</h3>
+      <div class="rx-chart-h"><canvas id="chart-rel"></canvas></div>
     </div>
 
     <div class="chart-container">
-      <h3>📋 Últimos Simulados Realizados</h3>
+      <h3>Últimos simulados realizados</h3>
       ${state.historicoSimulados.length === 0 ? '<p style="color:var(--radix-gray-light);">Nenhum simulado realizado ainda.</p>' : `
         <table>
           <thead><tr><th>Aluno</th><th>Data</th><th>Questões</th><th>Acertos</th><th>%</th></tr></thead>
@@ -16354,7 +16372,7 @@ function renderRelatorioProfessor() {
   new Chart(document.getElementById('chart-linha'), {
     type: 'line',
     data: { labels: labelsLinha, datasets: [{ label: 'Respostas/dia', data: dadosLinha, borderColor: '#1E88E5', backgroundColor: 'rgba(30,136,229,0.15)', fill: true, tension: 0.3 }] },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
   // Gráfico de tema
@@ -16364,7 +16382,7 @@ function renderRelatorioProfessor() {
   new Chart(document.getElementById('chart-rel'), {
     type: 'bar',
     data: { labels, datasets: [{ label: '% acerto', data: taxas, backgroundColor: '#1E88E5', borderRadius: 6 }] },
-    options: { scales: { y: { beginAtZero: true, max: 100 } } }
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
   });
 }
 
@@ -16535,7 +16553,7 @@ function _ldgRender() {
       '<button class="btn btn-secondary" style="padding:8px 14px;font-size:12.5px;" onclick="renderLeadsDegustacao()">Atualizar</button>' +
     '</div>' +
     (tot === 0
-      ? '<div class="ldg-empty">Nenhum lead ainda. Quem clicar em "Conhecer a plataforma por 7 dias" na página inicial aparece aqui.</div>'
+      ? '<div class="ldg-empty">Nenhum lead registrado. A degustação foi encerrada em 15/09/2026; esta tela guarda só o histórico.</div>'
       : (lista.length === 0
         ? '<div class="ldg-empty">Nenhum lead neste filtro.</div>'
         : '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table"><thead><tr>' +
@@ -16649,7 +16667,7 @@ async function renderGerenciarAlunos() {
       <div class="stat-card"><div class="label">Pendentes</div><div class="value" style="color:#E65100;">${pendentesT}</div></div>
       <div class="stat-card"><div class="label">Aprovados</div><div class="value" style="color:#16A34A;">${aprovadosT}</div></div>
       <div class="stat-card"><div class="label">Bloqueados</div><div class="value" style="color:var(--radix-red);">${bloqueadosT}</div></div>
-      <div class="stat-card" style="cursor:pointer;" onclick="renderLeadsDegustacao()" title="Abrir o detalhamento dos leads da degustação"><div class="label">Em degustação</div><div class="value" style="color:var(--radix-cyan,#0891b2);">${degustT}</div><div class="sub">ver detalhamento →</div></div>
+      <div class="stat-card" style="cursor:pointer;" onclick="renderLeadsDegustacao()" title="Histórico da degustação, encerrada em 15/09/2026"><div class="label">Degustação (encerrada)</div><div class="value" style="color:var(--radix-cyan,#0891b2);">${degustT}</div><div class="sub">ver histórico →</div></div>
       <div class="stat-card"><div class="label">Total</div><div class="value">${totalGeral}</div></div>
     </div>
 
@@ -16791,7 +16809,7 @@ function filtrarAlunos() {
     ` : ''}
 
     ${degust.length > 0 ? `
-      <h3 class="section-title"><span class="section-title-accent"></span>🧪 Em degustação (${degust.length}) <small style="font-weight:400;font-size:12px;color:var(--radix-gray-light)">leads de ${DEGUSTACAO.dias} dias · ${degust.filter(p => p.degustacao_ate && new Date(p.degustacao_ate) < new Date()).length} expirada(s) · aprovar = matricular · <a onclick="renderLeadsDegustacao()" style="cursor:pointer;color:var(--radix-cyan,#0891b2);font-weight:700;">ver detalhamento →</a></small></h3>
+      <h3 class="section-title"><span class="section-title-accent"></span>Degustação encerrada (${degust.length}) <small style="font-weight:400;font-size:12px;color:var(--radix-gray-light)">contas da amostra de ${DEGUSTACAO.dias} dias · ${degust.filter(p => p.degustacao_ate && new Date(p.degustacao_ate) < new Date()).length} expirada(s) · aprovar = matricular · <a onclick="renderLeadsDegustacao()" style="cursor:pointer;color:var(--radix-cyan,#0891b2);font-weight:700;">ver detalhamento →</a></small></h3>
       ${renderListaAlunos(degust, 'degustacao')}
     ` : ''}
 
@@ -19612,6 +19630,9 @@ function renderCronograma(focoN) {
   // Professor (sem progresso) e aluno espiando o outro track veem só o
   // planejamento (cards limpos, sem status/estatística).
   const mostrarProgresso = !isProf && tipoView === tipoUser;
+  // (Onda 1, 24/10/2026) semana atual do aluno: marcada no cartão e usada para abrir a tela nela
+  let _sa = null; try { _sa = (mostrarProgresso && typeof getSemanaAtual === 'function') ? getSemanaAtual() : null; } catch (e) { _sa = null; }
+  state._cronAtualN = (_sa && _sa.n != null) ? _sa.n : null;
 
   const merged = getCronogramaMerged(tipoView);
   const modsAtivos = getModulosCronograma(tipoView);
@@ -19634,7 +19655,7 @@ function renderCronograma(focoN) {
   const pctConcluido = totalSemanas ? Math.round((concluidas / totalSemanas) * 100) : 0;
 
   const badgeIntegral = ehIntegral
-    ? '<span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#7e22ce,#a855f7);color:#fff;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.06em;vertical-align:middle;margin-left:10px;">⚡ INTEGRAL</span>'
+    ? '<span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#7e22ce,#a855f7);color:#fff;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:0.06em;vertical-align:middle;margin-left:10px;">INTEGRAL</span>'
     : '';
 
   // Toggle Regular ⇄ Integral (professor + aluno do Integral)
@@ -19673,6 +19694,7 @@ function renderCronograma(focoN) {
 
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
       <h2 class="section-title" style="margin:0;"><span class="section-title-accent"></span><span class="st-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cronograma 2026 — Matemática${badgeIntegral}</h2>
+      ${(mostrarProgresso && state._cronAtualN != null) ? '<button class="btn btn-secondary" style="padding:9px 14px;font-size:13px;" onclick="renderCronograma(' + state._cronAtualN + ')">Ir para a semana atual</button>' : ''}
       ${mostrarProgresso ? `<button class="btn btn-secondary" onclick="baixarPDFProgressoTudo()"
               title="Baixa um PDF com TODOS os seus registros de progresso (resumo + semana a semana). Útil pra revisar e montar estratégia de estudo."
               style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:13px;">
@@ -19717,6 +19739,14 @@ function renderCronograma(focoN) {
       alvo.classList.add('cron-semana-foco');
       setTimeout(() => alvo.classList.remove('cron-semana-foco'), 2200);
     }, 50);
+  } else if (state._cronAtualN != null) {
+    // (Onda 1, 24/10/2026) sem foco pedido, a tela abre na semana atual em vez de rolar desde janeiro
+    setTimeout(() => {
+      const alvo = document.getElementById('cron-sem-' + state._cronAtualN);
+      if (!alvo) return;
+      const y = alvo.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'auto' });
+    }, 60);
   }
 }
 
@@ -19752,7 +19782,6 @@ function renderSemanaCard(s, mostrarProgresso) {
 
   const st = statusDaSemana(s.n);
   const stats = statsDaSemana(s);
-  const stIcon = { 'nao_iniciado': '⚪', 'em_estudo': '🟡', 'concluido': '✅' }[st];
   const stLabel = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' }[st];
   const podeMarcar = s.tipo !== 'recesso';
 
@@ -19771,9 +19800,9 @@ function renderSemanaCard(s, mostrarProgresso) {
       const atrasadas = revs.filter(r => r.status === 'atrasada').length;
       const hoje = revs.filter(r => r.status === 'hoje').length;
       if (atrasadas > 0) {
-        revBadge = `<span class="cron-semana-rev-badge rev-atrasada" title="${atrasadas} ${atrasadas===1?'revisão atrasada':'revisões atrasadas'}">⚠ ${atrasadas}</span>`;
+        revBadge = `<span class="cron-semana-rev-badge rev-atrasada" title="${atrasadas} ${atrasadas===1?'revisão atrasada':'revisões atrasadas'}">${_RXI2.alerta} ${atrasadas}</span>`;
       } else if (hoje > 0) {
-        revBadge = `<span class="cron-semana-rev-badge" title="${hoje} ${hoje===1?'revisão pra hoje':'revisões pra hoje'}">🔔 ${hoje}</span>`;
+        revBadge = `<span class="cron-semana-rev-badge" title="${hoje} ${hoje===1?'revisão pra hoje':'revisões pra hoje'}">${_RXI2.sino} ${hoje}</span>`;
       }
     }
   }
@@ -19782,27 +19811,27 @@ function renderSemanaCard(s, mostrarProgresso) {
   const errosAtivos = _errosAtivos(_errosDaSemana(s.n));
   let erroBadge = '';
   if (errosAtivos.length > 0) {
-    erroBadge = `<span class="cron-semana-erro-badge" title="${errosAtivos.length} ${errosAtivos.length===1?'erro registrado':'erros registrados'}">📕 ${errosAtivos.length}</span>`;
+    erroBadge = `<span class="cron-semana-erro-badge" title="${errosAtivos.length} ${errosAtivos.length===1?'erro registrado':'erros registrados'}">${_RXI2.livro} ${errosAtivos.length}</span>`;
   }
   const temAmbos = !!(revBadge && erroBadge);
 
   return `
-    <div class="cron-semana ${st} ${temAmbos ? 'tem-rev-e-erro' : ''}" id="cron-sem-${s.n}" style="position:relative;" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
+    <div class="cron-semana ${st} ${temAmbos ? 'tem-rev-e-erro' : ''}${state._cronAtualN === s.n ? ' cron-semana-atual' : ''}" id="cron-sem-${s.n}" style="position:relative;" ${podeMarcar ? `onclick="abrirEditorSemana(${s.n})"` : ''}>
       ${revBadge}
       ${erroBadge}
       <div class="cron-semana-topo">
         <div class="cron-semana-num">SEM<br><b>${String(s.n).padStart(2,'0')}</b></div>
         <div class="cron-semana-meta">
-          <div class="cron-semana-data">${s.data} ${tipoBadge}</div>
+          <div class="cron-semana-data">${s.data} ${tipoBadge}${state._cronAtualN === s.n ? ' <span class="cron-tipo cron-atual-tipo">SEMANA ATUAL</span>' : ''}</div>
           <div class="cron-semana-titulo">${_escHtml(s.titulo)}</div>
           ${_chipsTemasSemana(s)}
         </div>
-        <div class="cron-semana-status" title="${stLabel}">${stIcon}</div>
+        <div class="cron-semana-status" title="${stLabel}" role="img" aria-label="${stLabel}"></div>
       </div>
       ${(s.temaId || (s.temas && s.temas.length)) ? `
         <div class="cron-semana-stats">
-          <span>📝 ${stats.total} ${stats.total === 1 ? 'questão' : 'questões'}</span>
-          ${stats.total > 0 ? `<span>· 🎯 ${stats.taxa}% acerto</span>` : ''}
+          <span>${stats.total} ${stats.total === 1 ? 'questão' : 'questões'}</span>
+          ${stats.total > 0 ? `<span>· ${stats.taxa}% de acerto</span>` : ''}
         </div>
       ` : ''}
     </div>
@@ -19956,7 +19985,7 @@ function _renderAlertaRevisoes() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="dash-rev-txt">
-          <p class="dash-rev-titulo">Suas revisões estão em dia 🎉</p>
+          <p class="dash-rev-titulo">Suas revisões estão em dia.</p>
           <p class="dash-rev-sub">${futuras} ${futuras === 1 ? 'revisão programada' : 'revisões programadas'} pros próximos dias.</p>
         </div>
         <div class="dash-rev-cta">Ver plano →</div>
@@ -21227,7 +21256,7 @@ function _htmlMinhaMeta() {
   if (!meta) {
     return `
       <div style="text-align:center;padding:48px 24px;background:var(--radix-surface-2, #fff);border:1px dashed var(--radix-line, #e5e7eb);border-radius:14px;color:var(--radix-text-muted);">
-        <div style="font-size:44px;margin-bottom:10px;">🎯</div>
+        <div class="rx-ico-grande">${_RXI2.alvo}</div>
         <p style="margin:0 0 6px;font-weight:700;color:var(--radix-text);">Você ainda não definiu sua meta</p>
         <p style="margin:0 0 16px;font-size:13px;">Diga qual curso você quer e quanto precisa tirar em cada área.<br>A plataforma calcula sozinha o quanto falta.</p>
         <button class="btn" style="background:var(--radix-cyan);color:#0e1a36;font-weight:800;padding:10px 20px;" onclick="abrirModalMeta()">
@@ -21324,7 +21353,7 @@ function _htmlMinhaMeta() {
 
     ${!temSimulado ? `
       <div style="padding:12px 14px;background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.4);border-radius:10px;font-size:12.5px;color:var(--radix-text);margin-bottom:14px;">
-        ⚠️ Você ainda não registrou nenhum simulado. Cadastre um na aba <b>Bancas externas</b> pra ver quanto falta pra sua meta.
+        Você ainda não registrou nenhum simulado. Cadastre um na aba <b>Bancas externas</b> pra ver quanto falta pra sua meta.
       </div>
     ` : `
       <p style="font-size:12.5px;color:var(--radix-text-muted);margin:0 0 12px;">
@@ -21417,7 +21446,7 @@ function abrirModalMeta() {
   const html = `
     <div class="modal-overlay" onclick="if(event.target===this)fecharModalMeta()">
       <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto;">
-        <h2 style="margin:0 0 4px;">🎯 Minha meta</h2>
+        <h2 style="margin:0 0 4px;">Minha meta</h2>
         <p style="font-size:12.5px;color:var(--radix-text-muted);margin:0 0 16px;">
           Diga onde você quer chegar. A plataforma compara com seus simulados e mostra <b>quanto falta em cada área</b>. Preencha só o que fizer sentido pra você.
         </p>
@@ -21841,7 +21870,7 @@ function abrirModalErro(opcoes) {
     <div class="modal-overlay" id="${id}" onclick="if(event.target===this)fecharModalErro()">
       <div class="modal ce-modal-form" style="max-width:600px;padding:24px 28px;">
         <div style="display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--radix-line);margin-bottom:18px;">
-          <span style="font-size:28px;line-height:1;">📕</span>
+          <span class="rx-ico-grande" style="width:28px;height:28px;margin:0;color:#7e22ce;">${_RXI2.livro}</span>
           <h2 style="margin:0;flex:1;font-size:20px;font-weight:800;">${editando ? 'Editar erro' : 'Novo erro'}</h2>
           ${questaoId ? `<button class="btn btn-secondary" style="padding:7px 12px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;" onclick="verQuestaoDoErro(${editando ? "'" + editando.id + "'" : 'null'}, ${questaoId})" title="Abre a questão ${questaoId} com gabarito e resolução"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver questão ${questaoId}</button>` : ''}
           ${ACOMP.htmlSelectSemana(semanaN, merged)}
@@ -21980,17 +22009,11 @@ async function salvarErroNoModal() {
   } catch (e) {
     const msg = e?.message || JSON.stringify(e);
     console.error('[caderno_erros] erro ao salvar:', e, '| payload:', payload);
-    // Só mostra o aviso "rode o SQL" se for ESPECIFICAMENTE a tabela que não existe
-    if (/relation "?caderno_erros"? does not exist|table "?caderno_erros"? does not exist/i.test(msg)) {
-      alert('Caderno de erros ainda não está configurado no banco. Rode SQL_caderno_erros.sql no Supabase.');
-    } else if (/row.level security|rls|policy/i.test(msg)) {
-      alert('Erro de permissão (RLS):\n' + msg + '\n\nVerifique se as policies de caderno_erros foram criadas (parte do SQL_caderno_erros.sql).');
-    } else if (/violates.*foreign key|fkey/i.test(msg)) {
-      alert('Erro de referência:\n' + msg + '\n\nProvável: questao_id apontando pra questão que não existe. Veja o console (F12) pra detalhes.');
-    } else if (/check constraint/i.test(msg)) {
-      alert('Erro de validação:\n' + msg + '\n\nProvável: categoria ou prioridade fora do esperado.');
+    // (Onda 1, 24/10/2026) O detalhe técnico fica no console; o aluno recebe um aviso em linguagem comum.
+    if (typeof rxErroTransitorio === 'function' && rxErroTransitorio(e)) {
+      alert('Não consegui salvar no seu caderno agora (sem conexão). Tente de novo em instantes.');
     } else {
-      alert('Erro ao salvar:\n' + msg + '\n\nVeja o console (F12) pra mais detalhes.');
+      alert('Não consegui salvar este erro no seu caderno. Tente de novo em instantes; se continuar, avise o professor.');
     }
     return;
   }
@@ -22145,7 +22168,7 @@ function renderCadernoErros() {
       <select onchange="state._ceFiltroCat=this.value;renderCadernoErros();"
               style="padding:8px 12px;border:1px solid var(--radix-line-2);border-radius:8px;font-size:13px;background:var(--radix-surface);color:var(--radix-text);min-width:200px;">
         <option value="" ${!state._ceFiltroCat?'selected':''}>Todas as categorias</option>
-        ${CATEGORIAS_ERRO.map(c => `<option value="${c.id}" ${state._ceFiltroCat===c.id?'selected':''}>${c.icone} ${c.nome}</option>`).join('')}
+        ${CATEGORIAS_ERRO.map(c => `<option value="${c.id}" ${state._ceFiltroCat===c.id?'selected':''}>${c.nome}</option>`).join('')}
       </select>
       <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--radix-text-muted);cursor:pointer;">
         <input type="checkbox" ${state._ceMostrarResolv?'checked':''} onchange="state._ceMostrarResolv=this.checked;renderCadernoErros();">
@@ -22262,7 +22285,7 @@ async function verQuestaoDoErro(erroId, qidDireto, opts) {
     try { await state.questoesPromise; } finally { radixHideLoading(); }
   }
   const q = (state.questoes || []).find(x => x.id === qid);
-  if (!q) { alert('A questão ' + qid + ' não está disponível no seu banco (pode ter sido removida ou estar fora da amostra da degustação).'); return; }
+  if (!q) { alert('Esta questão não está mais no banco. O registro continua no seu caderno.'); return; }
   const tema = TEMAS.find(t => t.id === q.tema);
   const letra = i => String.fromCharCode(65 + i);
   const ultima = (state.respostasAluno || []).find(r => r.questaoId === qid);   // lista já vem da mais recente
@@ -22364,12 +22387,12 @@ function _renderSecaoCadernoNaSemana(semanaN) {
     return `
       <div class="ce-na-semana-item ${e.resolvido ? 'resolvido' : ''}" style="border-left-color:${e.resolvido ? '#10b981' : pri.cor};">
         <span class="pri-dot" style="background:${e.resolvido ? '#10b981' : pri.cor};"></span>
-        <span style="font-size:14px;">${cat.icone}</span>
+        <span class="ce-cat-ico">${_SVG_CAT[cat.id] || ''}</span>
         <span class="ce-name">${_esc(e.titulo)}</span>
         <div class="acoes">
           ${_questaoIdDoErro(e) ? `<button class="mini-btn" title="Ver questão ${_questaoIdDoErro(e)}" onclick="verQuestaoDoErro('${e.id}')">Q</button>` : ''}
           <button class="mini-btn" title="${e.resolvido ? 'Reabrir' : 'Marcar resolvido'}" onclick="toggleResolvidoErro('${e.id}')">${e.resolvido ? '↺' : '✓'}</button>
-          <button class="mini-btn" title="Editar" onclick="abrirModalErro({erroId: '${e.id}'})">✏</button>
+          <button class="mini-btn" title="Editar" onclick="abrirModalErro({erroId: '${e.id}'})">${_RXI2.lapis}</button>
         </div>
       </div>`;
   }).join('');
@@ -22527,17 +22550,17 @@ function renderMinhasRevisoes() {
 
     ${all.length === 0 ? `
       <div style="text-align:center;padding:48px 24px;background:var(--radix-surface,#fff);border-radius:14px;border:1px dashed var(--radix-line,#e5e7eb);color:var(--radix-text-muted);">
-        <div style="font-size:42px;margin-bottom:8px;">🌱</div>
+        <div class="rx-ico-grande">${_RXI2.calendario}</div>
         <p style="margin:0 0 6px;font-size:14px;"><b>Você ainda não tem revisões previstas.</b></p>
         <p style="margin:0;font-size:12.5px;">Abra uma semana no Cronograma, marque como <b>"Em estudo"</b> e defina a data de início. As revisões aparecem aqui automaticamente.</p>
       </div>
     ` : `
-      ${_renderGrupoRevisao('atrasadas',   '🔴 Atrasadas',           g.atrasadas,    true)}
-      ${_renderGrupoRevisao('hoje',        '🔵 Hoje',                g.hoje,         true)}
-      ${_renderGrupoRevisao('estaSemana',  '🟠 Próximos 7 dias',     g.estaSemana,   true)}
-      ${_renderGrupoRevisao('proximas30',  '🟣 Próximos 30 dias',    g.proximas30,   false)}
-      ${_renderGrupoRevisao('futuras',     '⚪ Mais distantes',      g.futuras,      false)}
-      ${state._revMostrarFeitas ? _renderGrupoRevisao('feitas', '✅ Feitas', g.feitas, false) : ''}
+      ${_renderGrupoRevisao('atrasadas',   '<span class="rev-dot" style="background:#dc2626"></span>Atrasadas',           g.atrasadas,    true)}
+      ${_renderGrupoRevisao('hoje',        '<span class="rev-dot" style="background:#0891b2"></span>Hoje',                g.hoje,         true)}
+      ${_renderGrupoRevisao('estaSemana',  '<span class="rev-dot" style="background:#f59e0b"></span>Próximos 7 dias',     g.estaSemana,   true)}
+      ${_renderGrupoRevisao('proximas30',  '<span class="rev-dot" style="background:#a855f7"></span>Próximos 30 dias',    g.proximas30,   false)}
+      ${_renderGrupoRevisao('futuras',     '<span class="rev-dot" style="background:#94a3b8"></span>Mais distantes',      g.futuras,      false)}
+      ${state._revMostrarFeitas ? _renderGrupoRevisao('feitas', '<span class="rev-dot" style="background:#16a34a"></span>Feitas', g.feitas, false) : ''}
     `}
   `;
 }
@@ -22759,7 +22782,7 @@ function abrirEditorSemana(n) {
             <div id="ebb-revisoes" class="ebb-revisoes-grid"></div>
           </div>
 
-          <div class="estudo-sec-titulo">🏫 Em sala</div>
+          <div class="estudo-sec-titulo">Em sala</div>
           <div class="estudo-grid">
             <div class="colhead lbl">Categoria</div>
             <div class="colhead">Feitas</div>
@@ -22783,7 +22806,7 @@ function abrirEditorSemana(n) {
             <span id="sem-pct-sala-badge" class="estudo-badge empty">— %</span>
           </div>
 
-          <div class="estudo-sec-titulo" style="margin-top:18px;">🏠 Em casa</div>
+          <div class="estudo-sec-titulo" style="margin-top:18px;">Em casa</div>
           <div class="estudo-grid">
             <div class="colhead lbl">Categoria</div>
             <div class="colhead">Feitas</div>
@@ -23683,7 +23706,7 @@ async function gerarPDFProgresso(semanas, titulo) {
         // Barra colorida à esquerda
         page.drawRectangle({ x: ML, y: y - cardH, width: 3, height: cardH, color: corBorda });
         // Meta (prioridade + categoria)
-        const metaTxt = sanit(pri.nome.toUpperCase() + ' · ' + cat.icone + ' ' + cat.nome);
+        const metaTxt = sanit(pri.nome.toUpperCase() + ' · ' + cat.nome);
         page.drawText(metaTxt, { x: ML + 10, y: y - 11, size: 7.5, font: fontBold, color: corBorda });
 
         // Título
@@ -24216,7 +24239,7 @@ const TENTATIVAS = {
   },
   async continuar(id) {
     const t = this.mapa[id];
-    if (!t || t.status !== 'em_andamento') { alert('Essa atividade não está mais em andamento.'); renderHome(); return; }
+    if (!t || t.status !== 'em_andamento') { alert('Esta atividade já foi encerrada, talvez em outro aparelho. O resultado está em Desempenho.'); renderHome(); return; }
     if (!state.questoesPronto && state.questoesPromise) { radixShowLoading('Carregando questões…'); try { await state.questoesPromise; } finally { radixHideLoading(); } }
     if (t.tipo === 'estudo_teste' || t.tipo === 'estudo_prova') return _retomarEstudo(t);
     return _retomarSimulado(t);
@@ -24471,7 +24494,7 @@ function _atualizarContadorEstudoSemReRender() {
   const btnEnc = document.getElementById('estudo-btn-encerrar');
   if (btnEnc) {
     btnEnc.disabled = false; btnEnc.style.opacity = ''; btnEnc.style.cursor = ''; btnEnc.style.background = corAcento;
-    btnEnc.textContent = ehTeste ? '✓ Finalizar estudo' : (respN === total ? '🎯 Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
+    btnEnc.textContent = ehTeste ? '✓ Finalizar estudo' : (respN === total ? 'Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
     btnEnc.onclick = _finalizarEstudoDigital;
   }
 }
@@ -24568,7 +24591,7 @@ function _renderResultadoEstudo(r) {
     + RF_LISTA.htmlResultado(r)
     + '<div style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
     + ACOMP.htmlAcoesResultado(ACOMP.ctxEstudo(r))
-    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">📚 Voltar ao Banco</button></div>';
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">Voltar ao banco</button></div>';
   try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
 }
 
@@ -24586,7 +24609,7 @@ function _mostrarFeedbackQuestao(q, idx) {
   const correto = idx === q.correta;
   const semAtualResp = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
   const podeCaderno = !correto && state.usuario?.perfil === 'aluno';   // (Etapa 3) sem exigir semana
-  const btnCaderno = podeCaderno ? '<div style="margin-top:10px;"><button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;" onclick="abrirModalErroDaQuestao(' + q.id + ')">📕 Adicionar ao caderno de erros</button></div>' : '';
+  const btnCaderno = podeCaderno ? '<div style="margin-top:10px;"><button class="btn" style="background:#7e22ce;padding:7px 12px;font-size:12.5px;" onclick="abrirModalErroDaQuestao(' + q.id + ')">Adicionar ao caderno de erros</button></div>' : '';
   const box = document.getElementById('explicacao-' + q.id);
   if (box) box.innerHTML = '<div class="explicacao"><strong>' + (correto ? '✓ Correto!' : '✗ Resposta incorreta.') + '</strong><br>'
     + '<strong>Gabarito:</strong> ' + String.fromCharCode(65 + q.correta) + ')<br>'
@@ -24627,7 +24650,7 @@ function iniciarSimulado() {
   let pool = state.questoes.slice();
   if (temas.length > 0) pool = pool.filter(q => temas.includes(q.tema));
   if (pool.length === 0) { alert('Não há questões com esse filtro.'); return; }
-  if (pool.length < num) { alert('Apenas ' + pool.length + ' questões disponíveis com esses filtros.'); return; }
+  if (pool.length < num) { alert('Só há ' + pool.length + ' questões com esses filtros. Reduza a quantidade ou amplie os filtros.'); return; }
   TENTATIVAS.antesDeComecar(['simulado', 'mini'], () => {
     const sorteio = pool.slice().sort(() => Math.random() - 0.5).slice(0, num);
     _criarSimulado(sorteio, tempo, 'simulado', { num, tempo, temas });
@@ -24799,7 +24822,7 @@ async function triEnviar() {
     radixHideLoading();
     if (error) {
       if (rxErroTransitorio(error)) alert('Não foi possível enviar agora (sem conexão). Suas marcações estão guardadas; tente de novo em instantes.');
-      else alert('Não foi possível calcular: ' + error.message);
+      else { console.error('[simulado] calcular', error); alert('Não consegui calcular sua nota agora. Suas marcações estão guardadas; tente enviar de novo em instantes.'); }
       return;
     }
     clearInterval(TRI.timer); TRI.atual = null;
@@ -24847,6 +24870,18 @@ const _RXI = {
   livro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
   chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
   lista: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>'
+};
+// (Onda 1, 24/10/2026) Ícones em SVG que substituem emojis nas telas do aluno.
+const _RXI2 = {
+  alerta: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  sino: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  livro: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  alvo: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  relogio: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  monitor: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  arquivo: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  lapis: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+  calendario: '<svg class="rx-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>'
 };
 function rxIco(n) { return _RXI[n] || ''; }
 
@@ -25039,6 +25074,15 @@ const NAV = {
     { id: 'listas', rota: 'listas', txt: 'Minhas listas', ico: 'listas', badge: 'listas' },
     { id: 'cronograma', rota: 'cronograma', txt: 'Cronograma', ico: 'cronograma' }
   ],
+  // (Onda 1, 24/10/2026) Até a prova, a Revisão Final entra na barra do celular no lugar de "Revisar", que vai para "Mais".
+  ITEM_RF: { id: 'revisao-final', rota: 'revisao-final', txt: 'Revisão Final', ico: 'rf' },
+  rfAtiva() {
+    try {
+      if (!state.usuario || state.usuario.perfil === 'professor' || state.degustacao) return false;
+      const n = RVP.semanaAtual(); return n >= 1 && n <= 7;
+    } catch (e) { return false; }
+  },
+  itensBarra() { const b = this.ITENS.slice(0, 4); if (this.rfAtiva()) b.splice(2, 1, this.ITEM_RF); return b; },
   item(it, cls) {
     return '<a class="' + (cls || 'rx-nav-item') + '" data-secao="' + it.id + '" href="#/' + it.rota + '" onclick="event.preventDefault();ROTA.ir(\'' + it.rota + '\')">' + rxIco(it.ico) + '<span>' + it.txt + '</span>'
       + (it.badge ? '<span class="rx-badge is-zero" data-badge="' + it.badge + '">0</span>' : '') + '</a>';
@@ -25070,7 +25114,7 @@ const NAV = {
       + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();logout()">' + rxIco('sair') + '<span>Sair</span></a>'
       + '</div>';
     const bottom = app.querySelector('.rx-bottom');
-    bottom.innerHTML = this.ITENS.slice(0, 4).map(it => this.item(it, '')).join('')
+    bottom.innerHTML = this.itensBarra().map(it => this.item(it, '')).join('')
       + '<a data-secao="mais" href="#" onclick="event.preventDefault();NAV.abrirMais()">' + rxIco('mais') + '<span>Mais</span><span class="rx-badge is-zero" data-badge="listas" hidden>0</span></a>';
     this.atualizarBadges();
     this.marcar(ROTA.atual || 'inicio');
@@ -25092,9 +25136,10 @@ const NAV = {
     const n = (state.questoesSelecionadas || []).length;
     const it = (rota, ico, txt, extra) => '<a class="rx-nav-item" href="#/' + rota + '" onclick="event.preventDefault();ROTA.ir(\'' + rota + '\')">' + rxIco(ico) + '<span>' + txt + '</span>' + (extra || '') + '</a>';
     RX_DRAWER.abrir('mais', 'Mais', '<div class="rx-mais-lista">'
+      + (NAV.rfAtiva() ? it('revisar', 'revisar', 'Revisar') : '')
       + it('listas', 'listas', 'Minhas listas', n ? '<span class="rx-badge">' + n + '</span>' : '')
       + it('cronograma', 'cronograma', 'Cronograma')
-      + it('revisao-final', 'rf', 'Revisão Final')
+      + (NAV.rfAtiva() ? '' : it('revisao-final', 'rf', 'Revisão Final'))
       + it('desempenho', 'estat', 'Desempenho')
       + it('perfil', 'perfil', 'Meu perfil')
       + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();toggleTheme();NAV.abrirMais()">' + rxIco(claro ? 'tema' : 'sol') + '<span>' + (claro ? 'Tema escuro' : 'Tema claro') + '</span></a>'
@@ -25157,8 +25202,31 @@ function atualizarBadgeLista() {
 // ============================================================================
 // PÁGINA INICIAL DO ALUNO
 // ============================================================================
+// (Onda 1, 24/10/2026) Até a prova, o próximo passo da página inicial é a atividade do dia no plano da Revisão Final.
+function _homeRFInfo() {
+  try {
+    if (typeof NAV === 'undefined' || !NAV.rfAtiva()) return null;
+    const n = RVP.semanaAtual();
+    const hoje = new Date(); const h = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 12);
+    return { n, dias: Math.round((RVP.dt(RVP.PROVA2) - h) / 86400000) };
+  } catch (e) { return null; }
+}
+function _homeBotaoRF() {
+  const rf = _homeRFInfo();
+  return rf ? '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'revisao-final\')">' + rxIco('rf') + 'Revisão Final · Semana ' + rf.n + '</button>' : '';
+}
+function _homeProximoPassoRF(rf, temaSemAtual) {
+  const prazo = rf.dias > 1 ? ' Faltam ' + rf.dias + ' dias para a prova de Matemática, em 15 de novembro.' : rf.dias === 1 ? ' A prova de Matemática é amanhã.' : rf.dias === 0 ? ' A prova de Matemática é hoje.' : '';
+  return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Revisão Final · Semana ' + rf.n + ' de 7</h2>'
+    + '<p>A atividade de hoje está no seu plano da Revisão Final.' + prazo + '</p>'
+    + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="ROTA.ir(\'revisao-final\')">' + rxIco('rf') + 'Abrir a atividade de hoje</button>'
+    + (temaSemAtual ? '<button type="button" class="rx-btn rx-btn-secondary" onclick="abrirTema(\'' + temaSemAtual.id + '\')">Estudar o tema da semana</button>' : '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'estudar\')">Abrir o banco de questões</button>')
+    + '</div>';
+}
 function _homeProximoPasso(semAtual, temaSemAtual, mats) {
   const pend = (typeof TENTATIVAS !== 'undefined' && TENTATIVAS.uid) ? TENTATIVAS.lista() : [];
+  const rf = _homeRFInfo();
+  if (!pend.length && rf) return _homeProximoPassoRF(rf, temaSemAtual);
   if (pend.length === 1) {
     const t = pend[0]; const total = (t.questoes_ids || []).length; const resp = Object.keys(t.respostas || {}).length;
     const venceu = t.termina_em && Date.parse(t.termina_em) <= RELOGIO.agora();
@@ -25170,12 +25238,12 @@ function _homeProximoPasso(semAtual, temaSemAtual, mats) {
       + '<div class="rx-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + resp + '"><i style="width:' + (total ? Math.round(resp / total * 100) : 0) + '%"></i></div>'
       + '<div class="rx-next-meta">' + resp + ' de ' + total + ' respondidas' + (rest != null && !venceu ? ' · ' + Math.max(1, Math.round(rest / 60)) + ' min restantes' : '') + '</div>'
       + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="TENTATIVAS.continuar(\'' + t.id + '\')">' + rxIco('play') + (venceu ? 'Ver resultado' : 'Continuar atividade') + '</button>'
-      + '<button type="button" class="rx-btn rx-btn-ghost" onclick="TENTATIVAS.modalRetomar()">Detalhes</button></div>';
+      + '<button type="button" class="rx-btn rx-btn-ghost" onclick="TENTATIVAS.modalRetomar()">Detalhes</button>' + _homeBotaoRF() + '</div>';
   }
   if (pend.length > 1) {
     return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Continuar atividade</h2>'
       + '<p>Você tem ' + pend.length + ' atividades em andamento: ' + _escHtml(pend.slice(0, 3).map(t => TENTATIVAS.ROTULO[t.tipo] || t.tipo).join(', ')) + (pend.length > 3 ? '…' : '') + '. Escolha qual continuar.</p>'
-      + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="TENTATIVAS.modalRetomar()">' + rxIco('play') + 'Escolher e continuar</button></div>';
+      + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="TENTATIVAS.modalRetomar()">' + rxIco('play') + 'Escolher e continuar</button>' + _homeBotaoRF() + '</div>';
   }
   if (semAtual && temaSemAtual) {
     const nQ = state.questoesPronto ? (state.questoes || []).filter(q => q.tema === temaSemAtual.id).length : null;
@@ -26402,8 +26470,8 @@ function _htmlCardRevisaoGeral(s, mostrarProgresso, ehAluno) {
     ? '<a class="crv-btn" href="/revisao-final" role="button" aria-label="Ver plano da semana ' + s.n + ' (Revisão ' + String(s.revisaoN).padStart(2, '0') + ')" onclick="event.stopPropagation();event.preventDefault();renderRevisaoFinal()">Ver plano da semana <span aria-hidden="true">→</span></a>'
     : '';
   const aria = 'Semana ' + s.n + ' do curso, ' + titulo + ', ' + _crvData(s.data) + (stLabel ? ', ' + stLabel.toLowerCase() : '') + (podeMarcar ? '. Abre o registro da semana.' : '');
-  return '<article class="crv-card' + (st ? ' ' + st : '') + '" id="cron-sem-' + s.n + '"' + (podeMarcar ? ' role="button" tabindex="0" onclick="abrirEditorSemana(' + s.n + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirEditorSemana(' + s.n + ')}"' : '') + ' aria-label="' + _escHtml(aria) + '">'
-    + '<div class="crv-top"><div class="crv-id"><span class="crv-week">Semana ' + s.n + ' do curso</span><h4 class="crv-h">' + titulo + '</h4></div><span class="crv-date">' + _crvData(s.data) + '</span></div>'
+  return '<article class="crv-card' + (st ? ' ' + st : '') + (state._cronAtualN === s.n ? ' cron-semana-atual' : '') + '" id="cron-sem-' + s.n + '"' + (podeMarcar ? ' role="button" tabindex="0" onclick="abrirEditorSemana(' + s.n + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirEditorSemana(' + s.n + ')}"' : '') + ' aria-label="' + _escHtml(aria) + '">'
+    + '<div class="crv-top"><div class="crv-id"><span class="crv-week">Semana ' + s.n + ' do curso' + (state._cronAtualN === s.n ? ' <span class="cron-tipo cron-atual-tipo">SEMANA ATUAL</span>' : '') + '</span><h4 class="crv-h">' + titulo + '</h4></div><span class="crv-date">' + _crvData(s.data) + '</span></div>'
     + (st || errosAtivos.length ? '<div class="crv-estado">' + (st ? '<span class="crv-status ' + st + '"><i aria-hidden="true"></i>' + stLabel + '</span>' : '')
       + (errosAtivos.length ? '<span class="crv-erros" title="Erros ativos no caderno nesta semana">' + errosAtivos.length + (errosAtivos.length === 1 ? ' erro no caderno' : ' erros no caderno') + '</span>' : '') + '</div>' : '')
     + '<ul class="crv-list">' + assuntos.map(id => '<li>' + _escHtml(_nomeCurtoTema(id)) + '</li>').join('') + '</ul>'
