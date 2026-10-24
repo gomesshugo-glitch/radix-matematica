@@ -76,7 +76,7 @@
      =================================================================== */
   /* superfícies escuras nos cards que antes eram brancos */
   .quick-card, .modulo-bloco, .simulado-header,
-  .stat-card, table, .resultado-box, .chart-container,
+  .stat-card, table, .resultado-box, .chart-container, .config-box,
   .lista-mod-bloco, .gerencia-mat-item, .dash-card,
   .modal {
     background: var(--radix-surface) !important;
@@ -6087,6 +6087,31 @@
   /* (Onda 1) rótulo "Revisão Final" na barra inferior */
   .rx-bottom a span { white-space: nowrap; }
   .rx-bottom a[data-secao="revisao-final"] span { font-size: 10.5px; letter-spacing: -.2px; }
+  /* (Onda 2, 24/10/2026) retomada visível, sequência de questões, atalhos do simulado */
+  .rx-retomar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; margin: 0 0 14px; border-radius: var(--rx-r); background: var(--rx-primary-soft); border: 1px solid rgba(59,130,246,.35); }
+  .rx-retomar .t { flex: 1; min-width: 200px; font-size: var(--rx-fs-sm); color: var(--rx-text-2); line-height: 1.4; }
+  .rx-retomar .t b { display: block; font-size: var(--rx-fs); color: var(--rx-text); }
+  .rx-retomar .a { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rx-prox { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .rx-sessao { font-size: 12.5px; font-weight: 700; color: var(--rx-text-2); }
+  .rx-prox .rx-sessao:first-child { margin-right: auto; }
+  .sim-atalhos { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin: 0 0 18px; }
+  .sim-atalho { text-align: left; border: 1px solid var(--radix-line-2); background: var(--radix-surface); color: var(--radix-text); border-radius: 12px; padding: 14px; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 4px; min-height: 44px; }
+  .sim-atalho:hover:not(.off) { border-color: var(--radix-cyan); }
+  .sim-atalho b { font-size: 14px; }
+  .sim-atalho span { font-size: 12px; color: var(--radix-text-muted); line-height: 1.35; }
+  .sim-atalho.off { opacity: .55; cursor: not-allowed; }
+  .sim-mod details { margin-bottom: 10px; border: 1px solid var(--radix-line-2); border-radius: 10px; background: var(--radix-bg-2); }
+  .sim-mod summary { cursor: pointer; padding: 10px 12px; font-size: 13px; font-weight: 700; color: var(--radix-text); display: flex; justify-content: space-between; align-items: center; gap: 8px; list-style: none; min-height: 44px; }
+  .sim-mod summary::-webkit-details-marker { display: none; }
+  .sim-mod summary .n { font-weight: 600; color: var(--radix-text-muted); font-size: 12px; white-space: nowrap; }
+  .sim-mod details[open] summary { border-bottom: 1px solid var(--radix-line); }
+  .sim-mod .corpo { padding: 10px 12px; }
+  .sim-btn-link { background: transparent; border: 0; color: var(--radix-cyan); font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; padding: 10px 6px; min-height: 44px; }
+  .sim-btn-link:hover { text-decoration: underline; }
+  .sim-tri-card { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 16px; border-radius: 14px; border: 1px solid var(--radix-line-2); background: var(--radix-surface); margin: 16px 0 0; }
+  .sim-tri-card .t { flex: 1; min-width: 220px; font-size: 13px; color: var(--radix-text-2); line-height: 1.45; }
+  .sim-tri-card .t b { display: block; color: var(--radix-text); font-size: 15px; margin-bottom: 4px; }
   .rx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 11px; border-radius: 999px; font-size: var(--rx-fs-xs); font-weight: 600; background: var(--rx-surface-2); border: 1px solid var(--rx-line-2); color: var(--rx-text-2); }
   .rx-chip button { border: 0; background: transparent; color: var(--rx-muted); width: 20px; height: 20px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .rx-chip button:hover { background: rgba(255,122,92,.18); color: var(--rx-coral); }
@@ -11728,7 +11753,7 @@ function renderEstudoDigital() {
     : (respN === total ? 'Encerrar e ver resultado' : 'Encerrar e ver resultado (' + respN + '/' + total + ')');
 
   main.innerHTML = `
-    <div class="breadcrumb"><a onclick="_sairEstudoDigital()">← Banco de Questões</a> / ${tituloModo}</div>
+    <div class="breadcrumb"><a onclick="_sairEstudoDigital()">← ${_escHtml(_estudoAtual.voltarNome || 'Banco de questões')}</a> / ${tituloModo}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;padding:14px 16px;background:${corBgSuave};border:1px solid ${corBorda};border-radius:12px;">
       <div>
         <h2 style="margin:0;font-size:18px;color:${corAcento};">${tituloModo}</h2>
@@ -13446,6 +13471,8 @@ function abrirSimuladoConfig() {
   main.innerHTML = `
     <div class="breadcrumb"><a onclick="renderHome()">← Início</a> / Configurar Simulado</div>
     <h2 class="section-title"><span class="section-title-accent"></span>Novo simulado</h2>
+    ${_htmlAtalhosSimulado()}
+    <p style="margin:0 0 10px;font-size:13px;color:var(--radix-text-muted);">Ou monte o seu:</p>
     <div class="config-box">
       <div class="form-group">
         <label>Número de questões</label>
@@ -13474,27 +13501,27 @@ function abrirSimuladoConfig() {
         <small id="sim-tempo-dica" style="display:block;margin-top:4px;font-size:11.5px;color:var(--radix-text-muted);"></small>
       </div>
       <div class="form-group">
-        <label>Temas (deixe vazio para todos)</label>
-        ${MODULOS.map(mod => `
-          <div class="modulo-checkbox-grupo">
-            <div class="modulo-checkbox-titulo">
-              <strong>Módulo ${mod.numero} — ${mod.nome}</strong>
-              <button type="button" class="btn-mini" onclick="toggleModulo('${mod.id}', this)">Selecionar todos</button>
-            </div>
-            <div class="checkbox-group">
+        <label>Temas (opcional: sem marcar nenhum, entram todos)</label>
+        <div class="sim-mod">${MODULOS.map(mod => `
+          <details class="modulo-checkbox-grupo">
+            <summary><strong>Módulo ${mod.numero} — ${mod.nome}</strong><span class="n" data-mod-sel="${mod.id}">${mod.temas.length} temas</span></summary>
+            <div class="corpo">
+              <div style="margin:0 0 8px;"><button type="button" class="btn-mini" onclick="toggleModulo('${mod.id}', this)">Selecionar todos</button></div>
+              <div class="checkbox-group">
               ${mod.temas.map(tid => {
                 const t = TEMAS.find(x => x.id === tid);
                 const count = state.questoes.filter(q => q.tema === tid).length;
                 return `
                   <label class="checkbox-item">
-                    <input type="checkbox" value="${tid}" class="tema-check" data-modulo="${mod.id}">
+                    <input type="checkbox" value="${tid}" class="tema-check" data-modulo="${mod.id}" onchange="_simAtualizarContagem('${mod.id}')">
                     ${t.nome} <span style="color:var(--radix-gray-light);font-size:11px;">(${count})</span>
                   </label>
                 `;
               }).join('')}
+              </div>
             </div>
-          </div>
-        `).join('')}
+          </details>
+        `).join('')}</div>
       </div>
       <button class="btn btn-success" style="width:100%;padding:14px;" onclick="iniciarSimulado()">Iniciar Simulado</button>
     </div>
@@ -13525,6 +13552,7 @@ function toggleModulo(modId, btn) {
   const allChecked = [...checks].every(c => c.checked);
   checks.forEach(c => c.checked = !allChecked);
   btn.textContent = allChecked ? 'Selecionar todos' : 'Desmarcar todos';
+  _simAtualizarContagem(modId);
 }
 
 
@@ -13642,8 +13670,10 @@ function renderResultadoSimulado(registro, porTempo) {
       ${_htmlStatusGravacao(registro.opId)}
     </div>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;">
-      <button class="btn" onclick="renderHome()">Voltar ao Início</button>
-      <button class="btn btn-secondary" onclick="abrirSimuladoConfig()">Novo Simulado</button>
+      <button class="btn" onclick="_voltarASimulados()">Voltar a Simulados</button>
+      ${(registro.erros != null ? registro.erros : 0) > 0 ? '<button class="btn btn-secondary" onclick="_irPrimeiroErroSimulado()">Rever os erros (' + registro.erros + ')</button>' : ''}
+      <button class="btn btn-secondary" onclick="abrirSimuladoConfig()">Novo simulado</button>
+      <button class="btn btn-secondary" onclick="renderHome()">Início</button>
     </div>
     ${ACOMP.htmlAcoesResultado(ACOMP.ctxSimulado(registro))}
     <h3 class="section-title"><span class="section-title-accent"></span>Revisão das Questões</h3>
@@ -13922,7 +13952,7 @@ async function abrirMateriaisDaSemana(semanaNum) {
 function _htmlHistoricoPlataforma() {
   const meus = (state.historicoSimulados || []).filter(h => h.aluno === state.usuario.nome);
   return `
-    ${meus.length === 0 ? '<p style="text-align:center;color:var(--radix-gray-light);padding:32px;">Você ainda não fez nenhum simulado na plataforma.</p>' : `
+    ${meus.length === 0 ? '<div class="sim-empty"><b>Nenhum simulado feito na plataforma ainda</b><p style="margin:8px 0 14px;font-size:13px;">Monte um em um toque: 10 questões rápidas ou os temas desta semana.</p><button type="button" class="sim-btn sim-btn-primary" onclick="abrirSimuladoConfig()">Fazer simulado</button></div>' : `
       <table>
         <thead>
           <tr><th>Data</th><th>Questões</th><th>Acertos</th><th>%</th><th>Tempo</th></tr>
@@ -20969,11 +20999,16 @@ async function renderSimulados(aba) {
   state.view = 'meus-simulados';
   _simCss();
   const abasValidas = ['externos', 'plataforma', 'metas'];
-  state._simAba = abasValidas.includes(aba) ? aba
-                : (abasValidas.includes(state._simAba) ? state._simAba : 'externos');
-  const abaAtiva = state._simAba;
   if (!state.simuladosExternos) await carregarSimuladosExternos();
   if (state.metaAluno === undefined) await carregarMetaAluno();
+  // (Onda 2, 24/10/2026) abre no que o aluno usa: "Feitos na plataforma", salvo quem só tem notas externas registradas
+  if (!abasValidas.includes(aba) && !abasValidas.includes(state._simAba)) {
+    const temExt = (state.simuladosExternos || []).length > 0;
+    const temPlat = (state.historicoSimulados || []).some(h => h.aluno === state.usuario.nome);
+    state._simAba = (temExt && !temPlat) ? 'externos' : 'plataforma';
+  }
+  if (abasValidas.includes(aba)) state._simAba = aba;
+  const abaAtiva = state._simAba;
   const main = document.getElementById('main-content');
   const sims = (state.simuladosExternos || []).slice(); // já vem ordenado DESC
   const total = sims.length;
@@ -21026,13 +21061,10 @@ async function renderSimulados(aba) {
     <div style="display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap;align-items:center;">
       <button class="sim-btn sim-btn-primary" onclick="abrirSimuladoConfig()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3 19 12 5 21z"/></svg>
-        Fazer simulado agora
+        Fazer simulado
       </button>
-      <button class="sim-btn sim-btn-outline" onclick="abrirModalSimulado(null)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Registrar nota externa
-      </button>
-      ${state.degustacao ? '' : `<button class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">ENEM oficial com nota TRI →</button>`}
+      <button class="sim-btn-link" onclick="abrirModalSimulado(null)">Registrar nota de simulado externo</button>
+      ${state.degustacao ? '' : `<button class="sim-btn-link" onclick="renderSimuladoTRI()">ENEM com nota TRI</button>`}
     </div>
 
     <!-- Abas: sublinhado, sem pílula preenchida -->
@@ -21043,10 +21075,12 @@ async function renderSimulados(aba) {
     </div>
 
     ${abaAtiva === 'metas' ? _htmlMinhaMeta() : abaAtiva === 'plataforma' ? `
+      <div id="sim-retomar">${_htmlRetomadaStrip(['simulado', 'mini'])}</div>
       <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
         Simulados que você respondeu aqui na plataforma, com correção automática.
       </p>
       ${_htmlHistoricoPlataforma()}
+      ${state.degustacao ? '' : _htmlCardTri()}
     ` : `
     <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
       Notas dos simulados que você fez em bancas externas (Evolucional, SAS, Somos, ENEM antigos etc.).
@@ -24276,6 +24310,14 @@ const TENTATIVAS = {
       if (resto.length && !o.aoNovo) TENTATIVAS.modalRetomar(resto, o); else if (o.aoNovo) o.aoNovo(); else if (state.view === 'home') renderHome();
     }; });
   },
+  // (Onda 2, 24/10/2026) Descartar com confirmação fora do modal (faixa de retomada e página inicial).
+  descartarComConfirmacao(id) {
+    const t = this.mapa[id]; if (!t) return;
+    const teste = t.tipo === 'estudo_teste';
+    if (!confirm('Descartar esta atividade (' + (this.ROTULO[t.tipo] || t.tipo) + ')?' + (teste ? '\n\nAs respostas que você já deu nela continuam no seu histórico; só o andamento é apagado.' : '\n\nAs marcações feitas nela são apagadas.'))) return;
+    this.descartar(id);
+    if (state.view === 'home') renderHome(); else _atualizarFaixasRetomada();
+  },
   // Ao abrir o app: se a página foi recarregada no meio de uma atividade, oferece continuar.
   oferecerRetomadaAoAbrir() {
     const id = this.aberta(); const t = id && this.mapa[id];
@@ -24442,8 +24484,9 @@ function iniciarEstudoDigital(modo) {
   const qs = ids.map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
   if (qs.length === 0) { alert('Sua lista está vazia.'); return; }
   TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
-    const t = TENTATIVAS.criar({ tipo: 'estudo_' + modo, origem: { nome: 'Minha lista' }, questoes_ids: qs.map(q => q.id) });
-    _estudoAtual = { modo, qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0 };
+    const origem = Object.assign({ nome: 'Minha lista' }, _voltarAtual());   // (Onda 2) de onde o aluno veio
+    const t = TENTATIVAS.criar({ tipo: 'estudo_' + modo, origem, questoes_ids: qs.map(q => q.id) });
+    _estudoAtual = { modo, qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, voltar: origem.voltar, voltarRotulo: origem.voltarRotulo, voltarNome: origem.voltarNome };
     state.view = 'estudo-digital';
     renderEstudoDigital();
   });
@@ -24452,7 +24495,7 @@ function _retomarEstudo(t) {
   const qs = (t.questoes_ids || []).map(id => (state.questoes || []).find(q => q.id === id)).filter(Boolean);
   if (!qs.length) { alert('Nenhuma das questões dessa atividade está mais disponível no banco.'); return; }
   const resp = {}; Object.keys(t.respostas || {}).forEach(k => { const qid = Number(k); if (qs.some(q => q.id === qid)) resp[qid] = t.respostas[k].i; });
-  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: (t.questoes_ids || []).length - qs.length, recuperacao: (t.origem && t.origem.recuperacao) || null, revisao: (t.origem && t.origem.revisao) || null };
+  _estudoAtual = { modo: t.tipo === 'estudo_teste' ? 'teste' : 'prova', qs, respostas: resp, iniciadoEm: t.iniciado_em, tentativaId: t.id, voltar: (t.origem && t.origem.voltar) || null, voltarRotulo: (t.origem && t.origem.voltarRotulo) || null, voltarNome: (t.origem && t.origem.voltarNome) || null, faltando: (t.questoes_ids || []).length - qs.length, recuperacao: (t.origem && t.origem.recuperacao) || null, revisao: (t.origem && t.origem.revisao) || null };
   TENTATIVAS.marcarAberta(t.id);
   state.view = 'estudo-digital';
   renderEstudoDigital();
@@ -24502,7 +24545,7 @@ function _atualizarContadorEstudoSemReRender() {
 function _sairEstudoDigital() {
   if (!_estudoAtual) { abrirTema(''); return; }
   const e = _estudoAtual; const n = Object.keys(e.respostas).length; const tid = e.tentativaId;
-  if (n === 0) { TENTATIVAS.descartar(tid); _estudoAtual = null; abrirTema(''); return; }
+  if (n === 0) { TENTATIVAS.descartar(tid); _estudoAtual = null; _voltarDoEstudo(e); return; }
   let status;
   if (e.modo === 'teste') {
     const minhas = (state.respostasAluno || []).filter(r => r.tentativaId === tid);
@@ -24516,11 +24559,11 @@ function _sairEstudoDigital() {
   }
   _modalConfiab('<h2>Sair da atividade?</h2><p style="font-size:13.5px;color:var(--radix-text)">' + _escHtml(status) + '</p><p style="font-size:13px;color:var(--radix-text-muted)">Você pode continuar depois pelo botão "Continuar atividade" no início.</p>',
     [{ txt: 'Continuar aqui', cls: 'btn-success' },
-     { txt: 'Sair e continuar depois', cls: 'btn-secondary', fn: () => { TENTATIVAS.desmarcarAberta(tid); _estudoAtual = null; abrirTema(''); } },
+     { txt: 'Sair e continuar depois', cls: 'btn-secondary', fn: () => { TENTATIVAS.desmarcarAberta(tid); _estudoAtual = null; _voltarDoEstudo(e); } },
      { txt: 'Descartar atividade', cls: 'btn-danger', fn: () => {
        const msg = e.modo === 'teste' ? 'Descartar esta atividade? As respostas já registradas continuam no seu histórico; só o andamento é apagado.' : 'Descartar esta atividade? As ' + n + ' respostas marcadas serão apagadas.';
        if (!confirm(msg)) { renderEstudoDigital(); if (e.modo === 'teste') _reaplicarFeedbackTeste(); return; }
-       TENTATIVAS.descartar(tid); _estudoAtual = null; abrirTema('');
+       TENTATIVAS.descartar(tid); _estudoAtual = null; _voltarDoEstudo(e);
      } }]);
 }
 async function _finalizarEstudoDigital() {
@@ -24554,7 +24597,7 @@ async function _finalizarEstudoDigital() {
     FILA.enfileirar({ id: opId, tipo: 'gravar', payload: { tipo: 'respostas', dados: { itens, tentativa_id: tentativaId, finaliza: true, tentativa: t ? TENTATIVAS.retrato(t) : null } } });
     TENTATIVAS.finalizar(tentativaId, opId);
     if (_estudoAtual && _estudoAtual.revisao) { try { RF_LISTA.registrar(_estudoAtual.revisao, acertos, total, detalhes); } catch (e) { console.warn('[revisao] registro:', e); } }
-    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId, tentativaId, recuperacao: (_estudoAtual && _estudoAtual.recuperacao) || null, revisao: (_estudoAtual && _estudoAtual.revisao) || null });
+    _renderResultadoEstudo({ modo, detalhes, acertos, erros, brancos, respondidas, total, pct, opId, tentativaId, iniciadoEm: _estudoAtual.iniciadoEm || null, voltar: _estudoAtual.voltar || null, voltarRotulo: _estudoAtual.voltarRotulo || null, recuperacao: (_estudoAtual && _estudoAtual.recuperacao) || null, revisao: (_estudoAtual && _estudoAtual.revisao) || null });
     _estudoAtual = null;
   } finally { _finalizarEstudoDigital._ocupado = false; }
 }
@@ -24586,12 +24629,13 @@ function _renderResultadoEstudo(r) {
     + '<div style="color:var(--radix-gray-light);">Você acertou</div><div class="nota">' + acertos + '/' + total + '</div>'
     + '<div class="nota-detalhe">' + pct + '% de aproveitamento' + (modo === 'prova' ? ' (sobre as ' + total + ' questões)' : (respondidas < total ? ' (sobre as ' + respondidas + ' respondidas)' : '')) + '</div>'
     + '<div class="conf-tripla"><span><b>' + acertos + '</b> acertos</span><span><b>' + erros + '</b> erros</span><span><b>' + brancos + '</b> em branco</span></div>'
+    + (r.iniciadoEm ? (() => { const seg = Math.max(0, Math.round((RELOGIO.agora() - Date.parse(r.iniciadoEm)) / 1000)); return '<div style="margin-top:12px;font-size:13px;color:var(--radix-gray-light);">Tempo: ' + Math.floor(seg / 60) + ' min ' + (seg % 60) + ' s</div>'; })() : '')
     + _htmlStatusGravacao(opId)
     + '</div>'
     + RF_LISTA.htmlResultado(r)
     + '<div style="background:var(--radix-surface);border:1px solid var(--radix-border);border-radius:12px;margin:20px 0;overflow:hidden;"><div style="padding:12px 16px;background:var(--radix-bg-2);font-weight:700;font-size:13px;color:var(--radix-text);">Detalhamento por questão</div>' + detalhesHtml + '</div>'
     + ACOMP.htmlAcoesResultado(ACOMP.ctxEstudo(r))
-    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button><button class="btn btn-secondary" onclick="abrirTema(\'\')">Voltar ao banco</button></div>';
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;"><button class="btn" onclick="renderHome()">Voltar ao Início</button>' + _htmlBotaoVoltarOrigem(r) + '</div>';
   try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
 }
 
@@ -24616,6 +24660,7 @@ function _mostrarFeedbackQuestao(q, idx) {
     + '<strong>Explicação:</strong> <span data-expl="' + q.id + '">' + _htmlExplicacao(q) + '</span>'
     + (q.explicacaoImg ? '<div class="explicacao-img-wrap"><img class="explicacao-img" src="' + q.explicacaoImg + '" alt="resolução"></div>' : '')
     + btnCaderno + '</div>';
+  if (box) box.insertAdjacentHTML('beforeend', _htmlProximaQuestao(q));   // (Onda 2, 24/10/2026)
   if (q._explOk === false) _preencherExplicacoes([q]);
 }
 function responderQuestao(qid, idx, opts) {
@@ -24626,6 +24671,7 @@ function responderQuestao(qid, idx, opts) {
   const o = opts || {};
   const nova = { questaoId: qid, tema: q.tema, resposta: idx, correto: correto, data: new Date(RELOGIO.agora()).toISOString(), aluno: state.usuario.nome, fonte: 'estudo', pendente: true, opId: null, tentativaId: o.tentativaId || null };
   state.respostasAluno.push(nova);
+  _atualizarSessaoBanco(qid);   // (Onda 2, 24/10/2026)
   nova.opId = FILA.enfileirar({ tipo: 'gravar', payload: { tipo: 'resposta', dados: { questao_id: qid, tema: q.tema, resposta_marcada: idx, correto: correto, fonte: 'estudo', tentativa_id: o.tentativaId || null, respondido_em: nova.data } } },
     (estado) => { if (estado === 'salvo') nova.pendente = false; });
 }
@@ -24647,6 +24693,11 @@ function iniciarSimulado() {
   const num = parseInt(document.getElementById('sim-num').value);
   const tempo = parseInt(document.getElementById('sim-tempo').value);
   const temas = [...document.querySelectorAll('.tema-check:checked')].map(c => c.value);
+  _iniciarSimuladoCom(num, tempo, temas);
+}
+// (Onda 2, 24/10/2026) Mesmo caminho para o formulário e para os atalhos.
+function _iniciarSimuladoCom(num, tempo, temas) {
+  temas = Array.isArray(temas) ? temas : [];
   let pool = state.questoes.slice();
   if (temas.length > 0) pool = pool.filter(q => temas.includes(q.tema));
   if (pool.length === 0) { alert('Não há questões com esse filtro.'); return; }
@@ -24728,7 +24779,7 @@ function sairSimuladoDepois() {
   const rest = _segundosRestantes(sim);
   if (!confirm('Sair e continuar depois?\n\nAs marcações ficam salvas. O tempo continua contando: restam ' + Math.floor(rest / 60) + ' min ' + (rest % 60) + ' s. Quando o prazo acabar, o simulado é encerrado com o que estiver marcado.')) return;
   TENTATIVAS.desmarcarAberta(sim.tentativaId);
-  renderHome();
+  _voltarASimulados();
 }
 function confirmarFinalizar() {
   const sim = state.simuladoAtual; if (!sim || sim.finalizado) return;
@@ -25202,6 +25253,162 @@ function atualizarBadgeLista() {
 // ============================================================================
 // PÁGINA INICIAL DO ALUNO
 // ============================================================================
+// ============================================================================
+// (Onda 2, 24/10/2026) Retomada visível, sequência de questões, volta à origem e atalhos do simulado
+// ============================================================================
+function _quandoAtividade(t) {
+  const ms = t && t.atualizado_em ? Date.parse(t.atualizado_em) : NaN;
+  if (!ms) return 'há pouco';
+  const dias = Math.floor((RELOGIO.agora() - ms) / 86400000);
+  return dias <= 0 ? 'hoje' : dias === 1 ? 'ontem' : 'há ' + dias + ' dias';
+}
+// Faixa "atividade em andamento" nas telas de onde se começa outra (banco e simulados).
+function _htmlRetomadaStrip(tipos) {
+  try {
+    if (typeof TENTATIVAS === 'undefined' || !TENTATIVAS.uid) return '';
+    const ts = TENTATIVAS.deTipo(tipos); if (!ts.length) return '';
+    const t = ts[0]; const total = (t.questoes_ids || []).length, resp = Object.keys(t.respostas || {}).length;
+    let nome = TENTATIVAS.ROTULO[t.tipo] || t.tipo;
+    if (t.origem && t.origem.temaId) { const tm = TEMAS.find(x => x.id === t.origem.temaId); if (tm) nome += ' de ' + tm.nome; } else if (t.origem && t.origem.nome) nome += ' · ' + t.origem.nome;
+    return '<div class="rx-retomar" role="status"><div class="t"><b>' + (ts.length > 1 ? ts.length + ' atividades em andamento' : 'Atividade em andamento') + '</b>'
+      + _escHtml(nome) + ' · você parou na questão ' + Math.min(total, resp + 1) + ' de ' + total + ' · última marcação ' + _quandoAtividade(t) + '</div>'
+      + '<div class="a"><button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="TENTATIVAS.continuar(\'' + t.id + '\')">' + rxIco('play') + 'Continuar</button>'
+      + '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="TENTATIVAS.descartarComConfirmacao(\'' + t.id + '\')">Descartar</button>'
+      + (ts.length > 1 ? '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="TENTATIVAS.modalRetomar()">Ver todas</button>' : '') + '</div></div>';
+  } catch (e) { return ''; }
+}
+function _atualizarFaixasRetomada() {
+  const a = document.getElementById('qbk2-retomar'); if (a) a.innerHTML = _htmlRetomadaStrip(['estudo_teste', 'estudo_prova']);
+  const b = document.getElementById('sim-retomar'); if (b) b.innerHTML = _htmlRetomadaStrip(['simulado', 'mini']);
+}
+// Para onde voltar ao sair de uma atividade: a tela de onde o aluno veio.
+function _voltarAtual() {
+  const r = (typeof ROTA !== 'undefined' && ROTA.ativo() && ROTA.atual) ? String(ROTA.atual) : '';
+  if (r.startsWith('listas/')) return { voltar: r, voltarRotulo: 'a lista', voltarNome: 'Lista' };
+  if (r === 'listas') return { voltar: r, voltarRotulo: 'Minhas listas', voltarNome: 'Minhas listas' };
+  if (r === 'revisao-final' || r.startsWith('revisao-final/')) return { voltar: 'revisao-final', voltarRotulo: 'o plano da Revisão Final', voltarNome: 'Revisão Final' };
+  if (r === 'caderno') return { voltar: r, voltarRotulo: 'o caderno de erros', voltarNome: 'Caderno de erros' };
+  if (r.startsWith('estudar/tema/')) return { voltar: r, voltarRotulo: 'o banco de questões', voltarNome: 'Banco de questões' };
+  return { voltar: 'estudar', voltarRotulo: 'o banco de questões', voltarNome: 'Banco de questões' };
+}
+function _voltarDoEstudo(e) {
+  const v = e && e.voltar;
+  if (v && typeof ROTA !== 'undefined' && ROTA.ativo() && ROTA.resolver(v)) { ROTA.ir(v); return; }
+  abrirTema('');
+}
+function _htmlBotaoVoltarOrigem(r) {
+  if (r && r.revisao) return '';   // a Revisão Final já oferece "Voltar ao plano"
+  if (r && r.voltar && r.voltar !== 'estudar' && typeof ROTA !== 'undefined' && ROTA.ativo() && ROTA.resolver(r.voltar)) {
+    return '<button class="btn btn-secondary" onclick="ROTA.ir(\'' + r.voltar.replace(/'/g, '') + '\')">Voltar para ' + _escHtml(r.voltarRotulo || 'onde você estava') + '</button>';
+  }
+  return '<button class="btn btn-secondary" onclick="abrirTema(\'\')">Voltar ao banco</button>';
+}
+function _voltarASimulados() { if (typeof ROTA !== 'undefined' && ROTA.ativo()) ROTA.ir('simulados/plataforma'); else renderHome(); }
+function _irPrimeiroErroSimulado() {
+  const alt = document.querySelector('#main-content .questao-card .alternativa.errada');
+  const card = alt ? alt.closest('.questao-card') : null;
+  if (card) { try { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { card.scrollIntoView(); } }
+}
+// "Próxima questão" depois da correção: no Modo Teste (próxima não respondida) e no banco (próximo cartão da lista).
+function _sessaoBanco() {
+  const hoje = new Date(RELOGIO.agora()); const d0 = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+  const rs = (state.respostasAluno || []).filter(r => r.data && Date.parse(r.data) >= d0 && (r.fonte === 'estudo' || !r.fonte));
+  return { n: rs.length, ok: rs.filter(r => r.correto).length };
+}
+function _atualizarSessaoBanco(qid) {
+  if (state.view !== 'tema') return;
+  const el = document.querySelector('#explicacao-' + qid + ' .rx-prox .rx-sessao'); if (!el) return;
+  const sx = _sessaoBanco();
+  el.textContent = 'Hoje: ' + sx.n + (sx.n === 1 ? ' questão' : ' questões') + ' · ' + sx.ok + (sx.ok === 1 ? ' acerto' : ' acertos');
+}
+function _qbkTemProximaPagina() {
+  try { const total = _questoesComFiltros([]).length; return (state._paginaQuestoes || 0) + 1 < Math.ceil(total / QBK_POR_PAGINA); } catch (e) { return false; }
+}
+function _irParaQuestaoEstudo(qid) {
+  const el = document.getElementById('estudo-q-' + qid); if (!el) return;
+  try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { el.scrollIntoView(); }
+  const a = el.querySelector('.alternativa'); if (a) setTimeout(() => { try { a.focus({ preventScroll: true }); } catch (e) {} }, 350);
+}
+function _htmlProximaQuestao(q) {
+  if (_estudoAtual && state.view === 'estudo-digital' && _estudoAtual.qs.some(x => x.id === q.id)) {
+    const prox = _estudoAtual.qs.find(x => _estudoAtual.respostas[x.id] === undefined);
+    const resp = Object.keys(_estudoAtual.respostas).length, total = _estudoAtual.qs.length;
+    return '<div class="rx-prox"><span class="rx-sessao">' + resp + ' de ' + total + ' respondidas</span>'
+      + (prox ? '<button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="_irParaQuestaoEstudo(' + prox.id + ')">Próxima questão</button>'
+              : '<button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="_finalizarEstudoDigital()">Ver resultado</button>') + '</div>';
+  }
+  if (state.view === 'tema') {
+    const el = document.getElementById('qbk-' + q.id);
+    const prox = (el && el.nextElementSibling && el.nextElementSibling.classList && el.nextElementSibling.classList.contains('qbk-card')) ? el.nextElementSibling : null;
+    const pid = prox ? parseInt(String(prox.id).replace('qbk-', ''), 10) : null;
+    const sx = _sessaoBanco();
+    return '<div class="rx-prox"><span class="rx-sessao">Hoje: ' + sx.n + (sx.n === 1 ? ' questão' : ' questões') + ' · ' + sx.ok + (sx.ok === 1 ? ' acerto' : ' acertos') + '</span>'
+      + (pid ? '<button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="resolverQuestao(' + pid + ')">Próxima questão</button>'
+             : (_qbkTemProximaPagina() ? '<button type="button" class="rx-btn rx-btn-primary rx-btn-sm" onclick="mudarPaginaQuestoes(1)">Próxima página</button>' : '<span class="rx-sessao">Fim da lista</span>')) + '</div>';
+  }
+  return '';
+}
+// Sequência: Modo Teste com até 10 questões dos filtros atuais, não feitas primeiro, depois as erradas.
+function iniciarSequenciaBanco() {
+  const pool = (typeof _questoesComFiltros === 'function') ? _questoesComFiltros([]) : (state.questoes || []).slice();
+  if (!pool.length) { alert('Nenhuma questão com esses filtros. Ajuste os filtros e tente de novo.'); return; }
+  const idx = _idxRespostasPorQuestao(); const ordem = { nao_feita: 0, errei: 1, acertei: 2 };
+  const qs = pool.map((q, i) => ({ q, i, o: ordem[_statusDaQuestao(q, idx)] })).sort((a, b) => a.o - b.o || a.i - b.i).slice(0, 10).map(x => x.q);
+  const temaIds = Array.from(new Set(qs.map(q => q.tema)));
+  const tema = temaIds.length === 1 ? TEMAS.find(t => t.id === temaIds[0]) : null;
+  const origem = Object.assign({ nome: 'Sequência do banco' + (tema ? ' · ' + tema.nome : '') }, _voltarAtual());
+  if (tema) origem.temaId = tema.id;
+  TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
+    const t = TENTATIVAS.criar({ tipo: 'estudo_teste', origem, questoes_ids: qs.map(q => q.id) });
+    _estudoAtual = { modo: 'teste', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, voltar: origem.voltar, voltarRotulo: origem.voltarRotulo, voltarNome: origem.voltarNome };
+    state.view = 'estudo-digital';
+    renderEstudoDigital();
+  });
+}
+// Atalhos do simulado: temas desta semana, pontos fracos, ENEM completo, 10 rápidas.
+function _temasAtalho(tipo) {
+  const comQ = new Set((state.questoes || []).map(q => q.tema));
+  if (tipo === 'semana') {
+    const sem = (typeof getSemanaAtual === 'function') ? getSemanaAtual() : null;
+    const ts = sem ? (Array.isArray(sem.temas) && sem.temas.length ? sem.temas : (sem.temaId ? [sem.temaId] : [])) : [];
+    return ts.filter(t => comQ.has(t));
+  }
+  if (tipo === 'fracos') {
+    const por = {};
+    (state.respostasAluno || []).forEach(r => { if (!r.tema || !comQ.has(r.tema)) return; const x = por[r.tema] || (por[r.tema] = { t: 0, a: 0 }); x.t++; if (r.correto) x.a++; });
+    return Object.keys(por).filter(k => por[k].t >= 3 && por[k].a / por[k].t < 0.7).sort((a, b) => por[a].a / por[a].t - por[b].a / por[b].t).slice(0, 3);
+  }
+  return [];
+}
+function _htmlAtalhosSimulado() {
+  const nomes = ts => ts.map(id => { const t = TEMAS.find(x => x.id === id); return t ? t.nome : id; });
+  const sem = _temasAtalho('semana'), fr = _temasAtalho('fracos');
+  const total = (state.questoes || []).length;
+  const card = (tipo, tit, sub, off) => '<button type="button" class="sim-atalho' + (off ? ' off' : '') + '"' + (off ? ' disabled' : '') + ' onclick="iniciarSimuladoAtalho(\'' + tipo + '\')"><b>' + tit + '</b><span>' + _escHtml(sub) + '</span></button>';
+  return '<div class="sim-atalhos" aria-label="Simulado em um toque">'
+    + card('semana', 'Temas desta semana', sem.length ? '10 questões · 33 min · ' + nomes(sem).join(', ') : 'Nenhum tema de aula nesta semana', !sem.length)
+    + card('fracos', 'Meus pontos fracos', fr.length ? '10 questões · 33 min · ' + nomes(fr).join(', ') : 'Responda mais questões para o app descobrir onde você erra', !fr.length)
+    + card('enem', 'Prova completa do ENEM', '45 questões · 2h30 · todos os temas', total < 45)
+    + card('rapidas', '10 rápidas', '10 questões · 20 min · todos os temas', total < 10)
+    + '</div>';
+}
+function iniciarSimuladoAtalho(tipo) {
+  if (tipo === 'semana') return _iniciarSimuladoCom(10, 33, _temasAtalho('semana'));
+  if (tipo === 'fracos') return _iniciarSimuladoCom(10, 33, _temasAtalho('fracos'));
+  if (tipo === 'enem') return _iniciarSimuladoCom(45, 150, []);
+  return _iniciarSimuladoCom(10, 20, []);
+}
+function _simAtualizarContagem(modId) {
+  const el = document.querySelector('[data-mod-sel="' + modId + '"]'); if (!el) return;
+  const cs = [...document.querySelectorAll('.tema-check[data-modulo="' + modId + '"]')];
+  const n = cs.filter(c => c.checked).length;
+  el.textContent = n ? n + (n === 1 ? ' selecionado' : ' selecionados') : cs.length + ' temas';
+}
+function _htmlCardTri() {
+  return '<div class="sim-tri-card"><div class="t"><b>ENEM oficial com nota TRI</b>Responda uma prova real do ENEM, com as 45 questões de Matemática, e receba a nota na escala TRI, de 0 a 1000, a mesma do ENEM. Dá para parar e continuar depois.</div>'
+    + '<button type="button" class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">Abrir</button></div>';
+}
+
 // (Onda 1, 24/10/2026) Até a prova, o próximo passo da página inicial é a atividade do dia no plano da Revisão Final.
 function _homeRFInfo() {
   try {
@@ -25233,12 +25440,12 @@ function _homeProximoPasso(semAtual, temaSemAtual, mats) {
     let ctx = TENTATIVAS.ROTULO[t.tipo] || t.tipo;
     if (t.origem && t.origem.temaId) { const tm = TEMAS.find(x => x.id === t.origem.temaId); if (tm) ctx += ' de ' + tm.nome; } else if (t.origem && t.origem.nome) ctx += ' · ' + t.origem.nome;
     const rest = t.termina_em ? Math.round((Date.parse(t.termina_em) - RELOGIO.agora()) / 1000) : null;
-    return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">' + (venceu ? 'Simulado com tempo esgotado' : 'Continuar atividade') + '</h2>'
-      + '<p>' + _escHtml(ctx) + (venceu ? '. O prazo acabou: ao abrir, ele é encerrado com o que você marcou.' : '. Você para onde parou, com as marcações guardadas.') + '</p>'
+    return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">' + (venceu ? 'Simulado com tempo esgotado' : 'Você parou na questão ' + Math.min(total, resp + 1) + ' de ' + total) + '</h2>'
+      + '<p>' + _escHtml(ctx) + (venceu ? '. O prazo acabou: ao abrir, ele é encerrado com o que você marcou.' : '. Última marcação ' + _quandoAtividade(t) + '. Continue de onde parou ou descarte.') + '</p>'
       + '<div class="rx-progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + resp + '"><i style="width:' + (total ? Math.round(resp / total * 100) : 0) + '%"></i></div>'
       + '<div class="rx-next-meta">' + resp + ' de ' + total + ' respondidas' + (rest != null && !venceu ? ' · ' + Math.max(1, Math.round(rest / 60)) + ' min restantes' : '') + '</div>'
       + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="TENTATIVAS.continuar(\'' + t.id + '\')">' + rxIco('play') + (venceu ? 'Ver resultado' : 'Continuar atividade') + '</button>'
-      + '<button type="button" class="rx-btn rx-btn-ghost" onclick="TENTATIVAS.modalRetomar()">Detalhes</button>' + _homeBotaoRF() + '</div>';
+      + '<button type="button" class="rx-btn rx-btn-ghost" onclick="TENTATIVAS.descartarComConfirmacao(\'' + t.id + '\')">Descartar</button>' + _homeBotaoRF() + '</div>';
   }
   if (pend.length > 1) {
     return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Continuar atividade</h2>'
@@ -25405,9 +25612,11 @@ function renderTelaQuestoes() {
     + '<div class="qbk2-head"><div><h1 class="rx-h1">Banco de questões</h1><p class="rx-sub">' + totalGeral + (totalGeral === 1 ? ' questão disponível' : ' questões disponíveis') + '. Resolva aqui ou monte sua lista de estudos.</p></div>'
     + '<div class="qbk2-head-acoes"><button type="button" class="rx-btn rx-btn-secondary qbk2-btn-filtros" onclick="qbkAbrirFiltros()">' + rxIco('filtro') + 'Filtros <span class="rx-badge is-zero" id="qbk2-nfiltros">0</span></button>'
     + '<button type="button" class="rx-btn rx-btn-primary qbk2-btn-lista" onclick="qbkAbrirLista()">' + rxIco('lista') + 'Minha lista <span class="rx-badge" id="qbk2-lista-cnt" style="background:rgba(255,255,255,.22);color:#fff">' + n + '</span></button>'
-    + '<button type="button" class="rx-btn qbk2-btn-gerar" id="qbk2-btn-gerar" onclick="abrirModalGerar()"' + (n ? '' : ' disabled') + ' title="' + (n ? 'Gerar a lista com as questões selecionadas (PDF ou resolução no app)' : 'Adicione questões à lista para gerar') + '">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>' + 'Gerar lista</button></div></div>'
+    + '<button type="button" class="rx-btn qbk2-btn-gerar" id="qbk2-btn-gerar" onclick="abrirModalGerar()"' + (n ? '' : ' disabled') + ' title="' + (n ? 'Gerar a lista com as questões selecionadas (PDF ou resolução no app)' : 'Adicione questões à lista para gerar') + '">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>' + 'Gerar lista</button>'
+    + '<button type="button" class="rx-btn rx-btn-primary qbk2-btn-seq" onclick="iniciarSequenciaBanco()" title="Modo Teste com até 10 questões dos filtros atuais: não feitas primeiro, correção na hora e resultado no fim">' + rxIco('play') + 'Estudar 10 em sequência</button></div></div>'
     + '<div class="qbk-busca-wrap">' + rxIco('busca').replace('<svg ', '<svg width="16" height="16" ') + '<label class="rx-visually-hidden" for="filtro-busca">Buscar no texto da questão ou alternativas</label><input type="search" id="filtro-busca" class="qbk-busca" placeholder="Buscar no texto da questão ou alternativas…" value="' + _escHtml(state._qbkBusca || '') + '" oninput="agendarFiltrarQuestoes()" autocomplete="off"></div>'
     + '<div id="qbk-filtros-ativos"></div>'
+    + '<div id="qbk2-retomar">' + _htmlRetomadaStrip(['estudo_teste', 'estudo_prova']) + '</div>'
     + '<div class="qbk2-grid"><aside class="qbk2-filtros" id="qbk2-filtros" aria-label="Filtros">' + _htmlFiltrosBanco() + '</aside><main id="lista-questoes" class="qbk2-main" aria-live="polite"></main></div>'
     + '<button type="button" class="rx-btn rx-btn-primary qbk2-fab" onclick="qbkAbrirLista()">' + rxIco('lista') + 'Minha lista · <b id="qbk2-fab-cnt">' + n + '</b></button>'
     + '</div>';
@@ -25853,11 +26062,12 @@ const ACOMP = {
     if (!qs.length) { alert('Nenhuma dessas questões está disponível no banco agora.'); return; }
     if (ctx.tipo === 'simulado' && ctx.simuladoId == null && ctx.opId) { const h = (state.historicoSimulados || []).find(x => x.opId === ctx.opId); if (h && typeof h.id === 'number') ctx.simuladoId = h.id; }
     const de = ctx.tentativaId || ctx.triId || null;
-    const origem = { nome: 'Recuperação · ' + ctx.rotulo, recuperacao_de: de, recuperacao_tipo: tipo,
+    const _va = _voltarAtual();
+    const origem = { nome: 'Recuperação · ' + ctx.rotulo, voltar: _va.voltar, voltarRotulo: _va.voltarRotulo, voltarNome: _va.voltarNome, recuperacao_de: de, recuperacao_tipo: tipo,
       recuperacao: { rotulo: ctx.rotulo, de_tipo: ctx.tipo, tentativa_id: ctx.tentativaId || null, simulado_id: ctx.simuladoId || null, tri_id: ctx.triId || null, recuperacao_tipo: tipo, n_origem: ctx.itens.length } };
     TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
       const t = TENTATIVAS.criar({ tipo: 'estudo_teste', origem, questoes_ids: qs.map(q => q.id) });
-      _estudoAtual = { modo: 'teste', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, recuperacao: Object.assign({}, origem.recuperacao) };
+      _estudoAtual = { modo: 'teste', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, voltar: origem.voltar, voltarRotulo: origem.voltarRotulo, voltarNome: origem.voltarNome, recuperacao: Object.assign({}, origem.recuperacao) };
       state.view = 'estudo-digital';
       renderEstudoDigital();
       try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
@@ -26564,8 +26774,8 @@ const RF_LISTA = {
     const nome = 'Revisão Final' + (semN ? ' · Semana ' + semN : '') + ' · Lista do dia';
     const revisao = { key: null, semana: semN, temaId: null, n: qs.length, pedidas: partes.reduce((a, p) => a + p.pedidas, 0), efv: 0, partes, nome };
     TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
-      const t = TENTATIVAS.criar({ tipo: 'estudo_prova', origem: { nome, revisao }, questoes_ids: qs.map(q => q.id) });
-      _estudoAtual = { modo: 'prova', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, revisao };
+      const t = TENTATIVAS.criar({ tipo: 'estudo_prova', origem: { nome, revisao, voltar: 'revisao-final', voltarRotulo: 'o plano da Revisão Final', voltarNome: 'Revisão Final' }, questoes_ids: qs.map(q => q.id) });
+      _estudoAtual = { modo: 'prova', qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, revisao, voltar: 'revisao-final', voltarRotulo: 'o plano da Revisão Final', voltarNome: 'Revisão Final' };
       state.view = 'estudo-digital';
       renderEstudoDigital();
       try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
@@ -26583,8 +26793,8 @@ const RF_LISTA = {
     const nome = 'Revisão Final' + (semN ? ' · Semana ' + semN : '') + (tema ? ' · ' + tema.nome : '');
     const revisao = { key: o.key || null, semana: semN, temaId: o.temaId, n: m.qs.length, pedidas: m.resumo.pedidas, efv: m.resumo.efv, resumo: m.resumo, nome };
     TENTATIVAS.antesDeComecar(['estudo_teste', 'estudo_prova'], () => {
-      const t = TENTATIVAS.criar({ tipo: 'estudo_prova', origem: { nome, revisao }, questoes_ids: m.qs.map(q => q.id) });
-      _estudoAtual = { modo: 'prova', qs: m.qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, revisao };
+      const t = TENTATIVAS.criar({ tipo: 'estudo_prova', origem: { nome, revisao, voltar: 'revisao-final', voltarRotulo: 'o plano da Revisão Final', voltarNome: 'Revisão Final' }, questoes_ids: m.qs.map(q => q.id) });
+      _estudoAtual = { modo: 'prova', qs: m.qs, respostas: {}, iniciadoEm: t.iniciado_em, tentativaId: t.id, faltando: 0, revisao, voltar: 'revisao-final', voltarRotulo: 'o plano da Revisão Final', voltarNome: 'Revisão Final' };
       state.view = 'estudo-digital';
       renderEstudoDigital();
       try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
