@@ -7935,6 +7935,7 @@ async function _preencherExplicacoes(lista) {
 async function carregarQuestoesDoBanco() {
   const k = _chaveCacheBanco();
   const versao = k ? await _versaoBanco() : null;
+  state._versaoBancoCarregada = versao;   // RADIX_REVALIDA_BANCO_2026-11-09
   if (k && versao) {
     try {
       const c = await _idb.get(k);
@@ -7950,6 +7951,58 @@ async function carregarQuestoesDoBanco() {
   }
   return remotas;
 }
+
+// ====== REVALIDAÇÃO DO BANCO COM A ABA ABERTA (09/11/2026) ======
+// A aba que fica aberta por dias nunca recarregava as questões corrigidas: o aluno
+// via enunciado e resolução antigos (reportes 30 e 31, questão 527). Ao voltar para
+// a aba, e a cada 30 min com ela visível, o app confere fn_versao_banco; se mudou,
+// recarrega o banco e redesenha a tela de questões. Nunca troca nada no meio de
+// simulado ou de atividade em andamento: espera terminar.
+const REVALIDA_BANCO = { ultimo: 0, rodando: false, MIN_MS: 10 * 60 * 1000, TIMER_MS: 30 * 60 * 1000 };
+function _atividadeEmAndamento() {
+  try {
+    if (state.simuladoAtual && !state.simuladoAtual.finalizado) return true;
+    if (typeof _estudoAtual !== 'undefined' && _estudoAtual) return true;
+  } catch (e) {}
+  return false;
+}
+async function revalidarBanco(forcar) {
+  if (!state.usuario || !state.questoesPronto || REVALIDA_BANCO.rodando) return false;
+  if (document.visibilityState === 'hidden') return false;
+  const agora = Date.now();
+  if (!forcar && agora - REVALIDA_BANCO.ultimo < REVALIDA_BANCO.MIN_MS) return false;
+  if (_atividadeEmAndamento()) return false;
+  REVALIDA_BANCO.rodando = true; REVALIDA_BANCO.ultimo = agora;
+  try {
+    const anterior = state._versaoBancoCarregada;
+    const v = await _versaoBanco();
+    if (!v || !anterior || v === anterior) return false;
+    const novas = await carregarQuestoesDoBanco();
+    if (!novas || !novas.length) { state._versaoBancoCarregada = anterior; return false; }
+    if (_atividadeEmAndamento()) { state._versaoBancoCarregada = anterior; return false; }   // começou algo no meio: tenta depois
+    state.questoes = novas;
+    state._explTodas = false;
+    console.log('[Radix] banco atualizado com a aba aberta (' + novas.length + ' questões).');
+    try { if (typeof SYNC_UI !== 'undefined') SYNC_UI.avisar('Questões atualizadas pelo professor.', 5000); } catch (e) {}
+    try {
+      if (typeof ROTA !== 'undefined' && ROTA.ativo() && ROTA.atual) {
+        const r = String(ROTA.atual);
+        if (r.startsWith('estudar') || r === 'caderno' || r.startsWith('listas/') || r.startsWith('revisao-final/mini/')) ROTA.abrir(r, true);
+      } else if (state.view === 'tema' && typeof filtrarQuestoes === 'function') {
+        filtrarQuestoes();
+      }
+    } catch (e) { console.warn('[revalida banco] redesenho:', e && e.message); }
+    return true;
+  } catch (e) {
+    console.warn('[revalida banco]', e && e.message);
+    return false;
+  } finally {
+    REVALIDA_BANCO.rodando = false;
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revalidarBanco(false); });
+window.addEventListener('pageshow', (ev) => { if (ev.persisted) revalidarBanco(true); });   // aba restaurada da memória do navegador
+setInterval(() => revalidarBanco(false), REVALIDA_BANCO.TIMER_MS);
 
 async function _carregarQuestoesDoServidor() {
   // Busca TODAS as questões no Supabase, em páginas de 1000.
