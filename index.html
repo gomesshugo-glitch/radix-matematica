@@ -6861,6 +6861,19 @@
   .deg-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(234,62,68,.14),rgba(47,123,255,.10));border:1px solid rgba(234,62,68,.35);border-radius:14px;padding:12px 16px;margin:0 0 14px}
   .deg-banner-txt{flex:1 1 320px;font-size:14px;line-height:1.5}
   .deg-banner-btn{white-space:nowrap}
+  .deg-banner-acoes{display:flex;gap:8px;flex-wrap:wrap}
+  .deg-banner a.btn,.status-card a.btn{text-decoration:none !important}
+  .deg-banner a.btn-primary,.status-card a.btn-primary{color:#fff !important}
+  .deg-guia-lista{display:grid;gap:12px}
+  .deg-guia-item{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px}
+  .deg-guia-txt{flex:1 1 260px;min-width:0}
+  .deg-guia-txt h3{margin:2px 0 4px;font-size:16px;line-height:1.3}
+  .deg-guia-txt p{margin:0;font-size:13.5px;line-height:1.5;color:var(--radix-text-muted)}
+  .deg-guia-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--rx-primary,#0064FF)}
+  .deg-guia-item .rx-btn{flex:none}
+  .deg-guia-mat{display:block}
+  .deg-guia-mat ul{margin:10px 0 14px;padding-left:20px;font-size:14px;line-height:1.75}
+  @media (max-width:560px){.deg-guia-item .rx-btn{width:100%;justify-content:center}}
   .deg-precos{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:12px 0 18px}
   .deg-preco{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:150px;padding:10px 16px;border-radius:12px;background:var(--radix-bg);border:1px solid var(--radix-line);font-size:13px}
   .deg-preco b{font-size:22px}
@@ -7064,11 +7077,11 @@ body .mk-tab.on, body .mk-tab.active, body.theme-light .mk-tab.on, body.theme-li
       </div>
 
       <div class="mk-deg-cta">
-        <a class="mk-deg-btn" href="https://app.radixmatematica.com.br/vendas" target="_blank" rel="noopener" style="text-decoration:none;">
-          Conhecer os planos e assinar
+        <button type="button" class="mk-deg-btn" onclick="abrirDegustacao()">
+          Conhecer a plataforma por 15 dias
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
-        <div class="mk-deg-sub">Ainda: vídeo-aulas e materiais por semana, estatísticas por tema, metas por área e o plano da Revisão Final.</div>
+        </button>
+        <div class="mk-deg-sub">Grátis e sem compromisso. Você entra na hora e testa questões do ENEM com gabarito comentado, simulados e uma prova do ENEM com nota TRI. Já decidiu? <a href="https://app.radixmatematica.com.br/vendas" target="_blank" rel="noopener" style="color:inherit;font-weight:700;">Conheça os planos</a>.</div>
       </div>
     </div>
 
@@ -7099,13 +7112,16 @@ body .mk-tab.on, body .mk-tab.active, body.theme-light .mk-tab.on, body.theme-li
           Entrar na plataforma
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
+        <p id="signin-link-deg" style="font-size:13px;text-align:center;margin-top:14px;">
+          Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#0052D6);">Conheça a plataforma por 15 dias, grátis</a>
+        </p>
       </div>
 
       <div id="form-signup" class="hidden">
         <div class="mk-form-title" id="signup-titulo">Crie sua conta.</div>
         <div class="mk-form-sub" id="signup-sub">Preencha os dados para liberar o acesso à plataforma.</div>
         <div id="signup-deg-banner" class="signup-deg-banner hidden">
-          <b>Degustação de 7 dias.</b> Você entra na hora, sem aprovação prévia, com uma amostra do banco de questões, simulado e a Semana 1 do plano da Revisão Final.
+          <b>Degustação de 15 dias.</b> Você entra na hora, sem aprovação prévia, com uma amostra do banco de questões, simulados e uma prova do ENEM com nota TRI.
           <a onclick="definirModoCadastro(false)">Sou aluno Radix, quero o cadastro regular</a>
         </div>
 
@@ -7139,7 +7155,7 @@ body .mk-tab.on, body .mk-tab.active, body.theme-light .mk-tab.on, body.theme-li
           Ao se cadastrar, você confirma o uso da plataforma Radix de Matemática.
         </p>
         <p id="signup-link-deg" style="font-size:13px;text-align:center;margin-top:6px;">
-          Ainda não é aluno? <a href="https://app.radixmatematica.com.br/vendas" target="_blank" rel="noopener" style="font-weight:700;color:var(--radix-blue,#0052D6);text-decoration:none;">Conheça os planos</a>
+          Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#0052D6);">Conheça a plataforma por 15 dias</a> ou <a href="https://app.radixmatematica.com.br/vendas" target="_blank" rel="noopener" style="font-weight:700;color:var(--radix-blue,#0052D6);text-decoration:none;">veja os planos</a>
         </p>
       </div>
 
@@ -8312,12 +8328,10 @@ async function sbContar(tabela, ajustar) {
 // (questões/materiais marcados no banco). O que ele enxerga é decidido pela RLS
 // (fn_status_atual / fn_pode_ver_questao); aqui é só interface e conversão.
 const DEGUSTACAO = {
-  dias: 7,
-  precoPresencial: 'R$ 300,00',            // Revisão presencial
-  precoOnline: 'R$ 69,90',                 // Revisão online
-  preco: 'a partir de R$ 69,90',           // rótulo curto usado na faixa do painel
+  dias: 15,                                // só texto de interface; quem manda é fn_degustacao_dias() no servidor
   whatsapp: '5584998131870',               // (84) 99813-1870
-  msg: 'Olá, Hugo! Fiz a degustação da plataforma Radix e quero garantir minha vaga na Revisão Final.',
+  msg: 'Olá, Hugo! Conheci a plataforma Radix na degustação e quero saber da matrícula 2027.',
+  matriculaUrl: '/matematica',             // página do curso de Matemática 2027
   zapUrl() { return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(this.msg); },
   ativa() { return !!(state && state.degustacao); }
 };
@@ -8352,14 +8366,13 @@ function definirModoCadastro(deg) {
   if ($('signup-btn-txt')) $('signup-btn-txt').textContent = deg ? 'Começar minha degustação' : 'Criar conta';
 }
 // ============================================================
-// DEGUSTAÇÃO (teste de 7 dias) — DESCONTINUADA em 16/09/2026.
-// A feature continua no código de propósito: quem já está em teste
-// segue até a data dele expirar, e os painéis de leads/conversão
-// continuam valendo para consulta do histórico.
-// Só a ENTRADA de alunos novos está fechada.
-// Para reabrir, basta voltar esta constante para true.
+// DEGUSTAÇÃO — reaberta em 16/11/2026 para quem pensa em se matricular em
+// 2027 (15 dias, migration 24). Esteve fechada de 16/09 a 16/11/2026.
+// Esta constante só liga os botões; quem concede o teste é o servidor
+// (handle_novo_usuario e fn_iniciar_degustacao). Para fechar de novo:
+// false aqui e o rollback da migration 24.
 // ============================================================
-const DEGUSTACAO_ABERTA = false;
+const DEGUSTACAO_ABERTA = true;
 function abrirDegustacao() {
   if (!DEGUSTACAO_ABERTA) return;   // não entram testes novos
   trocarAba('signup', true);
@@ -8791,7 +8804,7 @@ async function iniciarSessao() {
   if (meuPerfil.status === 'pendente' && meuPerfil.perfil === 'aluno' && !meuPerfil.degustacao_inicio
       && user.user_metadata && user.user_metadata.degustacao === true) {
     try {
-      // A duração é fixada no servidor (fn_degustacao_dias = 7); DEGUSTACAO.dias é só texto de interface.
+      // A duração é fixada no servidor (fn_degustacao_dias = 15); DEGUSTACAO.dias é só texto de interface.
       const { data: deg, error: eDeg } = await sb.rpc('fn_iniciar_degustacao');
       if (!eDeg && deg && deg.ok) {
         meuPerfil.status = 'degustacao'; meuPerfil.degustacao_ate = deg.ate; meuPerfil.degustacao_inicio = new Date().toISOString();
@@ -9025,17 +9038,13 @@ function mostrarTelaDegustacaoExpirada(perfil) {
         <div class="status-ico status-ico-warn">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <h2 class="status-titulo">Sua degustação terminou, ${primeiro}</h2>
+        <h2 class="status-titulo">Sua degustação terminou, ${_escHtml(primeiro)}</h2>
         <p class="status-msg">
-          Você teve ${DEGUSTACAO.dias} dias para conhecer a plataforma: banco de questões com gabarito comentado,
-          simulados cronometrados, cronograma semanal e a Semana 1 do plano da Revisão Final.
-          Para continuar com acesso completo até o ENEM, garanta sua vaga na Revisão Final:
+          Seu período para conhecer a plataforma acabou. Para continuar em 2027 com o acesso completo,
+          veja como funciona o curso de Matemática e garanta sua vaga.
         </p>
-        <div class="deg-precos">
-          <div class="deg-preco"><span>Revisão presencial</span><b>${DEGUSTACAO.precoPresencial}</b></div>
-          <div class="deg-preco"><span>Revisão online</span><b>${DEGUSTACAO.precoOnline}</b></div>
-        </div>
-        ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Quero garantir minha vaga</a>` : ''}
+        <a class="btn btn-primary" href="${DEGUSTACAO.matriculaUrl}">Conhecer o curso 2027</a>
+        ${DEGUSTACAO.whatsapp ? `<a class="btn btn-secondary" style="margin-top:10px" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Falar com o professor no WhatsApp</a>` : ''}
         <button class="btn btn-secondary" style="margin-top:10px" onclick="sb.auth.signOut().then(()=>location.reload())">Sair</button>
       </div>
     </div>
@@ -9046,9 +9055,90 @@ function _bannerDegustacao() {
   const d = state.degustacao.diasRestantes;
   return `
     <div class="deg-banner" role="status">
-      <div class="deg-banner-txt"><b>Modo degustação</b> · ${d === 1 ? 'último dia' : 'faltam ' + d + ' dias'}. Você está vendo uma amostra: questões do ENEM com gabarito comentado, simulado de até 15 questões e a Semana 1 do plano da Revisão Final.</div>
-      ${DEGUSTACAO.whatsapp ? `<a class="btn btn-primary deg-banner-btn" href="${DEGUSTACAO.zapUrl()}" target="_blank" rel="noopener">Garantir minha vaga · ${DEGUSTACAO.preco}</a>` : ''}
+      <div class="deg-banner-txt"><b>Degustação</b> · ${d === 1 ? 'último dia' : 'faltam ' + d + ' dias'}. Você está vendo uma amostra da plataforma, com questões do ENEM, simulados e uma prova do ENEM com nota TRI.</div>
+      <div class="deg-banner-acoes">
+        <button type="button" class="btn btn-secondary deg-banner-btn" onclick="ROTA.ir('guia')">Guia rápido</button>
+        <a class="btn btn-primary deg-banner-btn" href="${DEGUSTACAO.matriculaUrl}" target="_blank" rel="noopener">Quero me matricular em 2027</a>
+      </div>
     </div>`;
+}
+// ====== GUIA RÁPIDO DA DEGUSTAÇÃO (16/11/2026) ======
+// Tela de boas-vindas de quem está em degustação: o que dá para testar, com um botão
+// para cada parte, e o que abre com a matrícula. Abre sozinha no primeiro acesso
+// (_guiaDegPrimeiroAcesso) e fica no botão "Guia rápido" da faixa e do menu.
+function renderGuiaDegustacao() {
+  if (!state.degustacao) { renderHome(); return; }
+  state.view = 'guia';
+  const main = document.getElementById('main-content');
+  const d = state.degustacao.diasRestantes;
+  const nQ = state.questoesPronto ? (state.questoes || []).length : 0;
+  let nM = 0; try { nM = (typeof materiaisCache !== 'undefined' && Array.isArray(materiaisCache)) ? materiaisCache.filter(m => m.visivel).length : 0; } catch (e) { nM = 0; }
+  const passo = (ico, titulo, texto, tag, botao, rota) =>
+    '<article class="rx-card deg-guia-item"><span class="rx-ico">' + ico + '</span>'
+    + '<div class="deg-guia-txt"><span class="deg-guia-tag">' + tag + '</span><h3>' + titulo + '</h3><p>' + texto + '</p></div>'
+    + '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'' + rota + '\')">' + botao + '</button></article>';
+  main.innerHTML = '<div class="rx-home deg-guia">'
+    + '<div class="rx-greet"><div><h1 class="rx-h1">Guia rápido<span class="id27-ponto" aria-hidden="true"></span></h1>'
+    + '<p class="rx-sub">' + (d === 1 ? 'Hoje é o último dia da sua degustação.' : 'Você tem ' + d + ' dias para conhecer o Radix por dentro.') + ' Cada botão leva direto a uma parte da plataforma.</p></div></div>'
+    + '<div class="deg-guia-lista">'
+    + passo(rxIco('estudar'), 'Questões do ENEM com gabarito comentado', (nQ ? nQ + ' questões' : 'Uma amostra de questões') + ' de provas oficiais. Depois de responder, você vê a resolução passo a passo.', 'na degustação', 'Resolver agora', 'estudar')
+    + passo(_RXI2.alvo, 'Prova do ENEM com nota TRI', 'Resolva uma prova oficial de Matemática, marque o gabarito aqui e receba a nota na mesma escala do ENEM, com a lista dos erros que estavam ao seu alcance.', 'na degustação · uma prova', 'Fazer a prova', 'simulados/tri')
+    + passo(rxIco('simulados'), 'Simulados', 'Escolha os assuntos e o tempo e faça um simulado cronometrado, com correção na hora.', 'na degustação', 'Montar um simulado', 'simulados/novo')
+    + passo(rxIco('livro'), 'Caderno de erros', 'Cada questão que você erra pode ir para o caderno, com o motivo do erro, para revisar depois.', 'na degustação', 'Abrir o caderno', 'caderno')
+    + passo(rxIco('estat'), 'Desempenho por assunto', 'Conforme você responde, a plataforma mostra em que assunto você acerta mais e em qual precisa treinar.', 'na degustação', 'Ver meu desempenho', 'desempenho')
+    + (nM ? passo(_RXI2.arquivo, 'Material das aulas', nM + (nM === 1 ? ' material' : ' materiais') + ' em PDF das aulas de 2026, para você ver como é o material do curso.', 'na degustação · amostra', 'Ver os materiais', 'aulas') : '')
+    + '</div>'
+    + '<section class="rx-card deg-guia-mat"><span class="rx-kicker">Com a matrícula</span>'
+    + '<h2 class="rx-h2">O que abre para a turma 2027</h2>'
+    + '<ul><li>Banco completo de questões oficiais do ENEM com gabarito comentado</li><li>Todas as provas do ENEM com nota TRI</li><li>Simulados de até 45 questões</li><li>Aulas e materiais de todas as semanas do curso</li><li>Acompanhamento do professor Hugo Gomes</li></ul>'
+    + '<div class="rx-next-acoes"><a class="rx-btn rx-btn-primary" style="text-decoration:none" href="' + DEGUSTACAO.matriculaUrl + '" target="_blank" rel="noopener">Quero me matricular em 2027</a>'
+    + (DEGUSTACAO.whatsapp ? '<a class="rx-btn rx-btn-secondary" style="text-decoration:none" href="' + DEGUSTACAO.zapUrl() + '" target="_blank" rel="noopener">Falar com o professor no WhatsApp</a>' : '')
+    + '</div></section></div>';
+  window.scrollTo(0, 0);
+}
+// Primeiro acesso de quem está em degustação: abre o guia uma vez (marca por usuário no navegador).
+function _guiaDegPrimeiroAcesso() {
+  if (!state.degustacao || !state.usuario) return;
+  const k = 'radix-deg-guia:' + state.usuario.id;
+  let visto = false; try { visto = localStorage.getItem(k) === '1'; } catch (e) {}
+  if (visto) return;
+  try { localStorage.setItem(k, '1'); } catch (e) {}
+  if (ROTA.atual && ROTA.atual !== 'inicio') return;   // chegou por um link direto: não desvia
+  ROTA.ir('guia');
+}
+function _homeProximoPassoDeg() {
+  const d = state.degustacao.diasRestantes;
+  return '<span class="rx-kicker">Seu próximo passo</span><h2 class="rx-h2">Conhecer a plataforma</h2>'
+    + '<p>' + (d === 1 ? 'Hoje é o último dia da sua degustação.' : 'Você tem ' + d + ' dias de degustação.') + ' O guia rápido mostra o que dá para testar e leva direto a cada parte.</p>'
+    + '<div class="rx-next-acoes"><button type="button" class="rx-btn rx-btn-primary" onclick="ROTA.ir(\'guia\')">' + rxIco('play') + 'Abrir o guia rápido</button>'
+    + '<button type="button" class="rx-btn rx-btn-secondary" onclick="ROTA.ir(\'estudar\')">Resolver questões do ENEM</button></div>';
+}
+// Simulado ENEM com nota TRI na degustação: uma prova, uma vez (o servidor aplica o mesmo limite).
+function _triDegCta() {
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">'
+    + '<a class="sim-btn sim-btn-primary" style="text-decoration:none" href="' + DEGUSTACAO.matriculaUrl + '" target="_blank" rel="noopener">Quero me matricular em 2027</a>'
+    + '<button type="button" class="sim-btn sim-btn-outline" onclick="ROTA.ir(\'guia\')">Voltar ao guia rápido</button></div>';
+}
+function _triDegJaFez(nTodas) {
+  return '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Você já fez a prova da degustação</div>'
+    + '<div class="sim-card-s">A nota e o relatório ficam guardados em Minhas notas, logo abaixo.</div></div></div>'
+    + '<p style="font-size:13.5px;line-height:1.55;margin:0;color:var(--radix-text)">Com a matrícula você faz as ' + nTodas + ' provas do ENEM que estão na plataforma, quantas vezes quiser, e abre cada questão com a resolução comentada.</p>'
+    + _triDegCta() + '</div>';
+}
+function _triDegNota(nTodas) {
+  return '<div class="sim-note"><b style="color:var(--radix-text)">Na degustação</b> esta prova pode ser feita uma vez. As outras ' + Math.max(0, nTodas - 1) + ' provas do ENEM entram com a matrícula.</div>';
+}
+function _triDegResultado() {
+  return '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Esta foi a prova da degustação</div>'
+    + '<div class="sim-card-s">Com a matrícula você abre cada questão desta prova com a resolução comentada, manda os erros para o caderno e faz as outras provas do ENEM com nota TRI.</div></div></div>'
+    + _triDegCta() + '</div>';
+}
+// Na degustação só as questões da amostra abrem; as demais ficam sem botão no relatório.
+function _triMapaVisivel(m) {
+  if (!state.degustacao) return m;
+  const vis = new Set((state.questoes || []).map(q => q.id)); const o = {};
+  Object.keys(m || {}).forEach(p => { if (vis.has(m[p])) o[p] = m[p]; });
+  return o;
 }
 function mostrarTelaBloqueado(perfil) {
   document.getElementById('view-login').classList.add('hidden');
@@ -10203,6 +10293,7 @@ async function abrirQuestaoDoMini(sem, k, resp, gab) {
 }
 
 function renderRevisaoFinal() {
+  if (state.degustacao) { setTimeout(() => ROTA.ir('guia'), 0); return; }   // a degustação de 2027 não inclui o plano de revisão
   state.view = 'revisao-final';
   const main = document.getElementById('main-content');
   const sub = state.degustacao
@@ -10244,6 +10335,7 @@ function _abrirDestinoInicial() {
   state._destinoInicial = null;
   if (!d) {
     try { if (state.usuario && state.usuario.perfil !== 'professor') ROTA.abrirDaUrl(); } catch (e) {}
+    try { _guiaDegPrimeiroAcesso(); } catch (e) {}
     try { if (state.usuario && state.usuario.perfil !== 'professor') TENTATIVAS.oferecerRetomadaAoAbrir(); } catch (e) {}
     return;
   }
@@ -16690,7 +16782,7 @@ function _ldgRender() {
     const acoes = [];
     if (zap) acoes.push('<a class="btn-icon" title="Chamar no WhatsApp" href="' + zap + '" target="_blank" rel="noopener" style="color:#25D366;text-decoration:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>');
     if (s.k !== 'matriculado') acoes.push('<button class="btn-icon success" title="Matricular (aprovar acesso completo)" onclick="_ldgStatus(\'' + p.id + '\',\'aprovado\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>');
-    if (s.k === 'ativo' || s.k === 'expirado') acoes.push('<button class="btn-icon" title="Estender a degustação por mais 7 dias" onclick="_ldgEstender(\'' + p.id + '\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>');
+    if (s.k === 'ativo' || s.k === 'expirado') acoes.push('<button class="btn-icon" title="Estender a degustação por mais ' + DEGUSTACAO.dias + ' dias" onclick="_ldgEstender(\'' + p.id + '\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>');
     if (s.k === 'ativo' || s.k === 'expirado') acoes.push('<button class="btn-icon danger" title="Bloquear" onclick="_ldgStatus(\'' + p.id + '\',\'bloqueado\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>');
     acoes.push('<button class="btn-icon" title="' + (aberto ? 'Fechar detalhe' : 'Ver detalhe') + '" onclick="LDG.aberto = LDG.aberto === \'' + p.id + '\' ? null : \'' + p.id + '\'; _ldgRender()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (aberto ? '<polyline points="18 15 12 9 6 15"/>' : '<polyline points="6 9 12 15 18 9"/>') + '</svg></button>');
 
@@ -16718,7 +16810,7 @@ function _ldgRender() {
   main.innerHTML =
     '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderGerenciarAlunos()">Gerenciar Alunos</a> / Degustação</div>' +
     '<h2 class="section-title"><span class="section-title-accent"></span>Degustação · leads</h2>' +
-    '<div class="tagline-bar">Quem se cadastrou pelos 7 dias grátis, quanto usou e quem virou matrícula. Matricular = aprovar o acesso completo.</div>' +
+    '<div class="tagline-bar">Quem se cadastrou pela degustação gratuita, quanto usou e quem virou matrícula. Matricular = aprovar o acesso completo.</div>' +
     '<div class="rvp-tiles">' +
       tile(tot, 'leads no total') +
       tile(ativos, 'em degustação agora', 'ok') +
@@ -16736,7 +16828,7 @@ function _ldgRender() {
       '<button class="btn btn-secondary" style="padding:8px 14px;font-size:12.5px;" onclick="renderLeadsDegustacao()">Atualizar</button>' +
     '</div>' +
     (tot === 0
-      ? '<div class="ldg-empty">Nenhum lead registrado. A degustação foi encerrada em 15/09/2026; esta tela guarda só o histórico.</div>'
+      ? '<div class="ldg-empty">Nenhum lead ainda. Quem clicar em “Conhecer a plataforma por 15 dias” na tela de entrada aparece aqui.</div>'
       : (lista.length === 0
         ? '<div class="ldg-empty">Nenhum lead neste filtro.</div>'
         : '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table"><thead><tr>' +
@@ -16850,7 +16942,7 @@ async function renderGerenciarAlunos() {
       <div class="stat-card"><div class="label">Pendentes</div><div class="value" style="color:#E65100;">${pendentesT}</div></div>
       <div class="stat-card"><div class="label">Aprovados</div><div class="value" style="color:#16A34A;">${aprovadosT}</div></div>
       <div class="stat-card"><div class="label">Bloqueados</div><div class="value" style="color:var(--radix-red);">${bloqueadosT}</div></div>
-      <div class="stat-card" style="cursor:pointer;" onclick="renderLeadsDegustacao()" title="Histórico da degustação, encerrada em 15/09/2026"><div class="label">Degustação (encerrada)</div><div class="value" style="color:var(--radix-cyan,#0052D6);">${degustT}</div><div class="sub">ver histórico →</div></div>
+      <div class="stat-card" style="cursor:pointer;" onclick="renderLeadsDegustacao()" title="Leads da degustação"><div class="label">Degustação</div><div class="value" style="color:var(--radix-cyan,#0052D6);">${degustT}</div><div class="sub">ver leads →</div></div>
       <div class="stat-card"><div class="label">Total</div><div class="value">${totalGeral}</div></div>
     </div>
 
@@ -17495,7 +17587,7 @@ async function liberarDegustacao(alunoId) {
   const jaTeve = !!p.degustacao_inicio;
   const pergunta = 'Liberar ' + dias + ' dias de teste para ' + nome + '?\n\n'
     + 'Ele entra na hora com a amostra do banco de questões, simulado de até 15 questões '
-    + 'e o plano da Revisão Final, e recebe um e-mail avisando'
+    + 'e uma prova do ENEM com nota TRI, e recebe um e-mail avisando'
     + (p.email ? ', em ' + p.email : '') + '.'
     + (jaTeve ? '\n\nAtenção: este aluno já teve um período de teste antes.' : '');
   if (!confirm(pergunta)) return;
@@ -20613,14 +20705,16 @@ async function renderSimuladoTRI() {
   const bc = '<div class="breadcrumb"><a onclick="renderHome()">← Início</a> / <a onclick="renderSimulados()">Simulados</a> / ENEM oficial com nota TRI</div>';
   const titulo = '<h1 class="sim-h1">Simulado ENEM oficial com nota TRI</h1>';
   const env = (inner) => '<div class="sim-wrap">' + bc + titulo + inner + '</div>';
-  if (state.degustacao) { main.innerHTML = env('<div class="sim-card">O simulado com nota TRI faz parte da Revisão Final. Na degustação ele não está liberado.</div>'); return; }
   main.innerHTML = env('<p class="sim-lead">Carregando…</p>');
   const [p, t] = await Promise.all([
-    sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao').eq('area', 'MT').not('pdf_url', 'is', null).order('ano', { ascending: false }).order('caderno'),
+    sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao, degustacao').eq('area', 'MT').not('pdf_url', 'is', null).order('ano', { ascending: false }).order('caderno'),
     sb.from('simulado_tri').select('id, co_prova, iniciado_em, enviado_em, nota, acertos, erros, brancos, tempo_seg, respostas').eq('aluno_id', state.usuario.id).order('iniciado_em', { ascending: false })
   ]);
   if (p.error) { main.innerHTML = env('<div class="sim-card">Não consegui carregar as provas: ' + _escHtml(p.error.message) + '</div>'); return; }
   TRI.provas = _triOrdenarProvas(p.data); TRI.tentativas = t.data || [];
+  // Degustação (16/11/2026): só a prova marcada em enem_prova.degustacao, uma tentativa.
+  const deg = !!state.degustacao; const nTodas = TRI.provas.length;
+  if (deg) TRI.provas = TRI.provas.filter(x => x.degustacao);
   const abertas = TRI.tentativas.filter(x => !x.enviado_em), feitas = TRI.tentativas.filter(x => x.enviado_em);
   const nProvas = TRI.provas.length;
   const heroA = abertas[0] || null;          // hero = a tentativa aberta mais recente
@@ -20629,7 +20723,7 @@ async function renderSimuladoTRI() {
   const temAprox = TRI.provas.some(x => x.nota_aproximada);
 
   main.innerHTML = env(
-      '<p class="sim-lead">Escolha um caderno, abra o PDF oficial do INEP, resolva as 45 questões de Matemática (136 a 180) e marque aqui. A nota sai pelo mesmo modelo do ENEM, com os parâmetros oficiais de cada questão. Reserve cerca de 2 horas e meia.</p>'
+      '<p class="sim-lead">' + (deg ? 'Na degustação está liberada uma prova oficial do ENEM, para fazer uma vez. Abra' : 'Escolha um caderno, abra') + ' o PDF oficial do INEP, resolva as 45 questões de Matemática (136 a 180) e marque aqui. A nota sai pelo mesmo modelo do ENEM, com os parâmetros oficiais de cada questão. Reserve cerca de 2 horas e meia.</p>'
     + (heroA
         ? '<div class="sim-hero">'
           + '<div class="h-l">Simulado em andamento</div>'
@@ -20650,7 +20744,7 @@ async function renderSimuladoTRI() {
               + '<button class="sim-btn sim-btn-ghost sim-btn-sm" onclick="triCancelar(\'' + a.id + '\')">Descartar</button></div>').join('')
           + '</div></div>'
         : '')
-    + '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">Provas disponíveis</div>'
+    + (deg && feitas.length ? _triDegJaFez(nTodas) : '<div class="sim-card"><div class="sim-card-head"><div><div class="sim-card-t">' + (deg ? 'Prova da degustação' : 'Provas disponíveis') + '</div>'
       + '<div class="sim-card-s">' + nProvas + (nProvas === 1 ? ' prova' : ' provas') + ' · Matemática · questões 136 a 180 · ~2h30 cada</div></div>'
       + (feitas.length ? '<button class="sim-link" onclick="document.getElementById(\'sim-minhas-notas\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">Ver histórico →</button>' : '')
       + '</div><div class="enem-list">'
@@ -20679,7 +20773,7 @@ async function renderSimuladoTRI() {
       + '</div>'
       + (TRI.provas.some(x => _triAplic(x)) ? '<div class="sim-note"><b style="color:var(--radix-text)">Mais de uma aplicação por ano:</b> além da prova que a maioria fez, o INEP aplica a mesma área em outras datas. <b>Reaplicação / PPL</b> é a segunda aplicação, usada por quem teve problema na data oficial e pelas pessoas privadas de liberdade. <b>Belém · Ananindeua · Marituba</b> é a aplicação própria dessas cidades em 2025, por causa da COP30. São provas diferentes, com questões diferentes, e a nota sai na mesma escala.</div>' : '')
       + (temAprox ? '<div class="sim-note"><b style="color:var(--radix-text)">Nota aproximada:</b> nesses anos o INEP publicou parâmetros inconsistentes. A nota usa parâmetros recalibrados a partir dos resultados oficiais — serve pra acompanhar a evolução, mas pode variar um pouco da nota real.</div>' : '')
-      + '</div>'
+      + (deg ? _triDegNota(nTodas) : '') + '</div>')
     + '<div class="sim-card" id="sim-minhas-notas"><div class="sim-card-head"><div><div class="sim-card-t">Minhas notas</div>'
       + '<div class="sim-card-s">' + (feitas.length ? feitas.length + (feitas.length === 1 ? ' simulado enviado' : ' simulados enviados') : 'nenhum enviado ainda') + '</div></div></div>'
       + (feitas.length
@@ -20701,7 +20795,7 @@ async function triContinuar(id) {
   const { data: t, error } = await sb.from('simulado_tri').select('id, co_prova, respostas, iniciado_em, enviado_em').eq('id', id).single();
   if (error || !t) { alert('Tentativa não encontrada.'); return; }
   if (t.enviado_em) { triVerResultado(id); return; }
-  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao').eq('area', 'MT'); TRI.provas = _triOrdenarProvas(p.data); }
+  if (!TRI.provas) { const p = await sb.from('enem_prova').select('co_prova, ano, cor, caderno, descricao, pdf_url, nota_aproximada, aplicacao, degustacao').eq('area', 'MT'); TRI.provas = _triOrdenarProvas(p.data); }
   const prova = TRI.provas.find(x => x.co_prova === t.co_prova) || { ano: '', cor: '', caderno: '', pdf_url: '' };
   const resp = (t.respostas && t.respostas.length === 45 ? t.respostas : '.'.repeat(45)).split('');
   TRI.atual = { id: t.id, co_prova: t.co_prova, prova, resp, inicio: new Date(t.iniciado_em).getTime() };
@@ -20760,7 +20854,7 @@ async function renderResultadoTRI(j, tempo) {
   const main = document.getElementById('main-content');
   const itens = (j.itens || []).slice();
   // Questões do banco ligadas aos itens (enem_item.questao_id, migration 17). Sem ligação, sem botão.
-  const mapaQ = await _triMapaQuestoes(j.co_prova);
+  const mapaQ = _triMapaVisivel(await _triMapaQuestoes(j.co_prova));
   // Acoes da linha: ver a questao e, quando errou (ou deixou em branco),
   // mandar direto pro caderno de erros.
   const _btnQ = (x) => {
@@ -20827,7 +20921,7 @@ async function renderResultadoTRI(j, tempo) {
     + '<div class="sim-kpi"><div class="k-l">Tempo</div><div class="k-v">' + _triTempo(tempo) + '</div><div class="k-c">do início ao envio</div></div>'
     + '</div>'
     + aviso
-    + ACOMP.htmlAcoesResultado(ACOMP.ctxTri(j, mapaQ))
+    + (state.degustacao ? '' : ACOMP.htmlAcoesResultado(ACOMP.ctxTri(j, mapaQ)))
     + '<div class="sim-card"><div class="sim-card-head"><div>'
       + '<div class="sim-card-t">Revisão prioritária</div>'
       + '<div class="sim-card-s">Erros em questões que estavam ao seu alcance — chance de acerto de 50% ou mais na sua proficiência. É aqui que a nota sobe mais rápido.</div>'
@@ -20841,6 +20935,7 @@ async function renderResultadoTRI(j, tempo) {
       + '</div></div>'
     + tabTudo
     + '</div>'
+    + (state.degustacao ? _triDegResultado() : '')
     + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px">'
       + '<button class="sim-btn sim-btn-outline" onclick="renderSimuladoTRI()">Voltar aos simulados</button></div>'
     + '</div>';
@@ -21217,7 +21312,7 @@ async function renderSimulados(aba) {
         Fazer simulado
       </button>
       <button class="sim-btn-link" onclick="abrirModalSimulado(null)">Registrar nota de simulado externo</button>
-      ${state.degustacao ? '' : `<button class="sim-btn-link" onclick="renderSimuladoTRI()">ENEM com nota TRI</button>`}
+      <button class="sim-btn-link" onclick="renderSimuladoTRI()">ENEM com nota TRI</button>
     </div>
 
     <!-- Abas: sublinhado, sem pílula preenchida -->
@@ -21233,7 +21328,7 @@ async function renderSimulados(aba) {
         Simulados que você respondeu aqui na plataforma, com correção automática.
       </p>
       ${_htmlHistoricoPlataforma()}
-      ${state.degustacao ? '' : _htmlCardTri()}
+      ${_htmlCardTri()}
     ` : `
     <p style="color:var(--radix-gray-light);font-size:13px;margin:0 0 14px;">
       Notas dos simulados que você fez em bancas externas (Evolucional, SAS, Somos, ENEM antigos etc.).
@@ -25111,6 +25206,7 @@ const ROTA = {
     ['revisao-final', () => renderRevisaoFinal()],
     ['revisao-final/mini/:sem/:k/:resp/:gab', (sem, k, resp, gab) => abrirQuestaoDoMini(Number(sem), Number(k), resp, gab)],
     ['estatisticas', () => renderEstatisticasAvancadas()],
+    ['guia', () => renderGuiaDegustacao()],
     ['perfil', () => abrirMeuPerfil()]
   ],
   ativo() { return document.body.classList.contains('rx-aluno'); },
@@ -25310,7 +25406,9 @@ const NAV = {
     const side = app.querySelector('.rx-side');
     side.innerHTML = this.ITENS.map(it => this.item(it)).join('')
       + '<div class="rx-side-sec">Mais</div>'
-      + '<a class="rx-nav-item rx-nav-rf" data-secao="revisao-final" href="#/revisao-final" onclick="event.preventDefault();ROTA.ir(\'revisao-final\')">' + rxIco('rf') + '<span>Revisão Final</span></a>'
+      + (state.degustacao
+          ? '<a class="rx-nav-item" data-secao="guia" href="#/guia" onclick="event.preventDefault();ROTA.ir(\'guia\')">' + rxIco('play') + '<span>Guia rápido</span></a>'
+          : '<a class="rx-nav-item rx-nav-rf" data-secao="revisao-final" href="#/revisao-final" onclick="event.preventDefault();ROTA.ir(\'revisao-final\')">' + rxIco('rf') + '<span>Revisão Final</span></a>')
       + '<a class="rx-nav-item" data-secao="desempenho" href="#/desempenho" onclick="event.preventDefault();ROTA.ir(\'desempenho\')">' + rxIco('estat') + '<span>Desempenho</span></a>'
       + '<div class="rx-side-rodape">'
       + '<a class="rx-nav-item" href="#/perfil" onclick="event.preventDefault();ROTA.ir(\'perfil\')">' + rxIco('perfil') + '<span>Meu perfil</span></a>'
@@ -25343,7 +25441,7 @@ const NAV = {
       + (NAV.rfAtiva() ? it('revisar', 'revisar', 'Revisar') : '')
       + it('listas', 'listas', 'Minhas listas', n ? '<span class="rx-badge">' + n + '</span>' : '')
       + it('cronograma', 'cronograma', 'Cronograma')
-      + (NAV.rfAtiva() ? '' : it('revisao-final', 'rf', 'Revisão Final'))
+      + (state.degustacao ? it('guia', 'play', 'Guia rápido') : (NAV.rfAtiva() ? '' : it('revisao-final', 'rf', 'Revisão Final')))
       + it('desempenho', 'estat', 'Desempenho')
       + it('perfil', 'perfil', 'Meu perfil')
       + '<a class="rx-nav-item" href="#" onclick="event.preventDefault();toggleTheme();NAV.abrirMais()">' + rxIco(claro ? 'tema' : 'sol') + '<span>' + (claro ? 'Tema escuro' : 'Tema claro') + '</span></a>'
@@ -25587,6 +25685,7 @@ function _homeProximoPasso(semAtual, temaSemAtual, mats) {
   const pend = (typeof TENTATIVAS !== 'undefined' && TENTATIVAS.uid) ? TENTATIVAS.lista() : [];
   const rf = _homeRFInfo();
   if (!pend.length && rf) return _homeProximoPassoRF(rf, temaSemAtual);
+  if (!pend.length && state.degustacao) return _homeProximoPassoDeg();
   if (pend.length === 1) {
     const t = pend[0]; const total = (t.questoes_ids || []).length; const resp = Object.keys(t.respostas || {}).length;
     const venceu = t.termina_em && Date.parse(t.termina_em) <= RELOGIO.agora();
@@ -25669,7 +25768,7 @@ function renderDashboardAluno() {
   const matsHtml = mats.length ? '<div class="rx-week-lista">' + mats.map(m => { try { return renderLinhaMaterial(m); } catch (e) { return ''; } }).join('') + '</div>' : '';
 
   main.innerHTML = _bannerDegustacao() + '<div class="rx-home">'
-    + '<div class="rx-greet"><div><h1 class="rx-h1">' + saudacao + ', ' + _escHtml(nomeCurto) + '<span class="id27-ponto" aria-hidden="true"></span></h1><p class="rx-sub">' + dataTxt + (semAtual ? ' · semana ' + semAtual.n + (temaSemAtual ? ' · ' + _escHtml(temaSemAtual.nome) : (semAtual.titulo ? ' · ' + _escHtml(semAtual.titulo) : '')) : '') + '</p></div></div>'
+    + '<div class="rx-greet"><div><h1 class="rx-h1">' + saudacao + ', ' + _escHtml(nomeCurto) + '<span class="id27-ponto" aria-hidden="true"></span></h1><p class="rx-sub">' + dataTxt + (semAtual && !state.degustacao ? ' · semana ' + semAtual.n + (temaSemAtual ? ' · ' + _escHtml(temaSemAtual.nome) : (semAtual.titulo ? ' · ' + _escHtml(semAtual.titulo) : '')) : '') + '</p></div></div>'
     + '<section class="rx-next" aria-label="Seu próximo passo">' + _homeProximoPasso(semAtual, temaSemAtual, mats) + (window.ID27 ? ID27.decorNext : '') + '</section>'
     + '<div class="rx-two">'
     + '<a class="rx-card rx-card-link" href="#/revisar" onclick="event.preventDefault();ROTA.ir(\'revisar\')"><span class="rx-ico ' + revIco + '">' + rxIco('revisar') + '</span><div><h3>' + _escHtml(revTit) + '</h3><p>' + _escHtml(revSub) + '</p></div><span class="rx-seta">' + rxIco('chevron') + '</span></a>'
@@ -25680,11 +25779,11 @@ function renderDashboardAluno() {
     + '<div class="rx-kpi"><div class="l">Taxa de acerto</div><div class="v">' + (taxa7 == null ? '—' : taxa7 + '<small>%</small>') + '</div><div class="s">' + (taxa7 == null ? 'sem respostas no período' : ac7 + ' acertos em ' + r7.length + ' · 7 dias') + '</div></div>'
     + '<div class="rx-kpi"><div class="l">Revisões realizadas</div><div class="v">' + (feitas7 == null ? '—' : feitas7) + '</div><div class="s">' + (feitas7 == null ? 'nenhuma prevista ainda' : 'últimos 7 dias') + '</div></div>'
     + '</div><div class="rx-kpis-rodape"><a href="#/desempenho" onclick="event.preventDefault();ROTA.ir(\'desempenho\')">Ver meu desempenho →</a></div></div>'
-    + '<section class="rx-card rx-week" aria-label="Na sua semana"><div class="rx-week-head"><div><span class="rx-kicker">Na sua semana</span>'
+    + (state.degustacao ? '' : '<section class="rx-card rx-week" aria-label="Na sua semana"><div class="rx-week-head"><div><span class="rx-kicker">Na sua semana</span>'
     + (semAtual ? '<h2 class="rx-h2">Semana ' + String(semAtual.n).padStart(2, '0') + ' · ' + _escHtml(semAtual.titulo || (temaSemAtual ? temaSemAtual.nome : '')) + '</h2><p class="rx-sub">' + (temaSemAtual ? 'Tema: ' + _escHtml(temaSemAtual.nome) + '. ' : '') + (mats.length ? mats.length + (mats.length === 1 ? ' material disponível.' : ' materiais disponíveis.') : 'Nenhum material publicado para esta semana ainda.') + '</p>'
       : '<h2 class="rx-h2">Fora do calendário de aulas</h2><p class="rx-sub">Nenhuma semana em andamento hoje.</p>')
     + '</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + (temaSemAtual ? '<button type="button" class="rx-btn rx-btn-secondary rx-btn-sm" onclick="abrirTema(\'' + temaSemAtual.id + '\')">Questões do tema</button>' : '') + '<button type="button" class="rx-btn rx-btn-ghost rx-btn-sm" onclick="ROTA.ir(\'cronograma' + (semAtual ? '/' + semAtual.n : '') + '\')">Ver cronograma completo</button></div></div>'
-    + matsHtml + '</section>'
+    + matsHtml + '</section>')
     + '<details class="rx-card rx-reports" open><summary>Relatórios</summary>'
     + '<div class="dash-charts-grid"><div class="dash-card"><h3>Evolução dos simulados</h3><div class="chart-wrap"><canvas id="chart-sim-evolucao"></canvas></div><div id="chart-sim-empty" class="chart-empty" style="display:none;">Nenhum simulado realizado ainda.<br><small style="opacity:0.7;">Faça um simulado pra ver sua evolução aparecer aqui.</small></div></div>'
     + '<div class="dash-card"><h3>Acertos por módulo</h3><div class="chart-wrap"><canvas id="chart-modulo"></canvas></div><div id="chart-mod-empty" class="chart-empty" style="display:none;">Responda algumas questões pra ver seus acertos por módulo.</div></div></div>'
@@ -25961,6 +26060,7 @@ function limparCestaLateral() {
  ['renderCronograma', () => 'cronograma'],
  ['renderRevisaoFinal', () => 'revisao-final'],
  ['renderEstatisticasAvancadas', () => 'estatisticas'],
+ ['renderGuiaDegustacao', () => (state.degustacao ? 'guia' : null)],
  ['abrirMeuPerfil', () => 'perfil']].forEach(([n, f]) => ROTA.envolver(n, f));
 
 // ============================================================================
