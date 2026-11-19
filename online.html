@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radix Matemática Online 2027 · Curso de Matemática para o ENEM</title>
+<meta name="description" content="Curso online de Matemática para o ENEM 2027 com o Prof. Hugo Gomes. Vídeo-aulas, mais de 1.600 questões oficiais, simulado com nota TRI, caderno de erros e Revisão Final na plataforma Radix.">
+<link rel="canonical" href="https://app.radixmatematica.com.br/online">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Radix Matemática">
+<meta property="og:title" content="Radix Matemática Online 2027">
+<meta property="og:description" content="Ponto a ponto, até o seu sonho. Curso online de Matemática para o ENEM 2027 com o Prof. Hugo Gomes.">
+<meta property="og:url" content="https://app.radixmatematica.com.br/online">
+<meta property="og:image" content="https://app.radixmatematica.com.br/radix27-link.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#EEF3F7">
+<link rel="icon" href="/radix27-icone.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="/radix27-icone.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://api.lumenio.com.br" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ====== Identidade visual 2027 do Radix Matemática ======
+   "ponto a ponto, até o seu sonho". Valores de 08 Plataforma/radix27_tokens.css;
+   regras de uso em GUIA_ID_VISUAL_2027.md. Os nomes antigos (--bg, --card, --cyan…)
+   foram mantidos apontando para a paleta nova, para a marcação não precisar mudar. */
+:root{
+  /* paleta 2027 */
+  --azul:#0064FF; --azul-tx:#0052D6; --azul-noite:#2F7BFF;
+  --marinho:#0A1440; --gelo:#EEF3F7; --branco:#fff;
+  --vermelho:#EA3E44; --vermelho-tx:#D92D36;
+  --anel-claro:rgba(10,20,64,.09); --anel-azul:rgba(255,255,255,.18); --anel-noite:rgba(77,141,255,.28);
+
+  /* nomes antigos, remapeados */
+  --bg:var(--gelo); --bg-deep:var(--branco); --card:var(--branco); --card-2:#E3EBF4;
+  --line:rgba(10,20,64,.10);
+  --text:var(--marinho); --text-2:#39436B; --muted:#5B6488;
+  --cyan:var(--azul-tx); --cyan-2:var(--azul); --blue:var(--azul);
+  --coral:var(--vermelho-tx); --green:var(--azul); --amber:#8A93B5;
+  --grad:var(--azul);
+  --radius:20px; --container:1140px; --pad:20px;
+  --font:Archivo,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --display:Archivo,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sombra:0 1px 2px rgba(10,20,64,.05),0 10px 30px rgba(10,20,64,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:72px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{background:var(--gelo);color:var(--marinho);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-width:320px}
+img,svg{display:block;max-width:100%}
+a{color:var(--azul-tx);text-decoration:none}
+a:hover{color:var(--azul)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+ul,ol{list-style:none}
+b,strong{font-weight:700}
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--azul);outline-offset:3px;border-radius:8px}
+.show-sm{display:none}
+.skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--azul);color:#fff;font-weight:800;padding:10px 14px;border-radius:10px}
+.skip:focus{top:12px}
+.wrap{max-width:var(--container);margin:0 auto;padding-left:var(--pad);padding-right:var(--pad)}
+.section{padding:80px 0 0}
+
+/* rótulo: JetBrains Mono, como no kit */
+.eyebrow{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.08em;color:var(--azul-tx);text-transform:uppercase}
+
+/* título: Archivo largo (125%), peso 800, azul sobre gelo (contraste 4,41 — só título grande) */
+h1,h2,h3{font-family:var(--display);text-wrap:balance}
+h1,h2{font-stretch:125%;letter-spacing:-.02em;color:var(--azul)}
+h2{font-size:clamp(26px,3.4vw,40px);line-height:1.08;font-weight:800;margin-top:12px;max-width:24ch}
+h3{letter-spacing:-.01em;color:var(--marinho)}
+.lead{margin-top:16px;font-size:clamp(16px,1.3vw,18px);line-height:1.6;color:var(--text-2);max-width:62ch;text-wrap:pretty}
+.band{background:var(--branco);margin-top:80px;padding:72px 0 80px}
+.band .section{padding-top:0}
+/* segunda parte do título: marinho, peso 300, como no kit */
+.hl{color:var(--marinho);font-weight:300}
+/* ponto final vermelho da frase */
+.ponto::after{content:'';display:inline-block;width:.275em;height:.275em;margin-left:.075em;border-radius:50%;background:var(--vermelho);vertical-align:baseline}
+
+/* anéis concêntricos saindo de um ponto */
+.aneis{background-image:repeating-radial-gradient(circle at var(--ax,86%) var(--ay,42%),transparent 0 68px,var(--anel-claro) 68px 70px)}
+
+/* ====== Botões ====== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:52px;padding:14px 26px;border-radius:14px;font-size:16px;font-weight:700;white-space:nowrap;transition:transform .15s,box-shadow .15s,border-color .15s,color .15s,background .15s}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:hover{color:#fff;background:#0057DF;box-shadow:0 14px 30px -14px rgba(0,100,255,.55);transform:translateY(-1px)}
+.btn-ghost{background:var(--branco);color:var(--text-2);border:1px solid rgba(10,20,64,.14)}
+.btn-ghost:hover{border-color:var(--azul);color:var(--azul-tx)}
+.microcopy{margin-top:10px;font-size:14px;color:var(--muted)}
+
+/* ====== Cabeçalho ====== */
+.header{position:sticky;top:0;z-index:40;background:rgba(238,243,247,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;padding-top:8px;padding-bottom:8px}
+.brand{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--marinho);min-height:44px;white-space:nowrap}
+.brand:hover{color:var(--marinho)}
+.brand .mark{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand .mark img{width:100%;height:auto}
+.brand .ed{font-family:var(--mono);font-weight:700;color:var(--azul-tx);letter-spacing:.04em}
+.nav{display:none;gap:4px}
+.nav a{white-space:nowrap;color:var(--text-2);font-size:14.5px;font-weight:500;padding:10px 12px;border-radius:9px;min-height:44px;display:inline-flex;align-items:center}
+.nav a:hover{color:var(--marinho);background:rgba(10,20,64,.05)}
+.header .btn{min-height:44px;padding:10px 18px;font-size:14.5px;border-radius:11px}
+
+/* ====== Hero ====== */
+.hero{position:relative;padding:36px 0 0;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background-image:repeating-radial-gradient(circle at 82% 34%,transparent 0 68px,var(--anel-claro) 68px 70px);pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:end;position:relative}
+.tag{display:inline-flex;align-items:center;gap:8px;background:var(--branco);border-radius:999px;padding:8px 14px;font-size:13.5px;color:var(--text-2);font-weight:500;box-shadow:var(--sombra)}
+.tag i{width:8px;height:8px;border-radius:50%;background:var(--vermelho);box-shadow:0 0 0 4px rgba(234,62,68,.16)}
+.hero h1{font-size:clamp(36px,6.2vw,64px);line-height:1.02;font-weight:800;max-width:15ch;margin-top:18px}
+.hero .lead{margin-top:20px;font-size:clamp(16px,1.5vw,19px);max-width:54ch}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.hero-copy{padding-bottom:16px}
+.hero-photo{position:relative;justify-self:center;width:min(440px,92%);margin-bottom:-1px}
+.hero-photo img{width:100%;height:auto;-webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent);mask-image:linear-gradient(to bottom,#000 78%,transparent);filter:drop-shadow(0 26px 40px rgba(10,20,64,.18))}
+.hero-photo .sign{position:absolute;left:-6px;bottom:64px;background:var(--branco);border-radius:16px;padding:12px 16px;box-shadow:var(--sombra)}
+.hero-photo .sign b{display:block;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.hero-photo .sign span{font-size:13px;color:var(--muted)}
+.hero-photo .float{position:absolute;right:-8px;bottom:150px;background:var(--branco);border-radius:16px;padding:12px 16px;text-align:left;box-shadow:var(--sombra)}
+.hero-photo .float small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;font-weight:500;color:var(--muted);text-transform:uppercase}
+.hero-photo .float b{font-size:26px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;color:var(--azul);line-height:1.1}
+.hero-photo .float span{display:block;font-size:12.5px;color:var(--text-2)}
+
+/* linha de pontos: as etapas sobem até o símbolo, que é o sonho */
+.trilha{position:relative;margin-top:30px;padding:22px 0 0;border-top:1px solid var(--line)}
+.trilha ol{display:flex;align-items:flex-end;gap:0;overflow:hidden}
+.trilha li{flex:1;min-width:0;position:relative;padding-bottom:22px;text-align:center}
+.trilha li::before{content:'';position:absolute;left:50%;right:-50%;bottom:5px;height:2px;background:var(--azul)}
+.trilha li:last-child::before{background:none;border-top:2px dashed var(--azul);bottom:4px}
+.trilha li::after{content:'';position:absolute;left:50%;bottom:0;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--marinho);z-index:1}
+.trilha li.ag::after{background:var(--vermelho)}
+.trilha li span{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.06em;color:var(--muted);display:block}
+.trilha .fim{position:absolute;right:0;bottom:12px;display:flex;align-items:center;gap:10px}
+.trilha .fim img{width:34px;height:auto}
+.trilha .caixa{display:inline-block;padding:.29em .67em;border-radius:999px;background:var(--vermelho);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:22px 0;border-top:1px solid var(--line)}
+.stat b{display:block;font-size:30px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1;color:var(--azul);font-variant-numeric:tabular-nums}
+.stat span{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.06em;font-weight:500;margin-top:8px;text-transform:uppercase}
+
+/* ====== Incidência ====== */
+.inc-grid{display:grid;grid-template-columns:1fr;gap:28px;margin-top:34px;align-items:center}
+.bars{background:var(--branco);border-radius:28px;padding:24px 22px;box-shadow:var(--sombra)}
+.bar{display:grid;grid-template-columns:150px 1fr 42px;gap:12px;align-items:center;padding:7px 0;font-size:14.5px}
+.bar .tr{height:12px;border-radius:999px;background:#E3EBF4;overflow:hidden}
+.bar .tr i{display:block;height:100%;border-radius:999px;background:var(--azul)}
+.bar b{text-align:right;font-variant-numeric:tabular-nums}
+.bars .sum{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);font-size:14.5px;color:var(--text-2)}
+.bars .sum b{color:var(--azul);font-size:22px;font-weight:800;font-stretch:125%;font-variant-numeric:tabular-nums}
+.bars .src{margin-top:10px;font-size:12.5px;color:var(--muted)}
+.points{display:grid;gap:14px}
+.point{display:flex;gap:14px;align-items:flex-start}
+.point .ic{flex-shrink:0;width:40px;height:40px;border-radius:12px;background:#E1EBFB;color:var(--azul-tx);display:flex;align-items:center;justify-content:center}
+.point h3{font-size:17px;font-weight:700;line-height:1.3}
+.point p{font-size:15px;color:var(--text-2);margin-top:4px}
+
+/* ====== Plataforma ====== */
+.tools-tabs{display:flex;gap:6px;overflow-x:auto;margin-top:30px;padding-bottom:6px;scrollbar-width:thin}
+.tools-tabs button{flex-shrink:0;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:12px;font-size:14.5px;font-weight:600;color:var(--text-2);background:var(--gelo);border:1px solid transparent}
+.tools-tabs button:hover{color:var(--marinho)}
+.tools-tabs button[aria-selected="true"]{background:var(--marinho);color:#fff;border-color:transparent}
+.tool{display:none;grid-template-columns:1fr;gap:28px;margin-top:18px;align-items:center}
+.tool.on{display:grid}
+.tool h3{font-size:clamp(21px,2.4vw,27px);font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1.15;color:var(--marinho)}
+.tool .why{margin-top:12px;color:var(--text-2);font-size:16px}
+.tool ul.ck{margin-top:16px;display:grid;gap:10px}
+.ck li{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--text-2)}
+.ck li svg{flex-shrink:0;margin-top:3px;color:var(--azul)}
+.screen{background:var(--gelo);border:1px solid rgba(10,20,64,.08);border-radius:28px;padding:18px;box-shadow:var(--sombra)}
+.screen .bar-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.screen .dots{display:flex;gap:6px}
+.screen .dots i{width:9px;height:9px;border-radius:50%;background:rgba(10,20,64,.18)}
+.screen .ilus{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--muted);background:rgba(10,20,64,.06);padding:5px 9px;border-radius:999px;text-transform:uppercase}
+.panel{background:var(--branco);border-radius:18px;padding:16px}
+.panel + .panel{margin-top:10px}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips span{font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--gelo);color:var(--text-2)}
+.chips span.on{background:#E1EBFB;color:var(--azul-tx)}
+.q{font-size:14px;color:var(--text-2);line-height:1.5}
+.q .src{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--azul-tx);letter-spacing:.06em}
+.alts{display:grid;gap:6px;margin-top:10px}
+.alts div{display:flex;gap:10px;align-items:center;font-size:13.5px;padding:8px 10px;border-radius:12px;background:var(--gelo);color:var(--text-2)}
+.alts div i{font-style:normal;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(10,20,64,.28);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.alts div.ok{background:#E1EBFB;color:var(--marinho)}
+.alts div.ok i{border-color:var(--azul);background:var(--azul);color:#fff}
+.res{margin-top:10px;font-size:13px;color:var(--text-2);border-left:3px solid var(--azul);padding:4px 0 4px 10px}
+.big{font-size:44px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1;color:var(--azul);font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.kv div{background:var(--gelo);border-radius:12px;padding:10px}
+.kv b{display:block;font-size:18px;font-weight:800;font-stretch:125%;font-variant-numeric:tabular-nums}
+.kv span{font-size:11.5px;color:var(--muted)}
+.mrow{display:grid;grid-template-columns:1fr 70px 46px;gap:10px;align-items:center;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow .tr{height:8px;border-radius:999px;background:#E3EBF4;overflow:hidden}
+.mrow .tr i{display:block;height:100%;border-radius:999px}
+.mrow b{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:999px;text-transform:uppercase}
+.pill.r{background:#FBE4E5;color:var(--vermelho-tx)}
+.pill.a{background:rgba(10,20,64,.07);color:#4A5478}
+.pill.g{background:#E1EBFB;color:var(--azul-tx)}
+.err{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.err:last-child{border-bottom:0}
+.err .n{flex-shrink:0;width:30px;height:30px;border-radius:10px;background:var(--gelo);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:11.5px;color:var(--azul-tx)}
+.err p{color:var(--text-2)}
+.err small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.wk{display:grid;gap:8px}
+.wk div{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--gelo);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.wk div.done{opacity:.55}
+.wk div.next{box-shadow:inset 0 0 0 1.5px var(--azul)}
+.wk small{color:var(--muted);font-size:12px;white-space:nowrap}
+
+/* ====== Grade de ferramentas ====== */
+.grid-tools{display:grid;grid-template-columns:1fr;gap:12px;margin-top:30px}
+.gt{background:var(--gelo);border-radius:20px;padding:20px}
+.gt .ic{width:40px;height:40px;border-radius:12px;background:#E1EBFB;color:var(--azul-tx);display:flex;align-items:center;justify-content:center}
+.gt h3{font-size:17px;font-weight:700;margin-top:14px}
+.gt p{font-size:15px;color:var(--text-2);margin-top:6px}
+
+/* ====== TRI: fundo escuro, um dos três fundos do kit ====== */
+.tri{display:grid;grid-template-columns:1fr;gap:0;background:var(--marinho);border-radius:28px;overflow:hidden;margin-top:34px;position:relative;background-image:repeating-radial-gradient(circle at 88% 30%,transparent 0 68px,var(--anel-noite) 68px 70px)}
+.tri-copy{padding:28px 24px;position:relative}
+.tri-copy .eyebrow{color:#9FC0FF}
+.tri-copy h3{font-size:clamp(21px,2.6vw,29px);font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1.14;margin-top:10px;color:#fff}
+.tri-copy p{margin-top:12px;color:#C9D4EE}
+.tri-num{display:flex;flex-wrap:wrap;gap:22px;margin-top:22px}
+.tri-num b{display:block;font-size:32px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;color:var(--azul-noite);line-height:1;font-variant-numeric:tabular-nums}
+.tri-num span{font-size:13px;color:#AFBBDA}
+.tri-photo{min-height:300px;background:url(mat27-hugo-tri.webp) right bottom/contain no-repeat;position:relative;margin-top:10px}
+
+/* ====== Módulos ====== */
+.mods{display:grid;grid-template-columns:1fr;gap:12px;margin-top:30px}
+.mod{background:var(--branco);border-radius:24px;padding:22px;position:relative;overflow:hidden;box-shadow:var(--sombra)}
+.mod .n{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.08em;color:var(--azul-tx)}
+.mod h3{font-size:19px;font-weight:700;margin-top:6px;line-height:1.25}
+.mod p{font-size:14px;color:var(--muted);margin-top:4px}
+.mod ul{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.mod li{font-size:12.5px;font-weight:500;padding:5px 9px;border-radius:9px;background:var(--gelo);color:var(--text-2)}
+.mod.rev{background:var(--azul);background-image:repeating-radial-gradient(circle at 92% 18%,transparent 0 58px,var(--anel-azul) 58px 60px)}
+.mod.rev .n{color:#fff;opacity:.85}
+.mod.rev h3,.mod.rev p{color:#fff}
+.mod.rev p{opacity:.9}
+.mod.rev li{background:rgba(255,255,255,.18);color:#fff}
+
+/* ====== Semana ====== */
+.flow{display:grid;grid-template-columns:1fr;gap:14px;margin-top:30px;counter-reset:f}
+.flow li{background:var(--branco);border-radius:24px;padding:22px;position:relative;box-shadow:var(--sombra)}
+.flow li::before{counter-increment:f;content:counter(f);width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:14px;color:#fff;background:var(--marinho)}
+
+.flow h3{font-size:17.5px;font-weight:700;margin-top:14px}
+.flow p{font-size:15px;color:var(--text-2);margin-top:6px}
+
+/* ====== Professor ====== */
+.prof{display:grid;grid-template-columns:1fr;gap:30px;align-items:center;margin-top:10px}
+.prof-photo{position:relative;border-radius:28px;overflow:hidden;background:var(--azul);background-image:repeating-radial-gradient(circle at 50% 22%,transparent 0 58px,var(--anel-azul) 58px 60px);padding-top:28px;max-width:460px;justify-self:center;width:100%}
+.prof-photo img{width:100%;height:auto}
+.prof-photo .cap{position:absolute;left:14px;right:14px;bottom:14px;background:var(--branco);border-radius:16px;padding:12px 14px;font-size:13.5px;color:var(--text-2);box-shadow:0 8px 20px rgba(10,20,64,.18)}
+.prof-photo .cap b{color:var(--marinho)}
+.prof blockquote{margin-top:22px;font-size:clamp(19px,2vw,23px);line-height:1.35;font-weight:600;font-stretch:112%;letter-spacing:-.01em;color:var(--marinho);border-left:3px solid var(--azul);padding-left:16px}
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:24px}
+.facts div{background:var(--gelo);border-radius:16px;padding:14px}
+.facts b{display:block;font-size:22px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;color:var(--azul);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--text-2)}
+
+/* ====== Planos ====== */
+.plans{display:grid;grid-template-columns:1fr;gap:16px;margin-top:30px}
+.plan{background:var(--branco);border-radius:28px;padding:26px 24px;display:flex;flex-direction:column;box-shadow:var(--sombra)}
+.plan.feat{border-top:3px solid var(--azul)}
+.plan .kind{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--azul-tx)}
+.plan h3{font-size:24px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;margin-top:8px}
+.plan .where{font-size:14px;color:var(--muted);margin-top:4px}
+.plan .price{margin-top:18px;font-size:34px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1.1;color:var(--azul);font-variant-numeric:tabular-nums}
+.plan .price small{display:block;font-size:13.5px;font-weight:500;font-stretch:100%;letter-spacing:0;color:var(--muted);margin-top:4px}
+.plan .price.soon{font-size:21px;color:var(--text-2);font-weight:700}
+.plan ul.ck{margin-top:18px;display:grid;gap:10px;flex:1}
+.plan .btn{margin-top:22px;width:100%}
+.inc-all{margin-top:16px;background:var(--branco);border-left:3px solid var(--azul);border-radius:16px;padding:14px 16px;font-size:14.5px;color:var(--text-2);box-shadow:var(--sombra)}
+.inc-all b{color:var(--marinho)}
+
+/* ====== FAQ ====== */
+.faq{margin-top:28px;display:grid;gap:10px;max-width:820px}
+.faq details{background:var(--branco);border-radius:18px;padding:0 18px;box-shadow:var(--sombra)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:14px;min-height:56px;padding:14px 0;font-weight:600;font-size:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary svg{flex-shrink:0;transition:transform .2s;color:var(--azul)}
+.faq details[open] summary svg{transform:rotate(45deg)}
+.faq details p{padding:0 0 18px;color:var(--text-2);font-size:15px}
+
+/* ====== Fecho: o fundo azul do kit ====== */
+.final{margin-top:90px;background:var(--azul);background-image:repeating-radial-gradient(circle at 74% 30%,transparent 0 68px,var(--anel-azul) 68px 70px);overflow:hidden;color:#fff}
+.final-grid{display:grid;grid-template-columns:1fr;gap:10px;align-items:end}
+.final-copy{padding:60px 0 30px}
+.final-copy .eyebrow{color:#fff}
+.final-copy h2{max-width:18ch;color:#fff}
+.final-copy .hl{color:#D7E6FF}
+.final-copy .ponto::after{background:var(--vermelho);box-shadow:0 0 0 2.5px #fff}
+.final-copy .lead{color:#fff}
+.final .btn-primary{background:#fff;color:var(--azul)}
+.final .btn-primary:hover{background:#fff;color:var(--azul);box-shadow:0 14px 30px -14px rgba(0,0,0,.35)}
+.final .btn-ghost{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
+.final .btn-ghost:hover{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.5);color:#fff}
+.final :focus-visible{outline-color:#fff}
+.final-photo{justify-self:center;width:min(560px,100%)}
+.final-photo img{width:100%;height:auto;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent);mask-image:linear-gradient(to bottom,#000 72%,transparent)}
+
+footer{background:var(--branco);border-top:1px solid var(--line);padding:30px 0 96px;font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px}
+footer a{color:var(--text-2)}
+/* assinatura do kit: RADIX, linha, símbolo, linha, 27 */
+.assina{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--marinho)}
+.assina i{display:block;width:26px;height:1.5px;background:rgba(10,20,64,.3)}
+.assina img{width:19px;height:auto}
+
+/* Barra fixa no celular */
+.mbar{position:fixed;left:0;right:0;bottom:0;z-index:45;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;gap:10px;transform:translateY(110%);transition:transform .25s}
+.mbar.show{transform:none}
+.mbar .btn{flex:1;min-height:48px;padding:10px 14px;font-size:15px}
+
+@media (min-width:640px){
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .grid-tools{grid-template-columns:repeat(2,1fr)}
+  .flow{grid-template-columns:repeat(2,1fr)}
+  .mods{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:960px){
+  :root{--pad:28px}
+  .nav{display:flex}
+  .hero{padding-top:56px}
+  .hero-grid{grid-template-columns:1.15fr .85fr;gap:30px}
+  .hero-copy{padding-bottom:70px}
+  .hero-photo{width:100%}
+  .inc-grid{grid-template-columns:1.05fr .95fr;gap:48px}
+  .tool{grid-template-columns:.9fr 1.1fr;gap:48px}
+  .grid-tools{grid-template-columns:repeat(4,1fr)}
+  .tri{grid-template-columns:1.25fr .75fr}
+  .tri-copy{padding:44px 40px}
+  .mods{grid-template-columns:repeat(3,1fr)}
+  .flow{grid-template-columns:repeat(4,1fr)}
+  .prof{grid-template-columns:.85fr 1.15fr;gap:56px}
+  .plans{grid-template-columns:1fr 1fr;max-width:900px}
+  .final-grid{grid-template-columns:1fr 1fr}
+  .final-copy{padding:80px 0 80px}
+  .mbar{display:none}
+  footer{padding-bottom:30px}
+}
+@media (max-width:520px){
+  .bar{grid-template-columns:118px 1fr 36px;font-size:13.5px}
+  .hero-photo .float{display:none}
+  .hide-sm{display:none}
+  .show-sm{display:inline}
+  .brand{font-size:14px}
+  .header .btn{padding:10px 14px}
+  .hero-photo .sign{left:0}
+  .trilha .fim{display:none}
+  .trilha li span{font-size:10.5px;letter-spacing:.02em}
+}
+/* Em 320px o nome por extenso mais o botão não cabiam no cabeçalho e
+   empurravam a página 7px para o lado. */
+@media (max-width:360px){
+  :root{--pad:14px}
+  .brand .ed{display:none}
+  .header .btn{padding:10px 12px;font-size:13.5px}
+  /* a 36px "Matemática" ocupava a linha inteira e deixava o "A" sozinho */
+  .hero h1{font-size:32px}
+}
+
+/* ====== /online ====== */
+[hidden]{display:none !important}
+[data-preco]{white-space:nowrap}
+/* a frase da campanha em minúsculas, como na peça-chave do kit */
+.hero h1{text-transform:lowercase;font-size:clamp(44px,7.2vw,80px);line-height:.95;max-width:none}
+.hero h1 .t1{display:block}
+.hero h1 .t1 i{font-style:normal;font-weight:300}
+.hero h1 .t2{display:block;font-size:.58em;line-height:1.08;font-weight:300;letter-spacing:-.01em;color:var(--marinho);margin-top:.14em}
+.hero .sub{margin-top:10px;font-size:15.5px;line-height:1.6;color:var(--text-2);max-width:54ch;text-wrap:pretty}
+.campanha{text-transform:lowercase}
+.tag i{background:var(--azul);box-shadow:0 0 0 4px rgba(0,100,255,.14)}
+/* etiqueta de texto pequeno: o vermelho de texto do kit dá 4,79 com letra branca */
+.caixa.promo{display:inline-block;padding:.36em .8em;border-radius:999px;background:var(--vermelho-tx);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.02em;line-height:1.3;white-space:nowrap}
+.de{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.de s{text-decoration-thickness:1.5px}
+/* preço no hero */
+.oferta-hero{margin-top:22px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+.oferta-hero .caixa{align-self:center}
+.oferta-hero .valor{font-size:clamp(32px,3.8vw,42px);font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1;color:var(--azul);font-variant-numeric:tabular-nums}
+.oferta-hero .como{flex-basis:100%;font-size:14.5px;color:var(--text-2)}
+.hero .oferta-hero + .aviso-fora + .hero-actions{margin-top:20px}
+/* oferta saiu de venda na Lumen: some o preço, entra o aviso */
+.so-fora{display:none}
+body.oferta-fora .so-venda{display:none !important}
+body.oferta-fora .so-fora{display:block}
+.aviso-fora{margin-top:18px;font-size:15px;color:var(--text-2);border-left:3px solid var(--vermelho);padding-left:12px;max-width:54ch}
+/* seção de matrícula */
+.oferta{display:grid;grid-template-columns:1fr;gap:16px;margin-top:30px;max-width:980px}
+.lado{display:grid;gap:16px;align-content:start}
+.promo-faixa{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.promo-faixa b{font-size:17px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1.15;text-transform:lowercase;color:var(--marinho)}
+.plan h3{line-height:1.15}
+.plan .de{display:block;margin-top:18px}
+.plan .de + .price{margin-top:2px}
+.plan .aviso-fora{margin-top:18px}
+.nota-compra{margin-top:12px;font-size:13.5px;line-height:1.5;color:var(--muted);text-wrap:pretty}
+.depois{background:var(--branco);border-radius:28px;padding:24px;box-shadow:var(--sombra)}
+.depois h3{font-size:18px;font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:1.2}
+.depois p{margin-top:10px;font-size:15px;color:var(--text-2);text-wrap:pretty}
+.depois ol{margin-top:16px;display:grid;gap:14px;counter-reset:d}
+.depois li{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:center;font-size:15px;color:var(--text-2)}
+.depois li::before{counter-increment:d;content:counter(d);width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:12.5px;color:#fff;background:var(--marinho)}
+.depois .btn{margin-top:16px;min-height:46px;padding:10px 18px;font-size:15px}
+@media (min-width:960px){
+  .oferta{grid-template-columns:1.08fr .92fr}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="header">
+  <div class="wrap">
+    <a class="brand" href="#topo" aria-label="Radix Matemática, início">
+      <span class="mark"><img src="radix27-simbolo.png" width="775" height="680" alt="" aria-hidden="true"></span>
+      <span>Radix Matemática <span class="ed">2027</span></span>
+    </a>
+    <nav class="nav" aria-label="Seções">
+      <a href="#plataforma">A plataforma</a>
+      <a href="#curso">O curso</a>
+      <a href="#professor">O professor</a>
+      <a href="#matricula">Matrícula</a>
+    </nav>
+    <a class="btn btn-primary" data-comprar href="https://checkout.lumenio.com.br/radix-matematica?itens=ef0b5f17-40f3-4d4b-b286-877e1905c899"><span class="hide-sm">Garantir minha vaga</span><span class="show-sm">Garantir vaga</span></a>
+  </div>
+</header>
+
+<main id="conteudo">
+<!-- ====== HERO ====== -->
+<section class="hero" id="topo">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <span class="tag"><i></i>Curso online de Matemática · ENEM 2027</span>
+        <h1><span class="t1">ponto <i>a</i> ponto,</span><span class="t2 ponto">até o seu sonho</span></h1>
+        <p class="lead">A nota do ENEM se constrói ponto a ponto. O Radix mostra qual é o seu próximo.</p>
+        <p class="sub">Vídeo-aulas com o Prof. Hugo Gomes e uma plataforma que mostra o que estudar, onde você erra e qual seria a sua nota hoje. O ano inteiro, do básico à Revisão Final.</p>
+        <div class="oferta-hero so-venda">
+          <span class="caixa promo" data-promo hidden>Black Friday · até <span data-promo-ate>30/11</span></span>
+          <span class="de" data-promo hidden>de <s data-promo-de>R$ 647,00</s> por</span>
+          <span class="valor" data-preco>R$ 497,00</span>
+          <span class="como">Pagamento único, sem mensalidade. PIX ou cartão de crédito em até 10×.</span>
+        </div>
+        <p class="so-fora aviso-fora">A compra pelo site está indisponível agora. Fale com o atendimento pelo WhatsApp.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" data-comprar href="https://checkout.lumenio.com.br/radix-matematica?itens=ef0b5f17-40f3-4d4b-b286-877e1905c899">Garantir minha vaga
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-ghost" href="#plataforma">Conhecer a plataforma</a>
+        </div>
+        <p class="microcopy so-venda">A compra é feita no checkout da Lumen IO.</p>
+      </div>
+      <div class="hero-photo">
+        <img src="mat27-hugo-hero.webp" width="734" height="1100" alt="Prof. Hugo Gomes sorrindo, de camisa preta do Radix, com as mãos nos bolsos" fetchpriority="high">
+        <div class="float"><small>Nota TRI</small><b>como o INEP</b><span>no simulado da plataforma</span></div>
+        <div class="sign"><b>Prof. Hugo Gomes</b><span>Professor de Matemática e fundador do Radix</span></div>
+      </div>
+    </div>
+    <div class="trilha" aria-hidden="true">
+      <ol>
+        <li><span>dia 01</span></li>
+        <li><span>dia 02</span></li>
+        <li><span>dia 03</span></li>
+        <li class="ag"><span>hoje</span></li>
+        <li><span>dia 05</span></li>
+        <li><span></span></li>
+      </ol>
+      <div class="fim"><span class="caixa">seu sonho</span><img src="radix27-simbolo.png" width="775" height="680" alt=""></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>1.600+</b><span>questões oficiais do ENEM</span></div>
+      <div class="stat"><b>36</b><span>provas do INEP no banco</span></div>
+      <div class="stat"><b>39</b><span>semanas de curso</span></div>
+      <div class="stat"><b>17</b><span>aplicações do ENEM analisadas</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== POR QUE ====== -->
+<section class="section" aria-labelledby="t-inc">
+  <div class="wrap">
+    <p class="eyebrow">O ponto de partida</p>
+    <h2 id="t-inc">Quem sabe o que cai estuda menos no escuro</h2>
+    <p class="lead">O curso não segue a ordem do livro. Segue a prova. O Prof. Hugo levantou, uma a uma, as 45 questões de Matemática de 17 aplicações do ENEM. Esse levantamento decide a ordem das aulas, o peso das listas e a dose da revisão.</p>
+    <div class="inc-grid">
+      <div class="bars" role="img" aria-label="Média de questões por prova: Razão e Proporção 6,9; Estatística 5,4; Geometria Espacial 5,0; Geometria Plana 4,1; Porcentagem 3,6; Probabilidade 2,6; Sistema Métrico 2,1.">
+        <p class="lbl" style="margin-bottom:10px">Média de questões por prova</p>
+        <div class="bar"><span>Razão e Proporção</span><span class="tr"><i style="width:100%"></i></span><b>6,9</b></div>
+        <div class="bar"><span>Estatística</span><span class="tr"><i style="width:78%"></i></span><b>5,4</b></div>
+        <div class="bar"><span>Geom. Espacial</span><span class="tr"><i style="width:72%"></i></span><b>5,0</b></div>
+        <div class="bar"><span>Geom. Plana</span><span class="tr"><i style="width:59%"></i></span><b>4,1</b></div>
+        <div class="bar"><span>Porcentagem</span><span class="tr"><i style="width:52%"></i></span><b>3,6</b></div>
+        <div class="bar"><span>Probabilidade</span><span class="tr"><i style="width:38%"></i></span><b>2,6</b></div>
+        <div class="bar"><span>Sistema Métrico</span><span class="tr"><i style="width:30%"></i></span><b>2,1</b></div>
+        <p class="sum">Sete assuntos somam <b>29,7</b> das 45 questões: cerca de dois terços da prova.</p>
+        <p class="src">Levantamento do Prof. Hugo Gomes, ENEM 2009 a 2025, 17 aplicações.</p>
+      </div>
+      <div class="points">
+        <div class="point"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+          <div><h3>Mais tempo no que mais cai</h3><p>Razão e Proporção, Estatística e Geometria recebem mais aulas, mais listas e voltam na revisão.</p></div></div>
+        <div class="point"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+          <div><h3>Questão de prova desde a primeira aula</h3><p>Cada assunto termina em questões do ENEM, não em exercício de fixação solto.</p></div></div>
+        <div class="point"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div><h3>A revisão chega na hora certa</h3><p>Os assuntos de maior peso ficam para o fim do ano, frescos na memória no dia da prova.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== PLATAFORMA ====== -->
+<div class="band" id="plataforma">
+<section class="section" aria-labelledby="t-plat">
+  <div class="wrap">
+    <p class="eyebrow">A plataforma Radix</p>
+    <h2 id="t-plat">A aula acaba. A plataforma continua com você.</h2>
+    <p class="lead">Todo aluno do curso online recebe acesso à plataforma do Radix. Ela foi construída pelo próprio professor para o ENEM e é onde o estudo da semana acontece.</p>
+
+    <div class="tools-tabs" role="tablist" aria-label="Ferramentas da plataforma">
+      <button role="tab" id="tab-banco" aria-controls="p-banco" aria-selected="true">Banco de questões</button>
+      <button role="tab" id="tab-tri" aria-controls="p-tri" aria-selected="false" tabindex="-1">Simulado com TRI</button>
+      <button role="tab" id="tab-erros" aria-controls="p-erros" aria-selected="false" tabindex="-1">Caderno de erros</button>
+      <button role="tab" id="tab-desemp" aria-controls="p-desemp" aria-selected="false" tabindex="-1">Desempenho</button>
+      <button role="tab" id="tab-rf" aria-controls="p-rf" aria-selected="false" tabindex="-1">Revisão Final</button>
+    </div>
+
+    <!-- Banco -->
+    <div class="tool on" id="p-banco" role="tabpanel" aria-labelledby="tab-banco">
+      <div>
+        <h3>Mais de 1.600 questões oficiais, filtradas do jeito que você precisa</h3>
+        <p class="why">Todas as provas do ENEM de 2009 a 2025, regulares e PPL, organizadas por assunto e nível. Você escolhe o tema, resolve e vê a resolução comentada.</p>
+        <ul class="ck">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Filtro por assunto, prova, ano e dificuldade</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Resolução comentada passo a passo</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Monte suas próprias listas e baixe em PDF</li>
+        </ul>
+      </div>
+      <div class="screen" aria-hidden="true">
+        <div class="bar-top"><span class="dots"><i></i><i></i><i></i></span><span class="ilus">Tela ilustrativa</span></div>
+        <div class="panel">
+          <p class="lbl">Filtros</p>
+          <div class="chips"><span class="on">Razão e Proporção</span><span>Porcentagem</span><span class="on">Nível médio</span><span>ENEM 2024</span><span class="on">Não resolvidas</span></div>
+        </div>
+        <div class="panel">
+          <p class="q"><span class="src">EXEMPLO DE QUESTÃO</span><br>Uma receita rende 12 porções e leva 300 g de farinha. Para 30 porções, mantida a proporção, a quantidade de farinha necessária é</p>
+          <div class="alts"><div><i>A</i>600 g</div><div class="ok"><i>B</i>750 g</div><div><i>C</i>800 g</div></div>
+          <p class="res">Resolução: 300 ÷ 12 = 25 g por porção; 25 × 30 = 750 g.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRI -->
+    <div class="tool" id="p-tri" role="tabpanel" aria-labelledby="tab-tri" hidden>
+      <div>
+        <h3>Faça a prova oficial e veja a nota que o INEP daria</h3>
+        <p class="why">Você resolve um caderno real do ENEM, marca o gabarito e a plataforma calcula sua nota pelo mesmo modelo de TRI usado na correção oficial. Não é estimativa por número de acertos.</p>
+        <ul class="ck">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Nota na escala do ENEM, com acertos e tempo de prova</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Chance de acerto em cada questão: veja onde a TRI te pune</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Refazer as erradas com um clique</li>
+        </ul>
+      </div>
+      <div class="screen" aria-hidden="true">
+        <div class="bar-top"><span class="dots"><i></i><i></i><i></i></span><span class="ilus">Tela ilustrativa</span></div>
+        <div class="panel">
+          <p class="lbl">Sua nota em Matemática · ENEM 2025</p>
+          <p class="big" style="margin-top:8px">712,4</p>
+          <div class="kv"><div><b>31/45</b><span>acertos</span></div><div><b>2h41</b><span>tempo</span></div><div><b>+38</b><span>vs. anterior</span></div></div>
+        </div>
+        <div class="panel">
+          <p class="lbl" style="margin-bottom:6px">Questões que mais custaram</p>
+          <div class="mrow"><span>Q152 · fácil, você errou</span><span class="pill r">penaliza</span><b>91%</b></div>
+          <div class="mrow"><span>Q141 · fácil, você errou</span><span class="pill r">penaliza</span><b>84%</b></div>
+          <div class="mrow"><span>Q177 · difícil, você acertou</span><span class="pill a">pesa menos</span><b>18%</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Caderno de erros -->
+    <div class="tool" id="p-erros" role="tabpanel" aria-labelledby="tab-erros" hidden>
+      <div>
+        <h3>Cada erro vira revisão, não esquecimento</h3>
+        <p class="why">Errou? A questão vai para o seu caderno de erros com o motivo: conceito, cálculo ou interpretação. Na véspera, você revisa só o que é seu.</p>
+        <ul class="ck">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Registro em lote direto do resultado do simulado</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Categoria do erro para enxergar o padrão</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Refazer e acompanhar se o erro deixou de acontecer</li>
+        </ul>
+      </div>
+      <div class="screen" aria-hidden="true">
+        <div class="bar-top"><span class="dots"><i></i><i></i><i></i></span><span class="ilus">Tela ilustrativa</span></div>
+        <div class="panel">
+          <p class="lbl" style="margin-bottom:4px">Meu caderno de erros · 14 questões</p>
+          <div class="err"><span class="n">Q1</span><p>Porcentagem: aumentos sucessivos <span class="pill a">interpretação</span><small>ENEM 2023 · marcou C, gabarito E</small></p></div>
+          <div class="err"><span class="n">Q2</span><p>Geometria Espacial: volume do cilindro <span class="pill r">cálculo</span><small>ENEM 2021 · refeita e acertada</small></p></div>
+          <div class="err"><span class="n">Q3</span><p>Estatística: mediana em tabela <span class="pill r">conceito</span><small>ENEM 2024 PPL · aguardando revisão</small></p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desempenho -->
+    <div class="tool" id="p-desemp" role="tabpanel" aria-labelledby="tab-desemp" hidden>
+      <div>
+        <h3>Você sabe, assunto por assunto, onde está</h3>
+        <p class="why">A plataforma cruza tudo o que você resolveu e mostra seu acerto em cada assunto, a evolução no tempo e onde ainda falta prática. O professor vê o mesmo painel e sabe quem precisa de atenção.</p>
+        <ul class="ck">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Acerto por assunto e por período</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Alertas de pouca prática e dificuldade recorrente</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Acompanhamento do professor com base nos seus dados</li>
+        </ul>
+      </div>
+      <div class="screen" aria-hidden="true">
+        <div class="bar-top"><span class="dots"><i></i><i></i><i></i></span><span class="ilus">Tela ilustrativa</span></div>
+        <div class="panel">
+          <p class="lbl" style="margin-bottom:6px">Desempenho por assunto · últimos 30 dias</p>
+          <div class="mrow"><span>Razão e Proporção</span><span class="tr"><i style="width:82%;background:var(--green)"></i></span><b>82%</b></div>
+          <div class="mrow"><span>Estatística</span><span class="tr"><i style="width:71%;background:var(--green)"></i></span><b>71%</b></div>
+          <div class="mrow"><span>Porcentagem</span><span class="tr"><i style="width:58%;background:var(--amber)"></i></span><b>58%</b></div>
+          <div class="mrow"><span>Geometria Espacial</span><span class="tr"><i style="width:44%;background:var(--coral)"></i></span><b>44%</b></div>
+          <div class="mrow"><span>Probabilidade</span><span class="tr"><i style="width:39%;background:var(--coral)"></i></span><b>39%</b></div>
+        </div>
+        <div class="panel"><p class="q"><span class="pill r">Dificuldade recorrente</span> Geometria Espacial ficou abaixo de 50% em três semanas seguidas. Sugestão: lista de 8 questões de nível básico.</p></div>
+      </div>
+    </div>
+
+    <!-- Revisão Final -->
+    <div class="tool" id="p-rf" role="tabpanel" aria-labelledby="tab-rf" hidden>
+      <div>
+        <h3>Nas últimas semanas, um plano de revisão só seu</h3>
+        <p class="why">Antes do ENEM, você responde a um diagnóstico de 8 minutos e recebe a Revisão Final: sete semanas, 420 questões e mini-simulados, distribuídos pelo seu nível, pela sua meta e pelo tempo que você tem. Já vem incluída no curso.</p>
+        <ul class="ck">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Plano que cabe nas horas que você marcou</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>A carga sobe onde você erra e cai onde já domina</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Mini-simulado semanal com gabarito na plataforma</li>
+        </ul>
+      </div>
+      <div class="screen" aria-hidden="true">
+        <div class="bar-top"><span class="dots"><i></i><i></i><i></i></span><span class="ilus">Tela ilustrativa</span></div>
+        <div class="panel">
+          <p class="lbl">Seu próximo passo · Semana 6</p>
+          <p style="font-family:var(--display);font-weight:700;font-size:19px;margin-top:6px">Resolver 9 questões de Razão e Proporção</p>
+          <p class="q" style="margin-top:4px">Por que agora: é o assunto que mais cai e seus acertos ficaram abaixo de 50%.</p>
+        </div>
+        <div class="panel wk">
+          <div class="done"><span>Estatística · 7 questões</span><small>6 de 7 acertos</small></div>
+          <div class="next"><span>Razão e Proporção · 9 questões</span><small>cerca de 36 min</small></div>
+          <div><span>Geometria Espacial II · 8 questões</span><small>cerca de 32 min</small></div>
+          <div><span>Mini-simulado · 15 questões</span><small>sábado</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Destaque TRI -->
+    <div class="tri">
+      <div class="tri-copy">
+        <p class="eyebrow">Por que confiar na nota</p>
+        <h3>A conta foi conferida com 60 mil candidatos reais do ENEM 2025</h3>
+        <p>O cálculo da plataforma usa os parâmetros oficiais de cada questão, publicados pelo INEP. Comparamos a nota da plataforma com a nota oficial de 60 mil participantes do ENEM 2025 em Matemática.</p>
+        <div class="tri-num">
+          <div><b>0,03</b><span>ponto de diferença média</span></div>
+          <div><b>99,9%</b><span>das notas a menos de 0,5 ponto</span></div>
+        </div>
+      </div>
+      <div class="tri-photo" role="img" aria-label="Prof. Hugo Gomes, pensativo, com a mão no queixo e o celular na mão"></div>
+    </div>
+
+    <!-- Outras ferramentas -->
+    <div class="grid-tools">
+      <div class="gt"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><h3>Cronograma do ano</h3><p>Semana a semana, com a aula, o material e as questões de cada assunto.</p></div>
+      <div class="gt"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg></span><h3>Vídeo-aulas e PDFs</h3><p>Teoria e resolução de questões para rever quando quiser, no celular ou no computador.</p></div>
+      <div class="gt"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span><h3>Minhas listas</h3><p>Monte listas com as questões que escolher e imprima para resolver no papel.</p></div>
+      <div class="gt"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><h3>Professor de olho</h3><p>O Prof. Hugo acompanha pelo painel quem parou de estudar ou travou num assunto.</p></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ====== O CURSO ====== -->
+<section class="section" id="curso" aria-labelledby="t-curso">
+  <div class="wrap">
+    <p class="eyebrow">O curso</p>
+    <h2 id="t-curso">Toda a Matemática do ENEM em cinco módulos</h2>
+    <p class="lead">Uma aula por semana, de fevereiro a novembro. Os conteúdos que sustentam os outros vêm primeiro; a Revisão Geral fecha o ano com os assuntos de maior peso.</p>
+    <div class="mods">
+      <div class="mod"><p class="n">MÓDULO 01</p><h3>Aritmética e Proporção</h3><p>A base de quase metade da prova.</p>
+        <ul><li>Sistema métrico</li><li>4 operações</li><li>Lógica</li><li>Múltiplos e divisores</li><li>Razão e proporção</li><li>Porcentagem</li><li>Gráficos e tabelas</li></ul></div>
+      <div class="mod"><p class="n">MÓDULO 02</p><h3>Geometria</h3><p>Plana, espacial, analítica e trigonometria.</p>
+        <ul><li>Geometria plana</li><li>Trigonometria no triângulo</li><li>Geometria espacial</li><li>Geometria analítica</li></ul></div>
+      <div class="mod"><p class="n">MÓDULO 03</p><h3>Funções e Progressões</h3><p>Do 1º grau à matemática financeira.</p>
+        <ul><li>Conjuntos</li><li>Função do 1º e 2º grau</li><li>Potências e raízes</li><li>Exponencial e logaritmo</li><li>Funções trigonométricas</li><li>PA e PG</li><li>Financeira</li></ul></div>
+      <div class="mod"><p class="n">MÓDULO 04</p><h3>Estatística e Matrizes</h3><p>Contagem, chance e leitura de dados.</p>
+        <ul><li>Análise combinatória</li><li>Probabilidade</li><li>Estatística</li><li>Matrizes</li><li>Sistemas lineares</li></ul></div>
+      <div class="mod rev"><p class="n">MÓDULO 05</p><h3>Revisão Geral</h3><p>Sete semanas antes da prova, com plano personalizado na plataforma.</p>
+        <ul><li>4 assuntos + geometria por semana</li><li>Mini-simulado semanal</li><li>Retorno dos assuntos de maior peso</li></ul></div>
+      <div class="mod"><p class="n">AO LONGO DO ANO</p><h3>Simulados</h3><p>Provas oficiais com nota TRI e simulados da plataforma para medir a evolução.</p>
+        <ul><li>Nota na escala do ENEM</li><li>Relatório por questão</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== A SEMANA ====== -->
+<section class="section" aria-labelledby="t-semana">
+  <div class="wrap">
+    <p class="eyebrow">Como é a semana</p>
+    <h2 id="t-semana">A semana de quem estuda online</h2>
+    <ol class="flow">
+      <li><h3>Aula do assunto</h3><p>Teoria direta e questões do ENEM resolvidas pelo professor, em vídeo-aula.</p></li>
+      <li><h3>Lista na plataforma</h3><p>As questões da semana ficam no app, com resolução comentada para conferir.</p></li>
+      <li><h3>Erros no caderno</h3><p>O que você errou fica registrado com o motivo, pronto para a revisão.</p></li>
+      <li><h3>Desempenho atualizado</h3><p>Seu acerto por assunto muda e o professor vê quem precisa de ajuda.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ====== PROFESSOR ====== -->
+<div class="band" id="professor">
+<section class="section" aria-labelledby="t-prof">
+  <div class="wrap">
+    <div class="prof">
+      <div class="prof-photo">
+        <img src="mat27-hugo-sobre.webp" width="686" height="1000" alt="Prof. Hugo Gomes de óculos e blazer preto sobre a camisa do Radix" loading="lazy">
+        <div class="cap"><b>Hugo Gomes</b> · professor de Matemática e fundador do Radix</div>
+      </div>
+      <div>
+        <p class="eyebrow">O professor</p>
+        <h2 id="t-prof">Quem dá a aula também construiu a plataforma</h2>
+        <p class="lead">O Prof. Hugo Gomes fundou o Radix em Mossoró. Ele leva para a aula o que aprendeu analisando cada prova do ENEM e levou o mesmo cuidado para a plataforma. O banco, a nota TRI e o plano de revisão foram pensados por ele, para os alunos dele.</p>
+        <div class="facts">
+          <div><b>60 mil</b><span>notas do ENEM 2025 usadas para conferir a nota TRI</span></div>
+          <div><b>17</b><span>aplicações do ENEM analisadas questão a questão</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ====== MATRÍCULA ====== -->
+<section class="section" id="matricula" aria-labelledby="t-mat">
+  <div class="wrap">
+    <p class="eyebrow">Matrícula 2027</p>
+    <h2 id="t-mat">Radix Matemática Online 2027</h2>
+    <p class="lead">O curso online anual do Radix Matemática. Pagamento único, sem mensalidade.</p>
+    <div class="oferta">
+      <div class="plan feat">
+        <div class="promo-faixa" data-promo hidden>
+          <span class="caixa promo">Black Friday · até <span data-promo-ate>30/11</span></span>
+          <b>o primeiro ponto do seu 2027 custa menos</b>
+        </div>
+        <p class="kind">Online</p>
+        <h3>De onde você estiver</h3>
+        <p class="where">Pelo celular ou computador</p>
+        <div class="so-venda">
+          <span class="de" data-promo hidden>de <s data-promo-de>R$ 647,00</s> por</span>
+          <p class="price"><span data-preco>R$ 497,00</span><small>pagamento único · PIX ou cartão de crédito em até 10×</small></p>
+        </div>
+        <p class="so-fora aviso-fora">A compra pelo site está indisponível agora. Fale com o atendimento pelo WhatsApp.</p>
+        <ul class="ck">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Vídeo-aulas de teoria e resolução</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Estude no seu horário</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Acesso completo à plataforma</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Revisão Final incluída</li>
+        </ul>
+        <a class="btn btn-primary" data-comprar href="https://checkout.lumenio.com.br/radix-matematica?itens=ef0b5f17-40f3-4d4b-b286-877e1905c899">Garantir minha vaga</a>
+        <p class="nota-compra so-venda">Você vai para o checkout da Lumen IO. Lá você cria a conta de quem vai pagar, informa os dados do aluno e escolhe PIX ou cartão.</p>
+      </div>
+      <div class="lado">
+        <div class="depois">
+          <h3>Depois do pagamento</h3>
+          <ol>
+            <li>A confirmação aparece na tela e chega por e-mail.</li>
+            <li>O Radix libera o seu acesso ao curso online.</li>
+            <li><span>Você acompanha a compra na <a href="https://admin.lumenio.com.br/minha-conta" target="_blank" rel="noopener">sua conta da Lumen IO</a>.</span></li>
+          </ol>
+        </div>
+        <div class="depois">
+          <h3>Prefere a turma presencial em Mossoró?</h3>
+          <p>A matrícula da turma presencial é feita com o atendimento. <span data-promo hidden>Black Friday até <span data-promo-ate>30/11</span>. Presencial em Mossoró + online, de R$ 2.800 por R$ 1.920.</span></p>
+          <a class="btn btn-ghost" data-wa="presencial" href="https://wa.me/5584998131870" target="_blank" rel="noopener">Falar no WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <p class="inc-all" style="max-width:980px">O curso inclui o banco com mais de 1.600 questões oficiais, simulados com nota TRI, caderno de erros, painel de desempenho, minhas listas e a Revisão Final personalizada.</p>
+  </div>
+</section>
+
+<!-- ====== PERGUNTAS ====== -->
+<section class="section" aria-labelledby="t-faq">
+  <div class="wrap">
+    <p class="eyebrow">Dúvidas</p>
+    <h2 id="t-faq">Perguntas frequentes</h2>
+    <div class="faq">
+      <details class="so-venda"><summary>É mensalidade?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>Não. É um pagamento único de <span data-preco>R$ 497,00</span>, no PIX ou em até 10× no cartão de crédito.</p></details>
+      <details class="so-venda"><summary>Como faço a matrícula?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>Toque em Garantir minha vaga. Você vai para o checkout da Lumen IO, onde o curso aparece como Radix Matemática Online 2027, com o professor Antônio Hugo Diniz Gomes. Lá você cria a conta de quem vai pagar, informa os dados do aluno e escolhe PIX ou cartão. Se o aluno for menor de idade, a conta fica no nome do pai, da mãe ou do responsável.</p></details>
+      <details><summary>O que acontece depois que eu pago?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>A confirmação aparece na tela e chega por e-mail. O Radix libera o seu acesso ao curso online. Se precisar de ajuda, fale com o atendimento pelo WhatsApp (84) 99813-1870.</p></details>
+      <details><summary>O curso serve para quem tem muita dificuldade em Matemática?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>Sim. O primeiro módulo começa pela base (operações, proporção, porcentagem), que é justamente o que mais cai. No banco, você filtra por nível e começa pelas questões básicas.</p></details>
+      <details><summary>Já sei a base. Vale a pena?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>Vale. O simulado com TRI mostra exatamente quais questões fáceis você ainda erra, que são as que mais derrubam a nota, e o painel de desempenho aponta os assuntos que estão custando pontos.</p></details>
+      <details><summary>A plataforma funciona no celular?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>Funciona pelo navegador, no celular ou no computador, sem instalar nada.</p></details>
+      <details><summary>A Revisão Final é cobrada à parte?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+        <p>Não. Ela está incluída no curso.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ====== CTA FINAL ====== -->
+<section class="final" aria-labelledby="t-final">
+  <div class="wrap">
+    <div class="final-grid">
+      <div class="final-copy">
+        <p class="eyebrow">ENEM 2027</p>
+        <h2 id="t-final" class="campanha">ponto a ponto, <span class="hl ponto">até o seu sonho</span></h2>
+        <p class="lead">Garanta sua vaga e comece 2027 com aula, banco de questões, nota TRI e um professor acompanhando de perto.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" data-comprar href="https://checkout.lumenio.com.br/radix-matematica?itens=ef0b5f17-40f3-4d4b-b286-877e1905c899">Garantir minha vaga</a>
+          <a class="btn btn-ghost" data-wa href="https://wa.me/5584998131870" target="_blank" rel="noopener">Falar no WhatsApp</a>
+        </div>
+      </div>
+      <div class="final-photo"><img src="mat27-hugo-cta.webp" width="1372" height="900" alt="Prof. Hugo Gomes de óculos, com o dedo indicador apontando para cima" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="assina">RADIX<i></i><img src="radix27-simbolo.png" width="775" height="680" alt=""><i></i>27</span>
+    <span>Radix Matemática Online 2027 · Prof. Hugo Gomes · pagamento pela Lumen IO</span>
+    <span><a href="/">Entrar na plataforma</a> · <a data-wa href="https://wa.me/5584998131870" target="_blank" rel="noopener">WhatsApp (84) 99813-1870</a></span>
+  </div>
+</footer>
+
+<div class="mbar" id="mbar">
+  <a class="btn btn-ghost" data-wa href="https://wa.me/5584998131870" target="_blank" rel="noopener">WhatsApp</a>
+  <a class="btn btn-primary" data-comprar href="https://checkout.lumenio.com.br/radix-matematica?itens=ef0b5f17-40f3-4d4b-b286-877e1905c899">Garantir vaga</a>
+</div>
+
+<script>
+/*<oferta>*/
+/* Oferta do Radix Matemática Online 2027 na Lumen IO.
+   Valores do Guia-loja-Radix-Matematica-Online.md (18/11/2026).
+   - checkout: o link de compra. Não leva preço nem dado de ninguém.
+   - precoReserva: o que a página mostra se a Lumen não responder.
+   - promo: "de R$ 647 por", até 30/11. A partir de `fim` deixa de aparecer sozinha.
+     Para encerrar antes, troque `promo` por null. */
+const OFERTA = {
+  checkout: 'https://checkout.lumenio.com.br/radix-matematica?itens=ef0b5f17-40f3-4d4b-b286-877e1905c899',
+  api: 'https://api.lumenio.com.br/storefront/radix-matematica/listings/ef0b5f17-40f3-4d4b-b286-877e1905c899',
+  precoReserva: '497.00',
+  promo: { de: '647.00', ate: '30/11', fim: '2026-12-01T00:00:00-03:00' },
+  whatsapp: '5584998131870'
+};
+
+function _reais(texto) {
+  return Number(texto).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+// A Lumen manda o preço como texto ("497.00"). Qualquer coisa fora desse formato não vai para a tela.
+function _precoValido(p) {
+  return typeof p === 'string' && /^\d+(\.\d{1,2})?$/.test(p) && Number(p) > 0;
+}
+
+/* Decide o que a página mostra. Função pura: recebe a hora e a resposta da API
+   ({ status, price }) ou null quando a rede falhou. Testada em _fonte/testa_oferta.mjs. */
+function estadoDaOferta(agora, api) {
+  // 404 = a oferta saiu de venda; o checkout também vai dizer isso
+  if (api && api.status === 404) return { disponivel: false, preco: _reais(OFERTA.precoReserva), promo: null };
+  const preco = (api && api.status === 200 && _precoValido(api.price)) ? api.price : OFERTA.precoReserva;
+  const p = OFERTA.promo;
+  // só existe "de R$ 647" enquanto a data vale E o preço cobrado é de fato menor
+  const emPromo = !!p && agora.getTime() < new Date(p.fim).getTime() && Number(preco) < Number(p.de);
+  return { disponivel: true, preco: _reais(preco), promo: emPromo ? { de: _reais(p.de), ate: p.ate } : null };
+}
+/*</oferta>*/
+
+function wa(assunto) {
+  var msg = assunto === 'presencial' ? 'Olá! Quero saber da turma presencial de Matemática 2027 do Radix.'
+          : assunto === 'online' ? 'Olá! Quero me matricular no Radix Matemática Online 2027.'
+          : 'Olá! Tenho uma dúvida sobre o Radix Matemática Online 2027.';
+  return 'https://wa.me/' + OFERTA.whatsapp + '?text=' + encodeURIComponent(msg);
+}
+
+/* Pinta a página conforme o estado da oferta. Se isto não rodar, o HTML já traz
+   o preço de reserva e o link de compra, e nenhuma frase de promoção aparece. */
+function aplicarOferta(e) {
+  var q = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  document.body.classList.toggle('oferta-fora', !e.disponivel);
+  q('[data-preco]').forEach(function (el) { el.textContent = e.preco; });
+  q('[data-promo]').forEach(function (el) { el.hidden = !(e.disponivel && e.promo); });
+  if (e.promo) {
+    q('[data-promo-de]').forEach(function (el) { el.textContent = e.promo.de; });
+    q('[data-promo-ate]').forEach(function (el) { el.textContent = e.promo.ate; });
+  }
+  q('[data-comprar]').forEach(function (a) {
+    if (!a._rotulo) a._rotulo = a.innerHTML;
+    if (e.disponivel) { a.href = OFERTA.checkout; a.innerHTML = a._rotulo; a.removeAttribute('target'); a.removeAttribute('rel'); }
+    else { a.href = wa('online'); a.textContent = 'Falar no WhatsApp'; a.target = '_blank'; a.rel = 'noopener'; }
+  });
+}
+
+(function () {
+  document.querySelectorAll('[data-wa]').forEach(function (a) { a.href = wa(a.getAttribute('data-wa')); });
+
+  /* Preço: primeiro o de reserva (liga a faixa da promoção sem esperar a rede),
+     depois o que a Lumen responder. */
+  var ultima = null;
+  aplicarOferta(estadoDaOferta(new Date(), null));
+  if (window.fetch) {
+    var ctl = ('AbortController' in window) ? new AbortController() : null;
+    var prazo = setTimeout(function () { if (ctl) ctl.abort(); }, 6000);
+    fetch(OFERTA.api, ctl ? { signal: ctl.signal } : undefined)
+      .then(function (r) {
+        if (r.status !== 200) return { status: r.status };
+        return r.json().then(function (j) { return { status: 200, price: j && j.price }; });
+      })
+      .catch(function () { return null; })
+      .then(function (api) { clearTimeout(prazo); ultima = api; aplicarOferta(estadoDaOferta(new Date(), api)); });
+  }
+  /* Quem deixou a aba aberta na virada de 30/11 para 1º/12 não fica vendo a promoção. */
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) aplicarOferta(estadoDaOferta(new Date(), ultima));
+  });
+
+  /* Abas da plataforma */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tools-tabs [role=tab]'));
+  function abrir(t, foco) {
+    tabs.forEach(function (b) {
+      var on = b === t;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      var p = document.getElementById(b.getAttribute('aria-controls'));
+      p.hidden = !on; p.classList.toggle('on', on);
+    });
+    if (foco) t.focus();
+    t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  tabs.forEach(function (b, i) {
+    b.addEventListener('click', function () { abrir(b); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        var n = (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+        abrir(tabs[n], true);
+      }
+    });
+  });
+
+  /* Barra fixa no celular: aparece depois do hero, some na seção de matrícula */
+  var bar = document.getElementById('mbar'), hero = document.getElementById('topo'), mat = document.getElementById('matricula');
+  if ('IntersectionObserver' in window) {
+    var heroVis = true, matVis = false;
+    var upd = function () { bar.classList.toggle('show', !heroVis && !matVis); };
+    new IntersectionObserver(function (es) { heroVis = es[0].isIntersecting; upd(); }).observe(hero);
+    new IntersectionObserver(function (es) { matVis = es[0].isIntersecting; upd(); }).observe(mat);
+  }
+})();
+</script>
+</body>
+</html>
