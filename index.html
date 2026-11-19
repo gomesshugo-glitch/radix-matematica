@@ -7016,6 +7016,12 @@ body.theme-light .mk-login-left { --id27-p-bg: #EEF3F7; --id27-p-tit: #0064FF; -
 .mk-deg-sub { color: var(--id27-p-txt) !important; opacity: .78; }
 body .mk-tab.on, body .mk-tab.active, body.theme-light .mk-tab.on, body.theme-light .mk-tab.active { background: #0064FF !important; color: #fff !important; box-shadow: none !important; }
 .mk-deg-btn { background: #0064FF !important; color: #fff !important; box-shadow: none !important; }
+.mk-mat-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--id27-p-borda); }
+.mk-mat-linha > span { font-size: 13px; font-weight: 600; color: var(--id27-p-txt); }
+.mk-mat-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1.5px solid var(--id27-p-linha) !important; background: transparent !important; color: var(--id27-p-tit) !important; font-weight: 700; font-size: 14px; text-decoration: none !important; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.mk-mat-btn:hover { background: #0064FF !important; border-color: #0064FF !important; color: #fff !important; }
+.mk-mat-btn:focus-visible { outline: 2px solid #0064FF; outline-offset: 3px; }
+@media (max-width: 480px) { .mk-mat-btn { flex: 1 1 100%; justify-content: center; padding: 10px 12px; font-size: 13.5px; } .mk-mat-btn svg { display: none; } }
 .mk-btn-primary { background: #0064FF !important; color: #fff !important; box-shadow: none !important; border-radius: 12px !important; }
 .mk-btn-primary svg { stroke: #fff; }
 @media (max-width: 900px) { .id27-faixa { display: none; } }
@@ -7081,7 +7087,14 @@ body .mk-tab.on, body .mk-tab.active, body.theme-light .mk-tab.on, body.theme-li
           Conhecer a plataforma por 15 dias
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
-        <div class="mk-deg-sub">Grátis e sem compromisso. Você entra na hora e testa questões do ENEM com gabarito comentado, simulados e uma prova do ENEM com nota TRI. Já decidiu? <a href="https://app.radixmatematica.com.br/vendas" target="_blank" rel="noopener" style="color:inherit;font-weight:700;">Conheça os planos</a>.</div>
+        <div class="mk-deg-sub">Grátis e sem compromisso. Você entra na hora e testa questões do ENEM com gabarito comentado, simulados e uma prova do ENEM com nota TRI.</div>
+        <div class="mk-mat-linha">
+          <span>Já decidiu?</span>
+          <a class="mk-mat-btn" href="/online">
+            Quero me matricular em 2027
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
       </div>
     </div>
 
@@ -7155,7 +7168,7 @@ body .mk-tab.on, body .mk-tab.active, body.theme-light .mk-tab.on, body.theme-li
           Ao se cadastrar, você confirma o uso da plataforma Radix de Matemática.
         </p>
         <p id="signup-link-deg" style="font-size:13px;text-align:center;margin-top:6px;">
-          Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#0052D6);">Conheça a plataforma por 15 dias</a> ou <a href="https://app.radixmatematica.com.br/vendas" target="_blank" rel="noopener" style="font-weight:700;color:var(--radix-blue,#0052D6);text-decoration:none;">veja os planos</a>
+          Ainda não é aluno? <a onclick="abrirDegustacao()" style="cursor:pointer;font-weight:700;color:var(--radix-blue,#0052D6);">Conheça a plataforma por 15 dias</a> ou <a href="/online" target="_blank" rel="noopener" style="font-weight:700;color:var(--radix-blue,#0052D6);text-decoration:none;">faça sua matrícula 2027</a>
         </p>
       </div>
 

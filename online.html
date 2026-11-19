@@ -783,8 +783,8 @@ body.oferta-fora .so-fora{display:block}
         </div>
         <div class="depois">
           <h3>Prefere a turma presencial em Mossoró?</h3>
-          <p>A matrícula da turma presencial é feita com o atendimento. <span data-promo hidden>Black Friday até <span data-promo-ate>30/11</span>. Presencial em Mossoró + online, de R$ 2.800 por R$ 1.920.</span></p>
-          <a class="btn btn-ghost" data-wa="presencial" href="https://wa.me/5584998131870" target="_blank" rel="noopener">Falar no WhatsApp</a>
+          <p>A matrícula da turma presencial é feita no site do Radix Cursos. <span data-promo hidden>Black Friday até <span data-promo-ate>30/11</span>. Presencial em Mossoró + online, de R$ 2.800 por R$ 1.920.</span></p>
+          <a class="btn btn-ghost" href="https://radixcursos.com" target="_blank" rel="noopener">Ir para radixcursos.com</a>
         </div>
       </div>
     </div>
@@ -886,8 +886,7 @@ function estadoDaOferta(agora, api) {
 /*</oferta>*/
 
 function wa(assunto) {
-  var msg = assunto === 'presencial' ? 'Olá! Quero saber da turma presencial de Matemática 2027 do Radix.'
-          : assunto === 'online' ? 'Olá! Quero me matricular no Radix Matemática Online 2027.'
+  var msg = assunto === 'online' ? 'Olá! Quero me matricular no Radix Matemática Online 2027.'
           : 'Olá! Tenho uma dúvida sobre o Radix Matemática Online 2027.';
   return 'https://wa.me/' + OFERTA.whatsapp + '?text=' + encodeURIComponent(msg);
 }
