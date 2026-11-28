@@ -6864,6 +6864,30 @@
   .deg-banner-acoes{display:flex;gap:8px;flex-wrap:wrap}
   .deg-banner a.btn,.status-card a.btn{text-decoration:none !important}
   .deg-banner a.btn-primary,.status-card a.btn-primary{color:#fff !important}
+  .atd-wrap{max-width:1040px;margin:0 auto}
+  .atd-link{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--radix-line,rgba(255,255,255,.12));border-radius:14px;margin:0 0 14px;font-size:13.5px;line-height:1.5}
+  .atd-link b{word-break:break-all}
+  .atd-msg{padding:10px 14px;border-radius:12px;margin:0 0 12px;font-size:13.5px;line-height:1.5}
+  .atd-msg.ok{background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.45)}
+  .atd-msg.erro{background:rgba(234,62,68,.12);border:1px solid rgba(234,62,68,.45)}
+  .atd-msg.info{background:rgba(47,123,255,.10);border:1px solid rgba(47,123,255,.35)}
+  .atd-acao{display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+  .atd-acao .btn{padding:7px 12px;font-size:12.5px;white-space:nowrap}
+  .atd-acao .btn.btn-primary{color:#fff !important}
+  .atd-acao small{color:var(--radix-text-muted);font-size:12px}
+  .atd-nota{color:var(--radix-text-muted);font-size:12.5px;line-height:1.5;margin:14px 0 0}
+  .ldg-sit.aguardando{background:rgba(47,123,255,.18);color:#8FB6FF}
+  body.theme-light .ldg-sit.aguardando{color:#0052D6}
+  @media (max-width:680px){
+    .atd-tab{min-width:0 !important;width:100% !important}
+    .atd-tab thead{display:none !important}
+    .atd-tab tbody,.atd-tab tr,.atd-tab td{display:block !important;width:100% !important;box-sizing:border-box}
+    .atd-tab tr{padding:12px 14px !important;border-bottom:1px solid var(--radix-line,rgba(0,0,0,.08))}
+    .atd-tab td{padding:3px 0 !important;border:0 !important;white-space:normal !important}
+    .atd-tab .atd-acao{justify-content:flex-start;margin-top:8px}
+    .atd-tab .atd-acao .btn{flex:1 1 auto;padding:10px 12px;font-size:13.5px}
+    .atd-tab .atd-acao small{flex:1 1 100%}
+  }
   .deg-guia-lista{display:grid;gap:12px}
   .deg-guia-item{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px}
   .deg-guia-txt{flex:1 1 260px;min-width:0}
@@ -8832,6 +8856,16 @@ async function iniciarSessao() {
     mostrarTelaBloqueado(meuPerfil);
     return;
   }
+  // Perfil de atendimento (27/11/2026): tela única para liberar a degustação.
+  // Não carrega banco de questões nem dados de aluno; o servidor também não entrega.
+  if (meuPerfil.perfil === 'atendimento') {
+    if (meuPerfil.status !== 'aprovado') { mostrarTelaBloqueado(meuPerfil); return; }
+    state.degustacao = null;
+    state.usuario = { nome: meuPerfil.nome, perfil: 'atendimento', email: meuPerfil.email, id: user.id, foto_base64: meuPerfil.foto_base64 };
+    sb.rpc('marcar_meu_acesso').then(()=>{}, ()=>{});
+    mostrarAtendimento();
+    return;
+  }
   // Etapa 9: professor só entra com o segundo fator (aplicativo autenticador).
   // Sem fator cadastrado, cadastra agora; com fator, confirma o código. O servidor
   // exige o mesmo: is_professor() só é true em aal2 quando há fator verificado.
@@ -9086,6 +9120,7 @@ function renderGuiaDegustacao() {
   const d = state.degustacao.diasRestantes;
   const nQ = state.questoesPronto ? (state.questoes || []).length : 0;
   let nM = 0; try { nM = (typeof materiaisCache !== 'undefined' && Array.isArray(materiaisCache)) ? materiaisCache.filter(m => m.visivel).length : 0; } catch (e) { nM = 0; }
+  let nV = 0; try { nV = materiaisCache.filter(m => m.visivel && m.tipo === 'aula_youtube').length; } catch (e) { nV = 0; }
   const passo = (ico, titulo, texto, tag, botao, rota) =>
     '<article class="rx-card deg-guia-item"><span class="rx-ico">' + ico + '</span>'
     + '<div class="deg-guia-txt"><span class="deg-guia-tag">' + tag + '</span><h3>' + titulo + '</h3><p>' + texto + '</p></div>'
@@ -9099,7 +9134,7 @@ function renderGuiaDegustacao() {
     + passo(rxIco('simulados'), 'Simulados', 'Escolha os assuntos e o tempo e faça um simulado cronometrado, com correção na hora.', 'na degustação', 'Montar um simulado', 'simulados/novo')
     + passo(rxIco('livro'), 'Caderno de erros', 'Cada questão que você erra pode ir para o caderno, com o motivo do erro, para revisar depois.', 'na degustação', 'Abrir o caderno', 'caderno')
     + passo(rxIco('estat'), 'Desempenho por assunto', 'Conforme você responde, a plataforma mostra em que assunto você acerta mais e em qual precisa treinar.', 'na degustação', 'Ver meu desempenho', 'desempenho')
-    + (nM ? passo(_RXI2.arquivo, 'Material das aulas', nM + (nM === 1 ? ' material' : ' materiais') + ' em PDF das aulas de 2026, para você ver como é o material do curso.', 'na degustação · amostra', 'Ver os materiais', 'aulas') : '')
+    + (nM ? passo(_RXI2.arquivo, 'Aulas e materiais', (nV ? nV + (nV === 1 ? ' aula em vídeo e ' : ' aulas em vídeo e ') : '') + (nM - nV) + ((nM - nV) === 1 ? ' material' : ' materiais') + ' em PDF de algumas semanas do curso, para você ver como são as aulas e o material.', 'na degustação · amostra', 'Ver as aulas', 'aulas') : '')
     + '</div>'
     + '<section class="rx-card deg-guia-mat"><span class="rx-kicker">Com a matrícula</span>'
     + '<h2 class="rx-h2">O que abre para a turma 2027</h2>'
@@ -9152,6 +9187,129 @@ function _triMapaVisivel(m) {
   const vis = new Set((state.questoes || []).map(q => q.id)); const o = {};
   Object.keys(m || {}).forEach(p => { if (vis.has(m[p])) o[p] = m[p]; });
   return o;
+}
+// ====== ATENDIMENTO (27/11/2026) ======
+// Perfil limitado: uma tela só, para liberar ou estender a degustação de quem pediu.
+// Tudo o que ela mostra e faz vem de duas funções do servidor (fn_atend_lista e
+// fn_atend_liberar), que conferem o perfil a cada chamada. Esconder botão aqui não é a proteção.
+const ATD = { busca: '', dados: null, confirmando: null, msg: null, ocupado: false, carregando: false, _t: null, _seq: 0 };
+function mostrarAtendimento() {
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('view-app').classList.remove('hidden');
+  const vs = document.getElementById('view-status'); if (vs) vs.classList.add('hidden');
+  atualizarHeaderAvatar();
+  try { NAV.desmontar(); } catch (e) {}
+  renderAtendimento();
+}
+async function renderAtendimento() {
+  state.view = 'atendimento';
+  ATD.confirmando = null;
+  await _atdCarregar();
+}
+async function _atdCarregar() {
+  const seq = ++ATD._seq;
+  ATD.carregando = true; _atdRender();
+  let data = null, error = null;
+  try { const r = await sb.rpc('fn_atend_lista', { p_busca: ATD.busca ? ATD.busca : null }); data = r.data; error = r.error; } catch (e) { error = e; }
+  if (seq !== ATD._seq) return;   // chegou uma busca mais nova
+  ATD.carregando = false;
+  if (error) { ATD.dados = null; ATD.msg = { tipo: 'erro', txt: 'Não consegui carregar a lista. ' + ((error && error.message) || '') }; }
+  else ATD.dados = data || { linhas: [] };
+  _atdRender();
+}
+function _atdData(ts) { return ts ? new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'; }
+function _atdSituacao(l) {
+  if (l.situacao === 'aguardando') return { cls: 'aguardando', txt: 'aguardando desde ' + _atdData(l.criado_em) };
+  if (l.situacao === 'ativa') return { cls: 'ativo', txt: 'em degustação até ' + _atdData(l.degustacao_ate) };
+  return { cls: 'expirado', txt: 'degustação venceu em ' + _atdData(l.degustacao_ate) };
+}
+function _atdLink() { return location.origin + '/?degustacao=1'; }
+function _atdRender() {
+  if (state.view !== 'atendimento') return;
+  const main = document.getElementById('main-content'); if (!main) return;
+  const d = ATD.dados || { linhas: [] };
+  const dias = d.dias || DEGUSTACAO.dias; const teto = d.teto_dias || dias * 2;
+  const ehId = (s) => /^[0-9a-f-]{36}$/i.test(String(s || ''));
+  const linhas = (d.linhas || []).filter(l => ehId(l.id)).map(l => {
+    const s = _atdSituacao(l);
+    const tel = String(l.telefone || '').replace(/\D/g, '');
+    const telFmt = tel ? tel.replace(/^(\d{2})(\d{4,5})(\d{4}).*/, '($1) $2-$3') : '';
+    const verbo = l.situacao === 'aguardando' ? 'Liberar' : 'Estender';
+    const primeiro = _escHtml(String(l.nome || '').split(' ')[0] || 'este aluno');
+    let acao;
+    if (ATD.confirmando === l.id) {
+      acao = '<small>' + verbo + ' ' + dias + ' dias para ' + primeiro + '?</small>'
+        + '<button type="button" class="btn btn-primary"' + (ATD.ocupado ? ' disabled' : '') + ' onclick="_atdConfirmar(\'' + l.id + '\')">' + (ATD.ocupado ? 'Liberando…' : 'Confirmar') + '</button>'
+        + '<button type="button" class="btn btn-secondary"' + (ATD.ocupado ? ' disabled' : '') + ' onclick="_atdCancelar()">Cancelar</button>';
+    } else if (!l.pode) {
+      acao = '<small>já está no limite de ' + teto + ' dias</small>';
+    } else {
+      acao = '<button type="button" class="btn btn-primary" onclick="_atdPedir(\'' + l.id + '\')">' + verbo + ' ' + dias + ' dias</button>';
+    }
+    return '<tr>'
+      + '<td><strong style="display:block;">' + _escHtml(l.nome || '') + '</strong><span style="font-size:11.5px;color:var(--radix-text-muted);">' + _escHtml(l.email || '') + '</span></td>'
+      + '<td style="white-space:nowrap;">' + (tel ? '<a href="https://wa.me/55' + tel + '" target="_blank" rel="noopener" style="color:var(--radix-success);text-decoration:none;font-weight:600;">' + telFmt + '</a>' : '<span style="color:var(--radix-text-muted);">—</span>') + '</td>'
+      + '<td><span class="ldg-sit ' + s.cls + '">' + s.txt + '</span></td>'
+      + '<td><div class="atd-acao">' + acao + '</div></td>'
+      + '</tr>';
+  }).join('');
+  const nM = d.matriculados || 0, nB = d.bloqueados || 0;
+  const aviso = (ATD.busca && (nM || nB))
+    ? '<div class="atd-msg info">' + (nM ? nM + (nM === 1 ? ' cadastro com essa busca já é aluno matriculado. ' : ' cadastros com essa busca já são alunos matriculados. ') : '')
+      + (nB ? nB + (nB === 1 ? ' cadastro com essa busca está bloqueado. ' : ' cadastros com essa busca estão bloqueados. ') : '') + 'Esses casos ficam com o professor Hugo.</div>'
+    : '';
+  const vazio = ATD.carregando && !ATD.dados ? 'Carregando…'
+    : (ATD.busca ? 'Ninguém aguardando ou em degustação com essa busca.' : 'Ninguém aguardando liberação nem em degustação no momento.');
+  main.innerHTML = '<div class="atd-wrap">'
+    + '<h2 class="section-title"><span class="section-title-accent"></span>Atendimento · Degustação</h2>'
+    + '<div class="tagline-bar">Libere ou estenda o período de teste de quem pediu. Cada liberação vale ' + dias + ' dias e o aluno recebe um e-mail avisando.</div>'
+    + '<div class="atd-link"><span>Quem ainda não tem cadastro entra sozinho por este link, já com ' + dias + ' dias de degustação:</span> <b>' + _escHtml(_atdLink()) + '</b>'
+    + '<button type="button" class="btn btn-secondary" style="padding:7px 12px;font-size:12.5px;" onclick="_atdCopiarLink()">Copiar link</button></div>'
+    + (ATD.msg ? '<div class="atd-msg ' + ATD.msg.tipo + '" role="status">' + _escHtml(ATD.msg.txt) + '</div>' : '')
+    + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">'
+    + '<div class="qbk-busca-wrap" style="flex:1;min-width:220px;margin:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>'
+    + '<input type="text" class="qbk-busca" id="atd-busca" aria-label="Buscar por nome, e-mail ou WhatsApp" placeholder="Buscar por nome, e-mail ou WhatsApp" value="' + _escHtml(ATD.busca || '') + '" oninput="_atdBuscar(this.value)"></div>'
+    + '<button type="button" class="btn btn-secondary" style="padding:8px 14px;font-size:12.5px;" onclick="_atdCarregar()">' + (ATD.carregando ? 'Atualizando…' : 'Atualizar') + '</button>'
+    + '</div>'
+    + aviso
+    + (linhas
+      ? '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table atd-tab"><thead><tr><th>Aluno</th><th>WhatsApp</th><th>Situação</th><th style="text-align:right;">Degustação</th></tr></thead><tbody>' + linhas + '</tbody></table></div>'
+      : '<div class="ldg-empty">' + vazio + '</div>')
+    + '<p class="atd-nota">Cada aluno pode ficar com no máximo ' + teto + ' dias de degustação à frente. Matrícula, bloqueio e correção de cadastro ficam com o professor Hugo.</p>'
+    + '</div>';
+  const inp = document.getElementById('atd-busca');
+  if (inp && ATD._foco) { inp.focus(); try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {} }
+}
+function _atdBuscar(v) { ATD.busca = v; ATD._foco = true; ATD.msg = null; clearTimeout(ATD._t); ATD._t = setTimeout(_atdCarregar, 350); }
+function _atdPedir(id) { ATD.confirmando = id; ATD.msg = null; ATD._foco = false; _atdRender(); }
+function _atdCancelar() { ATD.confirmando = null; _atdRender(); }
+async function _atdConfirmar(id) {
+  if (ATD.ocupado) return;
+  ATD.ocupado = true; _atdRender();
+  const l = ((ATD.dados && ATD.dados.linhas) || []).find(x => x.id === id) || {};
+  let data = null, error = null;
+  try { const r = await sb.rpc('fn_atend_liberar', { p_aluno: id }); data = r.data; error = r.error; } catch (e) { error = e; }
+  ATD.ocupado = false; ATD.confirmando = null;
+  if (error || !data) ATD.msg = { tipo: 'erro', txt: (error && error.message) || 'Não foi possível liberar. Tente de novo.' };
+  else ATD.msg = { tipo: 'ok', txt: (data.acao === 'estender' ? 'Degustação estendida' : 'Degustação liberada') + ' para ' + (l.nome || 'o aluno') + ' até ' + _atdData(data.ate) + '. O aluno recebe um e-mail avisando.' };
+  await _atdCarregar();
+}
+async function _atdCopiarLink() {
+  const link = _atdLink();
+  try { await navigator.clipboard.writeText(link); ATD.msg = { tipo: 'ok', txt: 'Link copiado.' }; }
+  catch (e) { ATD.msg = { tipo: 'info', txt: 'Não consegui copiar sozinho. Selecione e copie: ' + link }; }
+  ATD._foco = false; _atdRender();
+}
+// Painel do professor: o que o atendimento liberou (tabela atendimento_log, só o professor lê).
+function _ldgAtendHtml() {
+  const a = (LDG.dados && LDG.dados.atend) || [];
+  const quando = (ts) => ts ? new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+  const linhas = a.map(x => '<tr><td style="white-space:nowrap;">' + quando(x.criado_em) + '</td><td>' + _escHtml(x.feito_por_email || '—') + '</td><td>' + _escHtml(x.aluno_nome || '—') + '</td><td>' + (x.acao === 'estender' ? 'estendeu' : 'liberou') + '</td><td style="white-space:nowrap;">' + _atdData(x.ate_depois) + '</td></tr>').join('');
+  return '<details style="margin-top:18px;"><summary style="cursor:pointer;font-weight:700;">Liberações feitas pelo atendimento (' + a.length + (a.length === 30 ? ' mais recentes' : '') + ')</summary>'
+    + (a.length
+      ? '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table ldg-table" style="margin-top:10px;"><thead><tr><th>Quando</th><th>Quem liberou</th><th>Aluno</th><th>Ação</th><th>Degustação até</th></tr></thead><tbody>' + linhas + '</tbody></table></div>'
+      : '<p style="color:var(--radix-text-muted);font-size:13px;margin:10px 0 0;">Nenhuma liberação feita pelo atendimento ainda.</p>')
+    + '</details>';
 }
 function mostrarTelaBloqueado(perfil) {
   document.getElementById('view-login').classList.add('hidden');
@@ -9830,6 +9988,7 @@ async function salvarFotoObrigatoria() {
 
 async function abrirMeuPerfil() {
   if (!state.usuario?.id) return;
+  if (state.usuario.perfil === 'atendimento') return;   // o atendimento não tem perfil de aluno para editar
   const { data: p, error } = await sb.from('perfis').select('*').eq('id', state.usuario.id).single();
   if (error || !p) { alert('Erro ao carregar perfil: ' + (error?.message || '')); return; }
 
@@ -10061,7 +10220,7 @@ async function salvarMeuPerfil() {
 function atualizarHeaderAvatar() {
   const el = document.getElementById('user-display');
   if (!el) return;
-  const perfilLabel = state.usuario.perfil === 'aluno' ? 'Aluno' : 'Professor';
+  const perfilLabel = state.usuario.perfil === 'aluno' ? 'Aluno' : state.usuario.perfil === 'atendimento' ? 'Atendimento' : 'Professor';
   const avatarSize = 28;
   el.innerHTML = `
     <span style="display:inline-flex;align-items:center;gap:8px;">
@@ -10659,6 +10818,7 @@ function _rvpFoco(id) { const el = document.getElementById('rvp-' + id); if (el)
 
 function renderHome() {
   state.view = 'home';
+  if (state.usuario && state.usuario.perfil === 'atendimento') { renderAtendimento(); return; }
   const main = document.getElementById('main-content');
   if (state.usuario.perfil === 'aluno') {
     renderDashboardAluno();
@@ -16713,7 +16873,7 @@ function _ldgData(ts) {
 function _ldgZap(p) {
   if (!p.telefone) return '';
   const primeiro = String(p.nome || '').split(' ')[0];
-  const msg = 'Olá, ' + primeiro + '! Aqui é o Hugo, da Radix Matemática. Vi que você está conhecendo a plataforma. Posso te ajudar com alguma dúvida sobre a Revisão Final ENEM 2026?';
+  const msg = 'Olá, ' + primeiro + '! Aqui é o Hugo, da Radix Matemática. Vi que você está conhecendo a plataforma. Posso te ajudar com alguma dúvida sobre o curso de 2027?';
   return 'https://wa.me/55' + String(p.telefone).replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
 }
 
@@ -16749,7 +16909,9 @@ async function renderLeadsDegustacao() {
     sims.forEach(s => { const a = porAluno[s.aluno_id]; if (a) a.sims++; });
     rev.forEach(v => { const a = porAluno[v.aluno_id]; if (a) a.plano = true; });
     avisos.forEach(e => { const a = porAluno[e.aluno_id]; if (a && !a.aviso) a.aviso = e.criado_em; });
-    LDG.dados = { perfis: perfis || [], porAluno };
+    let atend = [];
+    try { const ra = await sb.from('atendimento_log').select('criado_em, feito_por_email, aluno_nome, acao, ate_depois').order('criado_em', { ascending: false }).limit(30); atend = (ra && ra.data) || []; } catch (e) { atend = []; }
+    LDG.dados = { perfis: perfis || [], porAluno, atend };
     _ldgRender();
   } catch (e) {
     main.innerHTML = bc + '<p style="color:var(--radix-coral);">Erro ao carregar: ' + (e.message || e) + '</p>';
@@ -16846,7 +17008,7 @@ function _ldgRender() {
         ? '<div class="ldg-empty">Nenhum lead neste filtro.</div>'
         : '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="v3-table v3-table-alunos ldg-table"><thead><tr>' +
           '<th>Lead</th><th>WhatsApp</th><th>Início</th><th>Situação</th><th>Último acesso</th><th title="Questões respondidas · taxa de acerto">Questões · acerto</th><th style="text-align:center;">Simulados</th><th style="text-align:center;" title="Montou o plano da Revisão Final">Plano RF</th><th style="text-align:right;">Ações</th>' +
-          '</tr></thead><tbody>' + linhas + '</tbody></table></div>'));
+          '</tr></thead><tbody>' + linhas + '</tbody></table></div>')) + _ldgAtendHtml();
   const inp = main.querySelector('.qbk-busca');
   if (inp && LDG.busca) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
 }
@@ -17372,7 +17534,7 @@ function exportarAlunosSelecionadosCSV() {
     p.email || '',
     fmtTel(p.telefone),
     fmtCpf(p.cpf),
-    p.perfil === 'professor' ? 'Professor' : 'Aluno',
+    p.perfil === 'professor' ? 'Professor' : p.perfil === 'atendimento' ? 'Atendimento' : 'Aluno',
     p.perfil === 'professor' ? '' : (turmaPorId(p.turma) ? turmaPorId(p.turma).nome : ''),
     statusLabel(p.status),
     fmtDate(p.criado_em),
@@ -17669,7 +17831,7 @@ async function abrirEditarAluno(alunoId) {
       <div class="modal" style="max-width:520px;">
         <h2>✏️ Editar aluno</h2>
         <p style="color:var(--radix-gray-light);font-size:13px;margin-bottom:14px;">
-          <strong>${_escHtml(p.email)}</strong> · ${p.perfil === 'professor' ? '👨‍🏫 Professor' : '🎓 Aluno'}
+          <strong>${_escHtml(p.email)}</strong> · ${p.perfil === 'professor' ? '👨‍🏫 Professor' : p.perfil === 'atendimento' ? 'Atendimento' : '🎓 Aluno'}
         </p>
 
         <div class="form-group">
